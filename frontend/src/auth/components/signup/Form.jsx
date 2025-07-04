@@ -142,8 +142,8 @@ export default function Form() {
           </div>
 
           {/* Social Login Buttons */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <button className="w-full flex items-center px-2 bg-black border border-gray-600 rounded-md text-white font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap py-2">
+          <div className="grid grid-cols-2 gap-3">
+            <button className="w-full flex items-center px-2 bg-black border border-gray-600 rounded-md text-white font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap py-2 text-xs sm:text-sm">
               {/* Colored Google SVG */}
               <svg className="w-5 h-5 mr-3" viewBox="0 0 48 48">
                 <g>
@@ -168,18 +168,20 @@ export default function Form() {
               </svg>
               Sign up with Google
             </button>
-            <button className="w-full flex items-center px-2 bg-black border border-gray-600 rounded-md text-white font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap py-2">
+            <button className="w-full flex items-center px-2 bg-black border border-gray-600 rounded-md text-white font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap py-2 text-xs sm:text-sm ">
               {/* Colored Facebook SVG */}
-              <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
-                <path
-                  fill="#1877F3"
-                  d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
-                />
-                <path
-                  fill="#FFF"
-                  d="M16.671 15.543l.532-3.47h-3.328v-2.25c0-.949.465-1.874 1.956-1.874h1.436V5.996S15.312 5.761 14 5.761c-2.741 0-4.533 1.662-4.533 4.669v2.143H6.42v3.47h3.047v8.385A12.07 12.07 0 0 0 12 24c.414 0 .822-.024 1.225-.062v-8.395h2.446z"
-                />
-              </svg>
+              <span style={{ transform: "scale(.7)", display: "inline-block" }}>
+                <svg className="w-5 h-5 " viewBox="0 0 24 24">
+                  <path
+                    fill="#1877F3"
+                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
+                  />
+                  <path
+                    fill="#FFF"
+                    d="M16.671 15.543l.532-3.47h-3.328v-2.25c0-.949.465-1.874 1.956-1.874h1.436V5.996S15.312 5.761 14 5.761c-2.741 0-4.533 1.662-4.533 4.669v2.143H6.42v3.47h3.047v8.385A12.07 12.07 0 0 0 12 24c.414 0 .822-.024 1.225-.062v-8.395h2.446z"
+                  />
+                </svg>
+              </span>
               Sign up with Facebook
             </button>
           </div>

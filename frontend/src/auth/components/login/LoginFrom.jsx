@@ -24,7 +24,7 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="flex flex-col p-2 sm:p-4 min-h-screen justify-center">
+    <div className="flex flex-col p-2 sm:p-4 ">
       <div className="w-full sm:w-full md:max-w-md md:mx-auto">
         {/* Logo */}
         <div className="flex justify-center">
@@ -42,7 +42,7 @@ export default function LoginForm() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email Field */}
             <div>
-              <label className="block text-white text-sm font-medium mb-2">
+              <label className="block text-white text-xs sm:text-sm font-medium mb-2">
                 E-mail or Phone Number
               </label>
               <input
@@ -51,13 +51,13 @@ export default function LoginForm() {
                 value={formData.email}
                 onChange={handleInputChange}
                 placeholder="Enter your email"
-                className="w-full px-4 py-3 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-600 rounded-md text-white placeholder-gray-400 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
               />
             </div>
 
             {/* Password Field */}
             <div>
-              <label className="block text-white text-sm font-medium mb-2">
+              <label className="block text-white text-xs sm:text-sm font-medium mb-2">
                 Password
               </label>
               <div className="relative">
@@ -67,7 +67,7 @@ export default function LoginForm() {
                   value={formData.password}
                   onChange={handleInputChange}
                   placeholder="Enter your password"
-                  className="w-full px-4 py-3 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent pr-12"
+                  className="w-full px-4 py-3 border border-gray-600 rounded-md text-white placeholder-gray-400 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent pr-12"
                 />
                 <button
                   type="button"
@@ -78,7 +78,10 @@ export default function LoginForm() {
                 </button>
               </div>
               <div className="flex justify-end mt-2">
-                <a href="#" className="text-gray-300 text-sm hover:underline">
+                <a
+                  href="#"
+                  className="text-gray-300 text-xs sm:text-sm hover:underline"
+                >
                   Forgot Password?
                 </a>
               </div>
@@ -87,7 +90,7 @@ export default function LoginForm() {
             {/* Sign In Button */}
             <button
               type="submit"
-              className="w-full bg-cyan-400 text-gray-900 py-3 rounded-md font-semibold hover:bg-cyan-300 transition-colors"
+              className="w-full bg-cyan-400 text-gray-900 py-3 rounded-md font-semibold hover:bg-cyan-300 transition-colors text-xs sm:text-sm"
             >
               Sign up
             </button>
@@ -96,13 +99,13 @@ export default function LoginForm() {
           {/* Divider */}
           <div className="flex items-center my-6">
             <div className="flex-1 border-t border-gray-600"></div>
-            <span className="px-4 text-gray-400 text-sm">Or</span>
+            <span className="px-4 text-gray-400 text-xs sm:text-sm">Or</span>
             <div className="flex-1 border-t border-gray-600"></div>
           </div>
 
           {/* Social Login Buttons */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button className="w-full flex items-center px-2 bg-black border border-gray-600 rounded-md text-white font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap py-2">
+          <div className="grid grid-cols-2 gap-3">
+            <button className="w-full flex items-center px-2 bg-black border border-gray-600 rounded-md text-white font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap py-2 text-xs sm:text-sm">
               {/* Colored Google SVG */}
               <svg className="w-5 h-5 mr-3" viewBox="0 0 48 48">
                 <g>
@@ -127,26 +130,33 @@ export default function LoginForm() {
               </svg>
               Sign up with Google
             </button>
-            <button className="w-full flex items-center px-2 bg-black border border-gray-600 rounded-md text-white font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap py-2">
+            <button className="w-full flex items-center px-2 bg-black border border-gray-600 rounded-md text-white font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap py-2 text-xs sm:text-sm ">
               {/* Colored Facebook SVG */}
-              <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
-                <path
-                  fill="#1877F3"
-                  d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
-                />
-                <path
-                  fill="#FFF"
-                  d="M16.671 15.543l.532-3.47h-3.328v-2.25c0-.949.465-1.874 1.956-1.874h1.436V5.996S15.312 5.761 14 5.761c-2.741 0-4.533 1.662-4.533 4.669v2.143H6.42v3.47h3.047v8.385A12.07 12.07 0 0 0 12 24c.414 0 .822-.024 1.225-.062v-8.395h2.446z"
-                />
-              </svg>
+              <span style={{ transform: "scale(.7)", display: "inline-block" }}>
+                <svg className="w-5 h-5 " viewBox="0 0 24 24">
+                  <path
+                    fill="#1877F3"
+                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
+                  />
+                  <path
+                    fill="#FFF"
+                    d="M16.671 15.543l.532-3.47h-3.328v-2.25c0-.949.465-1.874 1.956-1.874h1.436V5.996S15.312 5.761 14 5.761c-2.741 0-4.533 1.662-4.533 4.669v2.143H6.42v3.47h3.047v8.385A12.07 12.07 0 0 0 12 24c.414 0 .822-.024 1.225-.062v-8.395h2.446z"
+                  />
+                </svg>
+              </span>
               Sign up with Facebook
             </button>
           </div>
 
           {/* Sign up link */}
           <div className="mt-8 text-center">
-            <span className="text-gray-400">Don't have an account? </span>
-            <Link to="/" className="text-cyan-400 hover:underline">
+            <span className="text-gray-400 text-xs sm:text-sm">
+              Don't have an account?{" "}
+            </span>
+            <Link
+              to="/"
+              className="text-cyan-400 hover:underline text-xs sm:text-sm"
+            >
               Sign up
             </Link>
           </div>
