@@ -13,7 +13,7 @@ import {
 } from "react-icons/tb";
 import { CiSettings } from "react-icons/ci";
 import { FiLogOut } from "react-icons/fi";
-import logo from "../../../public/auth/logo.png";
+import logo from "../../assets/auth/logo.png";
 
 const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
   const menuItems = [

@@ -1,6 +1,6 @@
 import React from "react";
 import { X } from "lucide-react";
-import welcomeImg from "../../../../public/auth/welcome.png";
+import welcomeImg from "../../../assets/auth/welcome.png";
 
 const Welcome = ({ onClose }) => {
   return (

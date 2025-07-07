@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { X, ArrowLeft, ArrowRight } from "lucide-react";
 
 const options = [
@@ -8,11 +8,8 @@ const options = [
   "Raise a security incident and go back doing your work",
 ];
 
-const Question1 = ({ onNext }) => {
-  const [selected, setSelected] = useState(1); // 1 is the second option (as selected in screenshot)
-
-  const handleSelect = (idx) => {
-    setSelected(idx);
+const Question1 = ({ onNext, onBack, onClose }) => {
+  const handleSelect = () => {
     if (onNext) {
       setTimeout(() => onNext(), 150); // slight delay for click effect
     }
@@ -26,13 +23,19 @@ const Question1 = ({ onNext }) => {
       <div className="relative z-10 bg-black rounded-xl p-8 shadow-xl w-full max-w-xl mx-4">
         {/* Top bar with arrows and close */}
         <div className="flex items-center justify-between mb-6">
-          <button className="text-white hover:text-cyan-400 transition">
+          <button
+            className="text-white hover:text-cyan-400 transition"
+            onClick={onBack}
+          >
             <ArrowLeft size={28} />
           </button>
           <h2 className="text-2xl font-bold text-white tracking-wide text-center flex-1">
             QUESTION 1
           </h2>
-          <button className="text-white hover:text-cyan-400 transition">
+          <button
+            className="text-white hover:text-cyan-400 transition"
+            onClick={onClose}
+          >
             <X size={28} />
           </button>
         </div>
@@ -45,10 +48,10 @@ const Question1 = ({ onNext }) => {
         </p>
         {/* Options */}
         <div className="flex flex-col gap-4">
-          {options.map((opt, idx) => (
+          {options.map((opt) => (
             <button
               key={opt}
-              onClick={() => handleSelect(idx)}
+              onClick={handleSelect}
               className={`w-full text-left px-6 py-4 rounded-none border transition font-medium text-base
                 hover:bg-cyan-400 hover:text-black hover:border-cyan-400
                 bg-transparent text-white border border-[#12DCF0]

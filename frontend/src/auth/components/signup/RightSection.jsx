@@ -1,8 +1,8 @@
 import React from "react";
-import DashIcon from "../../../../public/auth/Dash.png";
-import Ticket from "../../../../public/auth/ticket.png";
-import Dots from "../../../../public/auth/dots.png";
-import Vector from "../../../../public/auth/Vector.png";
+import DashIcon from "../../../assets/auth/Dash.png";
+import Ticket from "../../../assets/auth/ticket.png";
+import Dots from "../../../assets/auth/dots.png";
+import Vector from "../../../assets/auth/Vector.png";
 export default function RightSection() {
   // Random person images from Unsplash
   const personImages = [

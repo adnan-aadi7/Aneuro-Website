@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import logo from "../../../../public/auth/logo.png";
+import logo from "../../../assets/auth/logo.png";
 import { Link } from "react-router-dom";
 
 export default function LoginForm() {
