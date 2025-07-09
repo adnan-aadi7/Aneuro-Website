@@ -57,12 +57,12 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
         className={`fixed top-0 left-0 h-screen w-64 bg-[#16161C] text-white flex flex-col  z-50 shadow-md transform transition-transform duration-300
         ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 lg:static lg:shadow-none`}
+        } lg:translate-x-0 lg:static lg:shadow-none overflow-y-auto lg:overflow-visible`}
       >
         {/* Close button for mobile */}
         <button
           onClick={onSidebarClose}
-          className="absolute top-4 right-4 z-[100] size-10 lg:hidden flex items-center justify-center text-white bg-gray-800 rounded-lg"
+          className="absolute top-4 right-4 z-[100] size-10 lg:hidden flex items-center justify-center text-white bg-gray-800 rounded-lg border-r border-gray-800"
         >
           <svg
             width="20"
@@ -80,11 +80,11 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
           </svg>
         </button>
         {/* Logo */}
-        <div className="  flex flex-col items-center">
+        <div className="  flex flex-col items-center ">
           <img src={logo} alt="Logo" className="w-[162px] h-[162px] " />
         </div>
         {/* Navigation */}
-        <nav className="flex flex-col gap-2 flex-1 px-4">
+        <nav className="flex flex-col gap-4 flex-1 px-4">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -92,10 +92,10 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
                 key={item.label}
                 to={item.to}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 font-medium text-[15px] transition-all border-r-2 ${
+                  `flex items-center gap-3 px-4 py-3 font-medium text-[15px] transition-all border-l-7 ${
                     isActive
-                      ? "bg-teal-500/20 text-teal-400 border-teal-400 shadow rounded-full"
-                      : "text-gray-400 border-transparent hover:text-gray-300 hover:bg-gray-800/50 rounded-2xl"
+                      ? "bg-teal-500/20 text-teal-400 border-teal-400 shadow "
+                      : "text-gray-400 border-transparent hover:text-gray-300 hover:bg-gray-800/50 "
                   }`
                 }
               >
@@ -106,7 +106,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
           })}
         </nav>
         {/* Bottom Menu */}
-        <div className="border-t border-gray-800 py-4 px-4">
+        <div className=" py-4 px-4 mt-15">
           {bottomItems.map((item) => {
             const Icon = item.icon;
             return (

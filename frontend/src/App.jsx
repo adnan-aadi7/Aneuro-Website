@@ -7,11 +7,14 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import ClientLayout from "./client/layout/layout";
 import Quiz from "./auth/pages/quiz/Quiz";
 
-//choosing plan
-
-//welcome
-import Dashboard from "./client/pages/Dashboard";
+import Dashboard from "./client/pages/dashboard/Dashboard";
 import Subcription from "./auth/pages/choosingPlan/Subcription";
+import ResultsOverView from "./client/pages/resultOverview/ResultsOverView";
+import AnalyticsOverview from "./client/pages/analyticsOverview/AnalyticsOverview";
+import QuizDetials from "./client/pages/analyticsOverview/QuizDetials";
+import IncompleteQuiz from "./client/pages/analyticsOverview/IncompleteQuiz";
+import FeedBack from "./client/pages/feedback/FeedBack";
+import SupportCenter from "./client/pages/support/SupportCenter";
 
 function App() {
   return (
@@ -32,6 +35,54 @@ function App() {
           element={
             <ClientLayout>
               <Dashboard />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/results-overview"
+          element={
+            <ClientLayout>
+              <ResultsOverView />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/analytics-overview"
+          element={
+            <ClientLayout>
+              <AnalyticsOverview />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/quiz-details"
+          element={
+            <ClientLayout>
+              <QuizDetials />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/incomplete-quiz"
+          element={
+            <ClientLayout>
+              <IncompleteQuiz />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/support-center"
+          element={
+            <ClientLayout>
+              <SupportCenter />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/leave-feedback"
+          element={
+            <ClientLayout>
+              <FeedBack />
             </ClientLayout>
           }
         />

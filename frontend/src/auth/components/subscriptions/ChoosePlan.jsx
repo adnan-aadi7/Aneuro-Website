@@ -113,7 +113,7 @@ const ChoosePlan = () => {
             </div>
             {/* Main Table - with left margin for sidebar overlap */}
             <div
-              className="relative max-w-5xl mx-auto bg-black rounded-lg shadow-2xl overflow-hidden px-12"
+              className="relative w-full max-w-5xl mx-auto bg-black rounded-lg shadow-2xl overflow-hidden px-2 sm:px-4 md:px-12"
               style={{
                 boxShadow: `0 0 130px 30px ${CYAN}80`,
                 marginLeft: "0",
@@ -121,9 +121,9 @@ const ChoosePlan = () => {
               }}
             >
               {/* Plan headers */}
-              <div className="grid grid-cols-4">
-                {/* Basic plan: only icon, wider column */}
-                <div className="flex flex-col items-start py-4 w-64">
+              <div className="grid grid-cols-3 md:grid-cols-4">
+                {/* Basic plan: only icon, wider column, hidden on small screens */}
+                <div className="hidden md:flex flex-col items-start py-4 w-64">
                   <img
                     src={GroupImg}
                     alt="Basic Plan"
@@ -134,23 +134,23 @@ const ChoosePlan = () => {
                 {plans.slice(1).map((plan) => (
                   <div
                     key={plan.name}
-                    className="flex flex-col items-center py-8"
+                    className="flex flex-col items-center py-4 md:py-8"
                   >
-                    <h3 className="text-white text-2xl font-bold mb-2 tracking-wide text-center">
+                    <h3 className="text-white text-lg md:text-2xl font-bold mb-1 md:mb-2 tracking-wide text-center">
                       {plan.name}
                     </h3>
                     <div
-                      className="w-16 h-1 rounded-full mb-4"
+                      className="w-10 h-1 md:w-16 rounded-full mb-2 md:mb-4"
                       style={{ background: CYAN }}
                     />
                     <div className="flex items-end justify-center mb-0">
-                      <span className="text-5xl font-bold text-white leading-none">
+                      <span className="text-3xl md:text-5xl font-bold text-white leading-none">
                         {plan.price}
                       </span>
-                      <span className="text-xl font-bold ml-1 mb-1 text-gray-200">
+                      <span className="text-base md:text-xl font-bold ml-1 mb-1 text-gray-200">
                         $
                       </span>
-                      <span className="text-gray-400 text-base ml-2">
+                      <span className="text-gray-400 text-xs md:text-base ml-2">
                         per month
                       </span>
                     </div>
@@ -162,27 +162,27 @@ const ChoosePlan = () => {
                 {features.map((feature) => (
                   <div
                     key={feature.name}
-                    className="grid grid-cols-4 min-h-[48px] items-center"
+                    className="grid grid-cols-3 md:grid-cols-4 min-h-[40px] md:min-h-[48px] items-center"
                   >
-                    {/* Basic column: empty */}
-                    <div />
+                    {/* Basic column: empty, hidden on small screens */}
+                    <div className="hidden md:block" />
                     {/* Other plans */}
                     {[feature.starter, feature.growth, feature.enterprise].map(
                       (col, colIdx) => (
                         <div
                           key={colIdx}
-                          className="flex items-center py-2 px-6"
+                          className="flex items-center py-1 md:py-2 px-2 md:px-6"
                         >
                           {col.available ? (
                             <CheckMark />
                           ) : (
                             <Minus
-                              className="w-5 h-5 mr-3 flex-shrink-0"
+                              className="w-5 h-5 mr-2 md:mr-3 flex-shrink-0"
                               style={{ color: CYAN }}
                             />
                           )}
                           <span
-                            className={`text-base ${
+                            className={`text-xs md:text-base ${
                               col.available ? "text-white" : "text-gray-500"
                             }`}
                           >
@@ -195,14 +195,14 @@ const ChoosePlan = () => {
                 ))}
               </div>
               {/* Buttons */}
-              <div className="grid grid-cols-4 gap-6 mt-6 px-4 pb-6">
-                {/* Basic column: no button */}
-                <div />
+              <div className="grid grid-cols-3 md:grid-cols-4 gap-2 md:gap-6 mt-4 md:mt-6 px-2 md:px-4 pb-4 md:pb-6">
+                {/* Basic column: no button, hidden on small screens */}
+                <div className="hidden md:block" />
                 {/* Other plans */}
                 {plans.slice(1).map((plan) => (
                   <button
                     key={plan.name}
-                    className="w-full text-black font-semibold py-3 px-6 rounded transition-colors duration-200 cursor-pointer"
+                    className="w-full text-black font-semibold py-2 md:py-3 px-2 md:px-6 rounded transition-colors duration-200 cursor-pointer text-xs md:text-base"
                     style={{ background: CYAN }}
                     onClick={() => setShowPopup(true)}
                   >
