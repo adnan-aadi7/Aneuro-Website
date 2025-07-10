@@ -7,6 +7,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import ClientLayout from "./client/layout/layout";
 import Quiz from "./auth/pages/quiz/Quiz";
 
+// cleint
 import Dashboard from "./client/pages/dashboard/Dashboard";
 import Subcription from "./auth/pages/choosingPlan/Subcription";
 import ResultsOverView from "./client/pages/resultOverview/ResultsOverView";
@@ -15,6 +16,10 @@ import QuizDetials from "./client/pages/analyticsOverview/QuizDetials";
 import IncompleteQuiz from "./client/pages/analyticsOverview/IncompleteQuiz";
 import FeedBack from "./client/pages/feedback/FeedBack";
 import SupportCenter from "./client/pages/support/SupportCenter";
+
+// admin
+import AdminLayout from "./admin/layout/layout";
+import AdminDashboard from "./admin/pages/dashboard/AdminDashboard";
 
 function App() {
   return (
@@ -84,6 +89,16 @@ function App() {
             <ClientLayout>
               <FeedBack />
             </ClientLayout>
+          }
+        />
+
+        {/* admin routes */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <AdminLayout>
+              <AdminDashboard />
+            </AdminLayout>
           }
         />
       </Routes>
