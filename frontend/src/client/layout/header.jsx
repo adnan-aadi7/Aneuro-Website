@@ -17,7 +17,6 @@ const Header = ({ onHamburgerClick }) => {
           aria-label="Open sidebar menu"
         >
           <svg
-            className="w-5 h-5 lg:w-6 lg:h-6"
             width="24"
             height="24"
             fill="none"
@@ -37,7 +36,7 @@ const Header = ({ onHamburgerClick }) => {
             className="flex items-center gap-2 text-gray-300  transition-colors"
             onClick={() => navigate(-1)}
           >
-            <ArrowLeft className="w-4 h-4 lg:w-5 lg:h-5" />
+            <ArrowLeft size={20} />
             <span className="text-sm font-medium">Back</span>
           </button>
         )}
@@ -47,12 +46,12 @@ const Header = ({ onHamburgerClick }) => {
       <div className="flex items-center gap-3">
         {/* Profile Icon */}
         <button className="p-3 rounded-lg hover:bg-gray-700  transition-colors border border-gray-400 cursor-pointer">
-          <User className="text-gray-300 w-3 h-3 lg:w-5 lg:h-5" />
+          <User size={18} className="text-gray-300" />
         </button>
 
         {/* Notification Bell with badge */}
         <button className="p-3 rounded-lg  = transition-colors relative border border-gray-400 hover:bg-gray-700 cursor-pointer">
-          <Bell className="text-gray-300 w-3 h-3 lg:w-5 lg:h-5" />
+          <Bell size={18} className="text-gray-300" />
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center ">
             1
           </span>
