@@ -123,6 +123,8 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
           })}
         </div>
       </aside>
+      {/* Vertical line on the right side, only for large screens */}
+      <div className="hidden lg:block fixed top-0 left-64 h-screen w-[2px] bg-[#232432] z-50" />
     </>
   );
 };

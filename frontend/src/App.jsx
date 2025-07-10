@@ -20,6 +20,8 @@ import SupportCenter from "./client/pages/support/SupportCenter";
 // admin
 import AdminLayout from "./admin/layout/layout";
 import AdminDashboard from "./admin/pages/dashboard/AdminDashboard";
+import Users from "./admin/pages/users/Users";
+import Details from "./admin/pages/users/Details";
 
 function App() {
   return (
@@ -98,6 +100,22 @@ function App() {
           element={
             <AdminLayout>
               <AdminDashboard />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <AdminLayout>
+              <Users />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/user/details"
+          element={
+            <AdminLayout>
+              <Details />
             </AdminLayout>
           }
         />
