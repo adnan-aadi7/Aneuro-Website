@@ -26,7 +26,7 @@ const Table = () => {
   const navigate = useNavigate();
   return (
     <div className="overflow-x-auto  bg-[#232432] mt-10">
-      <table className="min-w-full text-left">
+      <table className="w-full text-left">
         <thead>
           <tr className="text-gray-300 text-sm border-b border-gray-600">
             <th className="py-4 px-4 font-medium">
