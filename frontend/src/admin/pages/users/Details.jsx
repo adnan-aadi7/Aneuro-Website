@@ -6,7 +6,7 @@ const Details = () => {
   return (
     <>
       <UserInfo />
-      <div className="bg-[#2A2A39] p-5 mt-10">
+      <div className="bg-[#2A2A39] lg:p-5 mt-10 ">
         <Tabs />
       </div>
     </>

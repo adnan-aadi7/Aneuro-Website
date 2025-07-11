@@ -67,7 +67,7 @@ export default function GeneralDetails() {
   ];
 
   return (
-    <div className="w-full max-w-lg bg-[#2A2A39] p-6 space-y-6">
+    <div className="w-full sm:max-w-lg bg-[#2A2A39] p-3 sm:p-6 space-y-6">
       {/* Form Fields */}
       {formFields.map((field, index) => (
         <div key={index} className="space-y-2">
@@ -91,15 +91,15 @@ export default function GeneralDetails() {
       ))}
 
       {/* Suspend Account Button */}
-      <div className="pt-4 flex gap-3">
+      <div className="pt-4 flex flex-row gap-3">
         <button
-          className="px-4 py-2 bg-transparent border border-slate-600 text-slate-300 rounded-md hover:bg-slate-700 hover:text-white transition-colors text-sm font-medium"
+          className="px-2 sm:px-4 py-2 bg-transparent border border-slate-600 text-slate-300  hover:bg-slate-700 hover:text-white transition-colors text-sm font-medium whitespace-nowrap"
           onClick={() => setShowSuspend(true)}
         >
           Suspend Account
         </button>
         <button
-          className="px-4 py-2 bg-transparent border border-slate-600 text-slate-300 rounded-md hover:bg-slate-700 hover:text-white transition-colors text-sm font-medium"
+          className="px-3 sm:px-4 py-2 bg-transparent border border-slate-600 text-slate-300  hover:bg-slate-700 hover:text-white transition-colors text-sm font-medium whitespace-nowrap"
           onClick={() => setShowReactivate(true)}
         >
           Activate Account

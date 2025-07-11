@@ -1,13 +1,12 @@
 import React from "react";
 import { ArrowLeft, Bell, User } from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 const Header = ({ onHamburgerClick }) => {
   const location = useLocation();
-  const navigate = useNavigate();
   const isDashboard = location.pathname === "/client/dashboard";
   return (
-    <header className="bg-[#16161C] text-white px-6 py-5 flex items-center justify-between">
+    <header className="bg-[#16161C] text-white lg:px-6 py-5 flex items-center justify-between">
       {/* Left side - Hamburger (mobile) and Back button */}
       <div className="flex items-center">
         {/* Hamburger menu for mobile */}
@@ -32,13 +31,33 @@ const Header = ({ onHamburgerClick }) => {
           </svg>
         </button>
         {!isDashboard && (
-          <button
-            className="flex items-center gap-2 text-gray-300  transition-colors"
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft className="w-4 h-4 lg:w-5 lg:h-5" />
-            <span className="text-sm font-medium">Back</span>
-          </button>
+          <>
+            {/* Search Bar */}
+            <div className="flex items-center  rounded-full px-4 py-2 w-28 sm:w-64 max-w-full">
+              <svg
+                width="24"
+                height="24"
+                fill="none"
+                stroke="#B0B0B0"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                className="mr-2"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Type Here To Search..."
+                className="hidden sm:block bg-transparent outline-none text-[#B0B0B0] placeholder-[#B0B0B0] w-full text-lg"
+              />
+              <input
+                type="text"
+                placeholder="Search"
+                className="block sm:hidden bg-transparent outline-none text-[#B0B0B0] placeholder-[#B0B0B0] w-full text-base"
+              />
+            </div>
+          </>
         )}
       </div>
 
