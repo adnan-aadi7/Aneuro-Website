@@ -105,7 +105,7 @@ const SubscriptionPlan = () => {
             </div>
             {/* Main Table - with left margin for sidebar overlap */}
             <div
-              className="relative w-full max-w-full mx-auto bg-[#2A2A39] rounded-lg shadow-2xl overflow-hidden px-2 sm:px-4 md:px-12"
+              className="relative w-full max-w-full mx-auto bg-[#2A2A39]  shadow-2xl overflow-hidden px-2 sm:px-4 md:px-12"
               style={{
                 marginLeft: "0",
                 marginRight: "0",
