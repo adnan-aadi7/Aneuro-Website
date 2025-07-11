@@ -22,6 +22,10 @@ import AdminLayout from "./admin/layout/layout";
 import AdminDashboard from "./admin/pages/dashboard/AdminDashboard";
 import Users from "./admin/pages/users/Users";
 import Details from "./admin/pages/users/Details";
+import Subscription from "./client/pages/subsriptionPlan/Subscription";
+import FunnelTemplates from "./client/pages/funnelTemplates/FunnelTemplates";
+import PromptPacks from "./client/pages/promptPacks/PromptPacks";
+import EmailSequence from "./client/pages/emailSequence/EmailSequence";
 
 function App() {
   return (
@@ -74,6 +78,39 @@ function App() {
           element={
             <ClientLayout>
               <IncompleteQuiz />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/email-sequences"
+          element={
+            <ClientLayout>
+              <EmailSequence />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/prompt-packs"
+          element={
+            <ClientLayout>
+              <PromptPacks />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/funnel-templates"
+          element={
+            <ClientLayout>
+              <FunnelTemplates />
+            </ClientLayout>
+          }
+        />
+
+        <Route
+          path="/manage-subscription"
+          element={
+            <ClientLayout>
+              <Subscription />
             </ClientLayout>
           }
         />

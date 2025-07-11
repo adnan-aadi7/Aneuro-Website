@@ -1,6 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
+import UpgradePlan from "./upgradePlans/UpgradePlan";
+import UpgradeConfirmationPopup from "./upgradePlans/UpgradeConfirmationPopup";
 
 export default function SubscriptionTierExact() {
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState("");
+
+  const handleUpgrade = (plan) => {
+    setShowUpgrade(false);
+    setSelectedPlan(plan);
+    setShowConfirmation(true);
+  };
+
   return (
     <div className="w-full bg-[#2A2A39] ">
       {/* Header */}
@@ -14,7 +26,7 @@ export default function SubscriptionTierExact() {
       </div>
 
       {/* Cards Container */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Starter Plan Card */}
         <div className="bg-[#16161C] rounded-lg p-6 relative overflow-hidden">
           {/* Cyan blurred glow bottom right */}
@@ -56,7 +68,10 @@ export default function SubscriptionTierExact() {
           </div>
 
           {/* Upgrade Button */}
-          <button className="bg-transparent border border-slate-600 text-slate-300 py-2 px-4 rounded-md hover:bg-slate-600 hover:text-white transition-colors text-sm font-medium">
+          <button
+            className="bg-transparent border border-slate-600 text-slate-300 py-2 px-4 rounded-md hover:bg-slate-600 hover:text-white transition-colors text-sm font-medium"
+            onClick={() => setShowUpgrade(true)}
+          >
             Upgrade plan
           </button>
         </div>
@@ -71,40 +86,54 @@ export default function SubscriptionTierExact() {
             <div className="w-full h-full rounded-full bg-[#12DCF0] opacity-30 blur-[80px]" />
           </div>
           <div className="mb-6">
-            <h2 className="text-white text-xl font-medium mb-2">
+            <h2 className="text-white text-base md:text-xl font-medium mb-2">
               Payment Method
             </h2>
-            <p className="text-slate-400 text-sm">
+            <p className="text-slate-400 text-xs md:text-sm">
               Change how you pay for your plan
             </p>
           </div>
           <div className="flex items-center justify-between w-full mt-2">
             {/* Left: VISA info */}
-            <div className="flex items-center gap-4">
-              <div className="bg-[#232886] rounded w-[70px] h-[40px] flex items-center justify-center">
+            <div className="flex items-center gap-2 md:gap-4">
+              <div className="bg-[#232886] rounded w-[60px] md:w-[70px] h-[32px] md:h-[40px] flex items-center justify-center">
                 <span
-                  className="text-white text-2xl font-bold tracking-widest"
+                  className="text-white text-lg md:text-2xl font-bold tracking-widest"
                   style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
                 >
                   VISA
                 </span>
               </div>
               <div className="flex flex-col justify-center">
-                <span className="text-white text-lg font-medium leading-tight">
+                <span className="text-white text-sm md:text-lg font-medium leading-tight">
                   Visa ending in 1234
                 </span>
-                <span className="text-slate-400 text-sm leading-tight">
+                <span className="text-slate-400 text-xs md:text-sm leading-tight">
                   Expiry 20/2025
                 </span>
               </div>
             </div>
             {/* Right: Edit button */}
-            <button className="bg-[#12DCF0] text-[#232432] px-13 py-2 rounded text-lg font-semibold hover:bg-cyan-300 transition-colors shadow-none">
+            <button className="bg-[#12DCF0] text-[#232432] px-6 md:px-13 py-2 rounded text-base md:text-lg font-semibold hover:bg-cyan-300 transition-colors shadow-none">
               Edit
             </button>
           </div>
         </div>
       </div>
+
+      {/* UpgradePlan Modal */}
+      <UpgradePlan
+        open={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        onUpgrade={handleUpgrade}
+      />
+
+      {/* UpgradeConfirmationPopup Modal */}
+      <UpgradeConfirmationPopup
+        open={showConfirmation}
+        onClose={() => setShowConfirmation(false)}
+        plan={selectedPlan}
+      />
     </div>
   );
 }
