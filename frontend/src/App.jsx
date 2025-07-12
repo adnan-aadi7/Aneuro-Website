@@ -26,7 +26,8 @@ import Subscription from "./client/pages/subsriptionPlan/Subscription";
 import FunnelTemplates from "./client/pages/funnelTemplates/FunnelTemplates";
 import PromptPacks from "./client/pages/promptPacks/PromptPacks";
 import EmailSequence from "./client/pages/emailSequence/EmailSequence";
-
+import Support from "./admin/pages/support&feedback/Support";
+import Userdetail from "./admin/pages/support&feedback/userdetail";
 function App() {
   return (
     //auth routes
@@ -153,6 +154,22 @@ function App() {
           element={
             <AdminLayout>
               <Details />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/support/feedback"
+          element={
+            <AdminLayout>
+              <Support />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/support/feedback/user-detail"
+          element={
+            <AdminLayout>
+              <Userdetail />
             </AdminLayout>
           }
         />
