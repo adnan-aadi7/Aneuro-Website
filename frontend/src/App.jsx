@@ -16,16 +16,17 @@ import QuizDetials from "./client/pages/analyticsOverview/QuizDetials";
 import IncompleteQuiz from "./client/pages/analyticsOverview/IncompleteQuiz";
 import FeedBack from "./client/pages/feedback/FeedBack";
 import SupportCenter from "./client/pages/support/SupportCenter";
+import Subscription from "./client/pages/subsriptionPlan/Subscription";
+import FunnelTemplates from "./client/pages/funnelTemplates/FunnelTemplates";
+import PromptPacks from "./client/pages/promptPacks/PromptPacks";
+import EmailSequence from "./client/pages/emailSequence/EmailSequence";
+import BillingView from "./client/pages/subsriptionPlan/BillingView";
 
 // admin
 import AdminLayout from "./admin/layout/layout";
 import AdminDashboard from "./admin/pages/dashboard/AdminDashboard";
 import Users from "./admin/pages/users/Users";
 import Details from "./admin/pages/users/Details";
-import Subscription from "./client/pages/subsriptionPlan/Subscription";
-import FunnelTemplates from "./client/pages/funnelTemplates/FunnelTemplates";
-import PromptPacks from "./client/pages/promptPacks/PromptPacks";
-import EmailSequence from "./client/pages/emailSequence/EmailSequence";
 
 function App() {
   return (
@@ -111,6 +112,14 @@ function App() {
           element={
             <ClientLayout>
               <Subscription />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/billing-overview"
+          element={
+            <ClientLayout>
+              <BillingView />
             </ClientLayout>
           }
         />
