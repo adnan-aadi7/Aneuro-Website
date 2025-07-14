@@ -16,6 +16,11 @@ import QuizDetials from "./client/pages/analyticsOverview/QuizDetials";
 import IncompleteQuiz from "./client/pages/analyticsOverview/IncompleteQuiz";
 import FeedBack from "./client/pages/feedback/FeedBack";
 import SupportCenter from "./client/pages/support/SupportCenter";
+import Subscription from "./client/pages/subsriptionPlan/Subscription";
+import FunnelTemplates from "./client/pages/funnelTemplates/FunnelTemplates";
+import PromptPacks from "./client/pages/promptPacks/PromptPacks";
+import EmailSequence from "./client/pages/emailSequence/EmailSequence";
+import BillingView from "./client/pages/subsriptionPlan/BillingView";
 
 // admin
 import AdminLayout from "./admin/layout/layout";
@@ -31,6 +36,8 @@ import Userdetail from "./admin/pages/support&feedback/userdetail";
 import BillingOverview from "./admin/pages/Managesubscription/billingOverview";
 import UserDetails from "./admin/pages/Managesubscription/user-details";
 import Refunddetail from "./admin/pages/Managesubscription/refunddetailrequest";
+import EnterPrizeQuiz from "./client/pages/enterprieQuiz/EnterPrizeQuiz";
+
 function App() {
   return (
     //auth routes
@@ -119,6 +126,14 @@ function App() {
           }
         />
         <Route
+          path="/billing-overview"
+          element={
+            <ClientLayout>
+              <BillingView />
+            </ClientLayout>
+          }
+        />
+        <Route
           path="/support-center"
           element={
             <ClientLayout>
@@ -131,6 +146,14 @@ function App() {
           element={
             <ClientLayout>
               <FeedBack />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/enterprize-quiz"
+          element={
+            <ClientLayout>
+              <EnterPrizeQuiz />
             </ClientLayout>
           }
         />

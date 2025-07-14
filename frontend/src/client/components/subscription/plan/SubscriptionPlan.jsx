@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Minus } from "lucide-react";
-import GroupImg from "../../../assets/subscription/Group.png";
+import GroupImg from "../../../../assets/subscription/Group.png";
+import { useNavigate } from "react-router-dom";
 
 const CYAN = "#12DCF0";
 
@@ -73,6 +74,7 @@ const CheckMark = () => (
 
 const SubscriptionPlan = () => {
   const [showPopup, setShowPopup] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <div className=" flex flex-col items-center justify-center py-8 px-2">
@@ -195,7 +197,7 @@ const SubscriptionPlan = () => {
                     key={plan.name}
                     className="w-full text-black font-semibold py-2 md:py-3 px-2 md:px-6 rounded transition-colors duration-200 cursor-pointer text-xs md:text-base"
                     style={{ background: CYAN }}
-                    onClick={() => setShowPopup(true)}
+                    onClick={() => navigate("/billing-overview")}
                   >
                     Get Started
                   </button>

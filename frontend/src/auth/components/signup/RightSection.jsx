@@ -12,7 +12,7 @@ export default function RightSection() {
   ];
 
   return (
-    <div className="w-full">
+    <div className="w-full ">
       <div className="bg-[#12DCF0] ">
         <div className="mx-auto ">
           {/* Header */}

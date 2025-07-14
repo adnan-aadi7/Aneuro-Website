@@ -1,6 +1,6 @@
 import React from "react";
-import Header from "../../components/subscription/Header";
-import SubscriptionPlan from "../../components/subscription/SubscriptionPlan";
+import Header from "../../components/subscription/plan/Header";
+import SubscriptionPlan from "../../components/subscription/plan/SubscriptionPlan";
 
 const Subscription = () => {
   return (
