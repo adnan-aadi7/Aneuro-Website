@@ -27,6 +27,7 @@ import AdminLayout from "./admin/layout/layout";
 import AdminDashboard from "./admin/pages/dashboard/AdminDashboard";
 import Users from "./admin/pages/users/Users";
 import Details from "./admin/pages/users/Details";
+import EnterPrizeQuiz from "./client/pages/enterprieQuiz/EnterPrizeQuiz";
 
 function App() {
   return (
@@ -136,6 +137,14 @@ function App() {
           element={
             <ClientLayout>
               <FeedBack />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/enterprize-quiz"
+          element={
+            <ClientLayout>
+              <EnterPrizeQuiz />
             </ClientLayout>
           }
         />
