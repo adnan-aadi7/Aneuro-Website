@@ -28,6 +28,9 @@ import PromptPacks from "./client/pages/promptPacks/PromptPacks";
 import EmailSequence from "./client/pages/emailSequence/EmailSequence";
 import Support from "./admin/pages/support&feedback/Support";
 import Userdetail from "./admin/pages/support&feedback/userdetail";
+import BillingOverview from "./admin/pages/Managesubscription/billingOverview";
+import UserDetails from "./admin/pages/Managesubscription/user-details";
+import Refunddetail from "./admin/pages/Managesubscription/refunddetailrequest";
 function App() {
   return (
     //auth routes
@@ -170,6 +173,30 @@ function App() {
           element={
             <AdminLayout>
               <Userdetail />
+            </AdminLayout>
+          }
+        />
+         <Route
+          path="/admin/manage-subscription"
+          element={
+            <AdminLayout>
+              <BillingOverview />
+            </AdminLayout>
+          }
+        />
+         <Route
+          path="/admin/manage-subscription/user-detail"
+          element={
+            <AdminLayout>
+              <UserDetails />
+            </AdminLayout>
+          }
+        />
+         <Route
+          path="/admin/manage-subscription/refund-request"
+          element={
+            <AdminLayout>
+              <Refunddetail />
             </AdminLayout>
           }
         />

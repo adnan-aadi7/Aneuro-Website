@@ -1,48 +1,49 @@
-import { MoreVertical, ArrowDown} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { ArrowDown, MoreVertical } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
 const data = Array(8).fill({
   name: 'Devon Lane',
-  email: 'Devon@gmail.con',
-  category: 'Support',
-  assignedTo: 'Support Agent',
-  date: '06/11/2025',
-  status: 'Resolved',
+  Transactionid: '#53535',
+  AmountPaid: '$200',
+  Subscriptionplan: 'Premium',
+  status: 'Paid',
+  RefundRequest:"Requested"
 });
 
-export default function Support() {
-  const navigate = useNavigate();
-
-  return (
-    <div className='text-white'>
-      <h1 className="text-[32px] font-medium">All Users</h1>
-      <p className="opacity-70 text-[20px]">Let’s make the day productive</p>
-
-      <div
-        className="p-6 mt-6 shadow-md text-white font-inter w-full"
-        style={{
-          backgroundImage: `url('/Frame 2.png')`,
-          backgroundSize: 'cover',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center',
-        }}
-      >
-        <div className="w-full overflow-x-auto">
+const BillingOverview =()=>{
+   const navigate = useNavigate();
+    return(
+       <div className='text-white'>
+            <h1 className="text-[32px] font-medium">Billing Overview</h1>
+            <p className="opacity-70 text-[20px]">Let’s make the day productive</p>
+      
+           <div
+             className="p-6 mt-6 shadow-md text-white font-inter w-full"
+             style={{
+               backgroundImage: `url('/Frame 2.png')`,
+               backgroundSize: 'cover',
+               backgroundRepeat: 'no-repeat',
+               backgroundPosition: 'center',
+             }}
+           >
+     
+              <div className="w-full overflow-x-auto">
           <table className="w-full table-auto border-separate border-spacing-y-2 sm:border-spacing-y-0">
             <thead>
-               <tr className="text-left text-sm font-semibold text-white/70">
+               <tr className="text-left text-sm font-semibold text-white">
                  <th className="py-4 px-6 border-b border-slate-300 whitespace-nowrap">User Name <span className="inline-block "><ArrowDown size={14}/></span></th>
-                 <th className="py-4 px-6 border-b border-slate-300 whitespace-nowrap">Email Address</th>
-                 <th className="py-4 px-6 border-b border-slate-300 whitespace-nowrap">Category</th>
-                 <th className="py-4 px-6 border-b border-slate-300 whitespace-nowrap">Assigned To</th>
-                 <th className="py-4 px-6 border-b border-slate-300 whitespace-nowrap">Submitted On</th>
+                 <th className="py-4 px-6 border-b border-slate-300 whitespace-nowrap">Transaction ID	</th>
+                 <th className="py-4 px-6 border-b border-slate-300 whitespace-nowrap">Amount Paid</th>
+                 <th className="py-4 px-6 border-b border-slate-300 whitespace-nowrap">Subscription Plan </th>
                  <th className="py-4 px-6 border-b border-slate-300 whitespace-nowrap">Status</th>
+                 <th className="py-4 px-6 border-b border-slate-300 whitespace-nowrap">Refund Request</th>
                  <th className="py-4 px-6 border-b border-slate-300 whitespace-nowrap">Action</th>
                </tr>
              </thead>
             <tbody>
   {data.map((ticket, idx) => (
     <tr
-      onClick={() => navigate('/admin/support/feedback/user-detail')}
+      onClick={() => navigate('/admin/manage-subscription/user-detail')}
       key={idx}
       className="text-sm hover:bg-[#222431] transition-colors rounded-lg cursor-pointer"
     >
@@ -55,17 +56,15 @@ export default function Support() {
         {ticket.name}
       </td>
       <td className="py-4 px-6 border-b border-slate-300 ">
-        {ticket.email}
+        {ticket.Transactionid}
       </td>
       <td className="py-4 px-6 border-b border-slate-300 ">
-        {ticket.category}
+        {ticket.AmountPaid}
       </td>
       <td className="py-4 px-6 border-b border-slate-300 ">
-        {ticket.assignedTo}
+        {ticket.Subscriptionplan}
       </td>
-      <td className="py-4 px-6 border-b border-slate-300 ">
-        {ticket.date}
-      </td>
+   
       <td className="py-4 px-6 border-b border-slate-300 ">
         <span
           className={`px-3 py-1 text-xs font-semibold rounded-full 
@@ -76,6 +75,9 @@ export default function Support() {
           {ticket.status}
         </span>
       </td>
+       <td className="py-4 px-6 border-b border-slate-300 ">
+        {ticket.RefundRequest}
+      </td>
       <td className="text-center py-4 px-6 border-b border-slate-300  ">
         <MoreVertical size={16} className="cursor-pointer text-white/70" />
       </td>
@@ -83,11 +85,10 @@ export default function Support() {
   ))}
 </tbody>
 
-          </table>
-        </div>
+            </table>
+            </div>
 
-        {/* Pagination */}
-        <div className="mt-12 flex justify-center items-center gap-2 text-sm">
+             <div className="mt-12 flex justify-center items-center gap-2 text-sm">
           <button className="px-2 py-1 text-white/70">Previous</button>
           {[1, 2, 3].map((page) => (
             <button
@@ -99,7 +100,9 @@ export default function Support() {
           ))}
           <button className="px-2 py-1 text-white/70">Next</button>
         </div>
+           </div>
       </div>
-    </div>
-  );
+    )
 }
+
+export default BillingOverview;

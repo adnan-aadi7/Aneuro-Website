@@ -5,7 +5,7 @@ const Openticket =()=>{
 
     return(
         <div
-            className="py-12 text-white px-8 mt-6 shadow-md text-white font-inter w-full overflow-x-auto"
+            className="py-12 text-white px-4 md:px-8 mt-6 shadow-md text-white font-inter w-full overflow-x-auto"
   style={{
     backgroundImage: ` url('/Group 1000004911.png')`,
     backgroundSize: 'cover',
