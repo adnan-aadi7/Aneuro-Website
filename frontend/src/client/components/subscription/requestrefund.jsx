@@ -25,7 +25,7 @@ const Requestrefund =()=>{
       >
 
         <h1 className="text-[24px] font-medium">Write your message here</h1>
- <div className="p-2 h-[240px] border-2 border-slate-300 text-black dark-quill-container mt-8">
+ <div className="p-2 h-[400px] border-2 border-slate-300 text-black dark-quill-container mt-8">
                <Texteditor/>
             </div>
 
