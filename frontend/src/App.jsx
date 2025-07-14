@@ -27,17 +27,14 @@ import AdminLayout from "./admin/layout/layout";
 import AdminDashboard from "./admin/pages/dashboard/AdminDashboard";
 import Users from "./admin/pages/users/Users";
 import Details from "./admin/pages/users/Details";
-import Subscription from "./client/pages/subsriptionPlan/Subscription";
-import FunnelTemplates from "./client/pages/funnelTemplates/FunnelTemplates";
-import PromptPacks from "./client/pages/promptPacks/PromptPacks";
-import EmailSequence from "./client/pages/emailSequence/EmailSequence";
 import Support from "./admin/pages/support&feedback/Support";
 import Userdetail from "./admin/pages/support&feedback/userdetail";
 import BillingOverview from "./admin/pages/Managesubscription/billingOverview";
 import UserDetails from "./admin/pages/Managesubscription/user-details";
 import Refunddetail from "./admin/pages/Managesubscription/refunddetailrequest";
 import EnterPrizeQuiz from "./client/pages/enterprieQuiz/EnterPrizeQuiz";
-
+import UserRefund from "./client/components/subscription/refund";
+import Requestrefund from "./client/components/subscription/requestrefund";
 function App() {
   return (
     //auth routes
@@ -57,6 +54,22 @@ function App() {
           element={
             <ClientLayout>
               <Dashboard />
+            </ClientLayout>
+          }
+        />
+         <Route
+          path="/client/refund"
+          element={
+            <ClientLayout>
+              <UserRefund />
+            </ClientLayout>
+          }
+        />
+         <Route
+          path="/client/refund/request-refund"
+          element={
+            <ClientLayout>
+              <Requestrefund/>
             </ClientLayout>
           }
         />
