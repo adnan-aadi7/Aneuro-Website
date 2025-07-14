@@ -130,7 +130,6 @@ const Customizations = ({
 
   const [hue, setHue] = useState(180);
   const [saturation, setSaturation] = useState(44);
-  const [lightness, setLightness] = useState(60);
 
   // Update primaryColor when hue or saturation changes
   React.useEffect(() => {
