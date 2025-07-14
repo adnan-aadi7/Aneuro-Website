@@ -3,11 +3,16 @@ import { ChevronDown, Pipette } from "lucide-react";
 
 const CYAN = "#2de0fb";
 
-const Customizations = () => {
-  const [primaryColor, setPrimaryColor] = useState("#2DD1D1");
-  const [secondaryColor, setSecondaryColor] = useState("#FF6B35");
-  const [textColor, setTextColor] = useState("#FFFFFF");
-  const [borderColor, setBorderColor] = useState("#2DD1D1");
+const Customizations = ({
+  primaryColor,
+  setPrimaryColor,
+  secondaryColor,
+  setSecondaryColor,
+  textColor,
+  setTextColor,
+  borderColor,
+  setBorderColor,
+}) => {
   const [showCustomPicker, setShowCustomPicker] = useState(null);
 
   const colorOptions = [
@@ -20,8 +25,8 @@ const Customizations = () => {
   const ColorSection = ({ title, selectedColor, onColorChange, sectionId }) => (
     <div className="mb-1">
       <h3 className="text-gray-300 text-sm mb-0.5">{title}</h3>
-      <div className="flex items-center gap-1 justify-between">
-        <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-1 justify-between">
+        <div className="flex gap-3 flex-wrap justify-start">
           {colorOptions.map((color) => (
             <button
               key={color}
@@ -34,16 +39,30 @@ const Customizations = () => {
               onClick={() => onColorChange(color)}
             >
               {selectedColor === color && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                </div>
+                <span className="absolute top-0 right-0 mt-0.5 mr-0.5">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M5 10.5L9 14.5L15 7.5"
+                      stroke="#fff"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
               )}
             </button>
           ))}
         </div>
-        <div className="relative">
+        <div className="relative w-full sm:w-auto mt-2 sm:mt-0">
           <button
-            className="border border-[#12DCF0] text-gray-300 px-2 py-1 text-sm flex flex-row items-center gap-2 hover:bg-gray-600 transition-colors whitespace-nowrap ml-auto"
+            className="border border-[#12DCF0] text-gray-300 px-2 py-1 ml-0 sm:ml-5 text-sm flex items-center gap-2 hover:bg-gray-600 transition-colors whitespace-nowrap"
             onClick={() =>
               setShowCustomPicker(
                 showCustomPicker === sectionId ? null : sectionId
@@ -54,12 +73,12 @@ const Customizations = () => {
             <ChevronDown className="w-4 h-4" />
           </button>
           {showCustomPicker === sectionId && (
-            <div className="absolute top-full mt-1 left-0 z-10 bg-gray-800 border border-gray-600  p-2 shadow-lg">
+            <div className="absolute top-full mt-1 left-0 z-10 bg-gray-800 border border-gray-600 p-2 shadow-lg w-full max-w-xs sm:w-64 overflow-visible max-w-full">
               <input
                 type="color"
                 value={selectedColor}
                 onChange={(e) => onColorChange(e.target.value)}
-                className="w-32 h-8 rounded border-none cursor-pointer"
+                className="w-full h-8 rounded border-none cursor-pointer"
               />
               <div className="mt-2 text-xs text-gray-400">
                 Click to select a custom color
@@ -113,17 +132,23 @@ const Customizations = () => {
   const [saturation, setSaturation] = useState(44);
   const [lightness, setLightness] = useState(60);
 
+  // Update primaryColor when hue or saturation changes
+  React.useEffect(() => {
+    const hslColor = `hsl(${hue}, ${saturation}%, 50%)`;
+    setPrimaryColor(hslColor);
+  }, [hue, saturation, setPrimaryColor]);
+
   return (
     <div
-      className="w-full mx-auto p-8 bg-[#2A2A39] mt-3"
+      className="w-full mx-auto p-4 md:p-8 bg-[#2A2A39] mt-3 overflow-x-visible max-w-full"
       style={{ boxShadow: `inset 0 0 20px 0 ${CYAN}80` }}
     >
-      <div className=" text-white  font-sans">
+      <div className="text-white font-sans">
         {/* Primary Color Section */}
         <div className="mb-6 border border-gray-600 rounded p-2">
           <h3 className="text-gray-300 text-sm mb-1">Primary button color</h3>
-          <div className="flex items-center gap-32 mb-2">
-            <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-32 mb-2 flex-wrap">
+            <div className="flex gap-3 flex-wrap">
               {colorOptions.map((color) => (
                 <button
                   key={color}
@@ -136,16 +161,30 @@ const Customizations = () => {
                   onClick={() => setPrimaryColor(color)}
                 >
                   {primaryColor === color && (
-                    <div className="absolute inset-0 flex items-center justify-center border">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                    </div>
+                    <span className="absolute top-0 right-0 mt-0.5 mr-0.5">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M5 10.5L9 14.5L15 7.5"
+                          stroke="#fff"
+                          strokeWidth="2.2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </span>
                   )}
                 </button>
               ))}
             </div>
-            <div className="relative w-full">
+            <div className="relative w-full sm:w-auto">
               <button
-                className=" border border-[#12DCF0] text-gray-300 px-2 py-1 ml-5 text-sm flex items-center gap- hover:bg-gray-600 transition-colors "
+                className=" border border-[#12DCF0] text-gray-300 px-2 py-1 ml-0 sm:ml-5 text-sm flex items-center gap-2 hover:bg-gray-600 transition-colors "
                 onClick={() =>
                   setShowCustomPicker(
                     showCustomPicker === "primary" ? null : "primary"
@@ -162,7 +201,7 @@ const Customizations = () => {
                     type="color"
                     value={primaryColor}
                     onChange={(e) => setPrimaryColor(e.target.value)}
-                    className="w-32 h-8 rounded border-none cursor-pointer"
+                    className="w-32 h-8  border-none cursor-pointer"
                   />
                 </div>
               )}
@@ -203,7 +242,7 @@ const Customizations = () => {
         </div>
 
         {/* Secondary Color Section */}
-        <div className="border border-gray-600 rounded p-2 mb-2">
+        <div className="border border-gray-600  p-2 mb-2">
           <ColorSection
             title="Secondary button color"
             selectedColor={secondaryColor}
@@ -213,7 +252,7 @@ const Customizations = () => {
         </div>
 
         {/* Text Color Section */}
-        <div className="border border-gray-600 rounded p-2 mb-2">
+        <div className="border border-gray-600  p-2 mb-2">
           <ColorSection
             title="Text Color"
             selectedColor={textColor}
@@ -223,7 +262,7 @@ const Customizations = () => {
         </div>
 
         {/* Border Color Section */}
-        <div className="border border-gray-600 rounded p-2 mb-2">
+        <div className="border border-gray-600  p-2 mb-2">
           <ColorSection
             title="Border color"
             selectedColor={borderColor}

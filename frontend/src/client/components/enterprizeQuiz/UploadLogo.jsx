@@ -8,7 +8,7 @@ const defaultVariants = [
   { id: 3, src: logo, bg: "bg-[#233136]" },
 ];
 
-const UploadLogo = () => {
+const UploadLogo = ({ setLogo }) => {
   const [selected, setSelected] = useState(1);
   const [uploaded, setUploaded] = useState(null);
 
@@ -18,6 +18,7 @@ const UploadLogo = () => {
       const url = URL.createObjectURL(file);
       setUploaded(url);
       setSelected(4);
+      setLogo(url);
     }
   };
 
@@ -49,7 +50,10 @@ const UploadLogo = () => {
                   ? "border border-[#12DCF0]"
                   : "border border-[#23232b]"
               }`}
-              onClick={() => setSelected(variant.id)}
+              onClick={() => {
+                setSelected(variant.id);
+                setLogo(variant.src);
+              }}
               style={{ cursor: "pointer" }}
             >
               <img
