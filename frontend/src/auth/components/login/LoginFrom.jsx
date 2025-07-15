@@ -1,14 +1,35 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import logo from "../../../assets/auth/logo.png";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function LoginForm() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+
+  // Hardcoded users
+  const users = [
+    {
+      email: "admin@example.com",
+      password: "admin123",
+      role: "admin",
+    },
+    {
+      email: "user@example.com",
+      password: "user123",
+      role: "user",
+    },
+    {
+      email: "enterprize@example.com",
+      password: "user123",
+      role: "enterprize",
+    },
+  ];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -20,7 +41,21 @@ export default function LoginForm() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Login submitted:", formData);
+    setError("");
+    const foundUser = users.find(
+      (u) => u.email === formData.email && u.password === formData.password
+    );
+    if (foundUser) {
+      if (foundUser.role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (foundUser.role === "user") {
+        navigate("/client/dashboard");
+      } else if (foundUser.role === "enterprize") {
+        navigate("/enterprize-quiz");
+      }
+    } else {
+      setError("Invalid email or password");
+    }
   };
 
   return (
@@ -40,6 +75,12 @@ export default function LoginForm() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Error Message */}
+            {error && (
+              <div className="text-red-400 text-xs sm:text-sm text-center mb-2">
+                {error}
+              </div>
+            )}
             {/* Email Field */}
             <div>
               <label className="block text-white text-xs sm:text-sm font-medium mb-2">
