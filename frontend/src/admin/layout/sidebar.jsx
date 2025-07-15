@@ -18,7 +18,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
     { icon: MdOutlineDashboard, label: "Dashboard", to: "/admin/dashboard" },
     { icon: TbUsers, label: "Users", to: "/admin/users" },
     { icon: TbChartBar, label: "Analytics", to: "/admin/analytics" },
-    { icon: TbUserCog, label: "Admin Control", to: "/admin/admin-control" },
+    { icon: TbUserCog, label: "Admin Control", to: "/admin/CMS" },
     {
       icon: TbCurrencyDollar,
       label: "Manage Subscription",

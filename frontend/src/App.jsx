@@ -35,6 +35,7 @@ import Refunddetail from "./admin/pages/Managesubscription/refunddetailrequest";
 import EnterPrizeQuiz from "./client/pages/enterprieQuiz/EnterPrizeQuiz";
 import UserRefund from "./client/components/subscription/refund";
 import Requestrefund from "./client/components/subscription/requestrefund";
+import Admincontrolcenter from "./admin/pages/cms/admincontrolcenter";
 function App() {
   return (
     //auth routes
@@ -233,6 +234,14 @@ function App() {
           element={
             <AdminLayout>
               <Refunddetail />
+            </AdminLayout>
+          }
+        />
+         <Route
+          path="/admin/CMS"
+          element={
+            <AdminLayout>
+              <Admincontrolcenter />
             </AdminLayout>
           }
         />
