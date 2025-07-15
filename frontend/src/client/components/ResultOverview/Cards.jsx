@@ -2,22 +2,15 @@ import React from "react";
 
 // Make sure to import the image
 import Looper3 from "../../../assets/resultOverView/Looper-3.png";
+import VectorIcon from "../../../assets/resultOverView/vector.png";
+import { BsCloudCheck } from "react-icons/bs";
+import { TbGitBranch } from "react-icons/tb";
 
 const cards = [
   {
     type: "highlight",
     icon: (
-      <svg width="32" height="32" fill="none" viewBox="0 0 32 32">
-        <circle cx="16" cy="16" r="16" fill="#12DCF0" fillOpacity="0.2" />
-        <path
-          d="M16 10v6l4 2"
-          stroke="#232432"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <circle cx="16" cy="16" r="7" stroke="#232432" strokeWidth="2" />
-      </svg>
+      <img src={VectorIcon} alt="icon" className="w-9 h-9 object-contain" />
     ),
     title: "Welcome_10off",
     subtitle: "This week's highest performing campaign based on completions.",
@@ -30,25 +23,7 @@ const cards = [
     bgImage: true,
   },
   {
-    icon: (
-      <svg width="32" height="32" fill="none" viewBox="0 0 32 32">
-        <rect
-          x="8"
-          y="8"
-          width="16"
-          height="16"
-          rx="4"
-          fill="#fff"
-          fillOpacity="0.2"
-        />
-        <path
-          d="M12 16h8M16 12v8"
-          stroke="#fff"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-      </svg>
-    ),
+    icon: <TbGitBranch size={32} className="text-white" />,
     title: "Recently Added Tools",
     subtitle: "New tools has been uploaded by Aneuro Admin",
     value: "02",
@@ -57,51 +32,94 @@ const cards = [
   },
   {
     icon: (
-      <svg width="32" height="32" fill="none" viewBox="0 0 32 32">
-        <rect
-          x="8"
-          y="8"
-          width="16"
-          height="16"
-          rx="4"
-          fill="#fff"
-          fillOpacity="0.2"
-        />
-        <path
-          d="M12 16h8"
-          stroke="#fff"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-      </svg>
+      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+        <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+          <path
+            d="M8.5 15.5l7-7"
+            stroke="#fff"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <rect
+            x="2"
+            y="12"
+            width="8"
+            height="8"
+            rx="4"
+            stroke="#fff"
+            strokeWidth="2"
+          />
+          <rect
+            x="14"
+            y="4"
+            width="8"
+            height="8"
+            rx="4"
+            stroke="#fff"
+            strokeWidth="2"
+          />
+        </svg>
+      </div>
     ),
     title: "Quick Access Link",
-    subtitle: "https://aneuro.com/quiz/your-link",
+    subtitle: (
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-[#B0B3C7] break-all">
+          https://aneuro.com/quiz/your-link
+        </span>
+        <button className="p-1 hover:bg-white/10 rounded" title="Copy Link">
+          <svg
+            width="20"
+            height="20"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <rect
+              x="9"
+              y="9"
+              width="13"
+              height="13"
+              rx="2"
+              stroke="#12DCF0"
+              strokeWidth="2"
+            />
+            <rect
+              x="3"
+              y="3"
+              width="13"
+              height="13"
+              rx="2"
+              stroke="#12DCF0"
+              strokeWidth="2"
+            />
+          </svg>
+        </button>
+        <button className="p-1 hover:bg-white/10 rounded" title="Edit Link">
+          <svg
+            width="20"
+            height="20"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              d="M16.862 3.487a2.5 2.5 0 1 1 3.535 3.535l-12.02 12.02a2 2 0 0 1-.708.464l-4.243 1.415 1.415-4.243a2 2 0 0 1 .464-.708l12.02-12.02z"
+              stroke="#12DCF0"
+              strokeWidth="2"
+            />
+          </svg>
+        </button>
+      </div>
+    ),
     value: 78,
     valueLabel: "Copied",
     week: "↑ Week 1",
-    actions: true,
+    actions: false, // actions handled in subtitle now
+    custom: true, // flag for custom rendering if needed
   },
   {
-    icon: (
-      <svg width="32" height="32" fill="none" viewBox="0 0 32 32">
-        <rect
-          x="8"
-          y="8"
-          width="16"
-          height="16"
-          rx="4"
-          fill="#fff"
-          fillOpacity="0.2"
-        />
-        <path
-          d="M16 12v8"
-          stroke="#fff"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-      </svg>
-    ),
+    icon: <BsCloudCheck size={32} className="text-white" />,
     title: "Reflective Thinkers",
     subtitle: "Want to follow up with them while engagement is high?",
     value: null,
@@ -143,7 +161,12 @@ const Cards = () => {
           <div className="z-10">
             <div className="flex items-center gap-2 mb-2">{card.icon}</div>
             <div className="text-lg font-semibold mb-1">{card.title}</div>
-            <div className="text-xs mb-3 opacity-80">{card.subtitle}</div>
+            {/* Custom subtitle for 3rd card */}
+            {card.custom ? (
+              <div className="mb-3">{card.subtitle}</div>
+            ) : (
+              <div className="text-xs mb-3 opacity-80">{card.subtitle}</div>
+            )}
           </div>
           <div className="z-10 flex items-end justify-between w-full">
             {card.value !== null && (
@@ -157,11 +180,12 @@ const Cards = () => {
               </div>
             )}
             {card.button && (
-              <button className="bg-[#12DCF0] text-[#232432] font-semibold px-3 py-1 rounded">
+              <button className="bg-[#12DCF0] text-[#232432] font-semibold px-3 py-2 text-sm ">
                 {card.button}
               </button>
             )}
-            {card.actions && (
+            {/* Remove actions for 3rd card, handled in subtitle */}
+            {card.actions && !card.custom && (
               <div className="flex gap-2 ml-2">
                 <button className="p-1 hover:bg-white/10 rounded">
                   <svg width="16" height="16" fill="none" viewBox="0 0 16 16">

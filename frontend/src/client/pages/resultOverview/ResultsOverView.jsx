@@ -8,7 +8,7 @@ const ResultsOverView = () => {
   return (
     <>
       <QuizOverview />
-      <div className="p-2 md:p-5 bg-[#2A2A39] mt-5 rounded-lg">
+      <div className="p-2 md:p-5 bg-[#2A2A39] mt-5">
         <Cards />
         <BrainTypesAnalysis />
         <QuizPerformance />
