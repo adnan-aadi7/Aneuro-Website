@@ -27,7 +27,15 @@ import AdminLayout from "./admin/layout/layout";
 import AdminDashboard from "./admin/pages/dashboard/AdminDashboard";
 import Users from "./admin/pages/users/Users";
 import Details from "./admin/pages/users/Details";
+import Support from "./admin/pages/support&feedback/Support";
+import Userdetail from "./admin/pages/support&feedback/userdetail";
+import BillingOverview from "./admin/pages/Managesubscription/billingOverview";
+import UserDetails from "./admin/pages/Managesubscription/user-details";
+import Refunddetail from "./admin/pages/Managesubscription/refunddetailrequest";
 import EnterPrizeQuiz from "./client/pages/enterprieQuiz/EnterPrizeQuiz";
+import UserRefund from "./client/components/subscription/refund";
+import Requestrefund from "./client/components/subscription/requestrefund";
+import Admincontrolcenter from "./admin/pages/cms/admincontrolcenter";
 import Settings from "./client/pages/settings/Settings";
 import Notifications from "./client/components/notification/Notifications";
 
@@ -50,6 +58,22 @@ function App() {
           element={
             <ClientLayout>
               <Dashboard />
+            </ClientLayout>
+          }
+        />
+         <Route
+          path="/client/refund"
+          element={
+            <ClientLayout>
+              <UserRefund />
+            </ClientLayout>
+          }
+        />
+         <Route
+          path="/client/refund/request-refund"
+          element={
+            <ClientLayout>
+              <Requestrefund/>
             </ClientLayout>
           }
         />
@@ -189,6 +213,54 @@ function App() {
           element={
             <AdminLayout>
               <Details />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/support/feedback"
+          element={
+            <AdminLayout>
+              <Support />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/support/feedback/user-detail"
+          element={
+            <AdminLayout>
+              <Userdetail />
+            </AdminLayout>
+          }
+        />
+         <Route
+          path="/admin/manage-subscription"
+          element={
+            <AdminLayout>
+              <BillingOverview />
+            </AdminLayout>
+          }
+        />
+         <Route
+          path="/admin/manage-subscription/user-detail"
+          element={
+            <AdminLayout>
+              <UserDetails />
+            </AdminLayout>
+          }
+        />
+         <Route
+          path="/admin/manage-subscription/refund-request"
+          element={
+            <AdminLayout>
+              <Refunddetail />
+            </AdminLayout>
+          }
+        />
+         <Route
+          path="/admin/CMS"
+          element={
+            <AdminLayout>
+              <Admincontrolcenter />
             </AdminLayout>
           }
         />

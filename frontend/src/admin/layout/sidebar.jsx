@@ -18,13 +18,13 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
     { icon: MdOutlineDashboard, label: "Dashboard", to: "/admin/dashboard" },
     { icon: TbUsers, label: "Users", to: "/admin/users" },
     { icon: TbChartBar, label: "Analytics", to: "/admin/analytics" },
-    { icon: TbUserCog, label: "Admin Control", to: "/admin/admin-control" },
+    { icon: TbUserCog, label: "Admin Control", to: "/admin/CMS" },
     {
       icon: TbCurrencyDollar,
       label: "Manage Subscription",
       to: "/admin/manage-subscription",
     },
-    { icon: TbHeadset, label: "Support Center", to: "/admin/support-center" },
+    { icon: TbHeadset, label: "Support Center", to: "/admin/support/feedback" },
     { icon: TbMessage2, label: "Leave Feedback", to: "/admin/leave-feedback" },
     // Client View toggle will be handled separately below
   ];
