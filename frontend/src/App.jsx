@@ -36,6 +36,9 @@ import EnterPrizeQuiz from "./client/pages/enterprieQuiz/EnterPrizeQuiz";
 import UserRefund from "./client/components/subscription/refund";
 import Requestrefund from "./client/components/subscription/requestrefund";
 import Admincontrolcenter from "./admin/pages/cms/admincontrolcenter";
+import Settings from "./client/pages/settings/Settings";
+import Notifications from "./client/components/notification/Notifications";
+
 function App() {
   return (
     //auth routes
@@ -168,6 +171,22 @@ function App() {
           element={
             <ClientLayout>
               <EnterPrizeQuiz />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/client-settings"
+          element={
+            <ClientLayout>
+              <Settings />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/client-notifications"
+          element={
+            <ClientLayout>
+              <Notifications />
             </ClientLayout>
           }
         />
