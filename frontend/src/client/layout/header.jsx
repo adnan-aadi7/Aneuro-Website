@@ -7,7 +7,7 @@ const Header = ({ onHamburgerClick }) => {
   const navigate = useNavigate();
   const isDashboard = location.pathname === "/client/dashboard";
   return (
-    <header className="bg-[#16161C] text-white lg:px-6 py-5 flex items-center justify-between">
+    <header className="bg-[#16161C] text-white lg:px-6 px-2 py-5 flex items-center justify-between">
       {/* Left side - Hamburger (mobile) and Back button */}
       <div className="flex items-center">
         {/* Hamburger menu for mobile */}
@@ -50,7 +50,10 @@ const Header = ({ onHamburgerClick }) => {
         </button>
 
         {/* Notification Bell with badge */}
-        <button className="p-2 lg:p-3 transition-colors relative border border-gray-400 hover:bg-gray-700 cursor-pointer">
+        <button
+          className="p-2 lg:p-3 transition-colors relative border border-gray-400 hover:bg-gray-700 cursor-pointer"
+          onClick={() => navigate("/client-notifications")}
+        >
           <Bell className="text-gray-300 w-4 h-4 lg:w-5 lg:h-5" />
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center ">
             1

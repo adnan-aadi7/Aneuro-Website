@@ -28,6 +28,8 @@ import AdminDashboard from "./admin/pages/dashboard/AdminDashboard";
 import Users from "./admin/pages/users/Users";
 import Details from "./admin/pages/users/Details";
 import EnterPrizeQuiz from "./client/pages/enterprieQuiz/EnterPrizeQuiz";
+import Settings from "./client/pages/settings/Settings";
+import Notifications from "./client/components/notification/Notifications";
 
 function App() {
   return (
@@ -145,6 +147,22 @@ function App() {
           element={
             <ClientLayout>
               <EnterPrizeQuiz />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/client-settings"
+          element={
+            <ClientLayout>
+              <Settings />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/client-notifications"
+          element={
+            <ClientLayout>
+              <Notifications />
             </ClientLayout>
           }
         />

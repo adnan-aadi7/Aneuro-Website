@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import logo from "../../../assets/auth/logo.png";
+import { useNavigate } from "react-router-dom";
 
 export default function Form() {
   const [formData, setFormData] = useState({
@@ -12,6 +13,7 @@ export default function Form() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -24,6 +26,7 @@ export default function Form() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Form submitted:", formData);
+    navigate("/plan");
   };
 
   return (
@@ -42,97 +45,99 @@ export default function Form() {
             Enter details to create your account
           </p>
 
-          <div className="space-y-3">
-            {/* Name Field */}
-            <div>
-              <label className="block text-white text-sm font-medium mb-2">
-                Your Name
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                placeholder="Enter your name"
-                className="w-full px-4 py-3  border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
-              />
-            </div>
-
-            {/* Email Field */}
-            <div>
-              <label className="block text-white text-sm font-medium mb-2">
-                E-mail or Phone Number
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                placeholder="Enter your email"
-                className="w-full px-4 py-3  border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
-              />
-            </div>
-
-            {/* Password Field */}
-            <div>
-              <label className="block text-white text-sm font-medium mb-2">
-                Password
-              </label>
-              <div className="relative">
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-3">
+              {/* Name Field */}
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">
+                  Your Name
+                </label>
                 <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={formData.password}
+                  type="text"
+                  name="name"
+                  value={formData.name}
                   onChange={handleInputChange}
-                  placeholder="Enter your password"
-                  className="w-full px-4 py-3  border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent pr-12"
+                  placeholder="Enter your name"
+                  className="w-full px-4 py-3  border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
               </div>
-            </div>
 
-            {/* Confirm Password Field */}
-            <div>
-              <label className="block text-white text-sm font-medium mb-2">
-                Confirm Password
-              </label>
-              <div className="relative">
+              {/* Email Field */}
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">
+                  E-mail or Phone Number
+                </label>
                 <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
+                  type="email"
+                  name="email"
+                  value={formData.email}
                   onChange={handleInputChange}
-                  placeholder="Enter your password"
-                  className="w-full px-4 py-3  border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent pr-12"
+                  placeholder="Enter your email"
+                  className="w-full px-4 py-3  border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff size={20} />
-                  ) : (
-                    <Eye size={20} />
-                  )}
-                </button>
               </div>
-            </div>
 
-            {/* Sign Up Button */}
-            <button
-              onClick={handleSubmit}
-              className="w-full bg-cyan-400 text-gray-900 py-3 rounded-md font-semibold hover:bg-cyan-300 transition-colors"
-            >
-              Sign up
-            </button>
-          </div>
+              {/* Password Field */}
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    placeholder="Enter your password"
+                    className="w-full px-4 py-3  border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent pr-12"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm Password Field */}
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    placeholder="Enter your password"
+                    className="w-full px-4 py-3  border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent pr-12"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff size={20} />
+                    ) : (
+                      <Eye size={20} />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Sign Up Button */}
+              <button
+                type="submit"
+                className="w-full bg-cyan-400 text-gray-900 py-3 rounded-md font-semibold hover:bg-cyan-300 transition-colors"
+              >
+                Sign up
+              </button>
+            </div>
+          </form>
 
           {/* Divider */}
           <div className="flex items-center my-6">
