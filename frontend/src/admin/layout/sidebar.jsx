@@ -38,7 +38,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
     <>
       {/* Overlay for mobile */}
       <div
-        className={`fixed inset-0 z-40 transition-opacity duration-300 lg:hidden ${
+        className={`fixed inset-0 overflow-y-auto z-40 transition-opacity duration-300 lg:hidden ${
           sidebarOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
@@ -47,7 +47,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
       />
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-screen w-64 bg-[#16161C] text-white flex flex-col  z-50 shadow-md transform transition-transform duration-300
+        className={`fixed overflow-y-auto top-0 left-0 w-64 bg-[#16161C] text-white flex flex-col  z-50 shadow-md transform transition-transform duration-300
         ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0 lg:static lg:shadow-none overflow-y-auto lg:overflow-visible`}
@@ -74,10 +74,17 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
         </button>
         {/* Logo */}
         <div className="  flex flex-col items-center ">
-          <img src={logo} alt="Logo" className="w-[162px] h-[162px] " />
+          <img src={logo} alt="Logo" className="w-[162px]  " />
         </div>
         {/* Navigation */}
-        <nav className="flex flex-col gap-4 flex-1 px-4">
+<div
+  style={{
+    overflowY: 'auto',
+    scrollbarWidth: 'none', // Firefox
+    msOverflowStyle: 'none', // IE and Edge
+  }}
+  className="custom-scroll"
+>        <nav className="flex flex-col gap-4 flex-1 px-4 ">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -101,7 +108,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
           <ClientViewToggle />
         </nav>
         {/* Bottom Menu */}
-        <div className=" py-4 px-5 mt-15">
+        <div className=" py-4 px-5 mt-6">
           {bottomItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -121,6 +128,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
               </NavLink>
             );
           })}
+        </div>
         </div>
       </aside>
       {/* Vertical line on the right side, only for large screens */}

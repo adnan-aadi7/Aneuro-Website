@@ -84,6 +84,14 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
           <img src={logo} alt="Logo" className="w-[162px] h-[162px] " />
         </div>
         {/* Navigation */}
+        <div
+  style={{
+    overflowY: 'auto',
+    scrollbarWidth: 'none', // Firefox
+    msOverflowStyle: 'none', // IE and Edge
+  }}
+  className="custom-scroll"
+>  
         <nav className="flex flex-col gap-4 flex-1 px-4">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -106,7 +114,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
           })}
         </nav>
         {/* Bottom Menu */}
-        <div className=" py-4 px-4 mt-15">
+        <div className=" py-4 px-4 mt-6">
           {bottomItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -126,6 +134,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
               </NavLink>
             );
           })}
+        </div>
         </div>
       </aside>
       {/* Vertical line on the right side, only for large screens */}
