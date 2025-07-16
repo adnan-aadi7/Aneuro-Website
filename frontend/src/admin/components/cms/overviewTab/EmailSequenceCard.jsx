@@ -1,7 +1,10 @@
 // import { useState } from "react";
 import { Upload, Mail, Settings, Crown, Gem } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function EmailSequenceCard() {
+  const navigate = useNavigate();
+
   const handleFileUpload = () => {
     // handle files
   };
@@ -30,6 +33,12 @@ export default function EmailSequenceCard() {
     console.log("Upload Email Sequences clicked");
   };
 
+  const handleManualEmailChange = (e) => {
+    if (e.target.checked) {
+      navigate("/admin/mannual-email");
+    }
+  };
+
   return (
     <div className="bg-[#1F2937]  p-6 w-full mx-auto">
       {/* Header */}
@@ -53,6 +62,7 @@ export default function EmailSequenceCard() {
           type="checkbox"
           id="manual-email-toggle"
           className="w-5 h-5 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+          onChange={handleManualEmailChange}
         />
       </div>
 

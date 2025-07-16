@@ -40,6 +40,12 @@ import Refunddetail from "./admin/pages/Managesubscription/refunddetailrequest";
 import Admincontrolcenter from "./admin/pages/cms/adminControlCenter/admincontrolcenter";
 import AddEmailManuall from "./admin/pages/cms/addEmailManullay/AddEmailManuall";
 import Settingtabs from "./admin/pages/settings/setting";
+import AddPromptMannual from "./admin/pages/cms/addPromptMannually/AddPromptMannual";
+import Analytics from "./admin/pages/analyticsOverview/Analytics";
+import EmailStatsDetails from "./admin/pages/analyticsOverview/EmailStatsDetails";
+import PromptStatsDetails from "./admin/pages/analyticsOverview/PromptStatsDetails";
+import FunnelStatsDetails from "./admin/pages/analyticsOverview/FunnelStatsDetails";
+
 function App() {
   return (
     //auth routes
@@ -218,6 +224,38 @@ function App() {
           }
         />
         <Route
+          path="/admin/analytics"
+          element={
+            <AdminLayout>
+              <Analytics />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/analytics/email-details"
+          element={
+            <AdminLayout>
+              <EmailStatsDetails />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/analytics/prompts-details"
+          element={
+            <AdminLayout>
+              <PromptStatsDetails />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/analytics/funnel-details"
+          element={
+            <AdminLayout>
+              <FunnelStatsDetails />
+            </AdminLayout>
+          }
+        />
+        <Route
           path="/admin/support/feedback"
           element={
             <AdminLayout>
@@ -270,6 +308,14 @@ function App() {
           element={
             <AdminLayout>
               <AddEmailManuall />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/mannual-prompt"
+          element={
+            <AdminLayout>
+              <AddPromptMannual />
             </AdminLayout>
           }
         />
