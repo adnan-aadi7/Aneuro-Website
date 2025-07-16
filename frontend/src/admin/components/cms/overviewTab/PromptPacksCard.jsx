@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Upload } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function PromptPacksCard() {
   const [isDragOver, setIsDragOver] = useState(false);
+  const navigate = useNavigate();
 
   const handleFileUpload = () => {
     // handle files
@@ -22,6 +24,12 @@ export default function PromptPacksCard() {
     e.preventDefault();
     setIsDragOver(false);
     // handle files
+  };
+
+  const handleManualPromptChange = (e) => {
+    if (e.target.checked) {
+      navigate("/admin/mannual-prompt");
+    }
   };
 
   return (
@@ -47,6 +55,7 @@ export default function PromptPacksCard() {
         <input
           type="checkbox"
           className="w-5 h-5 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+          onChange={handleManualPromptChange}
         />
       </div>
 

@@ -1,9 +1,12 @@
-import React from 'react'
+import React from "react";
+import AddEmailMannually from "../../../components/cms/overviewTab/AddEmailMannually";
 
 const AddEmailManuall = () => {
   return (
-    <div>AddEmailManuall</div>
-  )
-}
+    <>
+      <AddEmailMannually />
+    </>
+  );
+};
 
-export default AddEmailManuall
+export default AddEmailManuall;
