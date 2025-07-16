@@ -25,7 +25,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
       to: "/admin/manage-subscription",
     },
     { icon: TbHeadset, label: "Support Center", to: "/admin/support/feedback" },
-    { icon: TbMessage2, label: "Leave Feedback", to: "/admin/leave-feedback" },
+   // { icon: TbMessage2, label: "Leave Feedback", to: "/admin/leave-feedback" },
     // Client View toggle will be handled separately below
   ];
 

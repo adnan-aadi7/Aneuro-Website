@@ -63,7 +63,7 @@ function App() {
           }
         />
         <Route
-          path="/client/refund"
+          path="/client/manage-subscription"
           element={
             <ClientLayout>
               <UserRefund />
@@ -136,7 +136,7 @@ function App() {
         />
 
         <Route
-          path="/manage-subscription"
+          path="/client/manage-subscription/subscriptions"
           element={
             <ClientLayout>
               <Subscription />
