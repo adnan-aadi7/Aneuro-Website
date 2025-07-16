@@ -21,6 +21,11 @@ import FunnelTemplates from "./client/pages/funnelTemplates/FunnelTemplates";
 import PromptPacks from "./client/pages/promptPacks/PromptPacks";
 import EmailSequence from "./client/pages/emailSequence/EmailSequence";
 import BillingView from "./client/pages/subsriptionPlan/BillingView";
+import EnterPrizeQuiz from "./client/pages/enterprieQuiz/EnterPrizeQuiz";
+import UserRefund from "./client/components/subscription/refund";
+import Requestrefund from "./client/components/subscription/requestrefund";
+import Settings from "./client/pages/settings/Settings";
+import Notifications from "./client/components/notification/Notifications";
 
 // admin
 import AdminLayout from "./admin/layout/layout";
@@ -32,12 +37,8 @@ import Userdetail from "./admin/pages/support&feedback/userdetail";
 import BillingOverview from "./admin/pages/Managesubscription/billingOverview";
 import UserDetails from "./admin/pages/Managesubscription/user-details";
 import Refunddetail from "./admin/pages/Managesubscription/refunddetailrequest";
-import EnterPrizeQuiz from "./client/pages/enterprieQuiz/EnterPrizeQuiz";
-import UserRefund from "./client/components/subscription/refund";
-import Requestrefund from "./client/components/subscription/requestrefund";
-import Admincontrolcenter from "./admin/pages/cms/admincontrolcenter";
-import Settings from "./client/pages/settings/Settings";
-import Notifications from "./client/components/notification/Notifications";
+import Admincontrolcenter from "./admin/pages/cms/adminControlCenter/admincontrolcenter";
+import AddEmailManuall from "./admin/pages/cms/addEmailManullay/AddEmailManuall";
 
 function App() {
   return (
@@ -61,7 +62,7 @@ function App() {
             </ClientLayout>
           }
         />
-         <Route
+        <Route
           path="/client/refund"
           element={
             <ClientLayout>
@@ -69,11 +70,11 @@ function App() {
             </ClientLayout>
           }
         />
-         <Route
+        <Route
           path="/client/refund/request-refund"
           element={
             <ClientLayout>
-              <Requestrefund/>
+              <Requestrefund />
             </ClientLayout>
           }
         />
@@ -232,7 +233,7 @@ function App() {
             </AdminLayout>
           }
         />
-         <Route
+        <Route
           path="/admin/manage-subscription"
           element={
             <AdminLayout>
@@ -240,7 +241,7 @@ function App() {
             </AdminLayout>
           }
         />
-         <Route
+        <Route
           path="/admin/manage-subscription/user-detail"
           element={
             <AdminLayout>
@@ -248,7 +249,7 @@ function App() {
             </AdminLayout>
           }
         />
-         <Route
+        <Route
           path="/admin/manage-subscription/refund-request"
           element={
             <AdminLayout>
@@ -256,11 +257,19 @@ function App() {
             </AdminLayout>
           }
         />
-         <Route
+        <Route
           path="/admin/CMS"
           element={
             <AdminLayout>
               <Admincontrolcenter />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/mannual-email"
+          element={
+            <AdminLayout>
+              <AddEmailManuall />
             </AdminLayout>
           }
         />
