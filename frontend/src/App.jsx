@@ -39,7 +39,7 @@ import UserDetails from "./admin/pages/Managesubscription/user-details";
 import Refunddetail from "./admin/pages/Managesubscription/refunddetailrequest";
 import Admincontrolcenter from "./admin/pages/cms/adminControlCenter/admincontrolcenter";
 import AddEmailManuall from "./admin/pages/cms/addEmailManullay/AddEmailManuall";
-
+import Settingtabs from "./admin/pages/settings/setting";
 function App() {
   return (
     //auth routes
@@ -270,6 +270,14 @@ function App() {
           element={
             <AdminLayout>
               <AddEmailManuall />
+            </AdminLayout>
+          }
+        />
+         <Route
+          path="/admin/Settings"
+          element={
+            <AdminLayout>
+              <Settingtabs />
             </AdminLayout>
           }
         />
