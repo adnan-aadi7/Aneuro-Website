@@ -31,7 +31,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
 
   const bottomItems = [
     { icon: CiSettings, label: "Setting", to: "/admin/settings" },
-    { icon: FiLogOut, label: "Logout", to: "/admin/logout" },
+    { icon: FiLogOut, label: "Logout", to: "/" },
   ];
 
   return (
@@ -117,10 +117,10 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
                 key={item.label}
                 to={item.to}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-3 font-medium text-[15px] transition-all border-r-2 ${
+                 `flex items-center gap-3 px-4 py-3 font-medium text-[15px] transition-all border-l-7 ${
                     isActive
-                      ? "bg-teal-500/20 text-teal-400 border-teal-400 shadow rounded-full"
-                      : "text-gray-400 border-transparent hover:text-gray-300 hover:bg-gray-800/50 rounded-2xl"
+                      ? "bg-teal-500/20 text-teal-400 border-teal-400 shadow "
+                      : "text-gray-400 border-transparent hover:text-gray-300 hover:bg-gray-800/50 "
                   }`
                 }
               >
