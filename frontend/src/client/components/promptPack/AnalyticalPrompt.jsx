@@ -19,7 +19,7 @@ export default function AnalyticalPrompts() {
   return (
     <div className=" bg-[#303041] text-white mt-10">
       {/* Header */}
-      <div className="p-3 lg:p-8">
+      <div className="p-2 lg:p-8">
         <h1 className="text-xl font-medium mb-6">
           Analytical Brain Type Prompts
         </h1>

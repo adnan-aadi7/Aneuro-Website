@@ -5,17 +5,17 @@ import { useNavigate } from "react-router-dom";
 const EmailSequencesStats = () => {
   const navigate = useNavigate();
   return (
-    <div className="p-6">
+    <div className="lg:p-6 p-2">
       {/* Header Row */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Mail className="w-7 h-7 text-white" />
-          <h2 className="text-white text-2xl font-semibold">
+          <h2 className="text-white lg:text-2xl text-lg font-semibold">
             Email Sequences Analytics
           </h2>
         </div>
         <button
-          className="bg-cyan-400 text-black font-medium px-6 py-2 rounded hover:bg-cyan-300 transition-all text-sm"
+          className="bg-cyan-400 text-black font-medium lg:px-6 py-2 px-2 rounded hover:bg-cyan-300 transition-all text-sm"
           onClick={() => navigate("/admin/analytics/email-details")}
         >
           View Details

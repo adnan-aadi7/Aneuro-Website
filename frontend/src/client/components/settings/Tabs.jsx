@@ -13,7 +13,7 @@ export default function Tabs() {
 
   return (
     <div className=" text-white">
-      <div className=" px-5 py-4">
+      <div className=" lg:px-5 py-4">
         {/* Header */}
         <div className="mb-5">
           <h1 className="text-4xl font-normal text-white mb-5">Settings</h1>

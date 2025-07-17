@@ -5,7 +5,7 @@ import DetailsChart from "../../components/analyticsOverview/details/DetailsChar
 
 const QuizDetials = () => {
   return (
-    <div className="bg-[#2A2A39] p-8 w-full min-h-screen">
+    <div className="bg-[#2A2A39] lg:p-8 p-2 w-full min-h-screen">
       <HeaderQuizDetails />
       <Cards />
       <DetailsChart />

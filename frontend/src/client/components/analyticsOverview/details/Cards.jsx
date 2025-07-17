@@ -18,7 +18,7 @@ const Cards = () => (
   <div className="flex flex-col md:flex-row gap-8 w-full mt-6">
     {/* User Info Card */}
     <div
-      className="flex-1 min-w-[240px] max-w-xs p-7 flex flex-col justify-between h-[220px]"
+      className="flex-1 min-w-[240px] md:max-w-xs w-full p-7 flex flex-col justify-between h-[220px]"
       style={{
         background: "linear-gradient(135deg, #2A2A39 60%, #12DCF0 300%)",
       }}
@@ -48,7 +48,7 @@ const Cards = () => (
     </div>
     {/* Dominant Brain Type Card */}
     <div
-      className="flex-1 min-w-[240px] max-w-xs bg-[#04D396]  p-7 flex flex-col justify-between h-[220px] relative overflow-hidden"
+      className="flex-1 min-w-[240px] md:max-w-xs w-full bg-[#04D396]  p-7 flex flex-col justify-between h-[220px] relative overflow-hidden"
       style={{
         backgroundImage: `url(${Looper3})`,
         backgroundSize: "cover",
@@ -80,7 +80,7 @@ const Cards = () => (
     </div>
     {/* Brain Percentage Card */}
     <div
-      className="flex-1 min-w-[240px] max-w-xs p-7 flex flex-col justify-between h-[220px]"
+      className="flex-1 min-w-[240px] md:max-w-xs w-full p-7 flex flex-col justify-between h-[220px]"
       style={{
         background: "linear-gradient(135deg, #2A2A39 60%, #12DCF0 300%)",
       }}

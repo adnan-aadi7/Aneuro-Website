@@ -5,7 +5,7 @@ export default function AnalyticalBrainEmail() {
   return (
     <div className="min-h-screen bg-[#303041] text-white">
       {/* Header */}
-      <div className="p-6">
+      <div className="lg:p-6 p-2">
         <h1 className="text-2xl font-semibold mb-6">Analytical Brain Type</h1>
 
         {/* Dropdown */}
@@ -21,7 +21,7 @@ export default function AnalyticalBrainEmail() {
       </div>
 
       {/* Email Templates Section */}
-      <div className="p-6">
+      <div className="lg:p-6 p-2">
         <h2 className="text-xl font-semibold mb-6">Email Templates</h2>
 
         {/* Email Template 1 */}
