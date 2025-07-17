@@ -51,7 +51,7 @@ export default function ProfileSettigs() {
   };
 
   return (
-    <div className="  p-6">
+    <div className="  lg:p-6 p-2">
       <div className="w-full">
         {/* Profile Avatar */}
         <div className="mb-8">

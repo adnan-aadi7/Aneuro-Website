@@ -17,7 +17,7 @@ export default function GeneralSettings() {
   };
 
   return (
-    <div className="  p-6 text-white">
+    <div className="  lg:p-6 p-2 text-white">
       <div className="w-full mx-auto">
         <h1 className="text-2xl font-semibold mb-8">Notifications</h1>
         <div className="space-y-6">

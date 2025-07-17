@@ -77,7 +77,7 @@ const SubscriptionPlan = () => {
   const navigate = useNavigate();
 
   return (
-    <div className=" flex flex-col items-center justify-center py-8 px-2">
+    <div className=" flex flex-col items-center justify-center py-8 lg:px-2">
       {/* Popup */}
       {showPopup && <SelectPlanPopup onClose={() => setShowPopup(false)} />}
       {/* Main content hidden when popup is open */}
@@ -129,7 +129,7 @@ const SubscriptionPlan = () => {
                     key={plan.name}
                     className="flex flex-col items-center py-4 md:py-8"
                   >
-                    <h3 className="text-white text-lg md:text-2xl font-bold mb-1 md:mb-2 tracking-wide text-center">
+                    <h3 className="text-white text-sm lg:text-2xl font-bold mb-1 md:mb-2 tracking-wide text-center">
                       {plan.name}
                     </h3>
                     <div
@@ -137,7 +137,7 @@ const SubscriptionPlan = () => {
                       style={{ background: CYAN }}
                     />
                     <div className="flex items-end justify-center mb-0">
-                      <span className="text-3xl md:text-5xl font-bold text-white leading-none">
+                      <span className="lg:text-3xl text-lg md:text-5xl font-bold text-white leading-none">
                         {plan.price}
                       </span>
                       <span className="text-base md:text-xl font-bold ml-1 mb-1 text-gray-200">
