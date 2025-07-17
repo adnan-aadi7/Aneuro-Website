@@ -47,7 +47,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
       />
       {/* Sidebar */}
       <aside
-  className={`sticky overflow-y-auto top-0 left-0 w-64 bg-[#16161C] text-white flex flex-col z-[90] lg:z-50 shadow-md transform transition-transform duration-300
+  className={`fixed overflow-y-auto top-0 left-0 w-64 bg-[#16161C] text-white flex flex-col z-[90] lg:z-50 shadow-md transform transition-transform duration-300
     ${
       sidebarOpen ? "translate-x-0" : "-translate-x-full"
     } lg:translate-x-0 lg:static lg:shadow-none`}
@@ -93,7 +93,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
                 key={item.label}
                 to={item.to}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 font-medium text-[15px] transition-all border-l-7 font-jakarta ${
+                  `flex items-center gap-3 px-4 py-3 font-medium text-[15px] transition-all border-l-7 ${
                     isActive
                       ? "bg-teal-500/20 text-teal-400 border-teal-400 shadow "
                       : "text-gray-400 border-transparent hover:text-gray-300 hover:bg-gray-800/50 "
