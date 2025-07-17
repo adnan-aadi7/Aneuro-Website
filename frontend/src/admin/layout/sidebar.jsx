@@ -47,7 +47,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
       />
       {/* Sidebar */}
       <aside
-  className={`fixed overflow-y-auto top-0 left-0 w-64 bg-[#16161C] text-white flex flex-col z-[90] lg:z-50 shadow-md transform transition-transform duration-300
+  className={`sticky overflow-y-auto top-0 left-0 w-64 bg-[#16161C] text-white flex flex-col z-[90] lg:z-50 shadow-md transform transition-transform duration-300
     ${
       sidebarOpen ? "translate-x-0" : "-translate-x-full"
     } lg:translate-x-0 lg:static lg:shadow-none`}

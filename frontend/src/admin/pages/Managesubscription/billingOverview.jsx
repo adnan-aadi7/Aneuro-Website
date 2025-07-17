@@ -14,7 +14,7 @@ const BillingOverview =()=>{
    const navigate = useNavigate();
     return(
        <div className='text-white'>
-            <h1 className="text-[32px] font-medium font-jakarta" >Billing Overview</h1>
+            <h1 className="text-[32px] font-medium font-dmsans" >Billing Overview</h1>
             <p className="opacity-70 text-[20px]">Let’s make the day productive</p>
       
            <div
@@ -30,14 +30,14 @@ const BillingOverview =()=>{
               <div className="w-full overflow-x-auto">
           <table className="w-full table-auto border-separate border-spacing-y-2 sm:border-spacing-y-0">
             <thead>
-               <tr className="text-left text-sm font-semibold text-white">
-                 <th className="py-4 px-6 border-b border-slate-300 whitespace-nowrap">User Name <span className="inline-block "><ArrowDown size={14}/></span></th>
-                 <th className="py-4 px-6 border-b border-slate-300 whitespace-nowrap">Transaction ID	</th>
-                 <th className="py-4 px-6 border-b border-slate-300 whitespace-nowrap">Amount Paid</th>
-                 <th className="py-4 px-6 border-b border-slate-300 whitespace-nowrap">Subscription Plan </th>
-                 <th className="py-4 px-6 border-b border-slate-300 whitespace-nowrap">Status</th>
-                 <th className="py-4 px-6 border-b border-slate-300 whitespace-nowrap">Refund Request</th>
-                 <th className="py-4 px-6 border-b border-slate-300 whitespace-nowrap">Action</th>
+               <tr className="text-left text-sm font-semibold text-white ">
+                 <th className="font-dmsans py-4 px-6 border-b border-slate-300 whitespace-nowrap">User Name <span className="inline-block "><ArrowDown size={14}/></span></th>
+                 <th className="font-dmsans py-4 px-6 border-b border-slate-300 whitespace-nowrap">Transaction ID	</th>
+                 <th className="font-dmsans py-4 px-6 border-b border-slate-300 whitespace-nowrap">Amount Paid</th>
+                 <th className="font-dmsans py-4 px-6 border-b border-slate-300 whitespace-nowrap">Subscription Plan </th>
+                 <th className="font-dmsans py-4 px-6 border-b border-slate-300 whitespace-nowrap">Status</th>
+                 <th className="font-dmsans py-4 px-6 border-b border-slate-300 whitespace-nowrap">Refund Request</th>
+                 <th className="font-dmsans py-4 px-6 border-b border-slate-300 whitespace-nowrap">Action</th>
                </tr>
              </thead>
             <tbody>
