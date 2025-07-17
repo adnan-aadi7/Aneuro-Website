@@ -14,7 +14,7 @@ const BillingOverview =()=>{
    const navigate = useNavigate();
     return(
        <div className='text-white'>
-            <h1 className="text-[32px] font-medium">Billing Overview</h1>
+            <h1 className="text-[32px] font-medium font-jakarta" >Billing Overview</h1>
             <p className="opacity-70 text-[20px]">Let’s make the day productive</p>
       
            <div

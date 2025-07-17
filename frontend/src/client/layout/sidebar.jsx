@@ -38,7 +38,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
 
   const bottomItems = [
     { icon: CiSettings, label: "Setting", to: "/client-settings" },
-    { icon: FiLogOut, label: "Logout", to: "/" },
+    { icon: FiLogOut, label: "Logout", to: "/login" },
   ];
 
   return (
