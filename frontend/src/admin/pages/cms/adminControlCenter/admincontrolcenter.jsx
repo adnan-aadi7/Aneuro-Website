@@ -131,12 +131,12 @@ const AdminControlCenter = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-2 border-[#212C3B]   bg-[#161D27]  overflow-hidden">
+      <div className="flex flex-row overflow-x-auto whitespace-nowrap border-2 border-[#212C3B] bg-[#161D27]">
         {tabs.map(({ name }) => (
           <button
             key={name}
             onClick={() => setActiveTab(name)}
-            className={`flex-1 cursor-pointer flex items-center justify-center gap-2 py-2 text-[14px] font-medium transition-all 
+            className={`flex-1 min-w-max cursor-pointer flex items-center justify-center gap-2 py-2 px-4 text-[14px] font-medium transition-all 
               ${activeTab === name ? "bg-white text-black" : "text-[#AEAEAE]"}`}
           >
             {name}
