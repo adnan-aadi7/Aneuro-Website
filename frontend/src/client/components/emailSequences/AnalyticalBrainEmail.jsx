@@ -12,9 +12,9 @@ export default function AnalyticalBrainEmail() {
         <div className="relative">
           <select className="w-full bg-[#16161C] text-[#B0B0B0] px-4 py-3 appearance-none cursor-pointer focus:outline-none border border-[#444]">
             <option className="text-[#B0B0B0]">Select a prompt category</option>
-            <option className="text-[#23232A]">Email Templates</option>
-            <option className="text-[#23232A]">Training Materials</option>
-            <option className="text-[#23232A]">Communication Guides</option>
+            <option className="text-[#B0B0B0]">Email Templates</option>
+            <option className="text-[#B0B0B0]">Training Materials</option>
+            <option className="text-[#B0B0B0]">Communication Guides</option>
           </select>
           <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#B0B0B0] pointer-events-none" />
         </div>

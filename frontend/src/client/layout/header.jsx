@@ -7,7 +7,7 @@ const Header = ({ onHamburgerClick }) => {
   const navigate = useNavigate();
   const isDashboard = location.pathname === "/client/dashboard";
   return (
-    <header className="bg-[#16161C] text-white lg:px-6 px-2 py-5 flex items-center justify-between">
+    <header className=" text-white lg:px-6 px-2 py-5 flex items-center justify-between">
       {/* Left side - Hamburger (mobile) and Back button */}
       <div className="flex items-center">
         {/* Hamburger menu for mobile */}

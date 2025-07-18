@@ -1,18 +1,15 @@
 import React from "react";
-import QuizOverview from "../../components/ResultOverview/QuizOverview";
-import Cards from "../../components/ResultOverview/Cards";
-import BrainTypesAnalysis from "../../components/ResultOverview/BrainTypesAnalysis";
-import QuizPerformance from "../../components/ResultOverview/QuizPerformance";
+import Header from "../../components/analyticsOverview/individualQuizSubmissions/Header";
+import Table from "../../components/analyticsOverview/individualQuizSubmissions/Table";
+// import Cards from "../../components/ResultOverview/Cards";
+// import BrainTypesAnalysis from "../../components/ResultOverview/BrainTypesAnalysis";
+// import QuizPerformance from "../../components/ResultOverview/QuizPerformance";
 
 const ResultsOverView = () => {
   return (
     <>
-      <QuizOverview />
-      <div className="p-2 md:p-5 bg-[#2A2A39] mt-5">
-        <Cards />
-        <BrainTypesAnalysis />
-        <QuizPerformance />
-      </div>
+      <Header />
+      <Table />
     </>
   );
 };

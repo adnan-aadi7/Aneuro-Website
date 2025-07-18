@@ -1,5 +1,9 @@
 import React, { useState } from "react";
 import AnalyticalPrompt from "./AnalyticalPrompt";
+import CreativePrompt from "./CreativePrompt";
+import EmpatheticPrompt from "./EmpatheticPrompt";
+import StrategicPrompt from "./StrategicPrompt";
+import PracticalPrompt from "./PracticalPrompt";
 
 export default function Tabs() {
   const [activeTab, setActiveTab] = useState("Analytical");
@@ -11,6 +15,23 @@ export default function Tabs() {
     "Strategic",
     "Practical",
   ];
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "Analytical":
+        return <AnalyticalPrompt />;
+      case "Creative":
+        return <CreativePrompt />;
+      case "Empathetic":
+        return <EmpatheticPrompt />;
+      case "Strategic":
+        return <StrategicPrompt />;
+      case "Practical":
+        return <PracticalPrompt />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="text-white w-full">
@@ -44,10 +65,8 @@ export default function Tabs() {
         </div>
       </div>
 
-      {/* Content Area */}
-      <div className="px-2 sm:px-8">
-        {activeTab === "Analytical" && <AnalyticalPrompt />}
-      </div>
+      {/* Content Area - show the correct component for the active tab */}
+      <div className="px-2 sm:px-8">{renderTabContent()}</div>
     </div>
   );
 }
