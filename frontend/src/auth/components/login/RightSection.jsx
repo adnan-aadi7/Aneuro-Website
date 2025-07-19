@@ -21,7 +21,7 @@ export default function RightSection() {
           <img
             src={Dots}
             alt="dosts"
-            className="w-10 h-40  absolute ml-[610px] mt-5"
+            className="w-10 h-40  absolute ml-[590px] mt-5"
           />
           <div className="flex flex-col items-center text-center">
             <h1 className="text-5xl font-bold text-gray-900 mt-14 ">

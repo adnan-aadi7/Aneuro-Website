@@ -59,14 +59,14 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="flex flex-col p-2 sm:p-4 ">
-      <div className="w-full sm:w-full md:max-w-md md:mx-auto">
+    <div className="flex flex-col p-2 lg:p-4 md:px-1 w-xl h-full px-24">
+      <div className="w-full">
         {/* Logo */}
         <div className="flex justify-center">
           <img src={logo} alt="Logo" className="w-[163px] h-[150px]" />
         </div>
         {/* Form Container */}
-        <div className="rounded-lg  p-4 sm:-8 bg-opacity-90">
+        <div className="rounded-lg p-4 sm:-8 bg-opacity-90 w-full">
           <h2 className="text-white text-2xl font-semibold text-center mb-2">
             Sign in Your Account!
           </h2>

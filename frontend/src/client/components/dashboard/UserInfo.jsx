@@ -2,7 +2,7 @@ import React from "react";
 
 const UserInfo = () => {
   return (
-    <div className="bg-[#16161c]  rounded-lg">
+    <div className="  rounded-lg">
       <h1 className="text-white text-2xl md:text-4xl font-semibold mb-2">
         Good Morning, Mike
       </h1>

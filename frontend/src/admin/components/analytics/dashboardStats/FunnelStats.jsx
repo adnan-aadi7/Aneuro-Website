@@ -7,15 +7,15 @@ const FunnelStats = () => {
   return (
     <div className="lg:p-6 p-2">
       {/* Header Row */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Filter className="w-7 h-7 text-white" />
-          <h2 className="text-white text-2xl font-semibold">
+      <div className="flex flex-row items-center justify-between mb-6 flex-wrap gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+          <Filter className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+          <h2 className="text-white text-lg sm:text-2xl font-semibold truncate">
             Funnel Templates Analytics
           </h2>
         </div>
         <button
-          className="bg-cyan-400 text-black font-medium px-6 py-2 rounded hover:bg-cyan-300 transition-all text-sm"
+          className="bg-cyan-400 text-black font-medium px-3 sm:px-6 py-2 rounded hover:bg-cyan-300 transition-all text-sm whitespace-nowrap"
           onClick={() => navigate("/admin/analytics/funnel-details")}
         >
           View Details

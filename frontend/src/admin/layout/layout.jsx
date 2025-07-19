@@ -4,8 +4,8 @@ import { useState } from "react";
 const AdminLayout = ({ children, headerChildren }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   return (
-    <div className="flex h-screen w-full   text-black">
- <Sidebar
+    <div className="flex min-h-screen ">
+      <Sidebar
         sidebarOpen={sidebarOpen}
         onSidebarClose={() => setSidebarOpen(false)}
       />
