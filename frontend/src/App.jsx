@@ -46,14 +46,18 @@ import EmailStatsDetails from "./admin/pages/analyticsOverview/EmailStatsDetails
 import PromptStatsDetails from "./admin/pages/analyticsOverview/PromptStatsDetails";
 import FunnelStatsDetails from "./admin/pages/analyticsOverview/FunnelStatsDetails";
 
+//landing pages
+import Home from "./landingpage/home";
+
 function App() {
   return (
     //auth routes
     <Router>
       <Routes>
-        <Route path="/" element={<Signup />} />
+        <Route path="/" element={<Home/>}/>
+        <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={<Signup />} />
+        <Route path="/signup" element={<Signup />} />
         <Route path="/quiz" element={<Quiz />} />
 
         {/* choosing plan or suubcription routes  */}
