@@ -1,7 +1,7 @@
 import React from "react";
-import neuralPic from "../../assets/aboutUs/pic.png";
-import brainBg from "../../assets/aboutUs/pic2.png";
-import aIcon from "../../assets/aboutUs/icon.png";
+import neuralPic from "../../../assets/aboutUs/pic.png";
+import brainBg from "../../../assets/aboutUs/pic2.png";
+import aIcon from "../../../assets/aboutUs/icon.png";
 
 const LevelIntelligence = () => {
   return (
