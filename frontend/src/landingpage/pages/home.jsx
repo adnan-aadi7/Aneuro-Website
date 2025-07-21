@@ -16,7 +16,7 @@ const Home=()=>{
         subtitle="Aneuro adapts to how your audience makes decisions—and delivers plug-and-play tools that match. No guesswork. No friction. "
         primaryBtnText="Get Started"
         primaryBtnLink="/signup"
-        secondaryBtnText="Learn More"
+        secondaryBtnText="View Pricing"
         secondaryBtnLink="/"
         bottomImage="/home/img.png"
         bottomText="Lorem ipsum dolor sit amet, consectetur adipiscing elit."
