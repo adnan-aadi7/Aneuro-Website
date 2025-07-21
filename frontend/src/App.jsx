@@ -39,6 +39,7 @@ import UserDetails from "./admin/pages/Managesubscription/user-details";
 import Refunddetail from "./admin/pages/Managesubscription/refunddetailrequest";
 import Admincontrolcenter from "./admin/pages/cms/adminControlCenter/admincontrolcenter";
 import AddEmailManuall from "./admin/pages/cms/addEmailManullay/AddEmailManuall";
+import Settingtabs from "./admin/pages/settings/setting";
 import AddPromptMannual from "./admin/pages/cms/addPromptMannually/AddPromptMannual";
 import Analytics from "./admin/pages/analyticsOverview/Analytics";
 import EmailStatsDetails from "./admin/pages/analyticsOverview/EmailStatsDetails";
@@ -68,7 +69,7 @@ function App() {
           }
         />
         <Route
-          path="/client/refund"
+          path="/client/manage-subscription"
           element={
             <ClientLayout>
               <UserRefund />
@@ -141,7 +142,7 @@ function App() {
         />
 
         <Route
-          path="/manage-subscription"
+          path="/client/manage-subscription/subscriptions"
           element={
             <ClientLayout>
               <Subscription />
@@ -315,6 +316,14 @@ function App() {
           element={
             <AdminLayout>
               <AddPromptMannual />
+            </AdminLayout>
+          }
+        />
+         <Route
+          path="/admin/Settings"
+          element={
+            <AdminLayout>
+              <Settingtabs />
             </AdminLayout>
           }
         />

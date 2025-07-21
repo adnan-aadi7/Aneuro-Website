@@ -25,20 +25,20 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
       to: "/admin/manage-subscription",
     },
     { icon: TbHeadset, label: "Support Center", to: "/admin/support/feedback" },
-    { icon: TbMessage2, label: "Leave Feedback", to: "/admin/leave-feedback" },
+   // { icon: TbMessage2, label: "Leave Feedback", to: "/admin/leave-feedback" },
     // Client View toggle will be handled separately below
   ];
 
   const bottomItems = [
     { icon: CiSettings, label: "Setting", to: "/admin/settings" },
-    { icon: FiLogOut, label: "Logout", to: "/admin/logout" },
+    { icon: FiLogOut, label: "Logout", to: "/login" },
   ];
 
   return (
     <>
       {/* Overlay for mobile */}
       <div
-        className={`fixed inset-0 z-40 transition-opacity duration-300 lg:hidden ${
+        className={`fixed inset-0  z-40 transition-opacity duration-300 lg:hidden ${
           sidebarOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
@@ -74,10 +74,17 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
         </button>
         {/* Logo */}
         <div className="  flex flex-col items-center ">
-          <img src={logo} alt="Logo" className="w-[162px] h-[162px] " />
+          <img src={logo} alt="Logo" className="w-[162px]  " />
         </div>
         {/* Navigation */}
-        <nav className="flex flex-col gap-4 flex-1 px-4">
+<div
+  style={{
+    overflowY: 'auto',
+    scrollbarWidth: 'none', // Firefox
+    msOverflowStyle: 'none', // IE and Edge
+  }}
+  className="custom-scroll"
+>        <nav className="flex flex-col gap-4 flex-1 px-4 ">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -101,7 +108,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
           <ClientViewToggle />
         </nav>
         {/* Bottom Menu */}
-        <div className=" py-4 px-5 mt-15">
+        <div className=" py-4 px-5 mt-6">
           {bottomItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -109,10 +116,10 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
                 key={item.label}
                 to={item.to}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-3 font-medium text-[15px] transition-all border-r-2 ${
+                 `flex items-center gap-3 px-4 py-3 font-medium text-[15px] transition-all border-l-7 ${
                     isActive
-                      ? "bg-teal-500/20 text-teal-400 border-teal-400 shadow rounded-full"
-                      : "text-gray-400 border-transparent hover:text-gray-300 hover:bg-gray-800/50 rounded-2xl"
+                      ? "bg-teal-500/20 text-teal-400 border-teal-400 shadow "
+                      : "text-gray-400 border-transparent hover:text-gray-300 hover:bg-gray-800/50 "
                   }`
                 }
               >
@@ -121,6 +128,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
               </NavLink>
             );
           })}
+        </div>
         </div>
       </aside>
       {/* Vertical line on the right side, only for large screens */}
