@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
 
 const navItems = [
-  { label: 'Home', href: '/' },
-  { label: 'About Us', href: '/about' },
-  { label: 'Services', href: '/services' },
-  { label: 'Blog', href: '/blog' },
-  { label: 'Contact Us', href: '/contact' },
+  { label: "Home", href: "/" },
+  { label: "About Us", href: "/about" },
+  { label: "Services", href: "/services" },
+  { label: "Blog", href: "/blog" },
+  { label: "Contact Us", href: "/contact" },
 ];
 
 const Navbar = () => {
@@ -17,7 +17,7 @@ const Navbar = () => {
   };
 
   return (
-    <div className="w-full py-6 font-manrope bg-[#16161c] text-white">
+    <div className="w-full py-6 font-manrope  text-white">
       <div className="flex items-center justify-between px-6 md:px-10">
         <img src="/logo.png" alt="logo" className="w-20 h-8" />
 

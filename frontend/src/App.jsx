@@ -48,17 +48,21 @@ import FunnelStatsDetails from "./admin/pages/analyticsOverview/FunnelStatsDetai
 
 //landing pages
 import Home from "./landingpage/home";
+import AboutUs from "./aboutUs/page/AboutUs";
 
 function App() {
   return (
     //auth routes
     <Router>
       <Routes>
-        <Route path="/" element={<Home/>}/>
+        <Route path="/" element={<Home />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/quiz" element={<Quiz />} />
+
+        {/* landingpage  */}
+        <Route path="/about-us" element={<AboutUs />} />
 
         {/* choosing plan or suubcription routes  */}
         <Route path="/plan" element={<Subcription />} />
@@ -323,7 +327,7 @@ function App() {
             </AdminLayout>
           }
         />
-         <Route
+        <Route
           path="/admin/Settings"
           element={
             <AdminLayout>
