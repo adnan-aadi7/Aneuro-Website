@@ -133,7 +133,7 @@ export default function LoginForm() {
               type="submit"
               className="w-full bg-cyan-400 text-gray-900 py-3 rounded-md font-semibold hover:bg-cyan-300 transition-colors text-xs sm:text-sm"
             >
-              Sign up
+              Sign In
             </button>
           </form>
 
