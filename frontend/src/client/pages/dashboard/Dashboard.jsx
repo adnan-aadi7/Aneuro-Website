@@ -2,8 +2,8 @@ import React from "react";
 import WelcomeDashboard from "../../components/dashboard/UserInfo";
 import QuestionnaireLinks from "../../components/dashboard/QuestionnaireLinks";
 import SuggestTools from "../../components/dashboard/SuggestTools";
-import Cards from "../../components/ResultOverview/Cards";
-import BrainTypesAnalysis from "../../components/ResultOverview/BrainTypesAnalysis";
+import Cards from "../../components/dashboard/Cards";
+import BrainTypesAnalysis from "../../components/dashboard/BrainTypesAnalysis";
 import QuizPerformance from "../../components/ResultOverview/QuizPerformance";
 
 const Dashboard = () => {

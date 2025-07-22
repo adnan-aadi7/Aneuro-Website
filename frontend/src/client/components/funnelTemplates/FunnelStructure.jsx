@@ -1,6 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 
 export default function FunnelStructure() {
+  // Tooltip state for Lead Magnet Page
+  const [showTooltip, setShowTooltip] = useState(false);
+  // Tooltip state for Landing Page
+  const [showLandingTooltip, setShowLandingTooltip] = useState(false);
   return (
     <div>
       {/* Filter Templates Section */}
@@ -41,7 +45,18 @@ export default function FunnelStructure() {
         </h2>
         <div className="space-y-4">
           {/* Landing Page */}
-          <div className="bg-[#23232A]  mb-2 flex items-center justify-between px-6 py-4">
+          <div
+            className="bg-[#23232A]  mb-2 flex items-center justify-between px-6 py-4 relative"
+            onMouseEnter={() => setShowLandingTooltip(true)}
+            onMouseLeave={() => setShowLandingTooltip(false)}
+          >
+            {/* Custom Tooltip for Landing Page */}
+            {showLandingTooltip && (
+              <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-3 py-2 rounded shadow-lg z-20 whitespace-nowrap pointer-events-none">
+                This is the Landing Page block. High-converting landing page
+                with compelling headline and CTA.
+              </div>
+            )}
             <div>
               <div className="text-white text-lg font-semibold">
                 Landing Page
@@ -55,18 +70,39 @@ export default function FunnelStructure() {
             </button>
           </div>
           {/* Lead Magnet Page */}
-          <div className="bg-[#23232A]  mb-2 flex items-center justify-between px-6 py-4 mt-5">
+          {/*
+            This block represents the 'Lead Magnet Page' step in the funnel structure.
+            - The left section contains the title and a description of the page's purpose.
+            - The right section is a 'Copy' button for duplicating or using this template.
+            - Styling ensures visual separation and clarity in the funnel steps list.
+          */}
+          <div
+            className="bg-[#23232A]  mb-2 flex items-center justify-between px-6 py-4 mt-5 relative"
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+          >
+            {/* Custom Tooltip */}
+            {showTooltip && (
+              <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-3 py-2 rounded shadow-lg z-20 whitespace-nowrap pointer-events-none">
+                This is the Lead Magnet Page block. Value-packed lead magnet to
+                capture visitor information.
+              </div>
+            )}
             <div>
+              {/* Title of the funnel step */}
               <div className="text-white text-lg font-semibold">
                 Lead Magnet Page
               </div>
+              {/* Description of the funnel step */}
               <div className="text-[#12DCF0] text-sm mt-1">
                 Value-packed lead magnet to capture visitor information
               </div>
             </div>
+            {/* Copy button for this funnel step */}
             <button className="border border-[#12DCF0] text-[#12DCF0] px-3 py-1 text-xs font-medium transition-colors hover:bg-[#23232F] ml-4">
               Copy
             </button>
+            {/* End of Lead Magnet Page block */}
           </div>
         </div>
       </div>

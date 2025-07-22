@@ -2,6 +2,7 @@ import Header from "./header";
 import Sidebar from "./sidebar";
 import { useState } from "react";
 const AdminLayout = ({ children, headerChildren }) => {
+  
   const [sidebarOpen, setSidebarOpen] = useState(false);
   return (
     <div className="flex h-screen w-full   text-black">
