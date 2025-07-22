@@ -3,8 +3,8 @@
 const Behavioralprecision =()=>{
 
     return(
-        <div className="flex flex-col w-full items-center justify-center mb-8 gap-8 px-3 lg:px-10">
-           <div className="absolute -top-20 right-0 w-[600px] h-[500px] z-0">
+        <div className="relative flex flex-col w-full items-center justify-center mb-12 gap-8 px-3 lg:px-10 overflow-x-hidden">
+           <div className="absolute top-10 -right-24 w-[600px] h-[600px] z-0">
         <img src="/home/Ellipse 30.png" alt="decor" className="w-full h-full object-contain" />
       </div>
           <p className="bg-[#FFFFFF0F] w-[250px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
@@ -64,7 +64,7 @@ const Behavioralprecision =()=>{
              </button>
 
               </div>
-              <img src="/home/Background+Overlay+Border+OverlayBlur (1).png" alt="img" className=" "/>
+              <img src="/home/Background+Overlay+Border+OverlayBlur (1).png" alt="img" className="lg:hidden "/>
           </div>
 
             <div className="flex flex-col lg:flex-row items-center justify-center gap-6 mt-12  w-full ">
