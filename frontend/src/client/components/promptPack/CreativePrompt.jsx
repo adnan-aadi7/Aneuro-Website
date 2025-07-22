@@ -4,11 +4,14 @@ import { ChevronDown, Copy } from "lucide-react";
 export default function CreativePrompt() {
   const [showFirstPrompt, setShowFirstPrompt] = useState(true);
   const [showFullPrompt, setShowFullPrompt] = useState(false);
-  const [copiedPrompt, setCopiedPrompt] = useState(0);
+  const [copiedPrompt, setCopiedPrompt] = useState(0); // 0: none, 1: first, 2: second
+  // Tooltip state for Creative Social Media Caption Generator section
+  const [showEmailTooltip, setShowEmailTooltip] = useState(false);
+  const [emailTooltipPos, setEmailTooltipPos] = useState({ x: 0, y: 0 });
 
   const firstPromptText = `Hi [Name],\n\nHere's a creative idea to boost your brand's engagement:\n1. [Creative concept]\n2. [Unique angle]\n3. [Suggested visual or story]\n\nWant more creative inspiration? Click here for a full brainstorm.\n\nBest,\n[Your Name]`;
 
-  const secondPromptText = `Hi [Name],\n\nI've identified a creative challenge for your brand:\nProblem: [Describe creative block or challenge]\nAnalysis: [Why this challenge exists]\nSolution: [Creative solution steps]\nResults: [Expected creative outcomes]\n\nWant to explore more ideas? Let's connect!\n\nBest,\n[Your Name]`;
+  const secondPromptText = `Hi [Name],\n\nI've identified a creative challenge for your brand:\nProblem: [Describe creative block or challenge]\nAnalysis: [Why this challenge exists]\n• [Reason 1]\n• [Reason 2]\n• [Reason 3]\nSolution: [Creative solution steps]\n1. [Step 1]\n2. [Step 2]\n3. [Step 3]\nResults: [Expected creative outcomes]\n\nWant to explore more ideas? Let's connect!\n\nBest,\n[Your Name]`;
 
   const handleCopy = (text, which) => {
     navigator.clipboard.writeText(text);
@@ -16,24 +19,64 @@ export default function CreativePrompt() {
     setTimeout(() => setCopiedPrompt(0), 1500);
   };
 
+  // Only keep the Creative dropdown unchanged
+  const renderDropdown = () => {
+    return (
+      <div className="relative mb-8">
+        <select className="w-full bg-[#16161C] text-white px-4 py-3 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700">
+          <option>Creative dropdown</option>
+          <option>Innovator</option>
+          <option>Visionary</option>
+          <option>Storyteller</option>
+          <option>Designer</option>
+        </select>
+        <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+      </div>
+    );
+  };
+
   return (
     <div className="bg-[#303041] text-white mt-10">
+      {/* Header */}
       <div className="p-2 lg:p-8">
         <h1 className="text-xl font-medium mb-6">
           Creative Brain Type Prompts
         </h1>
-        <div className="relative mb-8">
-          <select className="w-full bg-[#16161C] text-white px-4 py-3 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700">
-            <option>Creative dropdown</option>
-            <option>Innovator</option>
-            <option>Visionary</option>
-            <option>Storyteller</option>
-            <option>Designer</option>
-          </select>
-          <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-        </div>
+        {/* Dropdown (unchanged) */}
+        {renderDropdown()}
+        {/* Email Prompts Section */}
+        <h2 className="text-lg font-medium mb-6">
+          Email Prompts for Creative Types
+        </h2>
         {/* Creative Social Media Caption Generator */}
-        <div className="bg-[#23232F] p-6 mb-4">
+        <div
+          className="bg-[#23232F] p-6 mb-4 relative"
+          onMouseEnter={() => setShowEmailTooltip(true)}
+          onMouseLeave={() => setShowEmailTooltip(false)}
+          onMouseMove={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            setEmailTooltipPos({
+              x: e.clientX - rect.left,
+              y: e.clientY - rect.top,
+            });
+          }}
+        >
+          {/* Custom Tooltip for Creative Social Media Caption Generator (small, near cursor) */}
+          {showEmailTooltip && (
+            <div
+              className="pointer-events-none bg-black text-white text-[10px] px-2 py-1 rounded shadow-lg z-20 whitespace-nowrap"
+              style={{
+                position: "absolute",
+                left: emailTooltipPos.x + 10,
+                top: emailTooltipPos.y + 10,
+                minWidth: "max-content",
+                maxWidth: 180,
+              }}
+            >
+              This section generates a creative social media caption email
+              prompt, including subject, copy button, and example message.
+            </div>
+          )}
           <div className="flex justify-between items-start mb-4">
             <div className="flex-1">
               <h3 className="text-base font-medium mb-2">

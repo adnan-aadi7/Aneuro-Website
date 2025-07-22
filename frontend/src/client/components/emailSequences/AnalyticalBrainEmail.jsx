@@ -1,7 +1,11 @@
 import React from "react";
+import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 
 export default function AnalyticalBrainEmail() {
+  // Tooltip state for Email Template 1
+  const [showEmailTooltip, setShowEmailTooltip] = useState(false);
+  const [emailTooltipPos, setEmailTooltipPos] = useState({ x: 0, y: 0 });
   return (
     <div className="min-h-screen bg-[#303041] text-white">
       {/* Header */}
@@ -25,7 +29,34 @@ export default function AnalyticalBrainEmail() {
         <h2 className="text-xl font-semibold mb-6">Email Templates</h2>
 
         {/* Email Template 1 */}
-        <div className="bg-[#23232A] p-6 mb-6">
+        <div
+          className="bg-[#23232A] p-6 mb-6 relative"
+          onMouseEnter={() => setShowEmailTooltip(true)}
+          onMouseLeave={() => setShowEmailTooltip(false)}
+          onMouseMove={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            setEmailTooltipPos({
+              x: e.clientX - rect.left,
+              y: e.clientY - rect.top,
+            });
+          }}
+        >
+          {/* Custom Tooltip for Email Template 1 (small, near cursor) */}
+          {showEmailTooltip && (
+            <div
+              className="pointer-events-none bg-black text-white text-[10px] px-2 py-1 rounded shadow-lg z-20 whitespace-nowrap"
+              style={{
+                position: "absolute",
+                left: emailTooltipPos.x + 10,
+                top: emailTooltipPos.y + 10,
+                minWidth: "max-content",
+                maxWidth: 220,
+              }}
+            >
+              This section displays a detailed analytical brain type email
+              template, including subject, preview, and content for onboarding.
+            </div>
+          )}
           <div className="flex justify-between items-start mb-4">
             <div>
               <h3 className="text-base font-semibold mb-2">

@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "../../components/enterprizeQuiz/Header";
 import Quiz from "../../components/enterprizeQuiz/Quiz";
 import QuizLink from "../../components/enterprizeQuiz/QuizLink";
 import UploadLogo from "../../components/enterprizeQuiz/UploadLogo";
 import Customizations from "../../components/enterprizeQuiz/Customizations";
 import defaultLogo from "../../components/enterprizeQuiz/../../../assets/auth/logo.png";
+import EnterPrizePopup from "../../components/enterprizeQuiz/EnterPrizePopup";
 
 const EnterPrizeQuiz = () => {
   const [primaryColor, setPrimaryColor] = useState("#2DD1D1");
@@ -12,6 +13,19 @@ const EnterPrizeQuiz = () => {
   const [textColor, setTextColor] = useState("#FFFFFF");
   const [borderColor, setBorderColor] = useState("#2DD1D1");
   const [logo, setLogo] = useState(defaultLogo);
+  const [showPopup, setShowPopup] = useState(false);
+
+  useEffect(() => {
+    const role = localStorage.getItem("userRole");
+    if (role !== "enterprize") {
+      setShowPopup(true);
+    }
+  }, []);
+
+  if (showPopup) {
+    return <EnterPrizePopup onClose={() => {}} />;
+  }
+
   return (
     <>
       <Header />

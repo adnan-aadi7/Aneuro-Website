@@ -46,12 +46,13 @@ export default function LoginForm() {
       (u) => u.email === formData.email && u.password === formData.password
     );
     if (foundUser) {
+      localStorage.setItem("userRole", foundUser.role); // Store user role
       if (foundUser.role === "admin") {
         navigate("/admin/dashboard");
       } else if (foundUser.role === "user") {
         navigate("/client/dashboard");
       } else if (foundUser.role === "enterprize") {
-        navigate("/enterprize-quiz");
+        navigate("/client/dashboard");
       }
     } else {
       setError("Invalid email or password");

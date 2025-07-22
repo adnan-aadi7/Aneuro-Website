@@ -6,6 +6,9 @@ export default function AnalyticalPrompt({ activeTab = "Analytical" }) {
   const [showFirstPrompt, setShowFirstPrompt] = useState(true);
   const [showFullPrompt, setShowFullPrompt] = useState(false);
   const [copiedPrompt, setCopiedPrompt] = useState(0); // 0: none, 1: first, 2: second
+  // Tooltip state for Social Media Caption Generator section
+  const [showEmailTooltip, setShowEmailTooltip] = useState(false);
+  const [emailTooltipPos, setEmailTooltipPos] = useState({ x: 0, y: 0 });
 
   const firstPromptText = `Hi [Name],\n\nI analyzed the latest industry data and found 3 insights that could transform your approach:\n1. [Specific statistic with source]\n2. [Trend analysis with numbers]\n3. [Actionable recommendation based on data]\n\nWant the full breakdown? Click here to access the complete analysis.\n\nBest,\n[Your Name]`;
 
@@ -19,76 +22,22 @@ export default function AnalyticalPrompt({ activeTab = "Analytical" }) {
 
   // Dropdown for each tab
   const renderDropdown = (tab) => {
-    switch (tab) {
-      case "Analytical":
-        return (
-          <div className="relative mb-8">
-            <select className="w-full bg-[#16161C] text-white px-4 py-3 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700">
-              <option>Analytical dropdown</option>
-              <option>Architect</option>
-              <option>Challenger</option>
-              <option>Catalyst</option>
-              <option>Reflector</option>
-              <option>Synthesizer</option>
-            </select>
-            <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-          </div>
-        );
-      case "Creative":
-        return (
-          <div className="relative mb-8">
-            <select className="w-full bg-[#16161C] text-white px-4 py-3 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700">
-              <option>Creative dropdown</option>
-              <option>Innovator</option>
-              <option>Visionary</option>
-              <option>Storyteller</option>
-              <option>Designer</option>
-            </select>
-            <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-          </div>
-        );
-      case "Empathetic":
-        return (
-          <div className="relative mb-8">
-            <select className="w-full bg-[#16161C] text-white px-4 py-3 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700">
-              <option>Empathetic dropdown</option>
-              <option>Connector</option>
-              <option>Supporter</option>
-              <option>Listener</option>
-              <option>Motivator</option>
-            </select>
-            <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-          </div>
-        );
-      case "Strategic":
-        return (
-          <div className="relative mb-8">
-            <select className="w-full bg-[#16161C] text-white px-4 py-3 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700">
-              <option>Strategic dropdown</option>
-              <option>Planner</option>
-              <option>Organizer</option>
-              <option>Evaluator</option>
-              <option>Coordinator</option>
-            </select>
-            <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-          </div>
-        );
-      case "Practical":
-        return (
-          <div className="relative mb-8">
-            <select className="w-full bg-[#16161C] text-white px-4 py-3 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700">
-              <option>Practical dropdown</option>
-              <option>Implementer</option>
-              <option>Operator</option>
-              <option>Fixer</option>
-              <option>Producer</option>
-            </select>
-            <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-          </div>
-        );
-      default:
-        return null;
+    if (tab === "Analytical") {
+      return (
+        <div className="relative mb-8">
+          <select className="w-full bg-[#16161C] text-white px-4 py-3 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700">
+            <option>Analytical dropdown</option>
+            <option>Architect</option>
+            <option>Challenger</option>
+            <option>Catalyst</option>
+            <option>Reflector</option>
+            <option>Synthesizer</option>
+          </select>
+          <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+        </div>
+      );
     }
+    return null;
   };
 
   // Content for each tab
@@ -101,7 +50,35 @@ export default function AnalyticalPrompt({ activeTab = "Analytical" }) {
             Email Prompts for Analytical Types
           </h2>
           {/* Social Media Caption Generator */}
-          <div className="bg-[#23232F] p-6 mb-4">
+          <div
+            className="bg-[#23232F] p-6 mb-4 relative"
+            onMouseEnter={() => setShowEmailTooltip(true)}
+            onMouseLeave={() => setShowEmailTooltip(false)}
+            onMouseMove={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              setEmailTooltipPos({
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top,
+              });
+            }}
+          >
+            {/* Custom Tooltip for Social Media Caption Generator (small, near cursor) */}
+            {showEmailTooltip && (
+              <div
+                className="pointer-events-none bg-black text-white text-[10px] px-2 py-1 rounded shadow-lg z-20 whitespace-nowrap"
+                style={{
+                  position: "absolute",
+                  left: emailTooltipPos.x + 10,
+                  top: emailTooltipPos.y + 10,
+                  minWidth: "max-content",
+                  maxWidth: 180,
+                }}
+              >
+                This section generates a social media caption email prompt for
+                Analytical types, including subject, copy button, and example
+                message.
+              </div>
+            )}
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
                 <h3 className="text-base font-medium mb-2">
