@@ -7,9 +7,9 @@ const Behavioralprecision =()=>{
            <div className="absolute top-10 -right-24 w-[600px] h-[600px] z-0">
         <img src="/home/Ellipse 30.png" alt="decor" className="w-full h-full object-contain" />
       </div>
-          <p className="bg-[#FFFFFF0F] w-[250px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
+          <p className="bg-[#FFFFFF0F] border border-white/20 opacity-70 w-[250px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
             <img src="/home/star.png" alt="img"/>
-             How it Works
+             HOW IT WORKS
           <img src="/home/star.png" alt="img"/>
           </p>
 

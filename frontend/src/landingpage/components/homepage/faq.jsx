@@ -60,7 +60,7 @@ const Faq = () => {
 
         {/* Right - FAQ Content */}
         <div className="w-full">
-          <p className="bg-[#FFFFFF0F] w-[140px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
+          <p className="bg-[#FFFFFF0F] border border-white/20 opacity-70  w-[140px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
             <img src="/home/star.png" alt="img" />
             FAQ'S
             <img src="/home/star.png" alt="img" />

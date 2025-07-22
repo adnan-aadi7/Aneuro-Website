@@ -4,7 +4,7 @@ const Compete =()=>{
 
     return(
        <div className="overflow-hidden flex flex-col items-center justify-center py-12 relative bg-[url('/home/lastbg.png')] bg-no-repeat bg-cover bg-center w-full   rounded-lg border border-[#FFFFFF0F]">
-            <p className="bg-[#FFFFFF0F] border border-white/20 w-[150px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
+            <p className="bg-[#FFFFFF0F] border border-white/20 opacity-70 w-[150px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
                <img src="/home/star.png" alt="img"/>
                 PRICING
              <img src="/home/star.png" alt="img"/>
