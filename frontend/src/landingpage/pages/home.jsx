@@ -6,6 +6,8 @@ import Neural from "../components/homepage/neural";
 import Fact from "../components/homepage/fact";
 import Subscription from "../components/homepage/subscription";
 import Faq from "../components/homepage/faq";
+import Footer from "../aboutUs/components/Footer";
+import Compete from "../components/homepage/compete";
 
 const Home=()=>{
 
@@ -32,6 +34,8 @@ const Home=()=>{
       <Fact/>
       <Subscription/>
       <Faq/>
+      <Compete/>
+      <Footer/>
         </div>
     )
 }

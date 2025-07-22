@@ -37,8 +37,11 @@ const Faq = () => {
   };
 
   return (
-    <div className="bg-black py-20 px-4 md:px-12 text-white font-sans">
+    <div className="bg-black py-20 px-4 md:px-12 text-white font-sans relative">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-12 items-center">
+         <div className="absolute left-[28%] w-[600px] h-[500px] rounded-full -top-32" >
+          <img src="/home/Ellipse 33.png" alt="img"/>
+    </div>
         {/* Left - Brain Image Card */}
         <div
           style={{
