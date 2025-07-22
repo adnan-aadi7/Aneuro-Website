@@ -39,11 +39,11 @@ const Behavioralprecision =()=>{
              </button>
 
               </div>
-              <img src="/home/Background+Overlay+Border+OverlayBlur.png" alt="img"/>
+              <img src="/home/11.png" alt="img"/>
           </div>
 
           <div className="flex flex-col lg:flex-row items-center justify-center gap-12 mt-12  w-full ">
-                          <img src="/home/Background+Overlay+Border+OverlayBlur (1).png" alt="img" className="hidden lg:block "/>
+                          <img src="/home/22.png" alt="img" className="hidden lg:block "/>
 
               <div className="flex flex-col gap-4 ">
                    <p className="bg-[#FFFFFF0F] w-[150px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
@@ -64,7 +64,7 @@ const Behavioralprecision =()=>{
              </button>
 
               </div>
-              <img src="/home/Background+Overlay+Border+OverlayBlur (1).png" alt="img" className="lg:hidden "/>
+              <img src="/home/22.png" alt="img" className="lg:hidden "/>
           </div>
 
             <div className="flex flex-col lg:flex-row items-center justify-center gap-6 mt-12  w-full ">
@@ -87,7 +87,7 @@ const Behavioralprecision =()=>{
              </button>
 
               </div>
-              <img src="/home/Background+Overlay+Border+OverlayBlur (2).png" alt="img"/>
+              <img src="/home/33.png" alt="img"/>
           </div>
         </div>
     )

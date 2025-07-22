@@ -3,11 +3,14 @@ import HeroSection from "../components/homepage/hero";
 import Transformation from "../components/homepage/transformation";
 import Behavioralprecision from "../components/homepage/behavioralprecision";
 import Neural from "../components/homepage/neural";
+import Fact from "../components/homepage/fact";
+import Subscription from "../components/homepage/subscription";
+import Faq from "../components/homepage/faq";
 
 const Home=()=>{
 
     return(
-        <div className="w-full mx-auto px-4 md:px-12 max-w-[1750px] bg-black font-manrope">
+        <div className="w-full mx-auto px-4 md:px-12 max-w-[1750px] bg-black font-manrope overflow-hidden">
          <Navbar/>
           <HeroSection
         topbutton="Lorem ipsum dolo"
@@ -26,6 +29,9 @@ const Home=()=>{
       <Transformation/>
       <Behavioralprecision/>
       <Neural/>
+      <Fact/>
+      <Subscription/>
+      <Faq/>
         </div>
     )
 }
