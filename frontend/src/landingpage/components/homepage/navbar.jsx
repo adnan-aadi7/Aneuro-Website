@@ -17,7 +17,7 @@ const Navbar = () => {
   };
 
   return (
-    <div className="w-full py-6 font-manrope  text-white">
+    <div className="sticky top-0 left-0 right-0 z-50 w-full py-6 font-manrope text-white bg-black/80 backdrop-blur-md">
       <div className="flex items-center justify-between px-6 md:px-10">
         <img src="/logo.png" alt="logo" className="w-20 h-8" />
 
@@ -50,7 +50,7 @@ const Navbar = () => {
 
       {/* Mobile Sidebar */}
       {isSidebarOpen && (
-        <div className="md:hidden px-6 mt-4 space-y-4 flex flex-col">
+        <div className="md:hidden px-6 mt-4 space-y-4 flex flex-col bg-black">
           {navItems.map((item, idx) => (
             <a
               key={idx}
@@ -72,5 +72,6 @@ const Navbar = () => {
     </div>
   );
 };
+
 
 export default Navbar;

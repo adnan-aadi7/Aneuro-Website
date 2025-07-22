@@ -12,7 +12,7 @@ import Compete from "../components/homepage/compete";
 const Home=()=>{
 
     return(
-        <div className="w-full mx-auto px-4 md:px-12 max-w-[1750px] bg-black font-manrope overflow-hidden">
+        <div className="w-full mx-auto px-4 md:px-12 max-w-[1750px] bg-black font-manrope ">
          <Navbar/>
           <HeroSection
         topbutton="Lorem ipsum dolo"

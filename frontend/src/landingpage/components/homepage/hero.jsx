@@ -15,7 +15,7 @@ const HeroSection = ({
   highlightText
 }) => {
   return (
-    <div className="relative w-full text-white font-manrope max-h-screen flex items-center justify-center">
+    <div className="relative w-full text-white font-manrope max-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <img
