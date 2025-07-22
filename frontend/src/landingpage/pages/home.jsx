@@ -2,6 +2,7 @@ import Navbar from "../components/homepage/navbar";
 import HeroSection from "../components/homepage/hero";
 import Transformation from "../components/homepage/transformation";
 import Behavioralprecision from "../components/homepage/behavioralprecision";
+import Neural from "../components/homepage/neural";
 
 const Home=()=>{
 
@@ -24,6 +25,7 @@ const Home=()=>{
 
       <Transformation/>
       <Behavioralprecision/>
+      <Neural/>
         </div>
     )
 }
