@@ -30,7 +30,7 @@ const HeroSection = ({
       <div className="relative z-10 py-16 rounded-lg text-center flex flex-col gap-3 items-center justify-center w-full">
         {/* Top Section */}
         <div className="bg-black/20 w-[95%] md:w-[60%] rounded-lg py-8 flex flex-col gap-3 items-center justify-center px-6">
-          <p className="bg-black/50 px-6 py-2 rounded-full flex flex-row items-center gap-2">
+          <p className="bg-black/50 opacity-70 px-6 py-2 rounded-full flex flex-row items-center gap-3">
             <img src="/home/star.png" alt="img"/>
             {topbutton}
           <img src="/home/star.png" alt="img"/>
