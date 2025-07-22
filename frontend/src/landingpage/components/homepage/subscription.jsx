@@ -62,7 +62,7 @@ const plans = [
 ];
 const Subscription = () => {
   return (
-    <div className="flex flex-col items-center p-8 justify-center relative bg-[url('/home/bgimg.png')] mt-12 bg-no-repeat bg-cover bg-center w-full mb-8 rounded-lg border border-[#FFFFFF0F]">
+    <div className="flex flex-col items-center p-2 lg:p-8 justify-center relative bg-[url('/home/bgimg.png')] mt-12 bg-no-repeat bg-cover bg-center w-full mb-8 rounded-lg border border-[#FFFFFF0F]">
       {/* Header */}
       <p className="bg-[#FFFFFF0F] border border-white/20 opacity-70  w-[150px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
         <img src="/home/star.png" alt="img" />
@@ -81,7 +81,7 @@ const Subscription = () => {
       </p>
 
       {/* Plans */}
-      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-6 w-full max-w-7xl items-center">
+      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-6 w-full w-full  lg:max-w-7xl items-center">
         {plans.map((plan, index) => (
          <div
   key={index}
