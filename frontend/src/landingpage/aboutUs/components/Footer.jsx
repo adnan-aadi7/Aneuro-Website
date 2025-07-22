@@ -1,5 +1,6 @@
 import React from "react";
 import { ArrowUpRight } from "lucide-react";
+import headingImg from "../../../assets/aboutUs/heading.png";
 
 export default function Footer() {
   return (
@@ -101,10 +102,13 @@ export default function Footer() {
         </div>
       </div>
       {/* Large background text absolutely positioned at the very bottom, independent of copyright */}
-      <div className="left-0 bottom-0 w-full flex justify-center items-end pointer-events-none select-none z-10 mt-5">
-        <span className="font-manrope font-semibold uppercase text-center text-white/20 lg:text-[14vw] md:text-[240px] leading-[180px] tracking-tight text-[19vw]">
-          ANEURO
-        </span>
+      <div className="w-full flex justify-center items-end pointer-events-none select-none z-10 mt-5">
+        <img
+          src={headingImg}
+          alt="ANEURO heading"
+          className="w-full max-w-4xl h-auto object-contain"
+          draggable="false"
+        />
       </div>
       {/* Top right blue dot (hide on small screens) */}
       <span className="hidden md:block absolute top-20 right-[250px] w-10 h-10 rounded-full bg-[#12DCF0] opacity-90"></span>
@@ -120,7 +124,7 @@ export default function Footer() {
       ></span>
       {/* Bottom left glow */}
       <span
-        className="pointer-events-none absolute bottom-0 left-0 w-40 h-24 rounded-full"
+        className="pointer-events-none absolute bottom-0 left-0 w-35 h-24 rounded-full"
         style={{
           background: "#54E7FD",
           filter: "blur(100px)",
