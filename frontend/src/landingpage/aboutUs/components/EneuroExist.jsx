@@ -1,6 +1,6 @@
 import React from "react";
 import { Brain, Target, Zap, Star } from "lucide-react";
-import imageBg from "../../assets/aboutUs/image.png";
+import imageBg from "../../../assets/aboutUs/image.png";
 
 export default function EneuroExist() {
   return (

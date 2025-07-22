@@ -1,5 +1,5 @@
 import React from "react";
-import marketingImg from "../../assets/aboutUs/maketing.png";
+import marketingImg from "../../../assets/aboutUs/maketing.png";
 import { Star } from "lucide-react";
 
 const Marketing = () => {

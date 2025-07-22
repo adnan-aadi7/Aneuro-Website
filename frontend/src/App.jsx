@@ -47,9 +47,8 @@ import PromptStatsDetails from "./admin/pages/analyticsOverview/PromptStatsDetai
 import FunnelStatsDetails from "./admin/pages/analyticsOverview/FunnelStatsDetails";
 
 //landing pages
-import Home from "./landingpage/home";
-import AboutUs from "./aboutUs/page/AboutUs";
-
+import Home from "./landingpage/pages/home";
+import AboutUs from "./landingpage/pages/AboutUs";
 function App() {
   return (
     //auth routes

@@ -1,6 +1,6 @@
 import React from "react";
-import frame1 from "../../assets/aboutUs/frame2.png";
-import glow from "../../assets/aboutUs/Ellipse.png";
+import frame1 from "../../../assets/aboutUs/frame2.png";
+import glow from "../../../assets/aboutUs/Ellipse.png";
 
 const AneuroCreatedSection = () => {
   return (
