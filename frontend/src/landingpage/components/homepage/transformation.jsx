@@ -1,6 +1,6 @@
 const Transformation = () => {
   return (
-    <div className="relative w-full min-h-screen overflow-hidden mt-12 lg:mt-0">
+    <div className="relative w-full mb-16 overflow-hidden mt-12 lg:mt-0">
       {/* Smoothly blended radial gradient */}
       <div className="absolute  -left-20 w-[600px] h-[500px] rounded-full -top-20" >
           <img src="/home/Ellipse 30.png" alt="img"/>
