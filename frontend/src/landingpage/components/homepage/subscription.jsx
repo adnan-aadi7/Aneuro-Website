@@ -81,14 +81,14 @@ const Subscription = () => {
       </p>
 
       {/* Plans */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-7xl items-center">
+      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-6 w-full max-w-7xl items-center">
         {plans.map((plan, index) => (
          <div
   key={index}
   className={`relative rounded-lg border border-[#FFFFFF0F] bg-[#0A0B0D] p-8 flex flex-col justify-between transition-all duration-300 
   ${plan.highlight
   ? "bg-[linear-gradient(to_bottom,_#0E1D20_20%,_rgba(10,149,163,0.8)_100%)] h-[910px] border-t-8 border-t-[#12DCF0] shadow-[0_15px_80px_-5px_rgba(18,220,240,0.4)]"
-  : " hover:shadow-[0_8px_20px_-5px_rgba(18,220,240,0.2)] h-[880px]"
+  : " hover:shadow-[0_8px_20px_-5px_rgba(18,220,240,0.2)] h-[970px] md:h-[880px]"
 }
 
   `}

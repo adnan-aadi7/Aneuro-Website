@@ -47,7 +47,7 @@ const Faq = () => {
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'center',
           }}
-          className="bg-[#0a0c2c] relative h-[600px] rounded-lg p-6 mx-auto w-full max-w-sm text-center"
+          className="bg-[#0a0c2c] hidden lg:flex relative h-[600px] rounded-lg p-6 mx-auto w-full max-w-md text-center"
         >
           {/* User Ratings */}
           <div className="flex items-center justify-center mt-6 space-x-3 absolute bottom-6">
@@ -62,7 +62,7 @@ const Faq = () => {
             FAQ'S
             <img src="/home/star.png" alt="img" />
           </p>
-          <h2 className="text-3xl md:text-4xl mb-8">
+          <h2 className="text-3xl md:text-4xl mb-8 mt-6 font-normal">
             Still Have{' '}
             <span className="font-bold bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] bg-clip-text text-transparent">
               Questions?
@@ -88,7 +88,7 @@ const Faq = () => {
                   </div>
                   {isOpen && faq.answer && (
                     <>
-                    <hr className='border-none h-[1px] w-full bg-[#FFFFFF0F]'/>
+                    <hr className='border-none h-[1px] mt-2 w-full bg-[#FFFFFF0F]'/>
                     <p className="text-sm text-gray-400 mt-3">{faq.answer}</p>
                     </>
                   )}
