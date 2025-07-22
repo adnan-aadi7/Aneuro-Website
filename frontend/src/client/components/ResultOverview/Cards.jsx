@@ -212,9 +212,15 @@ const Cards = () => {
                 </button>
               </div>
             )}
-            <span className="text-xs text-green-400 font-medium ml-auto self-end">
-              {card.week}
-            </span>
+            {card.week && (
+              <span
+                className={`text-xs font-medium ml-auto self-end ${
+                  i === 0 ? "text-black" : "text-green-400"
+                }`}
+              >
+                {card.week}
+              </span>
+            )}
           </div>
         </div>
       ))}
