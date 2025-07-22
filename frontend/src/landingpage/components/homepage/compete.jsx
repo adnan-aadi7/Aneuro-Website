@@ -10,7 +10,7 @@ const Compete =()=>{
              <img src="/home/star.png" alt="img"/>
              </p>
 
-             <h1 className="text-[48px] font-300 mt-3">You weren't meant to compete
+             <h1 className="text[20px] lg:text-[48px] font-300 mt-3">You weren't meant to compete
                 <span className=" font-bold bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] bg-clip-text text-transparent"> In the past</span>
              </h1>
              <p className="text-[16px] text-[#A7AABB]">
