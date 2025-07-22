@@ -67,7 +67,7 @@ const Faq = () => {
           </p>
           <h2 className="text-3xl md:text-4xl mb-8 mt-6 font-normal">
             Still Have{' '}
-            <span className="font-bold bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] bg-clip-text text-transparent">
+            <span className="font-inter font-bold bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] bg-clip-text text-transparent">
               Questions?
             </span>
           </h2>

@@ -13,7 +13,9 @@ const Fact =()=>{
           <h1 className="text-[24px] lg:text-[48px] font-300 text-center leading-[60px] mt-8">
             86% of buying decisions happen
              <br/>  
-            <span className=" font-bold bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] bg-clip-text text-transparent">before logic kicks in</span>
+            <span className="font-inter font-bold bg-gradient-to-r from-[#0A95A3] via-[#12DCF0] to-[#0A95A3] bg-clip-text text-transparent">
+              Before Logic Kicks In
+              </span>
           </h1>
           <p className="text-[#A7AABB] text-[16px] mt-3 text-center">Aneuro bridges that moment. It delivers pre-aligned content—built to resonate with how people process choices.</p>
 
