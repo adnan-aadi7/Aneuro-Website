@@ -6,7 +6,7 @@ const users = [
     since: "2015",
     img: "https://randomuser.me/api/portraits/women/44.jpg",
     feedback:
-      "Lorem ipsum dolor sit amet, consectetur  iscing elit. Vivamus viverra auctor velit. Vestibulum id velit aliquam, placerat lacus",
+      "Aneuro helped me understand my audience better. The tools are intuitive, and the results came quicker than expected.",
     rating: 5,
   },
   {
@@ -14,7 +14,7 @@ const users = [
     since: "2015",
     img: "https://randomuser.me/api/portraits/women/47.jpg",
     feedback:
-      "Lorem ipsum dolor sit amet, consectetur  iscing elit. Vivamus viverra auctor velit. Vestibulum id velit aliquam, placerat lacus",
+      "Aneuro helped me understand my audience better. The tools are intuitive, and the results came quicker than expected.",
     rating: 5,
   },
   {
@@ -22,7 +22,7 @@ const users = [
     since: "2015",
     img: "https://randomuser.me/api/portraits/women/65.jpg",
     feedback:
-      "Lorem ipsum dolor sit amet, consectetur  iscing elit. Vivamus viverra auctor velit. Vestibulum id velit aliquam, placerat lacus",
+      "Aneuro helped me understand my audience better. The tools are intuitive, and the results came quicker than expected.",
     rating: 5,
   },
 ];

@@ -4,9 +4,9 @@ import { Menu, X } from "lucide-react";
 const navItems = [
   { label: "Home", href: "/" },
   { label: "About Us", href: "/about-us" },
-  { label: "Services", href: "/services" },
-  { label: "Blog", href: "/blog" },
-  { label: "Contact Us", href: "/contact" },
+  // { label: "Services", href: "/services" },
+  // { label: "Blog", href: "/blog" },
+  // { label: "Contact Us", href: "/contact" },
 ];
 
 const Navbar = () => {
@@ -17,12 +17,12 @@ const Navbar = () => {
   };
 
   return (
-    <div className="sticky top-0 left-0 right-0 z-50 w-full py-2 font-manrope text-white bg-black/80 backdrop-blur-md">
-      <div className="flex items-center justify-between ">
-        <img src="/logo.png" alt="logo" className="w-28 h-18" />
+    <div className="sticky top-0 left-0 right-0 z-50 w-full py-6 font-manrope text-white bg-black/80 backdrop-blur-md ">
+      <div className="flex items-center justify-between px-6 md:px-10">
+        <img src="/logo.png" alt="logo" className="w-30 h-12" />
 
         {/* Desktop Navigation */}
-        <div className="hidden lg:flex items-center gap-12 text-[16px] font-medium bg-[#FFFFFF0F] rounded-full px-10 py-3 border border-white/20">
+        <div className="hidden lg:flex items-center gap-40 text-[16px] font-medium bg-[#FFFFFF0F] rounded-full px-40 py-3 border border-white/20">
           {navItems.map((item, idx) => (
             <a
               key={idx}
@@ -72,6 +72,5 @@ const Navbar = () => {
     </div>
   );
 };
-
 
 export default Navbar;

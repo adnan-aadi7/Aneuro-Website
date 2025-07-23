@@ -7,7 +7,8 @@ export default function Header() {
         Funnel Structure
       </h1>
       <p className="text-slate-400 text-base mt-3">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit
+        Launch high-converting funnels built to match how each brain type
+        engages.
       </p>
     </div>
   );
