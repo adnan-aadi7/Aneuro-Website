@@ -7,9 +7,9 @@ const Transformation = () => {
     </div>
 
       {/* Content */}
-      <div className="relative z-10 px-4 lg:px-16 text-white flex flex-row items-center gap-16">
+      <div className="relative  px-4 lg:px-16 text-white flex flex-row items-center gap-16">
             <div className="flex flex-col gap-4 w-full lg:w-3/5 lg:pl-24">
-                  <div className="bg-[#FFFFFF0F] border border-white/50 w-[220px] flex items-center justify-center px-6 py-2 rounded-full flex flex-row items-center gap-2 text-[14px] text-[#A7AABB]">
+                  <div className="bg-[#FFFFFF0F]  text-[14px] text-[#A7AABB] border border-white/50 w-[200px] flex items-center justify-center px-2 py-2 rounded-full flex flex-row items-center gap-2  ">
                       <img src="/home/star.png" alt="img"/>
                       WHAT IS ANEURO
                         <img src="/home/star.png" alt="img"/>

@@ -4,14 +4,14 @@ const Compete =()=>{
 
     return(
        <div className="overflow-hidden flex flex-col items-center justify-center py-12 relative bg-[url('/home/lastbg.png')] bg-no-repeat bg-cover bg-center w-full   rounded-lg border border-[#FFFFFF0F]">
-            <p className="bg-[#FFFFFF0F] border border-white/20 opacity-70 w-[150px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
+            <p className="bg-[#FFFFFF0F] text-[14px] text-[#A7AABB] border border-white/20 w-[150px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
                <img src="/home/star.png" alt="img"/>
                 PRICING
              <img src="/home/star.png" alt="img"/>
              </p>
 
              <h1 className="text[20px] lg:text-[48px] font-300 mt-3">You weren't meant to compete
-                <span className=" font-bold bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] bg-clip-text text-transparent"> In the past</span>
+                <span className=" font-bold bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] bg-clip-text text-transparent"> In The Past</span>
              </h1>
              <p className="text-[16px] text-[#A7AABB]">
                 This is your portal into the next era of marketing. And it's already built.

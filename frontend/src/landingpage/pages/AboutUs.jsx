@@ -12,7 +12,7 @@ const AboutUs = () => {
     <div className="w-full mx-auto px-4 md:px-12 max-w-[1750px] bg-black">
       <Navbar />
       <HeroSection
-        topbutton="Lorem ipsum dolo"
+        topbutton="About Aneuro"
         bgImage="/Figureheroimg.png"
         title="Precision beats "
         highlightText="persuasion"

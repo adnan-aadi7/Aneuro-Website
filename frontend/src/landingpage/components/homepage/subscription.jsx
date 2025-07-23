@@ -64,7 +64,7 @@ const Subscription = () => {
   return (
     <div className="flex flex-col items-center p-2 lg:p-8 justify-center relative bg-[url('/home/bgimg.png')] mt-12 bg-no-repeat bg-cover bg-center w-full mb-8 rounded-lg border border-[#FFFFFF0F]">
       {/* Header */}
-      <p className="bg-[#FFFFFF0F] border border-white/20 opacity-70  w-[150px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
+      <p className="bg-[#FFFFFF0F] text-[14px] text-[#A7AABB] border border-white/20  w-[150px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
         <img src="/home/star.png" alt="img" />
         PRICING
         <img src="/home/star.png" alt="img" />

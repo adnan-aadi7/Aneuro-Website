@@ -7,7 +7,7 @@ const Behavioralprecision =()=>{
            <div className="absolute top-10 -right-24 w-[600px] h-[600px] z-0">
         <img src="/home/Ellipse 30.png" alt="decor" className="w-full h-full object-contain" />
       </div>
-          <p className="bg-[#FFFFFF0F] border border-white/20 opacity-70 w-[250px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
+          <p className="bg-[#FFFFFF0F]  text-[14px] text-[#A7AABB] border border-white/20 w-[200px] px-2 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
             <img src="/home/star.png" alt="img"/>
              HOW IT WORKS
           <img src="/home/star.png" alt="img"/>
@@ -25,7 +25,7 @@ const Behavioralprecision =()=>{
 
           <div className="flex flex-col lg:flex-row items-center justify-center gap-6 mt-12  w-full ">
               <div className="flex flex-col gap-4">
-                   <p className="flex items-center justify-center border border-white/20 opacity-70 bg-[#FFFFFF0F] w-[150px] px-4 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
+                   <p className="flex text-[14px] text-[#A7AABB] items-center justify-center border border-white/20  bg-[#FFFFFF0F] w-[130px] px-2 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
             <img src="/home/star.png" alt="img"/>
              STEP 1
           <img src="/home/star.png" alt="img"/>
@@ -50,7 +50,7 @@ const Behavioralprecision =()=>{
                           <img src="/home/22.png" alt="img" className="hidden lg:block "/>
 
               <div className="flex flex-col gap-4 ">
-                   <p className=" flex items-center justify-center border border-white/20 opacity-70 bg-[#FFFFFF0F] w-[150px] px-4 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
+                   <p className=" flex items-center text-[14px] text-[#A7AABB] justify-center border border-white/20  bg-[#FFFFFF0F] w-[130px] px-2 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
             <img src="/home/star.png" alt="img"/>
              STEP 2
           <img src="/home/star.png" alt="img"/>
@@ -73,7 +73,7 @@ const Behavioralprecision =()=>{
 
             <div className="flex flex-col lg:flex-row items-center justify-center gap-6 mt-12  w-full ">
               <div className="flex flex-col gap-4 ">
-                   <p className="flex items-center justify-center opacity-70 bg-[#FFFFFF0F] border border-white/20 w-[150px] px-4 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
+                   <p className="flex  text-[14px] text-[#A7AABB] items-center justify-center  bg-[#FFFFFF0F] border border-white/20 w-[130px] px-2 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
             <img src="/home/star.png" alt="img" className="hidden lg:block"/>
              STEP 3
           <img src="/home/star.png" alt="img"/>
