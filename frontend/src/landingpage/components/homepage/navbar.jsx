@@ -22,7 +22,7 @@ const Navbar = () => {
         <img src="/logo.png" alt="logo" className="w-20 h-8" />
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-12 text-[16px] font-medium bg-[#FFFFFF0F] rounded-full px-10 py-3 border border-white/20">
+        <div className="hidden lg:flex items-center gap-12 text-[16px] font-medium bg-[#FFFFFF0F] rounded-full px-10 py-3 border border-white/20">
           {navItems.map((item, idx) => (
             <a
               key={idx}
@@ -37,20 +37,20 @@ const Navbar = () => {
         {/* Desktop CTA */}
         <a
           href="/signup"
-          className="hidden md:block text-white font-bold text-[16px] px-5 py-3 rounded-full bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3]"
+          className="hidden lg:block text-white font-bold text-[16px] px-5 py-3 rounded-full bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3]"
         >
           Get Started
         </a>
 
         {/* Mobile Menu Button */}
-        <button onClick={toggleSidebar} className="md:hidden">
+        <button onClick={toggleSidebar} className="lg:hidden">
           {isSidebarOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
       </div>
 
       {/* Mobile Sidebar */}
       {isSidebarOpen && (
-        <div className="md:hidden px-6 mt-4 space-y-4 flex flex-col bg-black">
+        <div className="lg:hidden px-6 mt-4 space-y-4 flex flex-col bg-black">
           {navItems.map((item, idx) => (
             <a
               key={idx}
