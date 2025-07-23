@@ -7,26 +7,30 @@ const Behavioralprecision =()=>{
            <div className="absolute top-10 -right-24 w-[600px] h-[600px] z-0">
         <img src="/home/Ellipse 30.png" alt="decor" className="w-full h-full object-contain" />
       </div>
-          <p className="bg-[#FFFFFF0F] w-[250px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
+          <p className="bg-[#FFFFFF0F] border border-white/20 opacity-70 w-[250px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
             <img src="/home/star.png" alt="img"/>
-             How it Works
+             HOW IT WORKS
           <img src="/home/star.png" alt="img"/>
           </p>
 
           <h1 className="text-[20px] text-center lg:text-[48px]">
             Three intelligent steps to transform your
             <br/>
-           strategy with <span className="text-[#0A95A3] font-bold">Behavioral Precision</span>
+           strategy with {" "}
+           <span className="font-bold font-inter bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] bg-clip-text text-transparent">
+             Behavioral Precision
+           </span>
+           
           </h1>
 
           <div className="flex flex-col lg:flex-row items-center justify-center gap-6 mt-12  w-full ">
-              <div className="flex flex-col gap-4 ">
-                   <p className="bg-[#FFFFFF0F] w-[150px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
+              <div className="flex flex-col gap-4">
+                   <p className="flex items-center justify-center border border-white/20 opacity-70 bg-[#FFFFFF0F] w-[150px] px-4 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
             <img src="/home/star.png" alt="img"/>
-             Step 1
+             STEP 1
           <img src="/home/star.png" alt="img"/>
           </p>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] bg-clip-text text-transparent">
+            <h1 className="font-inter text-4xl font-bold bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] bg-clip-text text-transparent">
               Connect
             </h1>
             <p className="text-[16px] text-[#A7AABB]">
@@ -39,19 +43,19 @@ const Behavioralprecision =()=>{
              </button>
 
               </div>
-              <img src="/home/Background+Overlay+Border+OverlayBlur.png" alt="img"/>
+              <img src="/home/11.png" alt="img"/>
           </div>
 
           <div className="flex flex-col lg:flex-row items-center justify-center gap-12 mt-12  w-full ">
-                          <img src="/home/Background+Overlay+Border+OverlayBlur (1).png" alt="img" className="hidden lg:block "/>
+                          <img src="/home/22.png" alt="img" className="hidden lg:block "/>
 
               <div className="flex flex-col gap-4 ">
-                   <p className="bg-[#FFFFFF0F] w-[150px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
+                   <p className=" flex items-center justify-center border border-white/20 opacity-70 bg-[#FFFFFF0F] w-[150px] px-4 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
             <img src="/home/star.png" alt="img"/>
-             Step 2
+             STEP 2
           <img src="/home/star.png" alt="img"/>
           </p>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] bg-clip-text text-transparent">
+            <h1 className="font-inter text-4xl font-bold bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] bg-clip-text text-transparent">
              Align
             </h1>
             <p className="text-[16px] text-[#A7AABB]">
@@ -64,17 +68,17 @@ const Behavioralprecision =()=>{
              </button>
 
               </div>
-              <img src="/home/Background+Overlay+Border+OverlayBlur (1).png" alt="img" className="lg:hidden "/>
+              <img src="/home/22.png" alt="img" className="lg:hidden "/>
           </div>
 
             <div className="flex flex-col lg:flex-row items-center justify-center gap-6 mt-12  w-full ">
               <div className="flex flex-col gap-4 ">
-                   <p className="bg-[#FFFFFF0F] w-[150px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
+                   <p className="flex items-center justify-center opacity-70 bg-[#FFFFFF0F] border border-white/20 w-[150px] px-4 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
             <img src="/home/star.png" alt="img" className="hidden lg:block"/>
-             Step 3
+             STEP 3
           <img src="/home/star.png" alt="img"/>
           </p>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] bg-clip-text text-transparent">
+            <h1 className="font-inter text-4xl font-bold bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] bg-clip-text text-transparent">
               Deploy
             </h1>
             <p className="text-[16px] text-[#A7AABB]">
@@ -87,7 +91,7 @@ const Behavioralprecision =()=>{
              </button>
 
               </div>
-              <img src="/home/Background+Overlay+Border+OverlayBlur (2).png" alt="img"/>
+              <img src="/home/33.png" alt="img"/>
           </div>
         </div>
     )

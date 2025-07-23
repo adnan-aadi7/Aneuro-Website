@@ -15,13 +15,13 @@ const HeroSection = ({
   highlightText
 }) => {
   return (
-    <div className="relative w-full text-white font-manrope max-h-screen flex items-center justify-center">
+    <div className="relative w-full text-white font-manrope max-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <img
           src={bgImage}
           alt="Background"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover rounded-md"
         />
         <div className="absolute inset-0 bg-black/30" />
       </div>
@@ -29,14 +29,14 @@ const HeroSection = ({
       {/* Content */}
       <div className="relative z-10 py-16 rounded-lg text-center flex flex-col gap-3 items-center justify-center w-full">
         {/* Top Section */}
-        <div className="bg-black/20 w-[95%] md:w-[60%] rounded-lg py-8 flex flex-col gap-3 items-center justify-center px-6">
-          <p className="bg-black/50 px-6 py-2 rounded-full flex flex-row items-center gap-2">
+        <div className="bg-black/20 w-[95%] md:w-[60%] rounded-lg py-8 flex flex-col gap-3 items-center justify-center ">
+          <p className="bg-black/50 opacity-70 px-6 py-2 rounded-full flex flex-row items-center gap-3">
             <img src="/home/star.png" alt="img"/>
             {topbutton}
           <img src="/home/star.png" alt="img"/>
           </p>
 
-<h1 className="text-lg lg:text-3xl md:text-5xl font-semibold mb-4">
+<h1 className="text-lg lg:text-[50px] leading-tight font-semibold mb-4">
   {title.split(highlightText)[0]}
   <span className="text-[#12DCF0]">{highlightText}</span>
   {title.split(highlightText)[1]}

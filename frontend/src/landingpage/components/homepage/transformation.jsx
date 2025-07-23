@@ -2,26 +2,26 @@ const Transformation = () => {
   return (
     <div className="relative w-full mb-16 overflow-hidden mt-12 lg:mt-0">
       {/* Smoothly blended radial gradient */}
-      <div className="absolute  -left-20 w-[600px] h-[500px] rounded-full -top-20" >
+      <div className="absolute  -left-32 w-[800px] h-[800px] rounded-full -top-44" >
           <img src="/home/Ellipse 30.png" alt="img"/>
     </div>
 
       {/* Content */}
       <div className="relative z-10 px-4 lg:px-16 text-white flex flex-row items-center gap-16">
             <div className="flex flex-col gap-4 w-full lg:w-3/5 lg:pl-24">
-                  <div className="bg-[#FFFFFF0F] border border-white/50 w-[200px] px-6 py-2 rounded-full flex flex-row items-center gap-2 text-[14px] text-[#A7AABB]">
+                  <div className="bg-[#FFFFFF0F] border border-white/50 w-[220px] flex items-center justify-center px-6 py-2 rounded-full flex flex-row items-center gap-2 text-[14px] text-[#A7AABB]">
                       <img src="/home/star.png" alt="img"/>
-                      What Is Aneuro
+                      WHAT IS ANEURO
                         <img src="/home/star.png" alt="img"/>
                   </div>
-                  <h1 className="text-[20px] lg:text-[48px] font-[300]">
+                    <span className="text-[20px] lg:text-[48px] font-[150]">
                       Aneuro is not a tool. It’s a  <br/>
                      <div className="flex flex-row items-center gap-6">
                       <img src="/home/abioutustitle.png" alt="img"/>
-                     <span className="text-[#12DCF0]">Transformation.</span>
+                     <span className="bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] bg-clip-text text-transparent">Transformation.</span>
                      </div>
                     
-                  </h1>
+                  </span>
                   <hr className="bg-[#FFFFFF0F] h-px mt-4 mb-4 border-none" />
                   <div className="flex flex-col md:flex-row items-start lg:items-center justify-between gap-8">
                        <div className="flex flex-col gap-6">

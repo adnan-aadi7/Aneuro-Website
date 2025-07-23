@@ -18,13 +18,13 @@ const Neural = ()=>{
              <img src="/home/Image (2).png" alt="img" className="w-16 h-16 lg:h-24 lg:w-24"/>
         </div>
            <div className="flex flex-col gap-0 items-center justify-center w-full ">
-            <p className="bg-[#FFFFFF0F] w-[250px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
+            <p className="bg-[#FFFFFF0F] border border-white/20 opacity-70 w-[250px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
             <img src="/home/star.png" alt="img"/>
              Heading here
           <img src="/home/star.png" alt="img"/>
           </p>
              <h1 className="text-[48px] mt-4">
-                This isn't niche. <span className=" font-bold bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] bg-clip-text text-transparent">It's neural.</span>
+                This isn't niche. <span className=" font-bold bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] bg-clip-text text-transparent font-inter">It's neural.</span>
              </h1>
              <p className="text-center text-[16px] text-[#A7AABB]">Whether you sell software or sneakers, services or content—Aneuro adapts to <br/>the cognitive styles of your audience.</p>
 
