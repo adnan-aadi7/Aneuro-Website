@@ -78,12 +78,12 @@ export default function Footer() {
               Subscribe to our newsletter for the latest updates, exclusive
               content.
             </p>
-            <form className="flex items-center gap-2">
+            <form className="flex items-center gap-2 w-full border-b border-b-gray-600 pb-1">
               <input
                 type="email"
                 required
                 placeholder="Email Address *"
-                className="bg-transparent border-b border-b-gray-600 px-2 md:px-3 py-2 md:py-3 text-xs md:text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#12DCF0]"
+                className="bg-transparent px-2 md:px-3 py-2 md:py-3 text-xs md:text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#12DCF0] w-full"
               />
              <button
   type="submit"
