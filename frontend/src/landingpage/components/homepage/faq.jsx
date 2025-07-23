@@ -54,13 +54,13 @@ const Faq = () => {
         >
           {/* User Ratings */}
           <div className="flex items-center justify-center mt-6 space-x-3 absolute bottom-6">
-            <img src="/home/OverlayBlur.png" alt="img" />
+            <img src="/home/OverlayBlur.svg" alt="img" />
           </div>
         </div>
 
         {/* Right - FAQ Content */}
         <div className=" z-10 w-full">
-          <p className="bg-[#FFFFFF0F] border border-white/20 opacity-70  w-[140px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
+          <p className="text-[14px] text-[#A7AABB] bg-[#FFFFFF0F] border border-white/20  w-[140px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
             <img src="/home/star.png" alt="img" />
             FAQ'S
             <img src="/home/star.png" alt="img" />

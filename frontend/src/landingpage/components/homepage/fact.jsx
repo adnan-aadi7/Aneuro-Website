@@ -4,7 +4,7 @@ const Fact =()=>{
 
     return(
         <div className="overflow-hidden relative flex flex-col items-center justify-center mt-12 mb-12">
-             <p className="bg-[#FFFFFF0F] w-[250px] px-6 py-2 border border-white/20 opacity-70  rounded-full flex flex-row items-center gap-2 justify-center">
+             <p className="bg-[#FFFFFF0F] text-[14px] text-[#A7AABB] w-[250px] px-6 py-2 border border-white/20  rounded-full flex flex-row items-center gap-2 justify-center">
             <img src="/home/star.png" alt="img"/>
              OUR FACTS
           <img src="/home/star.png" alt="img"/>

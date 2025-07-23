@@ -15,7 +15,7 @@ const Home=()=>{
         <div className="w-full mx-auto px-4 md:px-12 max-w-[1750px] bg-black font-manrope ">
          <Navbar/>
           <HeroSection
-        topbutton="Lorem ipsum dolo"
+        topbutton="NEUROMARKETING INTELLIGENCE"
         bgImage="/home/hero.png"
         title="Every decision begins in the brain. Every click begins "
         highlightText="with Aneuro"

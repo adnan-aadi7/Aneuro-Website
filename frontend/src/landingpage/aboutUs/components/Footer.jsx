@@ -86,22 +86,19 @@ export default function Footer() {
                 placeholder="Email Address *"
                 className="bg-transparent px-2 md:px-3 py-2 md:py-3 text-xs md:text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#12DCF0] w-full"
               />
-              <button
-                type="submit"
-                className="p-2 rounded hover:opacity-90 transition-colors mb-0"
-                style={{
-                  background:
-                    "linear-gradient(90deg, #12DCF0 0%, #0A95A3 100%)",
-                }}
-                aria-label="Subscribe"
-              >
-                <ArrowUpRight className="text-[#FFFFFF] w-3 h-3 " />
-              </button>
+             <button
+  type="submit"
+  className="bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] p-1 rounded hover:opacity-90 transition-opacity cursor-pointer"
+  aria-label="Subscribe"
+>
+  <ArrowUpRight size={20} className="text-[#18192A]  text-white" />
+</button>
+
             </form>
           </div>
         </div>
         {/* Copyright */}
-        <div className="mt-8 md:mt-10 text-center text-gray-400 text-xs">
+        <div className="mt-8 md:mt-10 text-center white text-xs">
           Copyright © 2025 All Rights Reserved.
         </div>
       </div>
