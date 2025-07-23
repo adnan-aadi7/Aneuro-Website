@@ -4,14 +4,14 @@ import RightSection from "../../components/signup/RightSection";
 
 const Signup = () => {
   return (
-    <>
-      <div className="flex flex-col md:flex-row md:grid-cols-2 mx-auto w-full md:w-7xl gap-6 md:gap-32">
+    <div className="flex  w-full">
+      <div className="w-full md:w-1/2 flex items-center justify-center">
         <Form />
-        <div className="rounded-tr-3xl rounded-br-3xl overflow-hidden hidden md:block">
-          <RightSection />
-        </div>
       </div>
-    </>
+      <div className="w-0 md:w-1/2 h-full rounded-tr-3xl rounded-br-3xl overflow-hidden hidden md:block">
+        <RightSection />
+      </div>
+    </div>
   );
 };
 
