@@ -60,8 +60,8 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="flex flex-col p-2 lg:p-4 md:px-1 w-xl h-full px-24">
-      <div className="w-full">
+    <div className="flex justify-center items-center w-full ">
+      <div className="w-full max-w-sm sm:max-w-md mx-auto   bg-opacity-90">
         {/* Logo */}
         <div className="flex justify-center">
           <img src={logo} alt="Logo" className="w-[163px] h-[150px]" />

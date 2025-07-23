@@ -30,8 +30,8 @@ export default function Form() {
   };
 
   return (
-    <div className=" flex p-4">
-      <div className="w-7xl max-w-md mx-auto">
+    <div className="flex justify-center items-center min-h-screen w-full px-2">
+      <div className="w-full max-w-sm sm:max-w-md mx-auto px-4 py-6 bg-opacity-80">
         {/* Logo */}
         <div className="flex justify-center">
           <img src={logo} alt="Logo" className="w-[163px] h-[150px] " />

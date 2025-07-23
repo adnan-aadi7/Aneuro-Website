@@ -13,15 +13,15 @@ export default function RightSection() {
   ];
 
   return (
-    <div className="w-full">
-      <div className="bg-[#12DCF0] ">
-        <div className="mx-auto ">
+    <div className="w-full h-full">
+      <div className="bg-[#12DCF0] h-full w-full">
+        <div className="mx-auto h-full w-full">
           {/* Header */}
           <img src={Ticket} alt="ticket" className="w-20 h-16 ml-8 absolute" />
           <img
             src={Dots}
             alt="dosts"
-            className="w-10 h-40  absolute ml-[590px] mt-5"
+            className="w-10 h-40  absolute ml-[690px] mt-5"
           />
           <div className="flex flex-col items-center text-center">
             <h1 className="text-5xl font-bold text-gray-900 mt-14 ">
@@ -42,7 +42,7 @@ export default function RightSection() {
           </div>
 
           {/* Main Dashboard Card */}
-          <div className="max-full mx-auto mt-8 ">
+          <div className="max-full mx-auto mt-8 h-full w-full">
             {/* Profile Image at top */}
             <div className="relative">
               <img
