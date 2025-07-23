@@ -12,6 +12,7 @@ const AboutUs = () => {
     <div className="w-full mx-auto px-4 md:px-12 max-w-[1750px] bg-black">
       <Navbar />
       <HeroSection
+       className="bg-[url('/Background+Overlay.png')] bg-cover bg-center"
         topbutton="About Aneuro"
         bgImage="/Figureheroimg.png"
         title="Precision beats "
