@@ -97,7 +97,7 @@ export default function Footer() {
           </div>
         </div>
         {/* Copyright */}
-        <div className="mt-8 md:mt-10 text-center white text-xs">
+        <div className="mt-8 md:mt-10 text-center white text-[16px]">
           Copyright © 2025 All Rights Reserved.
         </div>
       </div>
