@@ -39,7 +39,7 @@ const Faq = () => {
   return (
     <div className="bg-black py-20 px-4 md:px-12 text-white font-sans relative overflow-hidden">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-12 items-center">
-         <div className="absolute left-[28%] w-[600px] h-[500px] rounded-full -top-32" >
+         <div className="absolute left-[28%] w-[600px] h-[500px] rounded-full -top-32 z-0" >
           <img src="/home/Ellipse 33.png" alt="img"/>
     </div>
         {/* Left - Brain Image Card */}
@@ -50,7 +50,7 @@ const Faq = () => {
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'center',
           }}
-          className="bg-[#0a0c2c] hidden lg:flex relative h-[600px] rounded-lg p-6 mx-auto w-full max-w-md text-center"
+          className="z-10 bg-[#0a0c2c] hidden lg:flex relative h-[600px] rounded-lg p-6 mx-auto w-full max-w-md text-center"
         >
           {/* User Ratings */}
           <div className="flex items-center justify-center mt-6 space-x-3 absolute bottom-6">
@@ -59,7 +59,7 @@ const Faq = () => {
         </div>
 
         {/* Right - FAQ Content */}
-        <div className="w-full">
+        <div className=" z-10 w-full">
           <p className="bg-[#FFFFFF0F] border border-white/20 opacity-70  w-[140px] px-6 py-2 rounded-full flex flex-row items-center gap-2 justify-center">
             <img src="/home/star.png" alt="img" />
             FAQ'S

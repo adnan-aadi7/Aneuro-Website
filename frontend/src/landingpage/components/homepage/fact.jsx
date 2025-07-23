@@ -24,7 +24,7 @@ const Fact =()=>{
          <div className="absolute  -right-20 w-[600px] h-[500px] rounded-full top-10" >
           <img src="/home/Ellipse 31.png" alt="img"/>
     </div>
-         <div className="w-[350px] rounded-2xl border border-[#FFFFFF0F] p-6"
+         <div className="w-[350px] rounded-2xl border border-[#FFFFFF0F] p-6 z-10"
              style={{
                backgroundImage: "url('/home/2a4e6ec3c93089e13583816aa0a23cbd6b76680f (1).png')",
                backgroundSize: "cover",
@@ -39,7 +39,7 @@ const Fact =()=>{
 
            </div>
 
-            <div className="w-[350px] rounded-2xl border border-[#FFFFFF0F] p-6"
+            <div className="z-10 w-[350px] rounded-2xl border border-[#FFFFFF0F] p-6"
              style={{
                backgroundImage: "url('/home/2a4e6ec3c93089e13583816aa0a23cbd6b76680f (1).png')",
                backgroundSize: "cover",
@@ -54,7 +54,7 @@ const Fact =()=>{
 
            </div>
 
-            <div className="w-[350px] rounded-2xl border border-[#FFFFFF0F] p-6"
+            <div className="z-10 w-[350px] rounded-2xl border border-[#FFFFFF0F] p-6"
              style={{
                backgroundImage: "url('/home/2a4e6ec3c93089e13583816aa0a23cbd6b76680f (1).png')",
                backgroundSize: "cover",

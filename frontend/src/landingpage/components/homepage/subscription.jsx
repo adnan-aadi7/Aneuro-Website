@@ -45,8 +45,8 @@ const plans = [
     duration: "/month",
     description: "Infrastructure for decision-driven marketing.",
     details:
-      "Enterprise provides full platform control, strategic flexibility, and operational scale.",
-    includes: [
+      "Enterprise provides full platform control, strategic flexibility, and operational scale. From white-labeled delivery to internal team seats, this tier is designed for companies who want to integrate Aneuro as a core system—without compromise.",
+      includes: [
       "All Growth tier inclusions",
       "White-labeled platform (client-facing or internal)",
       "API access for custom CRM/data integration",
@@ -87,8 +87,8 @@ const Subscription = () => {
   key={index}
   className={`relative rounded-lg border border-[#FFFFFF0F] bg-[#0A0B0D] p-8 flex flex-col justify-between transition-all duration-300 
   ${plan.highlight
-  ? "bg-[linear-gradient(to_bottom,_#0E1D20_20%,_rgba(10,149,163,0.8)_100%)] h-[910px] border-t-8 border-t-[#12DCF0] shadow-[0_15px_80px_-5px_rgba(18,220,240,0.4)]"
-  : " hover:shadow-[0_8px_20px_-5px_rgba(18,220,240,0.2)] h-[970px] md:h-[880px]"
+  ? "bg-[linear-gradient(to_bottom,_#0E1D20_20%,_rgba(10,149,163,0.8)_100%)] h-auto lg:h-[910px] border-t-8 border-t-[#12DCF0] shadow-[0_15px_80px_-5px_rgba(18,220,240,0.4)]"
+  : " hover:shadow-[0_8px_20px_-5px_rgba(18,220,240,0.2)] h-auto lg:h-[880px]"
 }
 
   `}
@@ -100,11 +100,11 @@ const Subscription = () => {
               </span>
             )}
             <div>
-              <h2 className="text-xl font-semibold text-whit flex flex-row items-center gap-3"> 
+              <h2 className="text-[24px] font-normal text-whit flex flex-row items-center gap-3"> 
                 <img src={plan.icon} alt="img"/>
                 {plan.title}</h2>
               <div className="flex items-end gap-1 mt-4">
-                <span className="text-4xl font-bold text-white">{plan.price}</span>
+                <span className="text-4xl text-white">{plan.price}</span>
                 <span className="text-sm text-[#A7AABB]">{plan.duration}</span>
               </div>
               <p className="mt-4  text-[15px] text-[18px]">{plan.description}</p>
@@ -113,7 +113,7 @@ const Subscription = () => {
                 <h1>Includes:</h1>
                 {plan.includes.map((item, i) => (
                   <li key={i} className="text-[#A7AABB] text-sm flex gap-2">
-                    <span className="text-[#12DCF0]"><Check/></span> {item}
+                    <span className="text-[#12DCF0] flex flex-row items-center gap-2"><Check size={16}/></span> {item}
                   </li>
                 ))}
               </ul>
