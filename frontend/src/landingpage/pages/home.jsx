@@ -9,12 +9,11 @@ import Faq from "../components/homepage/faq";
 import Footer from "../aboutUs/components/Footer";
 import Compete from "../components/homepage/compete";
 
-const Home=()=>{
-
-    return(
-        <div className="w-full mx-auto px-4 md:px-12 max-w-[1750px] bg-black font-manrope ">
-         <Navbar/>
-          <HeroSection
+const Home = () => {
+  return (
+    <div className="w-full mx-auto px-4 md:px-12 max-w-[1750px] bg-black font-manrope ">
+      <Navbar />
+      <HeroSection
         topbutton="NEUROMARKETING INTELLIGENCE"
         bgImage="/home/hero.png"
         title="Every decision begins in the brain. Every click begins "
@@ -25,19 +24,19 @@ const Home=()=>{
         secondaryBtnText="View Pricing"
         secondaryBtnLink="/"
         bottomImage="/home/img.png"
-        bottomText="Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        bottomText="Trusted by marketers who personalize with brain-based precision."
       />
 
-      <Transformation/>
-      <Behavioralprecision/>
-      <Neural/>
-      <Fact/>
-      <Subscription/>
-      <Faq/>
-      <Compete/>
-      <Footer/>
-        </div>
-    )
-}
+      <Transformation />
+      <Behavioralprecision />
+      <Neural />
+      <Fact />
+      <Subscription />
+      <Faq />
+      <Compete />
+      <Footer />
+    </div>
+  );
+};
 
 export default Home;

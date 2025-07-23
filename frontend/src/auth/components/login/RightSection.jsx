@@ -29,8 +29,8 @@ export default function RightSection() {
             </h1>
 
             <p className="text-gray-700 text-[13px] max-w-1xl mx-auto mt-2">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam ac
-              sapien at <br /> risus volutpat tempor.
+              Connect with professionals who understand audience behavior and
+              boost <br /> results using brain-first strategies.
             </p>
 
             {/* Navigation dots */}

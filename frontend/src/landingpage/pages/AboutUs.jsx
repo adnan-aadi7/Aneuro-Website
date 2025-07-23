@@ -22,7 +22,7 @@ const AboutUs = () => {
         secondaryBtnText="View Pricing"
         secondaryBtnLink="/"
         bottomImage="/home/img.png"
-        bottomText="Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        bottomText="Trusted by marketers who personalize with brain-based precision."
       />
       <AneuroCreatedSection />
       <LevelIntelligence />
