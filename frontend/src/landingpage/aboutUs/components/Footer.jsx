@@ -88,10 +88,14 @@ export default function Footer() {
               />
               <button
                 type="submit"
-                className="bg-[#12DCF0] p-2 rounded hover:bg-cyan-400 transition-colors mb-0"
+                className="p-2 rounded hover:opacity-90 transition-colors mb-0"
+                style={{
+                  background:
+                    "linear-gradient(90deg, #12DCF0 0%, #0A95A3 100%)",
+                }}
                 aria-label="Subscribe"
               >
-                <ArrowUpRight className="text-[#18192A] w-3 h-3 " />
+                <ArrowUpRight className="text-[#FFFFFF] w-3 h-3 " />
               </button>
             </form>
           </div>
