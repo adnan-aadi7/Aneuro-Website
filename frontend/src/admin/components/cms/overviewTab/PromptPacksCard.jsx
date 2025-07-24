@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import DiamondIcon from "../../../../../public/icons/diamond.png";
+import KingIcon from "../../../../../public/icons/king.png";
+import StarIcon from "../../../../../public/icons/star.png";
 
 export default function PromptPacksCard() {
   const [isDragOver, setIsDragOver] = useState(false);
@@ -99,9 +102,11 @@ export default function PromptPacksCard() {
               type="checkbox"
               className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
             />
-            <span className="w-5 h-5 flex items-center justify-center text-gray-400">
-              ★
-            </span>
+            <img
+              src={StarIcon}
+              alt="Basic"
+              className="w-6 h-6 object-contain"
+            />
             <div className="flex-1 ml-2">
               <div className="flex items-center gap-2">
                 <span className="text-white text-sm">Basic</span>
@@ -119,9 +124,11 @@ export default function PromptPacksCard() {
               type="checkbox"
               className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
             />
-            <span className="w-4 h-4 flex items-center justify-center text-blue-400">
-              &#x1F451;
-            </span>
+            <img
+              src={KingIcon}
+              alt="Premium"
+              className="w-6 h-6 object-contain"
+            />
             <div className="flex-1 ml-2">
               <div className="flex items-center gap-2">
                 <span className="text-white text-sm">Premium</span>
@@ -139,9 +146,11 @@ export default function PromptPacksCard() {
               type="checkbox"
               className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
             />
-            <span className="w-4 h-4 flex items-center justify-center text-purple-400">
-              &#x1F48E;
-            </span>
+            <img
+              src={DiamondIcon}
+              alt="VIP"
+              className="w-6 h-6 object-contain"
+            />
             <div className="flex-1 ml-2">
               <div className="flex items-center gap-2">
                 <span className="text-white text-sm">VIP</span>
