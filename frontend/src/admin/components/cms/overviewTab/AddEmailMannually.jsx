@@ -2,7 +2,7 @@ import React from "react";
 
 const AddEmailMannually = () => {
   return (
-    <div className="bg-[#2A2A39] min-h-screen p-0">
+    <div className="bg-[#2A2A39] min-h-screen p-2">
       {/* Sender Section */}
       <div className="flex items-center gap-3 mb-2 mt-4 ml-6">
         <img
@@ -44,7 +44,7 @@ const AddEmailMannually = () => {
           />
         </div>
         <div className="flex justify-start ml-6 mt-4">
-          <button className="bg-cyan-400 text-black font-semibold px-10 py-2 rounded hover:bg-cyan-300 transition-all text-sm ">
+          <button className="cursor-pointer bg-cyan-400 text-black font-semibold px-10 py-2 rounded hover:bg-cyan-300 transition-all text-sm ">
             Send
           </button>
         </div>

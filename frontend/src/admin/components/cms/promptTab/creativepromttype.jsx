@@ -1,3 +1,5 @@
+
+
 import React, { useState } from "react";
 import { ChevronDown, ChevronUp, Edit2 } from "lucide-react";
 
@@ -18,14 +20,14 @@ const prompts = [
   },
 ];
 
-const Promptype = ({ type }) => {
+const Promptype = () => {
   const [expandedId, setExpandedId] = useState(1);
 
   return (
     <div className="bg-[#2A2A39]  p-8 mt-10">
       {/* Title */}
       <h2 className="text-white text-2xl font-semibold mb-2">
-        {type} Brain Type Prompts
+        Analytical Brain Type Prompts
       </h2>
       {/* Dropdown */}
       <select className="w-full bg-[#181A20] text-white p-3 rounded mb-8 border border-[#3A3A4A] focus:outline-none">
@@ -36,7 +38,7 @@ const Promptype = ({ type }) => {
       </select>
       {/* Section Title */}
       <h3 className="text-white text-lg font-medium mb-4">
-        Email Prompts for {type} Types
+        Email Prompts for Analytical Types
       </h3>
       {/* Prompt Cards */}
       {prompts.map((prompt) => (

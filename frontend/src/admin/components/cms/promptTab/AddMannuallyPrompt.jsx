@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { act, useState } from "react";
 import { Mail, Users, Calendar } from "lucide-react";
 import Promptype from "./Promptype";
 
@@ -8,7 +8,7 @@ const AddMannuallyPrompt = () => {
   const [activeTab, setActiveTab] = useState("Analytical");
 
   return (
-    <div className="bg-[#181A20] min-h-screen p-6">
+    <div className=" min-h-screen ">
       {/* Title and subtitle */}
       <h2 className="text-white text-2xl font-semibold mb-1">Prompt Packs</h2>
       <p className="text-gray-300 mb-8 text-base">
@@ -60,12 +60,12 @@ const AddMannuallyPrompt = () => {
       </div>
 
       {/* Tab Bar */}
-      <div className="flex border border-[#3A3A4A]  overflow-hidden">
+      <div className="flex border border-[#3A3A4A] p-1  overflow-hidden">
         {tabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 px-6 py-2 text-sm font-medium transition-all
+            className={`flex-1 px-6 py-2 text-sm font-medium transition-all cursor-pointer
               ${
                 activeTab === tab
                   ? "bg-cyan-400 text-black"
@@ -78,7 +78,12 @@ const AddMannuallyPrompt = () => {
       </div>
 
       {/* Tab Content */}
-      {activeTab === "Analytical" && <Promptype />}
+      {activeTab === "Analytical" && <Promptype type={activeTab} />}
+      {activeTab === "Creative" && <Promptype type={activeTab} />}
+      {activeTab === "Empathetic" && <Promptype type={activeTab}/>}
+      {activeTab === "Strategic" && <Promptype type={activeTab}/>}
+      {activeTab === "Practical" && <Promptype type={activeTab}/>}
+
     </div>
   );
 };
