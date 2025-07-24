@@ -135,7 +135,7 @@ const Cards = () => {
       {cards.map((card, i) => (
         <div
           key={i}
-          className={`flex flex-col justify-between p-5 min-w-[280px] w-full max-w-sm h-[200px] relative transition-all duration-200 hover:brightness-110 hover:-translate-y-1 hover:scale-105 hover:shadow-lg cursor-pointer ${
+          className={`flex flex-col justify-between p-5  w-full relative transition-all duration-200 hover:brightness-110 hover:-translate-y-1 hover:scale-105 hover:shadow-lg cursor-pointer ${
             card.bg || "bg-gradient-to-r from-[#232432] to-[#19343B]"
           } ${card.text || "text-white"}`}
         >

@@ -5,7 +5,7 @@ import CloserEmail from "./CloserEmail";
 const Header = () => {
   const [activeTab, setActiveTab] = useState("Open");
   return (
-    <div className=" lg:px-4 py-6 px-1">
+    <div className="  py-6 px-1">
       <h1 className="text-4xl font-semibold text-white mb-2">
         Need Help? Open A Support Ticket
       </h1>

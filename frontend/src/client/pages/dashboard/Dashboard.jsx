@@ -10,8 +10,10 @@ const Dashboard = () => {
   return (
     <>
       <WelcomeDashboard />
-      <div className="p-2 md:p-5 bg-[#2A2A39] mt-5">
+      <div className="  bg-[#2A2A39] mt-5 p-2 lg:px-5 w-full">
         <Cards />
+      </div>
+      <div className="p-2  bg-[#2A2A39]">
         <BrainTypesAnalysis />
         <QuizPerformance />
       </div>

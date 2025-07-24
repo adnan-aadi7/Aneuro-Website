@@ -36,7 +36,7 @@ export default function Tabs() {
   return (
     <div className="text-white w-full ">
       {/* Header */}
-      <div className="px-4 sm:px-8 pt-4 pb-2">
+      <div className=" px-2 pt-4 pb-2">
         <h1 className="text-2xl sm:text-4xl font-bold mb-2 sm:mb-4">
           Prompt Packs
         </h1>
@@ -46,7 +46,7 @@ export default function Tabs() {
       </div>
 
       {/* Tabs */}
-      <div className="px-2 sm:px-8 mt-10">
+      <div className="px-2  mt-10">
         <div className="flex overflow-x-auto border border-[#444] rounded bg-transparent p-1 gap-1 sm:gap-0">
           {tabs.map((tab) => (
             <button
@@ -66,7 +66,7 @@ export default function Tabs() {
       </div>
 
       {/* Content Area - show the correct component for the active tab */}
-      <div className="px-2 sm:px-8">{renderTabContent()}</div>
+      <div className="px-2 ">{renderTabContent()}</div>
     </div>
   );
 }

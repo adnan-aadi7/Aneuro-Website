@@ -96,7 +96,6 @@ const userData = [
 export default function Table() {
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState("asc");
-  const [activePage, setActivePage] = useState(1); // Add active page state
   const navigate = useNavigate();
 
   const CircularProgress = ({ percentage }) => {
@@ -267,32 +266,22 @@ export default function Table() {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-center gap-4 py-4 px-6 bg-transparent">
-        <span
-          className="text-white text-lg cursor-pointer select-none"
-          onClick={() => setActivePage((p) => Math.max(1, p - 1))}
-        >
-          Previous
-        </span>
+
+      <div className="mt-12 flex justify-center items-center gap-2 text-sm">
+        <button className="px-2 py-1 text-white/70">Previous</button>
         {[1, 2, 3].map((page) => (
           <button
             key={page}
-            className={`w-10 h-10 rounded-lg font-bold text-lg flex items-center justify-center focus:outline-none transition-colors ${
-              activePage === page
-                ? "bg-[#12DCF0] text-black"
-                : "bg-[#181A20] text-gray-400"
+            className={`w-8 h-8 rounded-md ${
+              page === 1
+                ? "bg-[#00D1FF] text-black font-semibold"
+                : "bg-[#1B1D29] text-white/70"
             }`}
-            onClick={() => setActivePage(page)}
           >
             {page}
           </button>
         ))}
-        <span
-          className="text-white text-lg cursor-pointer select-none"
-          onClick={() => setActivePage((p) => Math.min(3, p + 1))}
-        >
-          Next
-        </span>
+        <button className="px-2 py-1 text-white/70">Next</button>
       </div>
     </div>
   );
