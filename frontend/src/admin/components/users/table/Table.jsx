@@ -203,7 +203,7 @@ export default function Table() {
               <th className="text-left py-4 px-2 text-slate-300 font-medium text-sm whitespace-nowrap">
                 Quiz Engagement
               </th>
-              <th className="text-left py-4 px-2 text-slate-300 font-medium text-sm">
+              <th className="text-left py-4 px-6 text-slate-300 font-medium text-sm">
                 Action
               </th>
             </tr>
@@ -263,13 +263,13 @@ export default function Table() {
                     {user.status}
                   </span>
                 </td>
-                <td className="py-4 px-2">
+                <td className="py-4 px-4">
                   <div className="flex items-center gap-2">
                     <CircularProgress percentage={user.engagement} />
                   </div>
                 </td>
-                <td className="py-4 px-2">
-                  <div className="flex items-center justify-center">
+                <td className="py-4 px-4">
+                  <div className="flex  ">
                     <button
                       className="bg-[#B6FFD6] text-green-900 font-semibold rounded-full px-5 py-1 text-sm focus:outline-none transition-all hover:brightness-95 cursor-pointer"
                       onClick={() => navigate("/admin/user/details")}
