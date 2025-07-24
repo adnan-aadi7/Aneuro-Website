@@ -49,6 +49,10 @@ import FunnelStatsDetails from "./admin/pages/analyticsOverview/FunnelStatsDetai
 //landing pages
 import Home from "./landingpage/pages/home";
 import AboutUs from "./landingpage/pages/AboutUs";
+
+//Audience
+import Audience from "./Audience/audience";
+
 function App() {
   return (
     //auth routes
@@ -60,6 +64,8 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/quiz" element={<Quiz />} />
 
+
+         <Route path="/Audience-quiz" element={<Audience/>}/>
         {/* landingpage  */}
         <Route path="/about-us" element={<AboutUs />} />
 
