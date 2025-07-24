@@ -72,7 +72,7 @@ const EmailSequencesStats = () => {
             <span className="bg-cyan-900 text-cyan-200 px-4 py-1 rounded-full text-xs font-medium border border-cyan-400 text-nowrap">
               18 Active
             </span>
-            <span className="bg-transparent text-cyan-200 px-2 py-1 rounded-full text-xs font-medium border border-cyan-400 text-nowrap">
+            <span className="bg-transparent text-cyan-200 px-2 py-1 rounded-full text-[10px] font-medium border border-cyan-400 text-nowrap">
               3 Scheduled
             </span>
           </div>

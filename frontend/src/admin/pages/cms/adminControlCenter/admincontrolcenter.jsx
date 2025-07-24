@@ -50,7 +50,7 @@ const AdminControlCenter = () => {
           </p>
         </div>
         {activeTab === "Email Sequences" && (
-          <button className="flex items-center gap-2 bg-cyan-400 text-black px-5 py-2 font-medium text-sm shadow hover:bg-cyan-300 transition-all">
+          <button className="flex items-center gap-3 bg-cyan-400 text-black px-5 py-2 font-medium text-sm shadow hover:bg-cyan-300 transition-all ">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-4 w-4"
@@ -69,7 +69,7 @@ const AdminControlCenter = () => {
           </button>
         )}
         {activeTab === "Prompt Packs" && (
-          <button className="flex items-center gap-2 bg-cyan-400 text-black px-5 py-2 font-medium text-sm shadow hover:bg-cyan-300 transition-all">
+          <button className="flex items-center gap-4 bg-cyan-400 text-black px-5 py-2 font-medium text-sm shadow hover:bg-cyan-300 transition-all">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-4 w-4"
@@ -88,7 +88,7 @@ const AdminControlCenter = () => {
           </button>
         )}
         {activeTab === "Funnel Templates" && (
-          <button className="flex items-center gap-2 bg-cyan-400 text-black px-5 py-2 font-medium text-sm shadow hover:bg-cyan-300 transition-all">
+          <button className="flex items-center gap-4 bg-cyan-400 text-black px-5 py-2 font-medium text-sm shadow hover:bg-cyan-300 transition-all">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-4 w-4"
@@ -108,7 +108,7 @@ const AdminControlCenter = () => {
         )}
         {activeTab === "Scheduled Releases" && (
           <button
-            className="flex items-center gap-2 bg-cyan-400 text-black px-5 py-2 font-medium text-sm shadow hover:bg-cyan-300 transition-all"
+            className="flex items-center gap-4 bg-cyan-400 text-black px-5 py-2 font-medium text-sm shadow hover:bg-cyan-300 transition-all"
             onClick={() => setShowSchedulePopup(true)}
           >
             <svg

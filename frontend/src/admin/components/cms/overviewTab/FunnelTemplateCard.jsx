@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { Upload } from "lucide-react";
+import DiamondIcon from "../../../../../public/icons/diamond.png";
+import KingIcon from "../../../../../public/icons/king.png";
+import StarIcon from "../../../../../public/icons/star.png";
 
 export default function FunnelTemplateCard() {
   const [isDragOver, setIsDragOver] = useState(false);
@@ -42,7 +45,7 @@ export default function FunnelTemplateCard() {
 
       {/* Upload Area */}
       <div
-        className={`border-2 border-dashed border-gray-500 bg-[#11182780] rounded-lg p-12 text-center mb-6 ${
+        className={`border-2 border-dashed border-gray-500 bg-[#11182780] rounded-lg p-12 text-center mt-17 ${
           isDragOver ? "ring-2 ring-cyan-400" : ""
         }`}
         onDragOver={handleDragOver}
@@ -70,7 +73,7 @@ export default function FunnelTemplateCard() {
 
       {/* Tier Access Control */}
       <div className="mb-6  p-2">
-        <h3 className="text-white text-sm font-medium mb-4">
+        <h3 className="text-white text-sm font-medium mt-5">
           Tier Access Control
         </h3>
         <div className="space-y-3">
@@ -80,9 +83,11 @@ export default function FunnelTemplateCard() {
               type="checkbox"
               className="w-5 h-5 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none"
             />
-            <span className="w-4 h-4 flex items-center justify-center text-gray-400">
-              ★
-            </span>
+            <img
+              src={StarIcon}
+              alt="Basic"
+              className="w-6 h-6 object-contain"
+            />
             <div className="flex-1 ml-2">
               <div className="flex items-center gap-2">
                 <span className="text-white text-sm">Basic</span>
@@ -100,9 +105,11 @@ export default function FunnelTemplateCard() {
               type="checkbox"
               className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none"
             />
-            <span className="w-4 h-4 flex items-center justify-center text-blue-400">
-              &#x1F451;
-            </span>
+            <img
+              src={KingIcon}
+              alt="Premium"
+              className="w-6 h-6 object-contain"
+            />
             <div className="flex-1 ml-2">
               <div className="flex items-center gap-2">
                 <span className="text-white text-sm">Premium</span>
@@ -120,9 +127,11 @@ export default function FunnelTemplateCard() {
               type="checkbox"
               className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none"
             />
-            <span className="w-4 h-4 flex items-center justify-center text-purple-400">
-              &#x1F48E;
-            </span>
+            <img
+              src={DiamondIcon}
+              alt="VIP"
+              className="w-6 h-6 object-contain"
+            />
             <div className="flex-1 ml-2">
               <div className="flex items-center gap-2">
                 <span className="text-white text-sm">VIP</span>
@@ -137,7 +146,7 @@ export default function FunnelTemplateCard() {
       </div>
 
       {/* Upload Button */}
-      <button className="w-full bg-cyan-400 text-[#232432] font-medium py-3 rounded hover:bg-cyan-300 transition-colors text-sm mt-2">
+      <button className="w-full bg-cyan-400 text-[#232432] font-medium py-3 rounded hover:bg-cyan-300 transition-colors text-sm ">
         Upload Funnel Templates
       </button>
     </div>

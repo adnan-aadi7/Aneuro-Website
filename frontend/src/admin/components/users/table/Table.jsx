@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronDown, MoreHorizontal } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const userData = [
@@ -98,37 +98,56 @@ export default function Table() {
   const [sortOrder, setSortOrder] = useState("asc");
   const navigate = useNavigate();
 
+  // CircularProgress styled to match the provided image
   const CircularProgress = ({ percentage }) => {
-    const radius = 10;
+    // SVG circle settings
+    const size = 20; // px
+    const strokeWidth = 3;
+    const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
-    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+    const progress = Math.max(0, Math.min(percentage, 100));
+    const strokeDashoffset = circumference - (progress / 100) * circumference;
 
     return (
-      <div className="relative w-8 h-8">
-        <svg className="w-8 h-8 transform -rotate-90" viewBox="0 0 24 24">
+      <div className="flex items-center gap-2">
+        <span
+          className="text-white text-sm font-light"
+          style={{ lineHeight: 1 }}
+        >
+          {progress}%
+        </span>
+        <svg
+          width={size}
+          height={size}
+          viewBox={`0 0 ${size} ${size}`}
+          className=""
+        >
+          {/* Track */}
           <circle
-            cx="12"
-            cy="12"
+            cx={size / 2}
+            cy={size / 2}
             r={radius}
-            stroke="#374151"
-            strokeWidth="2"
+            stroke="#D1FADF"
+            strokeWidth={strokeWidth}
             fill="none"
           />
+          {/* Progress */}
           <circle
-            cx="12"
-            cy="12"
+            cx={size / 2}
+            cy={size / 2}
             r={radius}
-            stroke="#10b981"
-            strokeWidth="2"
+            stroke="#19E05A"
+            strokeWidth={strokeWidth}
             fill="none"
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
+            style={{
+              transition: "stroke-dashoffset 0.4s",
+            }}
+            transform={`rotate(-90 ${size / 2} ${size / 2})`}
           />
         </svg>
-        <div className="absolute inset-0 flex items-center justify-center text-xs text-white font-medium">
-          {percentage}%
-        </div>
       </div>
     );
   };
@@ -157,7 +176,7 @@ export default function Table() {
         <table className="w-full">
           <thead className="bg-[#2A2A39]">
             <tr>
-              <th className="text-left py-4 px-6 text-slate-300 font-medium text-sm">
+              <th className="text-left py-4 px-2 text-slate-300 font-medium text-sm">
                 <div
                   className="flex items-center gap-2 cursor-pointer"
                   onClick={() => handleSort("name")}
@@ -166,25 +185,25 @@ export default function Table() {
                   <ChevronDown size={16} className="text-slate-400" />
                 </div>
               </th>
-              <th className="text-left py-4 px-6 text-slate-300 font-medium text-sm">
+              <th className="text-left py-4 px-2 text-slate-300 font-medium text-sm">
                 User ID
               </th>
-              <th className="text-left py-4 px-6 text-slate-300 font-medium text-sm">
+              <th className="text-left py-4 px-2 text-slate-300 font-medium text-sm">
                 Email Address
               </th>
-              <th className="text-left py-4 px-6 text-slate-300 font-medium text-sm">
+              <th className="text-left py-4 px-2 text-slate-300 font-medium text-sm whitespace-nowrap">
                 Subscription Tier
               </th>
-              <th className="text-left py-4 px-6 text-slate-300 font-medium text-sm">
+              <th className="text-left py-4 px-2 text-slate-300 font-medium text-sm">
                 Signup Date
               </th>
-              <th className="text-left py-4 px-6 text-slate-300 font-medium text-sm">
+              <th className="text-left py-4 px-2 text-slate-300 font-medium text-sm">
                 Status
               </th>
-              <th className="text-left py-4 px-6 text-slate-300 font-medium text-sm">
+              <th className="text-left py-4 px-2 text-slate-300 font-medium text-sm whitespace-nowrap">
                 Quiz Engagement
               </th>
-              <th className="text-left py-4 px-6 text-slate-300 font-medium text-sm">
+              <th className="text-left py-4 px-2 text-slate-300 font-medium text-sm">
                 Action
               </th>
             </tr>
@@ -200,7 +219,7 @@ export default function Table() {
                 key={user.id}
                 className="hover:bg-slate-700/50 transition-colors"
               >
-                <td className="py-4 px-6">
+                <td className="py-4 px-2">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center overflow-hidden">
                       <img
@@ -227,29 +246,29 @@ export default function Table() {
                     </span>
                   </div>
                 </td>
-                <td className="py-4 px-6 text-slate-300">{user.userId}</td>
-                <td className="py-4 px-6 text-slate-300">{user.email}</td>
-                <td className="py-4 px-6 text-slate-300">
+                <td className="py-4 px-2 text-slate-300">{user.userId}</td>
+                <td className="py-4 px-2 text-slate-300">{user.email}</td>
+                <td className="py-4 px-2 text-slate-300">
                   {user.subscription}
                 </td>
-                <td className="py-4 px-6 text-slate-300">{user.signupDate}</td>
-                <td className="py-4 px-6">
+                <td className="py-4 px-2 text-slate-300">{user.signupDate}</td>
+                <td className="py-4 px-2">
                   <span
                     className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
                       user.status === "Active"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
+                        ? "bg-[#D4F7D4] text-[#0B3C0C]"
+                        : "bg-[#F01212] text-[#FFFFFF]"
                     }`}
                   >
                     {user.status}
                   </span>
                 </td>
-                <td className="py-4 px-6">
+                <td className="py-4 px-2">
                   <div className="flex items-center gap-2">
                     <CircularProgress percentage={user.engagement} />
                   </div>
                 </td>
-                <td className="py-4 px-6">
+                <td className="py-4 px-2">
                   <div className="flex items-center justify-center">
                     <button
                       className="bg-[#B6FFD6] text-green-900 font-semibold rounded-full px-5 py-1 text-sm focus:outline-none transition-all hover:brightness-95 cursor-pointer"

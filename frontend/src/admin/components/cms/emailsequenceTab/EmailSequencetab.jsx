@@ -79,17 +79,17 @@ const EmailSequences = () => {
 
   const getTierBadge = (tier) => {
     const styles = {
-      premium: "bg-blue-600 text-white",
-      basic: "bg-green-600 text-white",
-      enterprise: "bg-purple-600 text-white",
+      premium: "bg-[#3B82F633] text-[#60A5FA]",
+      basic: "bg-[#22C55E33] text-[#4ADE80]",
+      enterprise: "bg-[#A855F733] text-[#C084FC]",
     };
     return styles[tier] || "bg-gray-600 text-white";
   };
 
   const getStatusBadge = (status) => {
     const styles = {
-      active: "bg-green-600 text-white",
-      scheduled: "bg-blue-600 text-white",
+      active: "bg-[#22C55E33] text-[#4ADE80]",
+      scheduled: "bg-[#3B82F633] text-[#60A5FA]",
     };
     return styles[status] || "bg-gray-600 text-white";
   };
