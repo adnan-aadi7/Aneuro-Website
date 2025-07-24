@@ -71,7 +71,7 @@ const Audience = () => {
 
   return (
     <div className="min-h-screen bg-[#0D0D0D] flex items-center justify-center relative overflow-hidden rounded-lg px-[5%]">
-      <div className="absolute w-[86%] h-[90%] rounded-full blur-2xl opacity-30 z-0 bg-[radial-gradient(circle,_rgba(34,211,238,1)_0%,_transparent_70%)]" />
+      <div className="absolute w-[90%] h-[93%] rounded-full blur-2xl opacity-30 z-0 bg-[radial-gradient(circle,_rgba(34,211,238,1)_0%,_transparent_60%)]" />
 
       {!showForm && !formSubmitted ? (
         // 🕒 Welcome Screen
