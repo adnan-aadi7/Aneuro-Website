@@ -1,7 +1,10 @@
-// index.js
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
-import connectDB from './db/db.js';
 import { swaggerUi, specs } from './swagger/swagger.js';
+import connectDB from './config/db.js'
+import authRoutes from './routes/authRoutes.js'
 
 
 const app = express();
@@ -13,6 +16,7 @@ app.use(express.json());
 // Swagger docs route
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
+app.use("/api/auth", authRoutes);
 
 
 app.listen(port, () => {
