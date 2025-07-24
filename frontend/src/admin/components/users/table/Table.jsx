@@ -263,7 +263,7 @@ export default function Table() {
                     {user.status}
                   </span>
                 </td>
-                <td className="py-4 ">
+                <td className="py-4 px-4">
                   <div className="flex items-center gap-2">
                     <CircularProgress percentage={user.engagement} />
                   </div>
