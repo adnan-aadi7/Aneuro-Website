@@ -34,7 +34,7 @@ const Billinghistory = () => {
       </div>
 
       <div className="mt-6 w-full overflow-x-auto">
-        <table className="w-full text-left border-separate border-spacing-y-3">
+        <table className="w-full  border-separate border-spacing-y-3">
           <thead>
             <tr className="">
               <th className="pb-2 border-b-2 border-slate-300 whitespace-nowrap px-4">

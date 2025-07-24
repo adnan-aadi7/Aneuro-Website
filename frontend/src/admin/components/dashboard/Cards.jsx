@@ -135,7 +135,11 @@ const Cards = () => {
           </div>
           <div className="z-10 text-3xl font-bold mb-2 px-8">{card.value}</div>
           <div className="z-10 flex items-end justify-between w-full mt-auto">
-            <span className="text-xs text-green-400 font-medium">
+            <span
+              className={`text-xs font-medium ${
+                i === 0 ? "text-black" : "text-green-400"
+              }`}
+            >
               {card.stat}
             </span>
             <span className="text-xs ml-2 opacity-80">{card.week}</span>

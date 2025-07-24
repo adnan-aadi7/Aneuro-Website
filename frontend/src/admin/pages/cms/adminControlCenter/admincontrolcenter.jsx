@@ -131,7 +131,7 @@ const AdminControlCenter = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-row overflow-x-auto whitespace-nowrap border-2 border-[#212C3B] bg-[#161D27]">
+      <div className="flex flex-row overflow-x-auto whitespace-nowrap border-2 border-[#212C3B] bg-[#161D27] p-1">
         {tabs.map(({ name }) => (
           <button
             key={name}
@@ -146,7 +146,7 @@ const AdminControlCenter = () => {
 
       {/* Tab Content */}
       <div className="">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-15">
           {activeTab === "Overview" && (
             <>
               <EmailSequenceCard />
