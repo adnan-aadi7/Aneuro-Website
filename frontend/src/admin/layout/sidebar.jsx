@@ -25,7 +25,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
       to: "/admin/manage-subscription",
     },
     { icon: TbHeadset, label: "Support Center", to: "/admin/support/feedback" },
-   // { icon: TbMessage2, label: "Leave Feedback", to: "/admin/leave-feedback" },
+    // { icon: TbMessage2, label: "Leave Feedback", to: "/admin/leave-feedback" },
     // Client View toggle will be handled separately below
   ];
 
@@ -77,58 +77,60 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
           <img src={logo} alt="Logo" className="w-[162px]  " />
         </div>
         {/* Navigation */}
-<div
-  style={{
-    overflowY: 'auto',
-    scrollbarWidth: 'none', // Firefox
-    msOverflowStyle: 'none', // IE and Edge
-  }}
-  className="custom-scroll"
->        <nav className="flex flex-col gap-4 flex-1 px-4 ">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.label}
-                to={item.to}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 font-medium text-[15px] transition-all border-l-7 ${
-                    isActive
-                      ? "bg-teal-500/20 text-teal-400 border-teal-400 shadow "
-                      : "text-gray-400 border-transparent hover:text-gray-300 hover:bg-gray-800/50 "
-                  }`
-                }
-              >
-                <Icon size={22} />
-                {item.label}
-              </NavLink>
-            );
-          })}
-          {/* Client View Toggle (interactive) */}
-          <ClientViewToggle />
-        </nav>
-        {/* Bottom Menu */}
-        <div className=" py-4 px-5 mt-6">
-          {bottomItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.label}
-                to={item.to}
-                className={({ isActive }) =>
-                 `flex items-center gap-3 px-4 py-3 font-medium text-[15px] transition-all border-l-7 ${
-                    isActive
-                      ? "bg-teal-500/20 text-teal-400 border-teal-400 shadow "
-                      : "text-gray-400 border-transparent hover:text-gray-300 hover:bg-gray-800/50 "
-                  }`
-                }
-              >
-                <Icon size={22} />
-                {item.label}
-              </NavLink>
-            );
-          })}
-        </div>
+        <div
+          style={{
+            overflowY: "auto",
+            scrollbarWidth: "none", // Firefox
+            msOverflowStyle: "none", // IE and Edge
+          }}
+          className="custom-scroll"
+        >
+          {" "}
+          <nav className="flex flex-col gap-4 flex-1 px-4 ">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.label}
+                  to={item.to}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-3 font-medium text-[15px] transition-all border-l-7 ${
+                      isActive
+                        ? "bg-teal-500/20 text-teal-400 border-teal-400 shadow "
+                        : "text-gray-400 border-transparent hover:text-gray-300 hover:bg-gray-800/50 "
+                    }`
+                  }
+                >
+                  <Icon size={22} />
+                  {item.label}
+                </NavLink>
+              );
+            })}
+            {/* Client View Toggle (interactive) */}
+            <ClientViewToggle />
+          </nav>
+          {/* Bottom Menu */}
+          <div className=" py-4 px-5 mt-6">
+            {bottomItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.label}
+                  to={item.to}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-3 font-medium text-[15px] transition-all border-l-7 ${
+                      isActive
+                        ? "bg-teal-500/20 text-teal-400 border-teal-400 shadow "
+                        : "text-gray-400 border-transparent hover:text-gray-300 hover:bg-gray-800/50 "
+                    }`
+                  }
+                >
+                  <Icon size={22} />
+                  {item.label}
+                </NavLink>
+              );
+            })}
+          </div>
         </div>
       </aside>
       {/* Vertical line on the right side, only for large screens */}
@@ -148,13 +150,13 @@ const ClientViewToggle = () => {
       aria-pressed={on}
     >
       <span
-        className={`w-8 h-5 flex items-center rounded-full p-0.5 transition-colors duration-200 ${
-          on ? "bg-cyan-400" : "bg-gray-600 "
+        className={`w-9 h-5 flex items-center rounded-full transition-colors duration-200 ${
+          on ? "bg-[#12DCF0]" : "bg-gray-600"
         }`}
       >
         <span
-          className={`w-4 h-4 rounded-full transition-all duration-200 ${
-            on ? "bg-black translate-x-0" : "bg-white translate-x-4"
+          className={`w-4 h-4 rounded-full bg-black transition-all duration-200 ${
+            on ? "ml-4" : "ml-1"
           }`}
         />
       </span>

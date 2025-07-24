@@ -96,6 +96,7 @@ const userData = [
 export default function Table() {
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState("asc");
+  const [activePage, setActivePage] = useState(1); // Add active page state
   const navigate = useNavigate();
 
   const CircularProgress = ({ percentage }) => {
@@ -143,7 +144,16 @@ export default function Table() {
   };
 
   return (
-    <div className="w-full bg-[#2A2A39] mt-10 overflow-hidden p-6">
+    <div className="w-full bg-[#2A2A39] mt-10 overflow-hidden p-6 relative">
+      {/* Gradient at right bottom */}
+      <div
+        className="pointer-events-none absolute right-0 bottom-0 w-60 h-40 z-0"
+        style={{
+          background:
+            "radial-gradient(ellipse at right bottom, #12DCF0 0%, transparent 80%)",
+          opacity: 0.25,
+        }}
+      />
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-[#2A2A39]">
@@ -257,20 +267,32 @@ export default function Table() {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-center gap-2 py-4 px-6 bg-[#2A2A39]">
-        <button className="px-3 py-1 text-slate-400 hover:text-white transition-colors">
+      <div className="flex items-center justify-center gap-4 py-4 px-6 bg-transparent">
+        <span
+          className="text-white text-lg cursor-pointer select-none"
+          onClick={() => setActivePage((p) => Math.max(1, p - 1))}
+        >
           Previous
-        </button>
-        <button className="px-3 py-1 bg-teal-600 text-white rounded">1</button>
-        <button className="px-3 py-1 text-slate-400 hover:text-white transition-colors">
-          2
-        </button>
-        <button className="px-3 py-1 text-slate-400 hover:text-white transition-colors">
-          3
-        </button>
-        <button className="px-3 py-1 text-slate-400 hover:text-white transition-colors">
+        </span>
+        {[1, 2, 3].map((page) => (
+          <button
+            key={page}
+            className={`w-10 h-10 rounded-lg font-bold text-lg flex items-center justify-center focus:outline-none transition-colors ${
+              activePage === page
+                ? "bg-[#12DCF0] text-black"
+                : "bg-[#181A20] text-gray-400"
+            }`}
+            onClick={() => setActivePage(page)}
+          >
+            {page}
+          </button>
+        ))}
+        <span
+          className="text-white text-lg cursor-pointer select-none"
+          onClick={() => setActivePage((p) => Math.min(3, p + 1))}
+        >
           Next
-        </button>
+        </span>
       </div>
     </div>
   );
