@@ -145,7 +145,7 @@ const AdminControlCenter = () => {
       </div>
 
       {/* Tab Content */}
-      <div className="lg:p-6">
+      <div className="">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {activeTab === "Overview" && (
             <>

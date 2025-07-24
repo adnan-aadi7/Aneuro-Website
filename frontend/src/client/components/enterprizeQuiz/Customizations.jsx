@@ -146,8 +146,9 @@ const Customizations = ({
         {/* Primary Color Section */}
         <div className="mb-6 border border-gray-600 rounded p-2">
           <h3 className="text-gray-300 text-sm mb-1">Primary button color</h3>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-32 mb-2 flex-wrap">
-            <div className="flex gap-3 flex-wrap">
+          <div className="flex items-center justify-between mb-2">
+            {/* Swatches left */}
+            <div className="flex gap-3">
               {colorOptions.map((color) => (
                 <button
                   key={color}
@@ -181,9 +182,10 @@ const Customizations = ({
                 </button>
               ))}
             </div>
-            <div className="relative w-full sm:w-auto">
+            {/* Custom color button right */}
+            <div className="relative">
               <button
-                className=" border border-[#12DCF0] text-gray-300 px-2 py-1 ml-0 sm:ml-5 text-sm flex items-center gap-2 hover:bg-gray-600 transition-colors "
+                className="border border-[#12DCF0] text-gray-300 px-2 py-1 text-sm flex items-center gap-2 hover:bg-gray-600 transition-colors"
                 onClick={() =>
                   setShowCustomPicker(
                     showCustomPicker === "primary" ? null : "primary"
@@ -193,35 +195,31 @@ const Customizations = ({
                 Select custom color
                 <ChevronDown className="w-4 h-4" />
               </button>
-              {/* Move sliders below custom color picker */}
               {showCustomPicker === "primary" && (
-                <div className="bg-gray-800 border border-gray-600 p-2">
+                <div className="absolute top-full left-0 bg-gray-800 border border-gray-600 p-2 z-10">
                   <input
                     type="color"
                     value={primaryColor}
                     onChange={(e) => setPrimaryColor(e.target.value)}
-                    className="w-32 h-8  border-none cursor-pointer"
+                    className="w-32 h-8 border-none cursor-pointer"
                   />
                 </div>
               )}
-              {/* Color Sliders */}
-              <div className="">
-                <ColorSlider
-                  value={hue}
-                  onChange={setHue}
-                  color={`hsl(${hue}, 100%, 50%)`}
-                  isHue={true}
-                />
-              </div>
-              {/* Saturation Slider */}
-              <div className="">
-                <ColorSlider
-                  value={saturation}
-                  onChange={setSaturation}
-                  color={`hsl(${hue}, 100%, 50%)`}
-                />
-              </div>
             </div>
+          </div>
+          {/* Color Sliders */}
+          <div className="mt-4">
+            <ColorSlider
+              value={hue}
+              onChange={setHue}
+              color={`hsl(${hue}, 100%, 50%)`}
+              isHue={true}
+            />
+            <ColorSlider
+              value={saturation}
+              onChange={setSaturation}
+              color={`hsl(${hue}, 100%, 50%)`}
+            />
           </div>
 
           {/* Color Info */}
