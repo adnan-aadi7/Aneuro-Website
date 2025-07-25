@@ -16,7 +16,7 @@ app.use(express.json());
 // Swagger docs route
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
-app.use("/api/auth", authRoutes);
+app.use("/api/", authRoutes);
 
 
 app.listen(port, () => {

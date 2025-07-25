@@ -1,38 +1,29 @@
 import User from "../model/User.js";
 import bcrypt from "bcryptjs";
 import connectDB from "../config/db.js";
+import jwt from "jsonwebtoken";
 
 export async function Signup(reqBody) {
   try {
     await connectDB();
 
     const { name, email, password, userType = "user" } = reqBody;
-
-    // Validate required fields
     if (!name || !email || !password) {
       throw new Error("Name, email, and password are required");
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       throw new Error("Email is already registered");
     }
-
-    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create new user
     const newUser = new User({
       name,
       email,
       password: hashedPassword,
       userType,
     });
-
     await newUser.save();
-
-    // Return success (omit password)
     return {
       message: "User registered successfully",
       user: {
@@ -46,3 +37,193 @@ export async function Signup(reqBody) {
     throw new Error(error.message || "Signup failed");
   }
 }
+
+
+export async function Login(reqBody) {
+  try {
+    await connectDB();
+
+    const { email, password } = reqBody;
+
+    if (!email || !password) {
+      throw new Error("Email and password are required");
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      throw new Error("Invalid email or password");
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      throw new Error("Invalid email or password");
+    }
+   const token = jwt.sign(
+      {
+        id: user._id,
+        email: user.email,
+        userType: user.userType,
+      },
+      process.env.JWT_SECRET, 
+      {
+        expiresIn: "7d",
+      }
+    );
+    return {
+      message: "Login successful",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        userType: user.userType,
+        accountStatus: user.accountStatus,
+      },
+    };
+  } catch (error) {
+    throw new Error(error.message || "Login failed");
+  }
+}
+
+//get api
+export async function getAllUsers({ page = 1, limit = 10, accountStatus }) {
+  await connectDB();
+
+  const query = {};
+  if (accountStatus && accountStatus !== "all") {
+    query.accountStatus = accountStatus;
+  }
+
+  const users = await User.find(query)
+    .skip((page - 1) * limit)
+    .limit(Number(limit))
+    .select("-password");
+
+  const total = await User.countDocuments(query);
+
+  if (!users || users.length === 0) {
+    return {
+      users: [],
+      total: 0,
+      page: Number(page),
+      totalPages: 0,
+      message: "No users found",
+    };
+  }
+
+  return {
+    users,
+    total,
+    page: Number(page),
+    totalPages: Math.ceil(total / limit),
+  };
+}
+
+export async function getUserById({ id, accountStatus }) {
+  await connectDB();
+
+  const query = { _id: id };
+  if (accountStatus && accountStatus !== "all") {
+    query.accountStatus = accountStatus;
+  }
+
+  const user = await User.findOne(query).select("-password");
+
+  if (!user) {
+    return {
+      user: null,
+      message: "User not found",
+    };
+  }
+
+  return user;
+}
+
+
+//delete user
+export async function deleteUser(userId) {
+  try {
+    await connectDB();
+
+    const user = await User.findByIdAndDelete(userId);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return {
+      message: "User deleted successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    };
+  } catch (error) {
+    throw new Error(error.message || "Failed to delete user");
+  }
+}
+
+//update api
+
+export async function updateUser(userId, userData) {
+  try {
+    await connectDB();
+
+    const updatedUser = await User.findByIdAndUpdate(userId, userData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updatedUser) {
+      throw new Error("User not found");
+    }
+
+    return {
+      message: "User updated successfully",
+      user: {
+        id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        accountStatus: updatedUser.accountStatus,
+      },
+    };
+  } catch (error) {
+    throw new Error(error.message || "Failed to update user");
+  }
+}
+
+//change password
+
+export const changePassword = async (req, res) => {
+  try {
+    await connectDB();
+
+    const { userId, currentPassword, newPassword } = req.body;
+
+    // Check for required fields
+    if (!userId || !currentPassword || !newPassword) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: "Current password is incorrect" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    return res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};

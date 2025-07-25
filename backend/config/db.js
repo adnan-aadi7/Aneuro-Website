@@ -7,7 +7,8 @@ console.log("MONGODB_URI =", MONGODB_URI);
 const connectDB = async () => {
   try {
    await mongoose.connect(
-  "mongodb+srv://kainatrobi011:qz2QHzkbfxdcvNwq@cluster0.159c8ov.mongodb.net/aneuro",
+  //"mongodb+srv://kainatrobi011:qz2QHzkbfxdcvNwq@cluster0.159c8ov.mongodb.net/aneuro",
+  "mongodb://127.0.0.1:27017/aneuro",
   { useNewUrlParser: true, useUnifiedTopology: true }
 );
 

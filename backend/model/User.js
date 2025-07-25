@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 
 const UserSchema = new mongoose.Schema(
@@ -20,6 +19,11 @@ const UserSchema = new mongoose.Schema(
       type: String,
       enum: ["admin", "user"],
       default: "user",
+    },
+    accountStatus: {
+      type: String,
+      enum: ["active", "suspended"],
+      default: "active",
     },
   },
   { timestamps: true }
