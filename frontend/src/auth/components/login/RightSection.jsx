@@ -15,13 +15,14 @@ export default function RightSection() {
   return (
     <div className="w-full h-full">
       <div className="bg-[#12DCF0] h-full w-full">
-        <div className="mx-auto h-full w-full">
+        <div className="mx-auto h-full w-full relative">
           {/* Header */}
           <img src={Ticket} alt="ticket" className="w-20 h-16 ml-8 absolute" />
+          {/* Responsive Dots Image */}
           <img
             src={Dots}
-            alt="dosts"
-            className="w-10 h-40  absolute ml-[690px] mt-5"
+            alt="dots"
+            className="w-8 h-20 absolute right-4 top-8 sm:w-10 sm:h-40 sm:right-1 sm:top-5"
           />
           <div className="flex flex-col items-center text-center">
             <h1 className="text-5xl font-bold text-gray-900 mt-14 ">

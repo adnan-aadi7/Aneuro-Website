@@ -26,7 +26,7 @@ export default function AnalyticalPrompt({ activeTab = "Analytical" }) {
       return (
         <div className="relative mb-8">
           <select className="w-full bg-[#16161C] text-white px-4 py-3 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700">
-            <option>Analytical dropdown</option>
+            <option>Architect dropdown</option>
             <option>Architect</option>
             <option>Challenger</option>
             <option>Catalyst</option>
@@ -47,7 +47,7 @@ export default function AnalyticalPrompt({ activeTab = "Analytical" }) {
         <>
           {/* Email Prompts Section */}
           <h2 className="text-lg font-medium mb-6">
-            Email Prompts for Analytical Types
+            Email Prompts for Architect Types
           </h2>
           {/* Social Media Caption Generator */}
           <div

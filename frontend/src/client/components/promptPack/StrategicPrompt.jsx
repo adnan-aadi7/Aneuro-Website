@@ -24,7 +24,7 @@ export default function StrategicPrompt() {
     return (
       <div className="relative mb-8">
         <select className="w-full bg-[#16161C] text-white px-4 py-3 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700">
-          <option>Strategic dropdown</option>
+          <option>Reflector dropdown</option>
           <option>Planner</option>
           <option>Organizer</option>
           <option>Evaluator</option>
@@ -40,13 +40,13 @@ export default function StrategicPrompt() {
       {/* Header */}
       <div className="p-2 lg:p-8">
         <h1 className="text-xl font-medium mb-6">
-          Strategic Brain Type Prompts
+          Reflector Brain Type Prompts
         </h1>
         {/* Dropdown (unchanged) */}
         {renderDropdown()}
         {/* Email Prompts Section */}
         <h2 className="text-lg font-medium mb-6">
-          Email Prompts for Strategic Types
+          Email Prompts for Reflector Types
         </h2>
         {/* Strategic Social Media Caption Generator */}
         <div

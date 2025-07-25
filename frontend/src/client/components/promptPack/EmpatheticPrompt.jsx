@@ -24,7 +24,7 @@ export default function EmpatheticPrompt() {
     return (
       <div className="relative mb-8">
         <select className="w-full bg-[#16161C] text-white px-4 py-3 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700">
-          <option>Empathetic dropdown</option>
+          <option>Synthesizer dropdown</option>
           <option>Connector</option>
           <option>Supporter</option>
           <option>Listener</option>
@@ -40,13 +40,13 @@ export default function EmpatheticPrompt() {
       {/* Header */}
       <div className="p-2 lg:p-8">
         <h1 className="text-xl font-medium mb-6">
-          Empathetic Brain Type Prompts
+          Synthesizer Brain Type Prompts
         </h1>
         {/* Dropdown (unchanged) */}
         {renderDropdown()}
         {/* Email Prompts Section */}
         <h2 className="text-lg font-medium mb-6">
-          Email Prompts for Empathetic Types
+          Email Prompts for Synthesizer Types
         </h2>
         {/* Empathetic Social Media Caption Generator */}
         <div

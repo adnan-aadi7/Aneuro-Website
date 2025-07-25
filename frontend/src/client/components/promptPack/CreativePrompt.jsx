@@ -24,7 +24,7 @@ export default function CreativePrompt() {
     return (
       <div className="relative mb-8">
         <select className="w-full bg-[#16161C] text-white px-4 py-3 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700">
-          <option>Creative dropdown</option>
+          <option>Challenger dropdown</option>
           <option>Innovator</option>
           <option>Visionary</option>
           <option>Storyteller</option>
@@ -40,13 +40,13 @@ export default function CreativePrompt() {
       {/* Header */}
       <div className="p-2 lg:p-8">
         <h1 className="text-xl font-medium mb-6">
-          Creative Brain Type Prompts
+          Challenger Brain Type Prompts
         </h1>
         {/* Dropdown (unchanged) */}
         {renderDropdown()}
         {/* Email Prompts Section */}
         <h2 className="text-lg font-medium mb-6">
-          Email Prompts for Creative Types
+          Email Prompts for Challenger Types
         </h2>
         {/* Creative Social Media Caption Generator */}
         <div

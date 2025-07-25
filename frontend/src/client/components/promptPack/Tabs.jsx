@@ -6,27 +6,27 @@ import StrategicPrompt from "./StrategicPrompt";
 import PracticalPrompt from "./PracticalPrompt";
 
 export default function Tabs() {
-  const [activeTab, setActiveTab] = useState("Analytical");
+  const [activeTab, setActiveTab] = useState("Architect");
 
   const tabs = [
-    "Analytical",
-    "Creative",
-    "Empathetic",
-    "Strategic",
-    "Practical",
+    "Architect",
+    "Challenger",
+    "Synthesizer",
+    "Reflector",
+    "Catalyst",
   ];
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case "Analytical":
+      case "Architect":
         return <AnalyticalPrompt />;
-      case "Creative":
+      case "Challenger":
         return <CreativePrompt />;
-      case "Empathetic":
+      case "Synthesizer":
         return <EmpatheticPrompt />;
-      case "Strategic":
+      case "Reflector":
         return <StrategicPrompt />;
-      case "Practical":
+      case "Catalyst":
         return <PracticalPrompt />;
       default:
         return null;
