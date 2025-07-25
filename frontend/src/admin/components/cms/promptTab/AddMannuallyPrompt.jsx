@@ -84,8 +84,11 @@ const AddMannuallyPrompt = () => {
       </div>
 
       {/* Tab Content */}
-      {activeTab === "Analytical" && <Promptype type={activeTab} />}
-      {activeTab === "Practical" && <Promptype type={activeTab} />}
+      {activeTab === "Architect" && <Promptype type={activeTab} />}
+      {activeTab === "Challenger" && <Promptype type={activeTab} />}
+      {activeTab === "Synthesizer" && <Promptype type={activeTab} />}
+      {activeTab === "Reflector" && <Promptype type={activeTab} />}
+      {activeTab === "Catalyst" && <Promptype type={activeTab} />}
     </div>
   );
 };
