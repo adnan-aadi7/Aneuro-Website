@@ -1,6 +1,16 @@
 // routes/authRoutes.js
 import express from "express";
-import { Signup, Login, getAllUsers, getUserById, deleteUser, updateUser, changePassword  } from "../controller/authController.js";
+import { 
+  Signup,
+  Login, 
+  getAllUsers,
+  getUserById, 
+  deleteUser, 
+  updateUser, 
+  changePassword,
+  sendOtp, 
+  verifyOtp, 
+  resetPassword  } from "../controller/authController.js";
 
 const router = express.Router();
 
@@ -189,7 +199,6 @@ router.delete("/delete/:id", async (req, res) => {
     res.status(statusCode).json({ error: error.message });
   }
 });
-export default router;
 
 /**
  * @swagger
@@ -280,3 +289,94 @@ router.put("/update/:id", async (req, res) => {
  *         description: Internal server error
  */
 router.put("/change-password", changePassword);
+
+
+/**
+ * @swagger
+ * /api/forgot-password:
+ *   post:
+ *     summary: Send OTP to user's email for password reset
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *     responses:
+ *       200:
+ *         description: OTP sent successfully
+ *       404:
+ *         description: User not found
+ */
+router.post("/forgot-password", sendOtp);
+
+/**
+ * @swagger
+ * /api/verify-otp:
+ *   post:
+ *     summary: Verify OTP sent to user's email
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               otp:
+ *                 type: string
+ *             example:
+ *               email: user@example.com
+ *               otp: "123456"
+ *     responses:
+ *       200:
+ *         description: OTP verified successfully
+ *       400:
+ *         description: Invalid or expired OTP
+ */
+router.post("/verify-otp", verifyOtp);
+/**
+ * @swagger
+ * /api/reset-password:
+ *   post:
+ *     summary: Reset user password after OTP verification
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - otp
+ *               - newPassword
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               otp:
+ *                 type: string
+ *                 example: 123456
+ *               newPassword:
+ *                 type: string
+ *                 example: NewPass@123
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ *       400:
+ *         description: Invalid or expired OTP
+ *       500:
+ *         description: Server error
+ */
+
+router.post("/reset-password", resetPassword);
+
+export default router;

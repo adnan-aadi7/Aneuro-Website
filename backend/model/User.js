@@ -25,6 +25,8 @@ const UserSchema = new mongoose.Schema(
       enum: ["active", "suspended"],
       default: "active",
     },
+    otp: String,
+    otpExpires: Date,
   },
   { timestamps: true }
 );
