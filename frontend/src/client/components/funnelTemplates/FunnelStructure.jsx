@@ -8,7 +8,7 @@ export default function FunnelStructure() {
   return (
     <div>
       {/* Filter Templates Section */}
-      <div className="bg-[#303041]  p-6 mb-6">
+      <div className="bg-[#303041]  p-6 mb-6 mt-10">
         <h2 className="text-white text-2xl font-semibold mb-6">
           Filter Templates
         </h2>

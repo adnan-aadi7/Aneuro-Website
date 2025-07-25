@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import RestrictionPopup from "../../ResultOverview/RestrictionPopup";
 
 const users = [
   {
@@ -24,8 +25,22 @@ const users = [
 
 const Table = () => {
   const navigate = useNavigate();
+  const [showRestriction, setShowRestriction] = useState(false);
+
+  const handlePreviewClick = () => {
+    const userRole = localStorage.getItem("userRole");
+    if (userRole === "starter") {
+      setShowRestriction(true);
+    } else {
+      navigate("/quiz-details");
+    }
+  };
+
   return (
     <div className="overflow-x-auto  bg-[#232432] mt-10">
+      {showRestriction && (
+        <RestrictionPopup onClose={() => setShowRestriction(false)} />
+      )}
       <table className="min-w-full text-left">
         <thead>
           <tr className="text-gray-300 text-sm border-b border-gray-600">
@@ -71,7 +86,7 @@ const Table = () => {
               <td className="py-3 px-4 min-w-[100px]">
                 <button
                   className="bg-green-200 text-green-900 font-semibold px-6 py-1 rounded-full text-sm shadow-sm hover:bg-green-300 transition-colors"
-                  onClick={() => navigate("/quiz-details")}
+                  onClick={handlePreviewClick}
                 >
                   {user.status}
                 </button>

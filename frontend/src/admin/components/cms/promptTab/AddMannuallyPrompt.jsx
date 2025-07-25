@@ -2,10 +2,16 @@ import React, { useState } from "react";
 import { Mail, Users, Calendar } from "lucide-react";
 import Promptype from "./Promptype";
 
-const tabs = ["Analytical", "Creative", "Empathetic", "Strategic", "Practical"];
+const tabs = [
+  "Architect",
+  "Challenger",
+  "Synthesizer",
+  "Reflector",
+  "Catalyst",
+];
 
 const AddMannuallyPrompt = () => {
-  const [activeTab, setActiveTab] = useState("Analytical");
+  const [activeTab, setActiveTab] = useState("Architect");
 
   return (
     <div className="bg-[#181A20] min-h-screen p-6">
@@ -60,7 +66,7 @@ const AddMannuallyPrompt = () => {
       </div>
 
       {/* Tab Bar */}
-      <div className="flex border border-[#3A3A4A]  overflow-hidden">
+      <div className="flex border border-[#3A3A4A]  overflow-hidden p-1">
         {tabs.map((tab) => (
           <button
             key={tab}
@@ -78,7 +84,7 @@ const AddMannuallyPrompt = () => {
       </div>
 
       {/* Tab Content */}
-      {activeTab === "Analytical" && <Promptype />}
+      {activeTab === "Architect" && <Promptype />}
     </div>
   );
 };

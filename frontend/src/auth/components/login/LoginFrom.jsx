@@ -22,12 +22,18 @@ export default function LoginForm() {
     {
       email: "user@example.com",
       password: "user123",
-      role: "user",
+      role: "growth",
     },
     {
-      email: "enterprize@example.com",
+      email: "enterprise@example.com",
       password: "user123",
-      role: "enterprize",
+      role: "enterprise",
+    },
+    // Starter plan user
+    {
+      email: "starter@example.com",
+      password: "user123",
+      role: "starter",
     },
   ];
 
@@ -49,9 +55,12 @@ export default function LoginForm() {
       localStorage.setItem("userRole", foundUser.role); // Store user role
       if (foundUser.role === "admin") {
         navigate("/admin/dashboard");
-      } else if (foundUser.role === "user") {
-        navigate("/client/dashboard");
-      } else if (foundUser.role === "enterprize") {
+      } else if (
+        foundUser.role === "user" ||
+        foundUser.role === "growth" ||
+        foundUser.role === "enterprise" ||
+        foundUser.role === "starter"
+      ) {
         navigate("/client/dashboard");
       }
     } else {

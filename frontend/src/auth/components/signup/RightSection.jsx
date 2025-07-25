@@ -19,8 +19,8 @@ export default function RightSection() {
           <img src={Ticket} alt="ticket" className="w-20 h-16 ml-8 absolute" />
           <img
             src={Dots}
-            alt="dosts"
-            className="w-10 h-40  absolute ml-[670px] mt-5"
+            alt="dots"
+            className="w-8 h-20 absolute right- top-8 sm:w-10 sm:h-40 lg:right-1  md:right-2 sm:top-5"
           />
           <div className="flex flex-col items-center text-center">
             <h1 className="text-5xl font-bold text-gray-900 mt-14 ">

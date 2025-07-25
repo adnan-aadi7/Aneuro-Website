@@ -24,7 +24,7 @@ export default function PracticalPrompt() {
     return (
       <div className="relative mb-8">
         <select className="w-full bg-[#16161C] text-white px-4 py-3 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700">
-          <option>Practical dropdown</option>
+          <option>Catalyst dropdown</option>
           <option>Implementer</option>
           <option>Operator</option>
           <option>Fixer</option>
@@ -40,13 +40,13 @@ export default function PracticalPrompt() {
       {/* Header */}
       <div className="p-2 lg:p-8">
         <h1 className="text-xl font-medium mb-6">
-          Practical Brain Type Prompts
+          Catalyst Brain Type Prompts
         </h1>
         {/* Dropdown (unchanged) */}
         {renderDropdown()}
         {/* Email Prompts Section */}
         <h2 className="text-lg font-medium mb-6">
-          Email Prompts for Practical Types
+          Email Prompts for Catalyst Types
         </h2>
         {/* Practical Social Media Caption Generator */}
         <div
