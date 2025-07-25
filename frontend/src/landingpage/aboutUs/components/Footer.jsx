@@ -15,8 +15,7 @@ export default function Footer() {
           {/* Logo & Description */}
           <div className="flex flex-col gap-4 mb-8 md:mb-0">
             <div className="flex items-center gap-3">
-              <span className="w-5 h-5 rounded-full bg-[#12DCF0] inline-block"></span>
-              <span className="font-semibold text-lg">LOGO</span>
+                     <img src="/logo.png" alt="logo" className="w-28 h-18" />
             </div>
             <p className="text-gray-400 text-xs md:text-sm max-w-xs">
               Neural networks powering innovation. Shaping the future
@@ -98,7 +97,7 @@ export default function Footer() {
           </div>
         </div>
         {/* Copyright */}
-        <div className="mt-8 md:mt-10 text-center white text-xs">
+        <div className="mt-8 md:mt-10 text-center white text-[16px]">
           Copyright © 2025 All Rights Reserved.
         </div>
       </div>

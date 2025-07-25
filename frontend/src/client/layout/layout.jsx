@@ -11,7 +11,7 @@ const AdminLayout = ({ children, headerChildren }) => {
         onSidebarClose={() => setSidebarOpen(false)}
       />
       {/* Main content area */}
-      <div className="flex flex-col flex-1 h-full bg-[#16161C]  overflow-hidden">
+      <div className="flex flex-col flex-1 h-full bg-black  overflow-hidden">
         {/* Optional Header */}
          <Header onHamburgerClick={() => setSidebarOpen(true)}>{headerChildren}</Header>
 

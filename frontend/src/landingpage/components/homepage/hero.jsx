@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 const HeroSection = ({
+  className="",
   topbutton,
   bgImage,
   title,
@@ -15,7 +16,7 @@ const HeroSection = ({
   highlightText
 }) => {
   return (
-    <div className="relative w-full text-white font-manrope max-h-screen flex items-center justify-center ">
+    <div className='relative w-full text-white font-manrope max-h-screen flex items-center justify-center '>
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <img
@@ -27,9 +28,11 @@ const HeroSection = ({
       </div>
 
       {/* Content */}
-      <div className="relative z-10 py-16 rounded-lg text-center flex flex-col gap-3 items-center justify-center w-full">
+      <div className='relative z-10 py-16 rounded-lg text-center flex flex-col gap-3 items-center justify-center w-full' >
+        
         {/* Top Section */}
-        <div className="bg-black/40 w-[95%] md:w-[60%] rounded-lg py-8 flex flex-col gap-3 items-center justify-center ">
+        <div className={`bg-black/20 w-[95%] md:w-[60%] py-8 flex flex-col gap-3 items-center justify-center ${className}`}>
+        
           <p className="bg-black/50 opacity-70 px-6 py-2 rounded-full flex flex-row items-center gap-3">
             <img src="/home/star.png" alt="img"/>
             {topbutton}

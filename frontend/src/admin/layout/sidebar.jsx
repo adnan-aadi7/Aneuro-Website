@@ -47,7 +47,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
       />
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-screen w-64 bg-[#000000] text-white flex flex-col  z-50 shadow-md transform transition-transform duration-300
+        className={`fixed top-0 left-0 h-screen w-64 bg-black text-white flex flex-col  z-50 shadow-md transform transition-transform duration-300
         ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0 lg:static lg:shadow-none overflow-y-auto lg:overflow-visible`}
@@ -55,22 +55,9 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
         {/* Close button for mobile */}
         <button
           onClick={onSidebarClose}
-          className="absolute top-4 right-4 z-[100] size-10 lg:hidden flex items-center justify-center text-white bg-gray-800 rounded-lg border-r border-gray-800"
+          className="absolute top-4 right-4 z-[100] size-10 lg:hidden flex items-center justify-center text-white bg-gray-800 rounded-lg border-r-1 border-r border-[#FFFFFF14]"
         >
-          <svg
-            width="20"
-            height="20"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M18 6L6 18M6 6l12 12"
-            />
-          </svg>
+         <img src="/logo.png" alt="logo"/>
         </button>
         {/* Logo */}
         <div className="  flex flex-col items-center ">
