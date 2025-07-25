@@ -13,7 +13,7 @@ const Behavioralprecision =()=>{
           <img src="/home/star.png" alt="img"/>
           </p>
 
-          <h1 className="text-[20px] text-center lg:text-[48px]">
+          <h1 className="text-[20px] text-center lg:text-[48px] font-medium">
             Three intelligent steps to transform your
             <br/>
            strategy with {" "}

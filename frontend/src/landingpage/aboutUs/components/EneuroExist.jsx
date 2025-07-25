@@ -17,16 +17,16 @@ export default function EneuroExist() {
       <div className="relative z-10 flex flex-col items-center justify-center px-2 sm:px-4">
         {/* Top Badge */}
         <div className="mb-8">
-          <div className="flex items-center space-x-2 text-cyan-400 text-xs md:text-sm font-medium">
-            <Star className="w-4 h-4 text-cyan-400 fill-cyan-400" />
-            <span className="tracking-wider uppercase">COGNITION</span>
-            <Star className="w-4 h-4 text-cyan-400 fill-cyan-400" />
-          </div>
+          <p className="bg-[#FFFFFF0F] text-[14px] text-[#A7AABB] w-[160px] px-2 py-2 border border-white/20  rounded-full flex flex-row items-center gap-2 justify-center">
+            <img src="/home/star.png" alt="img"/>
+              COGNITION
+          <img src="/home/star.png" alt="img"/>
+          </p>
         </div>
 
         {/* Main Heading */}
         <div className="text-center ">
-          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-light text-white mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-medium text-white mb-6">
             Why Aneuro <span className="text-cyan-400 font-normal">Exists</span>
           </h1>
         </div>

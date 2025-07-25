@@ -17,14 +17,14 @@ const Marketing = () => {
       <div className="flex-1 flex flex-col items-start md:items-start justify-center max-w-lg">
         {/* Badge */}
         <div className="mb-6">
-          <div className="flex items-center space-x-2 text-cyan-400 text-xs font-medium">
-            <Star className="w-4 h-4 text-cyan-400 fill-cyan-400" />
-            <span className="tracking-wider uppercase">Our Mission</span>
-            <Star className="w-4 h-4 text-cyan-400 fill-cyan-400" />
-          </div>
+         <p className="bg-[#FFFFFF0F] text-[14px] text-[#A7AABB] w-[180px] px-2 py-2 border border-white/20  rounded-full flex flex-row items-center gap-2 justify-center">
+            <img src="/home/star.png" alt="img"/>
+              OUR MISSION
+          <img src="/home/star.png" alt="img"/>
+          </p>
         </div>
         {/* Heading */}
-        <h2 className="text-white text-3xl md:text-4xl font-light mb-4">
+        <h2 className="text-white text-3xl md:text-4xl font-medium mb-4">
           Marketing Should Be{" "}
           <span className="text-[#12DCF0] font-semibold">Intelligent.</span>
         </h2>

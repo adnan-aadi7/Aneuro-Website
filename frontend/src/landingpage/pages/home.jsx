@@ -16,15 +16,15 @@ const Home = () => {
       <HeroSection
         topbutton="NEUROMARKETING INTELLIGENCE"
         bgImage="/home/hero.png"
-        title="Every decision begins in the brain. Every click begins "
+        title="Every decision begins in the brain, Every profit begins "
         highlightText="with Aneuro"
         subtitle="Aneuro adapts to how your audience makes decisions—and delivers plug-and-play tools that match. No guesswork. No friction. "
-        primaryBtnText="Get Started"
+        primaryBtnText="GET STARTED"
         primaryBtnLink="/signup"
-        secondaryBtnText="View Pricing"
+        secondaryBtnText="VIEW PRICING"
         secondaryBtnLink="/"
         bottomImage="/home/img.png"
-        bottomText="Trusted by marketers who personalize with brain-based precision."
+        bottomText="Trusted by leading businesses in every industry"
       />
 
       <Transformation />

@@ -14,7 +14,7 @@ const Transformation = () => {
                       WHAT IS ANEURO
                         <img src="/home/star.png" alt="img"/>
                   </div>
-                    <span className="text-[20px] lg:text-[48px] font-[150]">
+                    <span className="text-[20px] lg:text-[48px] font-medium">
                       Aneuro is not a tool. It’s a  <br/>
                      <div className="flex flex-row items-center gap-6">
                       <img src="/home/abioutustitle.png" alt="img"/>

@@ -10,7 +10,7 @@ const Fact =()=>{
           <img src="/home/star.png" alt="img"/>
           </p>
 
-          <h1 className="text-[24px] lg:text-[48px] font-300 text-center leading-[60px] mt-8">
+          <h1 className="text-[24px] lg:text-[48px] font-300 text-center leading-[60px] mt-8 font-medium">
             86% of buying decisions happen
              <br/>  
             <span className="font-inter font-bold bg-gradient-to-r from-[#0A95A3] via-[#12DCF0] to-[#0A95A3] bg-clip-text text-transparent">

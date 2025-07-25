@@ -7,14 +7,15 @@ const LevelIntelligence = () => {
   return (
     <section className="w-full bg-black py-12 md:py-20 lg:px-4 md:px-20">
       {/* Top Section with Heading */}
-      <div className="text-center mb-10 md:mb-16">
-        <button className="mb-4 px-4 md:px-6 py-2 rounded-full bg-[#1B1B1B33] text-white font-medium text-xs md:text-sm flex items-center gap-2 shadow-md mx-auto">
-          <span className="text-[#12DCF0]">★</span> COGNITION{" "}
-          <span className="text-[#12DCF0]">★</span>
-        </button>
-        <h2 className="text-white text-2xl md:text-4xl font-light mb-4">
+      <div className="text-center mb-10 md:mb-16 flex flex-col items-center justify-center">
+        <p className="bg-[#FFFFFF0F] text-[14px] text-[#A7AABB] w-[160px] px-2 py-2 border border-white/20  rounded-full flex flex-row items-center gap-2 justify-center">
+            <img src="/home/star.png" alt="img"/>
+              COGNITION
+          <img src="/home/star.png" alt="img"/>
+          </p>
+        <h2 className="mt-6 text-white text-2xl md:text-4xl font-medium mb-4">
           Marketing Rewired at the Cognitive Level
-          <span className="text-[#12DCF0]">Intelligence</span>
+          {/*<span className="text-[#12DCF0]">Intelligence</span>*/}
         </h2>
         <p className="text-[#BFC3C9] text-xs md:text-base max-w-2xl mx-auto">
           We believe the most powerful marketing doesn't start with trends. It

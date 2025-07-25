@@ -15,17 +15,17 @@ const Welcome = () => {
       <div className="relative z-10 flex flex-col items-center justify-center w-full">
         {/* Badge */}
         <div className="mb-4">
-          <div className="flex items-center space-x-2 text-cyan-400 text-xs font-medium">
-            <Star className="w-4 h-4 text-cyan-400 fill-cyan-400" />
-            <span className="tracking-wider uppercase">Pricing</span>
-            <Star className="w-4 h-4 text-cyan-400 fill-cyan-400" />
-          </div>
+          <p className="bg-[#FFFFFF0F] text-[14px] text-[#A7AABB] w-[160px] px-2 py-2 border border-white/20  rounded-full flex flex-row items-center gap-2 justify-center">
+            <img src="/home/star.png" alt="img"/>
+              PRICING
+          <img src="/home/star.png" alt="img"/>
+          </p>
         </div>
         {/* Heading */}
-        <h1 className="text-white text-3xl md:text-5xl font-light text-center mb-1">
+        <h1 className="mt-4 text-white text-3xl md:text-5xl font-medium text-center mb-1">
           Welcome To The Next Era
         </h1>
-        <h2 className="text-[#12DCF0] text-2xl md:text-4xl font-bold text-center mb-4">
+        <h2 className="text-[#12DCF0] text-2xl md:text-5xl font-bold text-center mb-4">
           Welcome To Aneuro
         </h2>
         {/* Subtext */}

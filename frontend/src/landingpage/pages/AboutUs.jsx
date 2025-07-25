@@ -18,12 +18,12 @@ const AboutUs = () => {
         title="Precision beats "
         highlightText="persuasion"
         subtitle="Aneuro is a behavioral intelligence system grounded in cognitive science. It is where neuroscience and strategy converge, giving businesses the ability to align with how people truly process, trust, and decide. "
-        primaryBtnText="Get Started"
+        primaryBtnText="GET STARTED"
         primaryBtnLink="/signup"
-        secondaryBtnText="View Pricing"
+        secondaryBtnText="VIEW PRICING"
         secondaryBtnLink="/"
         bottomImage="/home/img.png"
-        bottomText="Trusted by marketers who personalize with brain-based precision."
+        bottomText="Trusted by leading businesses in every industry"
       />
       <AneuroCreatedSection />
       <LevelIntelligence />

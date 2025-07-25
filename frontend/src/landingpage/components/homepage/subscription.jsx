@@ -69,7 +69,7 @@ const Subscription = () => {
         PRICING
         <img src="/home/star.png" alt="img" />
       </p>
-      <h1 className="text-[24px] lg:text-[48px] font-300 text-center leading-[60px] mt-8">
+      <h1 className="text-[24px] lg:text-[48px] font-300 text-center leading-[60px] mt-8 font-medium">
         Choose Your Neural{" "}
         <span className="font-inter font-bold bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] bg-clip-text text-transparent">
           Advantage
