@@ -22,7 +22,7 @@ const AneuroCreatedSection = () => {
             <br />
             Think Differently.
           </h1>
-          <p className="text-[#BFC3C9] text-sm md:text-lg mb-8 w-full">
+          <p className="text-[#A7AABB] text-sm md:text-lg mb-8 w-full">
             Not to optimize what already exists, but to understand what actually{" "}
             <br className="hidden md:block" /> works at the level of human
             behavior.

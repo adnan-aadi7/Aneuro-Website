@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 
 const navItems = [
-  { label: "Home", href: "/" },
-  { label: "About Us", href: "/about-us" },
+  { label: "HOME", href: "/" },
+  { label: "ABOUT US", href: "/about-us" },
   // { label: "Services", href: "/services" },
   // { label: "Blog", href: "/blog" },
   // { label: "Contact Us", href: "/contact" },
@@ -39,7 +39,7 @@ const Navbar = () => {
           href="/signup"
           className="hidden lg:block text-white font-bold text-[16px] px-5 py-3 rounded-full bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3]"
         >
-          Get Started
+          GET STARTED
         </a>
 
         {/* Mobile Menu Button */}
@@ -65,7 +65,7 @@ const Navbar = () => {
             href="/signup"
             className="w-full text-white font-bold text-[16px] px-5 py-3 rounded-full bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3]"
           >
-            Get Started
+            GET STARTED
           </a>
         </div>
       )}

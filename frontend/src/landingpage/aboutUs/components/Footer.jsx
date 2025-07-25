@@ -15,7 +15,7 @@ export default function Footer() {
           {/* Logo & Description */}
           <div className="flex flex-col gap-4 mb-8 md:mb-0">
             <div className="flex items-center gap-3">
-                     <img src="/logo.png" alt="logo" className="w-28 h-18" />
+        <img src="/logo.png" alt="logo" className="w-28  h-18" />
             </div>
             <p className="text-gray-400 text-xs md:text-sm max-w-xs">
               Neural networks powering innovation. Shaping the future
