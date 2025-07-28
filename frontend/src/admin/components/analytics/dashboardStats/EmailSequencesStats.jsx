@@ -4,14 +4,14 @@ import { useNavigate } from "react-router-dom";
 
 const EmailSequencesStats = () => {
   const navigate = useNavigate();
-  return (
-    <div className="lg:p-6 p-2">
+  return (   
+    <div className="lg:p-6 p-2">                     
       {/* Header Row */}
       <div className="flex flex-row items-center justify-between mb-6 flex-wrap gap-2">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <Mail className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
           <h2 className="text-white text-lg sm:text-2xl font-semibold truncate">
-            Email Sequences Analytics
+            Email Sequences Analytics            
           </h2>
         </div>
         <button
@@ -20,7 +20,7 @@ const EmailSequencesStats = () => {
         >
           View Details
         </button>
-      </div>
+      </div>           
       {/* Stat Cards */}
       <div className="flex flex-wrap gap-6">
         {/* Total Sequences */}

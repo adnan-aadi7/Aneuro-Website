@@ -6,6 +6,10 @@ import Signup from "./auth/pages/signup/Signup";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import ClientLayout from "./client/layout/layout";
 import Quiz from "./auth/pages/quiz/Quiz";
+import ForgotPassword from "./auth/pages/forgotPassword/ForgotPassword";
+import EmailInstructions from "./auth/pages/forgotPassword/EmailInstructions";
+import NewPassword from "./auth/pages/forgotPassword/NewPassword";
+
 
 // cleint
 import Dashboard from "./client/pages/dashboard/Dashboard";
@@ -53,6 +57,10 @@ import AboutUs from "./landingpage/pages/AboutUs";
 //Audience
 import Audience from "./Audience/audience";
 
+
+
+
+
 function App() {
   return (
     //auth routes
@@ -63,7 +71,9 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/quiz" element={<Quiz />} />
-
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/email-instruction" element={<EmailInstructions/>} />
+        <Route path="/new-password" element={<NewPassword/>} />
 
          <Route path="/Audience-quiz" element={<Audience/>}/>
         {/* landingpage  */}
