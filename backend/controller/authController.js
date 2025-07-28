@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import connectDB from "../config/db.js";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
-import crypto from "crypto";
+import { uploadToCloudinary } from '../middleware/uploadToCloudinary.js';
 
 export async function Signup(reqBody) {
   try {
@@ -168,11 +168,29 @@ export async function deleteUser(userId) {
   }
 }
 
-//update api
-
-export async function updateUser(userId, userData) {
+//update user
+// updateUser.js
+export async function updateUser(userId, userData, file) {
   try {
     await connectDB();
+
+    // 🛑 Prevent password update
+    if ('password' in userData) {
+      delete userData.password;
+    }
+
+    // ✅ Handle profile image upload if a new file is uploaded
+    if (file && file.buffer) {
+      const cloudinaryRes = await uploadToCloudinary(file.buffer, "user_profiles", file.originalname);
+      userData.profileImage = cloudinaryRes.secure_url;
+    }
+
+    // ✅ Remove empty string fields (treat them as "don't update")
+    Object.keys(userData).forEach(key => {
+      if (userData[key] === "") {
+        delete userData[key];
+      }
+    });
 
     const updatedUser = await User.findByIdAndUpdate(userId, userData, {
       new: true,
@@ -190,6 +208,7 @@ export async function updateUser(userId, userData) {
         name: updatedUser.name,
         email: updatedUser.email,
         accountStatus: updatedUser.accountStatus,
+        profileImage: updatedUser.profileImage || "",
       },
     };
   } catch (error) {

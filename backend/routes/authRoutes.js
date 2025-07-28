@@ -11,7 +11,7 @@ import {
   sendOtp, 
   verifyOtp, 
   resetPassword  } from "../controller/authController.js";
-
+import upload from "../middleware/multer.js";
 const router = express.Router();
 
 /**
@@ -200,6 +200,7 @@ router.delete("/delete/:id", async (req, res) => {
   }
 });
 
+
 /**
  * @swagger
  * /api/update/{id}:
@@ -209,14 +210,13 @@ router.delete("/delete/:id", async (req, res) => {
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: string
- *         required: true
  *         description: User ID
  *     requestBody:
- *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -224,11 +224,12 @@ router.delete("/delete/:id", async (req, res) => {
  *                 type: string
  *               email:
  *                 type: string
- *               password:
- *                 type: string
  *               accountStatus:
  *                 type: string
  *                 enum: [active, suspended]
+ *               profileImage:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       200:
  *         description: User updated successfully
@@ -239,16 +240,15 @@ router.delete("/delete/:id", async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-router.put("/update/:id", async (req, res) => {
+router.put("/update/:id", upload.single("profileImage"), async (req, res) => {
   try {
-    const result = await updateUser(req.params.id, req.body);
+    const result = await updateUser(req.params.id, req.body, req.file);
     res.status(200).json(result);
   } catch (error) {
     const statusCode = error.message === "User not found" ? 404 : 500;
     res.status(statusCode).json({ error: error.message });
   }
 });
-
 
 
 /**

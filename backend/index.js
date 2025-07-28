@@ -5,7 +5,7 @@ import express from 'express';
 import { swaggerUi, specs } from './swagger/swagger.js';
 import connectDB from './config/db.js'
 import authRoutes from './routes/authRoutes.js'
-
+import ticketRoutes from './routes/ticketRoutes.js'
 
 const app = express();
 const port = 3000;
@@ -17,6 +17,7 @@ app.use(express.json());
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 app.use("/api/", authRoutes);
+app.use("/api/ticket", ticketRoutes);
 
 
 app.listen(port, () => {

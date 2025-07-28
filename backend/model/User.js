@@ -27,6 +27,10 @@ const UserSchema = new mongoose.Schema(
     },
     otp: String,
     otpExpires: Date,
+     profileImage: {
+      type: String, 
+      default: "",  
+    },
   },
   { timestamps: true }
 );
