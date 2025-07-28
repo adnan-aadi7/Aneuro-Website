@@ -50,6 +50,10 @@ export default function Footer() {
                 <span className="inline-block w-1 h-1 rounded-full bg-white mr-2 align-middle"></span>
                 Compare Tiers
               </li>
+              <li>
+                <span className="inline-block w-1 h-1 rounded-full bg-white mr-2 align-middle"></span>
+                <a href="/privacy-policy" className="hover:underline">Privacy & Policy</a>
+              </li>
             </ul>
           </div>
           {/* Contact Information */}

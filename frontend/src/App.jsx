@@ -6,6 +6,10 @@ import Signup from "./auth/pages/signup/Signup";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import ClientLayout from "./client/layout/layout";
 import Quiz from "./auth/pages/quiz/Quiz";
+import ForgotPassword from "./auth/pages/forgotPassword/ForgotPassword";
+import EmailInstructions from "./auth/pages/forgotPassword/EmailInstructions";
+import NewPassword from "./auth/pages/forgotPassword/NewPassword";
+
 
 // cleint
 import Dashboard from "./client/pages/dashboard/Dashboard";
@@ -52,6 +56,11 @@ import AboutUs from "./landingpage/pages/AboutUs";
 
 //Audience
 import Audience from "./Audience/audience";
+import Policy from "./termsConditions/Policy";
+
+
+
+
 
 function App() {
   return (
@@ -63,11 +72,14 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/quiz" element={<Quiz />} />
-
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/email-instruction" element={<EmailInstructions/>} />
+        <Route path="/new-password" element={<NewPassword/>} />
 
          <Route path="/Audience-quiz" element={<Audience/>}/>
         {/* landingpage  */}
         <Route path="/about-us" element={<AboutUs />} />
+        <Route path="/privacy-policy" element={<Policy/>} />
 
         {/* choosing plan or suubcription routes  */}
         <Route path="/plan" element={<Subcription />} />

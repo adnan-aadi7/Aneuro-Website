@@ -7,7 +7,7 @@ export default function LoginForm() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
-    password: "",
+    password: "", 
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -129,12 +129,12 @@ export default function LoginForm() {
                 </button>
               </div>
               <div className="flex justify-end mt-2">
-                <a
-                  href="#"
+                <Link
+                  to="/forgot-password"
                   className="text-gray-300 text-xs sm:text-sm hover:underline"
                 >
                   Forgot Password?
-                </a>
+                </Link>
               </div>
             </div>
 

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Minus } from "lucide-react";
 import GroupImg from "../../../assets/subscription/Group.png";
 import SelectPlanPopup from "./SelectPlanPopup";
+import TermsAndConditions from "../../../termsConditions/TermsAndConditions";
+import Payment from "./Payment";
 
 const CYAN = "#12DCF0";
 
@@ -73,14 +75,36 @@ const CheckMark = () => (
 );
 
 const ChoosePlan = () => {
-  const [showPopup, setShowPopup] = useState(false);
+  const [modal, setModal] = useState(null); // null | 'select' | 'terms' | 'payment'
 
   return (
     <div className=" flex flex-col items-center justify-center py-8 px-2">
-      {/* Popup */}
-      {showPopup && <SelectPlanPopup onClose={() => setShowPopup(false)} />}
+      {/* Modals */}
+      {modal === 'select' && (
+        <SelectPlanPopup
+          onClose={() => setModal(null)}
+          onContinue={() => setModal('terms')}
+        />
+      )}
+      {modal === 'terms' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
+          <div className="relative max-h-[80vh] overflow-y-auto w-full max-w-2xl hide-scrollbar">
+            <button
+              onClick={() => setModal(null)}
+              className="absolute top-2 right-2 text-gray-400 hover:text-cyan-400 text-2xl font-bold z-10"
+              aria-label="Close"
+            >
+              &times;
+            </button>
+            <TermsAndConditions onAgree={() => setModal('payment')} />
+          </div>
+        </div>
+      )}
+      {modal === 'payment' && (
+        <Payment onClose={() => setModal(null)} />
+      )}
       {/* Main content hidden when popup is open */}
-      {!showPopup && (
+      {modal === null && (
         <>
           <div className="text-center mb-6">
             <h2 className="text-white text-3xl md:text-4xl font-bold mb-2 tracking-wide">
@@ -204,7 +228,7 @@ const ChoosePlan = () => {
                     key={plan.name}
                     className="w-full text-black font-semibold py-2 md:py-3 px-2 md:px-6 rounded transition-colors duration-200 cursor-pointer text-xs md:text-base"
                     style={{ background: CYAN }}
-                    onClick={() => setShowPopup(true)}
+                    onClick={() => setModal('select')}
                   >
                     Get Started
                   </button>

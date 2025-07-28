@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import Payment from "./Payment";
 
 const CYAN = "#12DCF0";
 
@@ -21,13 +20,8 @@ const plans = [
   },
 ];
 
-const SelectPlanPopup = ({ onClose }) => {
+const SelectPlanPopup = ({ onClose, onContinue }) => {
   const [selected, setSelected] = useState(0);
-  const [showPayment, setShowPayment] = useState(false);
-
-  if (showPayment) {
-    return <Payment onClose={() => setShowPayment(false)} />;
-  }
 
   return (
     <div
@@ -108,7 +102,7 @@ const SelectPlanPopup = ({ onClose }) => {
           <button
             className="bg-cyan-400 hover:bg-cyan-300 text-black font-semibold py-3 px-10 rounded transition-colors duration-200"
             style={{ background: CYAN }}
-            onClick={() => setShowPayment(true)}
+            onClick={onContinue}
           >
             Continue
           </button>
