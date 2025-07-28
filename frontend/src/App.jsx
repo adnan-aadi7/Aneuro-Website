@@ -56,6 +56,7 @@ import AboutUs from "./landingpage/pages/AboutUs";
 
 //Audience
 import Audience from "./Audience/audience";
+import Policy from "./termsConditions/Policy";
 
 
 
@@ -78,6 +79,7 @@ function App() {
          <Route path="/Audience-quiz" element={<Audience/>}/>
         {/* landingpage  */}
         <Route path="/about-us" element={<AboutUs />} />
+        <Route path="/privacy-policy" element={<Policy/>} />
 
         {/* choosing plan or suubcription routes  */}
         <Route path="/plan" element={<Subcription />} />
