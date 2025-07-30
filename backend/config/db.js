@@ -1,14 +1,13 @@
 // config/db.js
 import mongoose from "mongoose";
+import dotenv from "dotenv";
+dotenv.config();
 
 const MONGODB_URI = process.env.MONGODB_URI || "";
-console.log("MONGODB_URI =", MONGODB_URI);
 
 const connectDB = async () => {
   try {
-   await mongoose.connect(
-  //"mongodb+srv://kainatrobi011:qz2QHzkbfxdcvNwq@cluster0.159c8ov.mongodb.net/aneuro",
-  "mongodb://127.0.0.1:27017/aneuro",
+    await mongoose.connect(MONGODB_URI, 
   { useNewUrlParser: true, useUnifiedTopology: true }
 );
 

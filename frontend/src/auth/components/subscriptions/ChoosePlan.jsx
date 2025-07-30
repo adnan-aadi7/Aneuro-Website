@@ -76,6 +76,21 @@ const CheckMark = () => (
 
 const ChoosePlan = () => {
   const [modal, setModal] = useState(null); // null | 'select' | 'terms' | 'payment'
+  const [selectedPlan, setSelectedPlan] = useState(null);
+
+  const handlePlanSelect = (plan) => {
+    setSelectedPlan(plan);
+    setModal('terms');
+  };
+
+  const handleTermsAgree = () => {
+    setModal('payment');
+  };
+
+  const handlePaymentClose = () => {
+    setModal(null);
+    setSelectedPlan(null);
+  };
 
   return (
     <div className=" flex flex-col items-center justify-center py-8 px-2">
@@ -83,7 +98,7 @@ const ChoosePlan = () => {
       {modal === 'select' && (
         <SelectPlanPopup
           onClose={() => setModal(null)}
-          onContinue={() => setModal('terms')}
+          onContinue={handlePlanSelect}
         />
       )}
       {modal === 'terms' && (
@@ -96,12 +111,15 @@ const ChoosePlan = () => {
             >
               &times;
             </button>
-            <TermsAndConditions onAgree={() => setModal('payment')} />
+            <TermsAndConditions onAgree={handleTermsAgree} />
           </div>
         </div>
       )}
-      {modal === 'payment' && (
-        <Payment onClose={() => setModal(null)} />
+      {modal === 'payment' && selectedPlan && (
+        <Payment 
+          onClose={handlePaymentClose} 
+          selectedPlan={selectedPlan}
+        />
       )}
       {/* Main content hidden when popup is open */}
       {modal === null && (

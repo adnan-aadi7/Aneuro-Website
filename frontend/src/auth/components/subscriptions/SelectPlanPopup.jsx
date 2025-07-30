@@ -23,6 +23,11 @@ const plans = [
 const SelectPlanPopup = ({ onClose, onContinue }) => {
   const [selected, setSelected] = useState(0);
 
+  const handleContinue = () => {
+    const selectedPlan = plans[selected];
+    onContinue(selectedPlan);
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
@@ -102,7 +107,7 @@ const SelectPlanPopup = ({ onClose, onContinue }) => {
           <button
             className="bg-cyan-400 hover:bg-cyan-300 text-black font-semibold py-3 px-10 rounded transition-colors duration-200"
             style={{ background: CYAN }}
-            onClick={onContinue}
+            onClick={handleContinue}
           >
             Continue
           </button>
