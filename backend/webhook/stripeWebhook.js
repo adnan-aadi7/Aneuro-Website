@@ -38,12 +38,35 @@ export const handleStripeWebhook = async (req, res) => {
       plan
     });
     
+    // Skip payment creation if required data is missing
+    if (!userId) {
+      console.warn('Missing userId in invoice metadata. Skipping payment creation.');
+      break;
+    }
+    
     // Find payment intent details
     let paymentIntent;
     try {
       paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
     } catch (e) {
       paymentIntent = null;
+    }
+    
+    // Determine plan from subscription if not in metadata
+    let finalPlan = plan;
+    if (!finalPlan && subscriptionId) {
+      try {
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        // Map price IDs to plan names
+        const priceId = subscription.items.data[0]?.price?.id;
+        if (priceId === 'price_1RqBDNHHuap1a33PXASQqDj4') finalPlan = 'starter';
+        else if (priceId === 'price_1RqBDcHHuap1a33PvAJEFgPE') finalPlan = 'growth';
+        else if (priceId === 'price_1RqBDwHHuap1a33PwVa9QS7D') finalPlan = 'enterprise';
+        else finalPlan = 'starter'; // fallback
+      } catch (e) {
+        console.warn('Could not retrieve subscription to determine plan. Using starter as fallback.');
+        finalPlan = 'starter';
+      }
     }
     
     // Check if payment record already exists to avoid duplicates
@@ -57,12 +80,12 @@ export const handleStripeWebhook = async (req, res) => {
     if (!payment) {
       // Create new payment record only if it doesn't exist
       payment = new Payment({
-        userId: userId || null,
+        userId: userId,
         stripePaymentIntentId: paymentIntentId,
         stripeSubscriptionId: subscriptionId,
         amount: invoice.amount_paid,
         currency: invoice.currency,
-        plan: plan || 'custom',
+        plan: finalPlan,
         status: 'paid',
         customerEmail: customerEmail || '',
         receiptUrl: paymentIntent && paymentIntent.charges && paymentIntent.charges.data[0] ? paymentIntent.charges.data[0].receipt_url : '',
@@ -80,19 +103,17 @@ export const handleStripeWebhook = async (req, res) => {
     }
     
     // Update user subscription
-    if (userId) {
-      const user = await User.findById(userId);
-      if (user) {
-        user.subscription = {
-          plan: plan || user.subscription?.plan || 'custom',
-          status: 'active',
-          startDate: new Date(),
-          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 1 month from now
-          stripeSubscriptionId: subscriptionId,
-        };
-        await user.save();
-        console.log('User subscription updated:', user.email);
-      }
+    const user = await User.findById(userId);
+    if (user) {
+      user.subscription = {
+        plan: finalPlan,
+        status: 'active',
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 1 month from now
+        stripeSubscriptionId: subscriptionId,
+      };
+      await user.save();
+      console.log('User subscription updated:', user.email);
     }
     break;
   }

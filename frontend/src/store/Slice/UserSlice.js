@@ -1,30 +1,33 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axiosInstance from '../axiosInstance';
 
 // Async thunk for signup
 export const signupUser = createAsyncThunk(
   'user/signupUser',
-  async (userData) => {
-    const response = await fetch('http://localhost:3000/api/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData),
-    });
-    if (!response.ok) throw new Error('Signup failed');
-    return await response.json();
+  async (userData, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post('/signup', userData);
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.error || err.message || 'Signup failed'
+      );
+    }
   }
 );
 
 // Async thunk for login
 export const loginUser = createAsyncThunk(
   'user/loginUser',
-  async (loginData) => {
-    const response = await fetch('http://localhost:3000/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(loginData),
-    });
-    if (!response.ok) throw new Error('Login failed');
-    return await response.json();
+  async (loginData, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post('/login', loginData);
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.error || err.message || 'Login failed'
+      );
+    }
   }
 );
 
@@ -44,6 +47,10 @@ const userSlice = createSlice({
       localStorage.removeItem('userEmail');
       localStorage.removeItem('token');
     },
+    resetUserStatus: (state) => {
+      state.status = 'idle';
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -62,6 +69,8 @@ const userSlice = createSlice({
         localStorage.setItem('userId', action.payload.user.id);
         localStorage.setItem('userEmail', action.payload.user.email);
         localStorage.setItem('token', action.payload.token);
+        // Save subscription to localStorage for plan-based UI
+        localStorage.setItem('subscription', JSON.stringify(action.payload.user.subscription || null));
       })
       .addMatcher(
         (action) => action.type.endsWith('/pending'),
@@ -77,5 +86,5 @@ const userSlice = createSlice({
   },
 });
 
-export const { logout } = userSlice.actions;
+export const { logout, resetUserStatus } = userSlice.actions;
 export default userSlice.reducer;

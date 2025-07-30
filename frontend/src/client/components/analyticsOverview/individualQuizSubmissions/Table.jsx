@@ -28,12 +28,7 @@ const Table = () => {
   const [showRestriction, setShowRestriction] = useState(false);
 
   const handlePreviewClick = () => {
-    const userRole = localStorage.getItem("userRole");
-    if (userRole === "starter") {
-      setShowRestriction(true);
-    } else {
-      navigate("/quiz-details");
-    }
+    navigate("/quiz-details");
   };
 
   return (

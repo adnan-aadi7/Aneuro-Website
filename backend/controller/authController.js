@@ -51,7 +51,8 @@ export async function Login(reqBody) {
       throw new Error("Email and password are required");
     }
 
-    const user = await User.findOne({ email });
+    // Populate subscription field
+    const user = await User.findOne({ email }).lean();
 
     if (!user) {
       throw new Error("Invalid email or password");
@@ -82,6 +83,7 @@ export async function Login(reqBody) {
         email: user.email,
         userType: user.userType,
         accountStatus: user.accountStatus,
+        subscription: user.subscription || null,
       },
     };
   } catch (error) {

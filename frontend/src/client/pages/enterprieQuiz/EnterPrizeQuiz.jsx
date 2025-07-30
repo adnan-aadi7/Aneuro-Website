@@ -16,12 +16,21 @@ const EnterPrizeQuiz = () => {
   const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
-    const role = localStorage.getItem("userRole");
-    if (role !== "enterprize") {
+    const subscriptionStr = localStorage.getItem("subscription");
+    let plan = null;
+    if (subscriptionStr) {
+      try {
+        const subscription = JSON.parse(subscriptionStr);
+        plan = subscription?.plan;
+      } catch {
+        plan = null;
+      }
+    }
+    if (plan !== "enterprise") {
       setShowPopup(true);
     }
   }, []);
-
+  
   if (showPopup) {
     return <EnterPrizePopup onClose={() => {}} />;
   }

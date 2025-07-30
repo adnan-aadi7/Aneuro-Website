@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axiosInstance from '../axiosInstance';
 
 // Async thunk to create a subscription (calls your backend)
 export const createSubscription = createAsyncThunk(
@@ -8,16 +9,17 @@ export const createSubscription = createAsyncThunk(
       // Get user info from localStorage (set by UserSlice)
       const userId = localStorage.getItem('userId');
       const email = localStorage.getItem('userEmail');
-      const response = await fetch('http://localhost:3000/api/payment/create-subscription',  {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan, userId, email, paymentMethodId }),
+      const response = await axiosInstance.post('/payment/create-subscription', {
+        plan,
+        userId,
+        email,
+        paymentMethodId,
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Subscription failed');
-      return data; // { subscriptionId, message }
+      return response.data; // { subscriptionId, message }
     } catch (err) {
-      return rejectWithValue(err.message);
+      return rejectWithValue(
+        err.response?.data?.error || err.message || 'Subscription failed'
+      );
     }
   }
 );

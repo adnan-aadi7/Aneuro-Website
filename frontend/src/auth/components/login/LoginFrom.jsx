@@ -1,41 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import logo from "../../../assets/auth/logo.png";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser, resetUserStatus } from "../../../store/Slice/UserSlice";
 
 export default function LoginForm() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     email: "",
-    password: "", 
+    password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const { status } = useSelector((state) => state.user);
 
-  // Hardcoded users
-  const users = [
-    {
-      email: "admin@example.com",
-      password: "admin123",
-      role: "admin",
-    },
-    {
-      email: "user@example.com",
-      password: "user123",
-      role: "growth",
-    },
-    {
-      email: "enterprise@example.com",
-      password: "user123",
-      role: "enterprise",
-    },
-    // Starter plan user
-    {
-      email: "starter@example.com",
-      password: "user123",
-      role: "starter",
-    },
-  ];
+  // Reset status to idle on mount (fix stuck loading button)
+  useEffect(() => {
+    dispatch(resetUserStatus());
+  }, [dispatch]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -45,26 +29,32 @@ export default function LoginForm() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    const foundUser = users.find(
-      (u) => u.email === formData.email && u.password === formData.password
-    );
-    if (foundUser) {
-      localStorage.setItem("userRole", foundUser.role); // Store user role
-      if (foundUser.role === "admin") {
-        navigate("/admin/dashboard");
-      } else if (
-        foundUser.role === "user" ||
-        foundUser.role === "growth" ||
-        foundUser.role === "enterprise" ||
-        foundUser.role === "starter"
-      ) {
-        navigate("/client/dashboard");
+    try {
+      const resultAction = await dispatch(loginUser(formData));
+      if (loginUser.fulfilled.match(resultAction)) {
+        const user = resultAction.payload.user;
+        // Check for subscription plan
+        const plan = user?.subscription?.plan;
+        if (user.userType === "admin") {
+          navigate("/admin/dashboard");
+        } else if (plan === "growth") {
+          navigate("/client/dashboard");
+        } else if (plan === "enterprise") {
+          navigate("/client/dashboard");
+        } else if (plan === "starter") {
+          navigate("/client/dashboard");
+        } else {
+          // No plan, go to choose plan or fallback
+          navigate("/choose-plan");
+        }
+      } else {
+        setError(resultAction.payload || "Login failed");
       }
-    } else {
-      setError("Invalid email or password");
+    } catch {
+      setError("Login failed");
     }
   };
 
@@ -142,8 +132,9 @@ export default function LoginForm() {
             <button
               type="submit"
               className="w-full bg-cyan-400 text-gray-900 py-3 rounded-md font-semibold hover:bg-cyan-300 transition-colors text-xs sm:text-sm"
+              disabled={status === "loading"}
             >
-              Sign In
+              {status === "loading" ? "Signing In..." : "Sign In"}
             </button>
           </form>
 
