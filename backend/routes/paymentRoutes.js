@@ -5,7 +5,8 @@ import {
   getPlans, 
   getUserPayments, 
   getUserSubscription, 
-  getAllPayments 
+  getAllPayments,
+  getStripeProducts
 } from '../controller/PaymentController.js';
 
 const router = express.Router();
@@ -18,6 +19,9 @@ router.post('/create-payment-intent', createPaymentIntent);
 
 // Get available plans
 router.get('/plans', getPlans);
+
+// Get Stripe products and prices (dynamic)
+router.get('/stripe-products', getStripeProducts);
 
 // Get user payment history
 router.get('/user-payments/:userId', getUserPayments);

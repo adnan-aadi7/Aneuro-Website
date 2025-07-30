@@ -83,7 +83,7 @@ export const createSubscription = async (req, res) => {
         customerEmail: email 
       },
       collection_method: 'charge_automatically',
-      automatic_tax: { enabled: true },
+      // automatic_tax: { enabled: true },
     });
 
     console.log('Stripe subscription created:', subscription.id);
@@ -194,5 +194,37 @@ export const getAllPayments = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+// ✅ 7. Get Stripe products and prices
+export const getStripeProducts = async (req, res) => {
+  try {
+    // Fetch products from Stripe
+    const products = await stripe.products.list({
+      active: true,
+      expand: ['data.default_price']
+    });
+
+    // Map to your plan structure
+    const plans = products.data.map(product => {
+      const price = product.default_price;
+      return {
+        id: product.id,
+        name: product.name,
+        description: product.description,
+        plan: product.metadata?.plan || product.name.toLowerCase(),
+        price: price.unit_amount / 100, // Convert cents to dollars
+        priceId: price.id,
+        currency: price.currency,
+        interval: price.recurring?.interval || 'month',
+        features: product.metadata?.features ? JSON.parse(product.metadata.features) : []
+      };
+    });
+
+    res.json({ plans });
+  } catch (error) {
+    console.error('Error fetching Stripe products:', error);
+    res.status(500).json({ error: 'Failed to fetch products' });
   }
 };

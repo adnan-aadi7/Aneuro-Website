@@ -2,31 +2,42 @@ import React, { useState } from "react";
 
 const CYAN = "#12DCF0";
 
-const plans = [
-  {
-    name: "Starter",
-    price: "97",
-    description: "Individuals and for tiny teams",
-  },
-  {
-    name: "Growth",
-    price: "297",
-    description: "Expanding teams",
-  },
-  {
-    name: "Enterprise",
-    price: "1,999",
-    description: "For huge organizations",
-  },
-];
-
-const SelectPlanPopup = ({ onClose, onContinue }) => {
+const SelectPlanPopup = ({ onClose, onContinue, plans = [] }) => {
   const [selected, setSelected] = useState(0);
 
   const handleContinue = () => {
     const selectedPlan = plans[selected];
     onContinue(selectedPlan);
   };
+
+  // If no plans are provided, show a fallback
+  if (plans.length === 0) {
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center"
+        style={{ background: "rgba(0,0,0,0.7)" }}
+      >
+        <div
+          className="relative bg-black rounded-lg p-6 w-full max-w-md mx-auto"
+          style={{ boxShadow: `0 0 80px 10px ${CYAN}40` }}
+        >
+          <button
+            className="absolute top-6 right-6 text-white text-2xl focus:outline-none"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            &times;
+          </button>
+          <h2 className="text-white text-2xl font-bold text-center mb-2 tracking-wide">
+            No Plans Available
+          </h2>
+          <p className="text-gray-300 text-center text-sm mb-4">
+            Please try again later.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -56,7 +67,7 @@ const SelectPlanPopup = ({ onClose, onContinue }) => {
         <div className="flex flex-col gap-4">
           {plans.map((plan, idx) => (
             <div
-              key={plan.name}
+              key={plan.id}
               className={`flex items-center rounded border px-6 py-5 cursor-pointer transition-all ${
                 selected === idx ? "border-cyan-400" : "border-gray-600"
               }`}
@@ -90,14 +101,14 @@ const SelectPlanPopup = ({ onClose, onContinue }) => {
                   </span>
                 </div>
                 <div className="text-gray-400 text-sm mt-1">
-                  {plan.description}
+                  {plan.description || `${plan.plan} plan`}
                 </div>
               </div>
               <div className="flex flex-col items-end ml-6">
                 <span className="text-white text-3xl font-bold leading-none">
-                  {plan.price}$
+                  ${plan.price}
                 </span>
-                <span className="text-gray-400 text-xs mt-1">per month</span>
+                <span className="text-gray-400 text-xs mt-1">per {plan.interval}</span>
               </div>
             </div>
           ))}

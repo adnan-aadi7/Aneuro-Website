@@ -24,12 +24,30 @@ export const createSubscription = createAsyncThunk(
   }
 );
 
+// Async thunk to fetch Stripe products
+export const fetchStripeProducts = createAsyncThunk(
+  'payment/fetchStripeProducts',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get('/payment/stripe-products');
+      return response.data; // { plans: [...] }
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.error || err.message || 'Failed to fetch products'
+      );
+    }
+  }
+);
+
 const paymentSlice = createSlice({
   name: 'payment',
   initialState: {
     subscriptionId: null,
     status: 'idle',
     error: null,
+    products: [],
+    productsLoading: false,
+    productsError: null,
   },
   reducers: {
     clearPaymentState: (state) => {
@@ -52,6 +70,19 @@ const paymentSlice = createSlice({
       .addCase(createSubscription.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload || 'Subscription failed';
+      })
+      .addCase(fetchStripeProducts.pending, (state) => {
+        state.productsLoading = true;
+        state.productsError = null;
+      })
+      .addCase(fetchStripeProducts.fulfilled, (state, action) => {
+        state.productsLoading = false;
+        state.products = action.payload.plans;
+        state.productsError = null;
+      })
+      .addCase(fetchStripeProducts.rejected, (state, action) => {
+        state.productsLoading = false;
+        state.productsError = action.payload || 'Failed to fetch products';
       });
   },
 });

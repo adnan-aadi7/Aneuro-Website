@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Minus } from "lucide-react";
 import GroupImg from "../../../assets/subscription/Group.png";
 import SelectPlanPopup from "./SelectPlanPopup";
 import TermsAndConditions from "../../../termsConditions/TermsAndConditions";
 import Payment from "./Payment";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchStripeProducts } from "../../../store/Slice/PaymentSlice";
 
 const CYAN = "#12DCF0";
 
@@ -46,13 +48,6 @@ const features = [
   },
 ];
 
-const plans = [
-  { name: "Basic", price: "50" },
-  { name: "Starter", price: "97" },
-  { name: "Growth", price: "297" },
-  { name: "Enterprise", price: "1,999" },
-];
-
 const CheckMark = () => (
   <svg
     width="24"
@@ -77,6 +72,13 @@ const CheckMark = () => (
 const ChoosePlan = () => {
   const [modal, setModal] = useState(null); // null | 'select' | 'terms' | 'payment'
   const [selectedPlan, setSelectedPlan] = useState(null);
+  
+  const dispatch = useDispatch();
+  const { products, productsLoading } = useSelector(state => state.payment);
+
+  useEffect(() => {
+    dispatch(fetchStripeProducts());
+  }, [dispatch]);
 
   const handlePlanSelect = (plan) => {
     setSelectedPlan(plan);
@@ -92,6 +94,20 @@ const ChoosePlan = () => {
     setSelectedPlan(null);
   };
 
+  // Show loading state while fetching products
+  if (productsLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 px-2">
+        <div className="text-white text-xl">Loading plans...</div>
+      </div>
+    );
+  }
+
+  // Filter out the "Basic" plan and get the actual plans from Stripe
+  const displayPlans = products.filter(product => 
+    product.plan !== 'basic' && product.plan !== 'Basic'
+  );
+
   return (
     <div className=" flex flex-col items-center justify-center py-8 px-2">
       {/* Modals */}
@@ -99,6 +115,7 @@ const ChoosePlan = () => {
         <SelectPlanPopup
           onClose={() => setModal(null)}
           onContinue={handlePlanSelect}
+          plans={displayPlans}
         />
       )}
       {modal === 'terms' && (
@@ -173,9 +190,9 @@ const ChoosePlan = () => {
                   />
                 </div>
                 {/* Other plans */}
-                {plans.slice(1).map((plan) => (
+                {displayPlans.map((plan) => (
                   <div
-                    key={plan.name}
+                    key={plan.id}
                     className="flex flex-col items-center py-4 md:py-8"
                   >
                     <h3 className="text-white text-lg md:text-2xl font-bold mb-1 md:mb-2 tracking-wide text-center">
@@ -193,7 +210,7 @@ const ChoosePlan = () => {
                         $
                       </span>
                       <span className="text-gray-400 text-xs md:text-base ml-2">
-                        per month
+                        per {plan.interval}
                       </span>
                     </div>
                   </div>
@@ -241,9 +258,9 @@ const ChoosePlan = () => {
                 {/* Basic column: no button, hidden on small screens */}
                 <div className="hidden md:block" />
                 {/* Other plans */}
-                {plans.slice(1).map((plan) => (
+                {displayPlans.map((plan) => (
                   <button
-                    key={plan.name}
+                    key={plan.id}
                     className="w-full text-black font-semibold py-2 md:py-3 px-2 md:px-6 rounded transition-colors duration-200 cursor-pointer text-xs md:text-base"
                     style={{ background: CYAN }}
                     onClick={() => setModal('select')}
