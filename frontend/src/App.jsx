@@ -9,6 +9,8 @@ import Quiz from "./auth/pages/quiz/Quiz";
 import ForgotPassword from "./auth/pages/forgotPassword/ForgotPassword";
 import EmailInstructions from "./auth/pages/forgotPassword/EmailInstructions";
 import NewPassword from "./auth/pages/forgotPassword/NewPassword";
+import GoogleCallback from "./auth/components/login/GoogleCallback";
+import FacebookCallback from "./auth/components/login/FacebookCallback";
 
 
 // cleint
@@ -75,6 +77,8 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/email-instruction" element={<EmailInstructions/>} />
         <Route path="/new-password" element={<NewPassword/>} />
+        <Route path="/auth/google/callback" element={<GoogleCallback />} />
+        <Route path="/auth/facebook/callback" element={<FacebookCallback />} />
 
          <Route path="/Audience-quiz" element={<Audience/>}/>
         {/* landingpage  */}

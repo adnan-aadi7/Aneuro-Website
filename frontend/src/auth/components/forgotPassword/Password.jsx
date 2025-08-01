@@ -1,18 +1,26 @@
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import logo from "../../../assets/auth/logo.png";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { resetPassword } from "../../../store/Slice/UserSlice";
 
 export default function Password() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const dispatch = useDispatch();
+  const { forgotPasswordLoading, error } = useSelector((state) => state.user);
+  
+  const { email, otp } = location.state || {};
+  
   const [formData, setFormData] = useState({
     password: "",
     confirmPassword: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [localError, setLocalError] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -20,45 +28,54 @@ export default function Password() {
       ...prev,
       [name]: value,
     }));
-    setError(""); // Clear error when user types
+    setLocalError(""); // Clear error when user types
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setLocalError("");
     
     // Validation
     if (!formData.password) {
-      setError("Please enter a password");
+      setLocalError("Please enter a password");
       return;
     }
     
     if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long");
+      setLocalError("Password must be at least 6 characters long");
       return;
     }
     
     if (!formData.confirmPassword) {
-      setError("Please confirm your password");
+      setLocalError("Please confirm your password");
       return;
     }
     
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
+      setLocalError("Passwords do not match");
       return;
     }
 
-    setIsLoading(true);
-    
-    // Simulate API call to update password
-    setTimeout(() => {
-      setIsLoading(false);
-      // Here you would typically make an API call to update the password
-      console.log("Updating password...");
-      // For demo purposes, we'll just show success and redirect
+    // Check if we have email and OTP from navigation state
+    if (!email || !otp) {
+      setLocalError("Missing email or OTP. Please restart the password reset process.");
+      return;
+    }
+
+    try {
+      const result = await dispatch(resetPassword({ 
+        email, 
+        otp, 
+        newPassword: formData.password 
+      })).unwrap();
+      console.log("Password reset successfully:", result);
+      // Show success message and redirect to login
       alert("Password updated successfully!");
       navigate("/login");
-    }, 1000);
+    } catch (error) {
+      console.error("Failed to reset password:", error);
+      setLocalError(error || "Failed to reset password. Please try again.");
+    }
   };
 
   return (
@@ -80,9 +97,9 @@ export default function Password() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Error Message */}
-            {error && (
+            {(localError || error) && (
               <div className="text-red-400 text-xs sm:text-sm text-center mb-2">
-                {error}
+                {localError || error}
               </div>
             )}
             
@@ -137,10 +154,10 @@ export default function Password() {
             {/* Update Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={forgotPasswordLoading}
               className="w-full bg-cyan-400 text-gray-900 py-3 font-semibold hover:bg-cyan-300 transition-colors text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Updating..." : "Update"}
+              {forgotPasswordLoading ? "Updating..." : "Update"}
             </button>
           </form>
 

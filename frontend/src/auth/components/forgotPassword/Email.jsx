@@ -1,43 +1,46 @@
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import logo from "../../../assets/auth/logo.png";
 import { Link, useNavigate } from "react-router-dom";
+import { sendOtp } from "../../../store/Slice/UserSlice";
 
 export default function Email() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { forgotPasswordLoading, error } = useSelector((state) => state.user);
+  
   const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [localError, setLocalError] = useState("");
 
   const handleInputChange = (e) => {
     setEmail(e.target.value);
-    setError(""); // Clear error when user types
+    setLocalError(""); // Clear error when user types
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setLocalError("");
     
     // Basic email validation
     if (!email) {
-      setError("Please enter your email address");
+      setLocalError("Please enter your email address");
       return;
     }
     
     if (!email.includes("@")) {
-      setError("Please enter a valid email address");
+      setLocalError("Please enter a valid email address");
       return;
     }
 
-    setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // Here you would typically make an API call to send reset instructions
-      console.log("Sending reset instructions to:", email);
-      // Navigate to email instruction page
-      navigate("/email-instruction");
-    }, 1000);
+    try {
+      const result = await dispatch(sendOtp(email)).unwrap();
+      console.log("OTP sent successfully:", result);
+      // Navigate to email instruction page with email
+      navigate("/email-instruction", { state: { email } });
+    } catch (error) {
+      console.error("Failed to send OTP:", error);
+      setLocalError(error || "Failed to send OTP. Please try again.");
+    }
   };
 
   return (
@@ -59,9 +62,9 @@ export default function Email() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Error Message */}
-            {error && (
+            {(localError || error) && (
               <div className="text-red-400 text-xs sm:text-sm text-center mb-2">
-                {error}
+                {localError || error}
               </div>
             )}
             
@@ -83,10 +86,10 @@ export default function Email() {
             {/* Send Instructions Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={forgotPasswordLoading}
               className="w-full bg-cyan-400 text-gray-900 py-3  font-semibold hover:bg-cyan-300 transition-colors text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Sending..." : "Send Instructions"}
+              {forgotPasswordLoading ? "Sending..." : "Send OTP"}
             </button>
           </form>
 

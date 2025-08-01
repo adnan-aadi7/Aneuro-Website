@@ -1,0 +1,122 @@
+{
+  "info": {
+    "name": "Google OAuth2 Authentication",
+    "description": "Test collection for Google OAuth2 authentication endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Google Auth URL",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/auth/google/url",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "auth", "google", "url"]
+        },
+        "description": "Get Google OAuth2 authorization URL for frontend redirect"
+      },
+      "response": []
+    },
+    {
+      "name": "Google OAuth2 Callback",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/auth/google/callback",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "auth", "google", "callback"]
+        },
+        "description": "Handle OAuth2 callback from Google and return JWT token"
+      },
+      "response": []
+    },
+    {
+      "name": "Google Auth with Code",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"your_authorization_code_here\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/auth/google/code",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "auth", "google", "code"]
+        },
+        "description": "Authenticate with Google using authorization code (for mobile apps or custom flows)"
+      },
+      "response": []
+    },
+    {
+      "name": "Test JWT Token - Get Users",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer YOUR_JWT_TOKEN_HERE"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:3000/api/users",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "users"]
+        },
+        "description": "Test JWT token by accessing protected endpoint"
+      },
+      "response": []
+    },
+    {
+      "name": "Regular Login (for comparison)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "login"]
+        },
+        "description": "Regular email/password login for comparison"
+      },
+      "response": []
+    }
+  ]
+} 

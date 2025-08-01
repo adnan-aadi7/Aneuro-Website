@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import logo from "../../../assets/auth/logo.png";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser, resetUserStatus } from "../../../store/Slice/UserSlice";
+import { loginUser, resetUserStatus, googleLogin, facebookLogin } from "../../../store/Slice/UserSlice";
 
 export default function LoginForm() {
   const navigate = useNavigate();
@@ -14,12 +14,30 @@ export default function LoginForm() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const { status } = useSelector((state) => state.user);
+  const { status, googleLoading, facebookLoading } = useSelector((state) => state.user);
+  const [searchParams] = useSearchParams();
 
   // Reset status to idle on mount (fix stuck loading button)
   useEffect(() => {
     dispatch(resetUserStatus());
   }, [dispatch]);
+
+  // Handle error messages from URL parameters (Google OAuth redirects)
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    if (errorParam) {
+      switch (errorParam) {
+        case 'google_auth_failed':
+          setError('Google authentication failed. Please try again.');
+          break;
+        case 'no_auth_code':
+          setError('Authentication was cancelled or failed.');
+          break;
+        default:
+          setError('An error occurred during authentication.');
+      }
+    }
+  }, [searchParams]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -36,25 +54,45 @@ export default function LoginForm() {
       const resultAction = await dispatch(loginUser(formData));
       if (loginUser.fulfilled.match(resultAction)) {
         const user = resultAction.payload.user;
-        // Check for subscription plan
-        const plan = user?.subscription?.plan;
+        
+        // Check if user has active subscription
+        const hasActiveSubscription = user.subscription && 
+                                   user.subscription.plan && 
+                                   user.subscription.status === 'active';
+        
+        // Navigate based on user type and subscription status
         if (user.userType === "admin") {
           navigate("/admin/dashboard");
-        } else if (plan === "growth") {
-          navigate("/client/dashboard");
-        } else if (plan === "enterprise") {
-          navigate("/client/dashboard");
-        } else if (plan === "starter") {
+        } else if (hasActiveSubscription) {
+          // User has active subscription, go to dashboard
           navigate("/client/dashboard");
         } else {
-          // No plan, go to choose plan or fallback
-          navigate("/choose-plan");
+          // User has no subscription or inactive subscription, go to plan selection
+          navigate("/plan");
         }
       } else {
         setError(resultAction.payload || "Login failed");
       }
     } catch {
       setError("Login failed");
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError("");
+    try {
+      await dispatch(googleLogin());
+    } catch {
+      setError("Google authentication failed");
+    }
+  };
+
+  const handleFacebookLogin = async () => {
+    setError("");
+    try {
+      await dispatch(facebookLogin());
+    } catch {
+      setError("Facebook authentication failed");
     }
   };
 
@@ -147,7 +185,11 @@ export default function LoginForm() {
 
           {/* Social Login Buttons */}
           <div className="grid grid-cols-2 gap-3">
-            <button className="w-full flex items-center px-2 bg-black border border-gray-600 rounded-md text-white font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap py-2 text-xs sm:text-sm">
+            <button 
+              onClick={handleGoogleLogin}
+              disabled={googleLoading}
+              className="w-full flex items-center px-2 bg-black border border-gray-600 rounded-md text-white font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap py-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               {/* Colored Google SVG */}
               <svg className="w-5 h-5 mr-3" viewBox="0 0 48 48">
                 <g>
@@ -170,9 +212,13 @@ export default function LoginForm() {
                   <path fill="none" d="M0 0h48v48H0z" />
                 </g>
               </svg>
-              Sign up with Google
+              {googleLoading ? "Loading..." : "Sign in with Google"}
             </button>
-            <button className="w-full flex items-center px-2 bg-black border border-gray-600 rounded-md text-white font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap py-2 text-xs sm:text-sm ">
+            <button 
+              onClick={handleFacebookLogin}
+              disabled={facebookLoading}
+              className="w-full flex items-center px-2 bg-black border border-gray-600 rounded-md text-white font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap py-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               {/* Colored Facebook SVG */}
               <span style={{ transform: "scale(.7)", display: "inline-block" }}>
                 <svg className="w-5 h-5 " viewBox="0 0 24 24">
@@ -186,7 +232,7 @@ export default function LoginForm() {
                   />
                 </svg>
               </span>
-              Sign up with Facebook
+              {facebookLoading ? "Loading..." : "Sign in with Facebook"}
             </button>
           </div>
 
@@ -196,7 +242,7 @@ export default function LoginForm() {
               Don't have an account?{" "}
             </span>
             <Link
-              to="/"
+              to="/signup"
               className="text-cyan-400 hover:underline text-xs sm:text-sm"
             >
               Sign up

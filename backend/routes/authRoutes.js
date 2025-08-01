@@ -10,8 +10,17 @@ import {
   changePassword,
   sendOtp, 
   verifyOtp, 
-  resetPassword  } from "../controller/authController.js";
+  resetPassword,
+  handleGoogleCallback,
+  getGoogleAuthUrl,
+  googleAuthWithCode,
+  handleFacebookCallback,
+  getFacebookAuthUrl,
+  facebookAuthWithCode
+} from "../controller/authController.js";
 import upload from "../middleware/multer.js";
+import { authenticateGoogle, authenticateGoogleCallback } from "../services/googlePassport.js";
+import { authenticateFacebook, authenticateFacebookCallback } from "../services/facebookPassport.js";
 const router = express.Router();
 
 /**
@@ -378,5 +387,249 @@ router.post("/verify-otp", verifyOtp);
  */
 
 router.post("/reset-password", resetPassword);
+
+// Google OAuth2 Routes
+
+/**
+ * @swagger
+ * /api/auth/google:
+ *   get:
+ *     summary: Initiate Google OAuth2 authentication
+ *     tags: [Google Auth]
+ *     responses:
+ *       302:
+ *         description: Redirects to Google OAuth2
+ *       500:
+ *         description: Authentication failed
+ */
+router.get("/auth/google", (req, res, next) => {
+  console.log('🔍 DEBUG: /auth/google route hit');
+  console.log('Environment variables:');
+  console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'SET' : 'MISSING');
+  console.log('GOOGLE_CALLBACK_URL:', process.env.GOOGLE_CALLBACK_URL);
+  console.log('Full callback URL:', process.env.GOOGLE_CALLBACK_URL);
+  console.log('URL length:', process.env.GOOGLE_CALLBACK_URL?.length);
+  
+  // Log the strategy configuration
+  const strategy = passport._strategies.google;
+  console.log('Strategy callback URL:', strategy._callbackURL);
+  console.log('Strategy client ID:', strategy._clientID);
+  
+  next();
+}, authenticateGoogle);
+
+/**
+ * @swagger
+ * /api/auth/google/url:
+ *   get:
+ *     summary: Get Google OAuth2 authorization URL
+ *     tags: [Google Auth]
+ *     responses:
+ *       200:
+ *         description: Google auth URL generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 authUrl:
+ *                   type: string
+ *                   description: Google OAuth2 authorization URL
+ *       500:
+ *         description: Failed to generate auth URL
+ */
+router.get("/auth/google/url", getGoogleAuthUrl);
+
+// Debug route to see what URL Passport generates
+router.get("/auth/google/debug", (req, res) => {
+  try {
+    const strategy = passport._strategies.google;
+    
+   
+    
+    res.json({
+      clientID: strategy._clientID,
+      callbackURL: strategy._callbackURL,
+      envCallbackURL: process.env.GOOGLE_CALLBACK_URL,
+      envCallbackURLLength: process.env.GOOGLE_CALLBACK_URL?.length,
+      envCallbackURLTrimmed: process.env.GOOGLE_CALLBACK_URL?.trim()
+    });
+  } catch (error) {
+    console.error('Debug route error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * @swagger
+ * /api/auth/google/callback:
+ *   get:
+ *     summary: Google OAuth2 callback endpoint
+ *     tags: [Google Auth]
+ *     responses:
+ *       200:
+ *         description: Google authentication successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 token:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *       401:
+ *         description: Google authentication failed
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/auth/google/callback", authenticateGoogleCallback, handleGoogleCallback);
+
+/**
+ * @swagger
+ * /api/auth/google/code:
+ *   post:
+ *     summary: Authenticate with Google using authorization code
+ *     description: For mobile apps or custom OAuth flows
+ *     tags: [Google Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - code
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 description: Authorization code from Google OAuth2
+ *     responses:
+ *       200:
+ *         description: Google authentication successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 token:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *       400:
+ *         description: Invalid authorization code
+ *       500:
+ *         description: Google authentication failed
+ */
+router.post("/auth/google/code", googleAuthWithCode);
+
+// Facebook OAuth2 Routes
+
+/**
+ * @swagger
+ * /api/auth/facebook:
+ *   get:
+ *     summary: Initiate Facebook OAuth2 authentication
+ *     tags: [Facebook Auth]
+ *     responses:
+ *       302:
+ *         description: Redirects to Facebook OAuth2
+ *       500:
+ *         description: Authentication failed
+ */
+router.get("/auth/facebook", authenticateFacebook);
+
+/**
+ * @swagger
+ * /api/auth/facebook/url:
+ *   get:
+ *     summary: Get Facebook OAuth2 authorization URL
+ *     tags: [Facebook Auth]
+ *     responses:
+ *       200:
+ *         description: Facebook auth URL generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 authUrl:
+ *                   type: string
+ *                   description: Facebook OAuth2 authorization URL
+ *       500:
+ *         description: Failed to generate auth URL
+ */
+router.get("/auth/facebook/url", getFacebookAuthUrl);
+
+/**
+ * @swagger
+ * /api/auth/facebook/callback:
+ *   get:
+ *     summary: Facebook OAuth2 callback endpoint
+ *     tags: [Facebook Auth]
+ *     responses:
+ *       200:
+ *         description: Facebook authentication successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 token:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *       401:
+ *         description: Facebook authentication failed
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/auth/facebook/callback", authenticateFacebookCallback, handleFacebookCallback);
+
+/**
+ * @swagger
+ * /api/auth/facebook/code:
+ *   post:
+ *     summary: Authenticate with Facebook using authorization code
+ *     description: For mobile apps or custom OAuth flows
+ *     tags: [Facebook Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - code
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 description: Authorization code from Facebook OAuth2
+ *     responses:
+ *       200:
+ *         description: Facebook authentication successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 token:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *       400:
+ *         description: Invalid authorization code
+ *       500:
+ *         description: Facebook authentication failed
+ */
+router.post("/auth/facebook/code", facebookAuthWithCode);
 
 export default router;

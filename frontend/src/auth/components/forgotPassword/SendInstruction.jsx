@@ -1,12 +1,19 @@
 import { useState, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
 import logo from "../../../assets/auth/logo.png";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { verifyOtp, sendOtp } from "../../../store/Slice/UserSlice";
 
 export default function SendInstruction() {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-  const [email] = useState("Yourname@gmail.com"); // This would come from props or state management
+  const location = useLocation();
+  const dispatch = useDispatch();
+  const { forgotPasswordLoading, error } = useSelector((state) => state.user);
+  
+  const [email] = useState(location.state?.email || "Yourname@gmail.com");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [localError, setLocalError] = useState("");
   const otpRefs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
 
   const handleOtpChange = (e, idx) => {
@@ -26,14 +33,40 @@ export default function SendInstruction() {
     }
   };
 
-  const handleResend = () => {
-    setIsLoading(true);
-    // Simulate API call to resend instructions
-    setTimeout(() => {
-      setIsLoading(false);
-      // Navigate to new password page
-      navigate("/new-password");
-    }, 1000);
+  const handleVerifyOtp = async () => {
+    setLocalError("");
+    
+    // Check if OTP is complete
+    const otpString = otp.join("");
+    if (otpString.length !== 6) {
+      setLocalError("Please enter the complete 6-digit OTP");
+      return;
+    }
+
+    try {
+      const result = await dispatch(verifyOtp({ email, otp: otpString })).unwrap();
+      console.log("OTP verified successfully:", result);
+      // Navigate to new password page with email and OTP
+      navigate("/new-password", { state: { email, otp: otpString } });
+    } catch (error) {
+      console.error("Failed to verify OTP:", error);
+      setLocalError(error || "Failed to verify OTP. Please try again.");
+    }
+  };
+
+  const handleResend = async () => {
+    setLocalError("");
+    try {
+      const result = await dispatch(sendOtp(email)).unwrap();
+      console.log("OTP resent successfully:", result);
+      // Clear OTP fields
+      setOtp(["", "", "", "", "", ""]);
+      // Focus on first OTP field
+      otpRefs[0].current.focus();
+    } catch (error) {
+      console.error("Failed to resend OTP:", error);
+      setLocalError(error || "Failed to resend OTP. Please try again.");
+    }
   };
 
   return (
@@ -52,6 +85,13 @@ export default function SendInstruction() {
             Please follow the reset instructions in the email we sent to the following address:{" "}
             <span className="text-white font-medium">{email}</span>
           </p>
+
+          {/* Error Message */}
+          {(localError || error) && (
+            <div className="text-red-400 text-xs sm:text-sm text-center mb-4">
+              {localError || error}
+            </div>
+          )}
 
           {/* OTP Input */}
           <div className="flex flex-col items-center mb-8">
@@ -73,14 +113,25 @@ export default function SendInstruction() {
             </div>
           </div>
 
-          {/* Resend Instructions Button */}
-          <div className="flex justify-center mt-15">
+          {/* Continue Button */}
+          <div className="flex justify-center mb-4">
             <button
-              onClick={handleResend}
-              disabled={isLoading}
+              onClick={handleVerifyOtp}
+              disabled={forgotPasswordLoading}
               className="w-full bg-cyan-400 text-gray-900 py-3 font-semibold hover:bg-cyan-300 transition-colors text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Sending..." : "Continue"}
+              {forgotPasswordLoading ? "Verifying..." : "Continue"}
+            </button>
+          </div>
+
+          {/* Resend OTP Button */}
+          <div className="flex justify-center">
+            <button
+              onClick={handleResend}
+              disabled={forgotPasswordLoading}
+              className="text-cyan-400 hover:underline text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {forgotPasswordLoading ? "Sending..." : "Resend OTP"}
             </button>
           </div>
         </div>

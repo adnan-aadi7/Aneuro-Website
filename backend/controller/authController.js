@@ -4,6 +4,8 @@ import connectDB from "../config/db.js";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import { uploadToCloudinary } from '../middleware/uploadToCloudinary.js';
+import { generateGoogleToken } from '../services/googlePassport.js';
+import { generateFacebookToken } from '../services/facebookPassport.js';
 
 export async function Signup(reqBody) {
   try {
@@ -337,5 +339,336 @@ export const resetPassword = async (req, res) => {
     return res.status(200).json({ message: "Password reset successful" });
   } catch (error) {
     return res.status(500).json({ error: "Failed to reset password" });
+  }
+};
+
+// Google OAuth2 Authentication Methods
+
+/**
+ * Handle Google OAuth2 callback and redirect to frontend
+ */
+export const handleGoogleCallback = async (req, res) => {
+  try {
+    // User is already authenticated by passport middleware
+    const user = req.user;
+    
+    if (!user) {
+      return res.redirect(`${process.env.FRONTEND_URL}/login?error=google_auth_failed`);
+    }
+
+    // Generate JWT token
+    const token = generateGoogleToken(user);
+
+    // Check user's subscription plan
+    const hasActiveSubscription = user.subscription && 
+                               user.subscription.plan && 
+                               user.subscription.status === 'active';
+
+    // Redirect to frontend with user data and token
+    const userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      userType: user.userType,
+      accountStatus: user.accountStatus,
+      profileImage: user.profileImage || "",
+      subscription: user.subscription || null,
+    };
+
+    // Encode the data to pass via URL
+    const encodedData = encodeURIComponent(JSON.stringify({
+      token,
+      user: userData,
+      hasActiveSubscription
+    }));
+
+    return res.redirect(`${process.env.FRONTEND_URL}/auth/google/callback?data=${encodedData}`);
+  } catch (error) {
+    console.error('Google callback error:', error);
+    return res.redirect(`${process.env.FRONTEND_URL}/login?error=google_auth_failed`);
+  }
+};
+
+/**
+ * Get Google OAuth2 URL for frontend redirect
+ */
+export const getGoogleAuthUrl = async (req, res) => {
+  try {
+    // Check if required environment variables are set
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      return res.status(500).json({ error: "GOOGLE_CLIENT_ID not configured" });
+    }
+    
+    if (!process.env.GOOGLE_CALLBACK_URL) {
+      return res.status(500).json({ error: "GOOGLE_CALLBACK_URL not configured" });
+    }
+
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+      `client_id=${process.env.GOOGLE_CLIENT_ID}&` +
+      `redirect_uri=${encodeURIComponent(process.env.GOOGLE_CALLBACK_URL)}&` +
+      `scope=profile email&` +
+      `response_type=code&` +
+      `access_type=offline&` +
+      `prompt=consent`;
+
+    return res.status(200).json({
+      authUrl: googleAuthUrl
+    });
+  } catch (error) {
+    console.error('Error generating Google auth URL:', error);
+    return res.status(500).json({ error: "Failed to generate Google auth URL" });
+  }
+};
+
+/**
+ * Handle Google OAuth2 with authorization code (for mobile apps or custom flows)
+ */
+export const googleAuthWithCode = async (req, res) => {
+  try {
+    await connectDB();
+    
+    const { code } = req.body;
+    
+    if (!code) {
+      return res.status(400).json({ error: "Authorization code is required" });
+    }
+
+    // Exchange authorization code for tokens
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: process.env.GOOGLE_CALLBACK_URL,
+        grant_type: 'authorization_code',
+      }),
+    });
+
+    const tokenData = await tokenResponse.json();
+    
+    if (!tokenData.access_token) {
+      return res.status(400).json({ error: "Failed to get access token" });
+    }
+
+    // Get user profile from Google
+    const profileResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: {
+        'Authorization': `Bearer ${tokenData.access_token}`,
+      },
+    });
+
+    const profile = await profileResponse.json();
+    
+    if (!profile.email) {
+      return res.status(400).json({ error: "Email not found in Google profile" });
+    }
+
+    // Check if user exists or create new user
+    let user = await User.findOne({ email: profile.email });
+
+    if (user) {
+      // Update profile image if not set
+      if (!user.profileImage && profile.picture) {
+        user.profileImage = profile.picture;
+        await user.save();
+      }
+    } else {
+      // Create new user
+      user = new User({
+        name: profile.name,
+        email: profile.email,
+        password: `google_${profile.id}`,
+        profileImage: profile.picture || '',
+        userType: 'user',
+        accountStatus: 'active'
+      });
+      await user.save();
+    }
+
+    // Generate JWT token
+    const token = generateGoogleToken(user);
+
+    return res.status(200).json({
+      message: "Google login successful",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        userType: user.userType,
+        accountStatus: user.accountStatus,
+        profileImage: user.profileImage || "",
+        subscription: user.subscription || null,
+      },
+    });
+  } catch (error) {
+    console.error('Google auth error:', error);
+    return res.status(500).json({ error: "Google authentication failed" });
+  }
+};
+
+// Facebook OAuth2 Authentication Methods
+
+/**
+ * Handle Facebook OAuth2 callback and redirect to frontend
+ */
+export const handleFacebookCallback = async (req, res) => {
+  try {
+    // User is already authenticated by passport middleware
+    const user = req.user;
+    
+    if (!user) {
+      return res.redirect(`${process.env.FRONTEND_URL}/login?error=facebook_auth_failed`);
+    }
+
+    // Generate JWT token
+    const token = generateFacebookToken(user);
+
+    // Check user's subscription plan
+    const hasActiveSubscription = user.subscription && 
+                               user.subscription.plan && 
+                               user.subscription.status === 'active';
+
+    // Redirect to frontend with user data and token
+    const userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      userType: user.userType,
+      accountStatus: user.accountStatus,
+      profileImage: user.profileImage || "",
+      subscription: user.subscription || null,
+    };
+
+    // Encode the data to pass via URL
+    const encodedData = encodeURIComponent(JSON.stringify({
+      token,
+      user: userData,
+      hasActiveSubscription
+    }));
+
+    return res.redirect(`${process.env.FRONTEND_URL}/auth/facebook/callback?data=${encodedData}`);
+  } catch (error) {
+    console.error('Facebook callback error:', error);
+    return res.redirect(`${process.env.FRONTEND_URL}/login?error=facebook_auth_failed`);
+  }
+};
+
+/**
+ * Get Facebook OAuth2 URL for frontend redirect
+ */
+export const getFacebookAuthUrl = async (req, res) => {
+  try {
+    // Check if required environment variables are set
+    if (!process.env.FACEBOOK_APP_ID) {
+      return res.status(500).json({ error: "FACEBOOK_APP_ID not configured" });
+    }
+    
+    if (!process.env.FACEBOOK_CALLBACK_URL) {
+      return res.status(500).json({ error: "FACEBOOK_CALLBACK_URL not configured" });
+    }
+
+    const facebookAuthUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
+      `client_id=${process.env.FACEBOOK_APP_ID}&` +
+      `redirect_uri=${encodeURIComponent(process.env.FACEBOOK_CALLBACK_URL)}&` +
+      `scope=email&` +
+      `response_type=code`;
+
+    return res.status(200).json({
+      authUrl: facebookAuthUrl
+    });
+  } catch (error) {
+    console.error('Error generating Facebook auth URL:', error);
+    return res.status(500).json({ error: "Failed to generate Facebook auth URL" });
+  }
+};
+
+/**
+ * Handle Facebook OAuth2 with authorization code (for mobile apps or custom flows)
+ */
+export const facebookAuthWithCode = async (req, res) => {
+  try {
+    await connectDB();
+    
+    const { code } = req.body;
+    
+    if (!code) {
+      return res.status(400).json({ error: "Authorization code is required" });
+    }
+
+    // Exchange authorization code for tokens
+    const tokenResponse = await fetch('https://graph.facebook.com/v18.0/oauth/access_token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        code,
+        client_id: process.env.FACEBOOK_APP_ID,
+        client_secret: process.env.FACEBOOK_APP_SECRET,
+        redirect_uri: process.env.FACEBOOK_CALLBACK_URL,
+        grant_type: 'authorization_code',
+      }),
+    });
+
+    const tokenData = await tokenResponse.json();
+    
+    if (!tokenData.access_token) {
+      return res.status(400).json({ error: "Failed to get access token" });
+    }
+
+    // Get user profile from Facebook
+    const profileResponse = await fetch(`https://graph.facebook.com/v18.0/me?fields=id,name,email,picture&access_token=${tokenData.access_token}`);
+    const profile = await profileResponse.json();
+    
+    if (!profile.email) {
+      return res.status(400).json({ error: "Email not found in Facebook profile" });
+    }
+
+    // Check if user exists or create new user
+    let user = await User.findOne({ email: profile.email });
+
+    if (user) {
+      // Update profile image if not set
+      if (!user.profileImage && profile.picture?.data?.url) {
+        user.profileImage = profile.picture.data.url;
+        await user.save();
+      }
+    } else {
+      // Create new user
+      user = new User({
+        name: profile.name,
+        email: profile.email,
+        password: `facebook_${profile.id}`,
+        profileImage: profile.picture?.data?.url || '',
+        userType: 'user',
+        accountStatus: 'active'
+      });
+      await user.save();
+    }
+
+    // Generate JWT token
+    const token = generateFacebookToken(user);
+
+    return res.status(200).json({
+      message: "Facebook login successful",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        userType: user.userType,
+        accountStatus: user.accountStatus,
+        profileImage: user.profileImage || "",
+        subscription: user.subscription || null,
+      },
+    });
+  } catch (error) {
+    console.error('Facebook auth error:', error);
+    return res.status(500).json({ error: "Facebook authentication failed" });
   }
 };

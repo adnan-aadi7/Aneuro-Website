@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import logo from "../../../assets/auth/logo.png";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { signupUser } from "../../../store/Slice/UserSlice"; // path based on your setup
 
@@ -154,10 +154,24 @@ export default function Form() {
             </div>
           </form>
 
-          {/* Additional UI: Or, Social, Login Link */}
-          {/* ...leave that unchanged as in your current code */}
+          {/* Login link */}
+          <div className="mt-8 text-center">
+            <span className="text-gray-400 text-xs sm:text-sm">
+              Already have an account?{" "}
+            </span>
+            <Link
+              to="/login"
+              className="text-cyan-400 hover:underline text-xs sm:text-sm"
+            >
+              Sign in
+            </Link>
+          </div>
+           
         </div>
+        
       </div>
+      
     </div>
+    
   );
 }
