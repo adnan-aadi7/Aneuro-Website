@@ -12,6 +12,7 @@ import paymentRoutes from './routes/paymentRoutes.js';
 import webhookRoutes from './routes/webhookRoutes.js';
 import googlePassport from './services/googlePassport.js';
 import facebookPassport from './services/facebookPassport.js';
+import emailSequenceRoutes from './routes/emailSequencRoute.js';
 
 const app = express();
 const port = 3000;
@@ -58,6 +59,7 @@ const startServer = async () => {
     app.use("/api/", authRoutes);
     app.use("/api/ticket", ticketRoutes);
     app.use("/api/payment", paymentRoutes);
+    app.use("/api/email-sequences", emailSequenceRoutes);
 
     // Start server only after database connection is established
     app.listen(port, () => {
