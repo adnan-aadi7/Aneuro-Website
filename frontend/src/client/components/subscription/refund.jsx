@@ -1,16 +1,18 @@
 import Subscriptiontier from "../../../admin/components/subscription/subscriptiontier";
 import Billinghistory from "../../../admin/components/subscription/billinghistory";
+import UserInfo from "../dashboard/UserInfo";
 const UserRefund = () => {
   return (
     <div className="text-white">
-      <div>
+      {/* <div>
         <h1 className="text-[32px] font-medium inline-block pb-1">
-          Good Morning, Mike
+          Good Morning, Mike 
         </h1>
         <p className="text-[20px] opacity-70 mt-1">
           Let's make the day productive
         </p>
-      </div>
+      </div> */}
+      <UserInfo />
 
       <div
         className="p-2 md:p-6 mt-6 shadow-md text-white font-inter w-full overflow-x-auto"

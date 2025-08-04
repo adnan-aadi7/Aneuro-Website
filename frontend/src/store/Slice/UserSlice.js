@@ -142,9 +142,86 @@ export const resetPassword = createAsyncThunk(
   }
 );
 
-const userSlice = createSlice({
-  name: 'user',
-  initialState: {
+// Async thunk for changing password from settings
+export const changePassword = createAsyncThunk(
+  'user/changePassword',
+  async ({ userId, currentPassword, newPassword }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.put('/change-password', {
+        userId,
+        currentPassword,
+        newPassword,
+      });
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.error || err.message || 'Failed to change password'
+      );
+    }
+  }
+);
+
+// Async thunk for updating user profile
+export const updateUserProfile = createAsyncThunk(
+  'user/updateProfile',
+  async ({ userId, userData, profileImage }, { rejectWithValue }) => {
+    try {
+      const formData = new FormData();
+      // Always append mobileNumber, even if empty string
+      Object.keys(userData).forEach(key => {
+        if (key === 'mobileNumber') {
+          formData.append(key, userData[key] ?? '');
+        } else if (userData[key] !== '') {
+          formData.append(key, userData[key]);
+        }
+      });
+      if (profileImage) {
+        formData.append('profileImage', profileImage);
+      }
+      const response = await axiosInstance.put(`/update/${userId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.error || err.message || 'Failed to update profile'
+      );
+    }
+  }
+);
+
+// Helper function to get initial user state from localStorage
+const getInitialUserState = () => {
+  const token = localStorage.getItem('token');
+  const userId = localStorage.getItem('userId');
+  const userEmail = localStorage.getItem('userEmail');
+  const userName = localStorage.getItem('userName');
+  const userProfileImage = localStorage.getItem('userProfileImage');
+  const userMobileNumber = localStorage.getItem('userMobileNumber');
+  const subscription = localStorage.getItem('subscription');
+  
+  if (token && userId && userEmail) {
+    return {
+      user: {
+        id: userId,
+        email: userEmail,
+        name: userName || userEmail.split('@')[0], // Use stored name or email prefix as fallback
+        profileImage: userProfileImage || "",
+        mobileNumber: userMobileNumber || "",
+        subscription: subscription ? JSON.parse(subscription) : null
+      },
+      token: token,
+      status: 'succeeded',
+      googleLoading: false,
+      facebookLoading: false,
+      forgotPasswordLoading: false,
+      error: null,
+    };
+  }
+  
+  return {
     user: null,
     token: null,
     status: 'idle',
@@ -152,13 +229,21 @@ const userSlice = createSlice({
     facebookLoading: false,
     forgotPasswordLoading: false,
     error: null,
-  },
+  };
+};
+
+const userSlice = createSlice({
+  name: 'user',
+  initialState: getInitialUserState(),
   reducers: {
     logout: (state) => {
       state.user = null;
       state.token = null;
       localStorage.removeItem('userId');
       localStorage.removeItem('userEmail');
+      localStorage.removeItem('userName');
+      localStorage.removeItem('userProfileImage');
+      localStorage.removeItem('userMobileNumber');
       localStorage.removeItem('token');
       localStorage.removeItem('subscription');
     },
@@ -178,6 +263,7 @@ const userSlice = createSlice({
         // Save to localStorage for payment flow
         localStorage.setItem('userId', action.payload.user.id);
         localStorage.setItem('userEmail', action.payload.user.email);
+        localStorage.setItem('userName', action.payload.user.name);
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.user = action.payload.user;
@@ -186,6 +272,9 @@ const userSlice = createSlice({
         // Save to localStorage for payment flow
         localStorage.setItem('userId', action.payload.user.id);
         localStorage.setItem('userEmail', action.payload.user.email);
+        localStorage.setItem('userName', action.payload.user.name);
+        localStorage.setItem('userProfileImage', action.payload.user.profileImage || "");
+        localStorage.setItem('userMobileNumber', action.payload.user.mobileNumber || "");
         localStorage.setItem('token', action.payload.token);
         // Save subscription to localStorage for plan-based UI
         localStorage.setItem('subscription', JSON.stringify(action.payload.user.subscription || null));
@@ -201,6 +290,9 @@ const userSlice = createSlice({
         // Save to localStorage for payment flow
         localStorage.setItem('userId', action.payload.user.id);
         localStorage.setItem('userEmail', action.payload.user.email);
+        localStorage.setItem('userName', action.payload.user.name);
+        localStorage.setItem('userProfileImage', action.payload.user.profileImage || "");
+        localStorage.setItem('userMobileNumber', action.payload.user.mobileNumber || "");
         localStorage.setItem('token', action.payload.token);
         // Save subscription to localStorage for plan-based UI
         localStorage.setItem('subscription', JSON.stringify(action.payload.user.subscription || null));
@@ -216,6 +308,9 @@ const userSlice = createSlice({
         // Save to localStorage for payment flow
         localStorage.setItem('userId', action.payload.user.id);
         localStorage.setItem('userEmail', action.payload.user.email);
+        localStorage.setItem('userName', action.payload.user.name);
+        localStorage.setItem('userProfileImage', action.payload.user.profileImage || "");
+        localStorage.setItem('userMobileNumber', action.payload.user.mobileNumber || "");
         localStorage.setItem('token', action.payload.token);
         // Save subscription to localStorage for plan-based UI
         localStorage.setItem('subscription', JSON.stringify(action.payload.user.subscription || null));
@@ -231,6 +326,27 @@ const userSlice = createSlice({
       .addCase(resetPassword.fulfilled, (state) => {
         state.status = 'succeeded';
         state.forgotPasswordLoading = false;
+      })
+      .addCase(changePassword.fulfilled, (state) => {
+        state.status = 'succeeded';
+        state.forgotPasswordLoading = false;
+      })
+      .addCase(updateUserProfile.fulfilled, (state, action) => {
+        state.user = {
+          ...state.user,
+          ...action.payload.user,
+        };
+        state.status = 'succeeded';
+        // Update localStorage with new user data
+        if (action.payload.user.name) {
+          localStorage.setItem('userName', action.payload.user.name);
+        }
+        if (action.payload.user.profileImage) {
+          localStorage.setItem('userProfileImage', action.payload.user.profileImage);
+        }
+        if (action.payload.user.mobileNumber !== undefined) {
+          localStorage.setItem('userMobileNumber', action.payload.user.mobileNumber);
+        }
       })
       .addMatcher(
         (action) => action.type.endsWith('/pending'),

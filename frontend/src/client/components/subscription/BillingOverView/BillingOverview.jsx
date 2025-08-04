@@ -1,8 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchUserSubscription, fetchStripeProducts } from "../../../../store/Slice/PaymentSlice";
 import UpgradePlanPopup from "./UpdradePlanPopup";
 
 const BillingOverview = () => {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const dispatch = useDispatch();
+  const { userSubscription, userSubscriptionLoading, products } = useSelector((state) => state.payment);
+
+  useEffect(() => {
+    dispatch(fetchUserSubscription());
+    dispatch(fetchStripeProducts());
+  }, [dispatch]);
+
+  // Get current plan details from Stripe products
+  const getCurrentPlanDetails = () => {
+    if (!userSubscription?.plan || !products.length) return null;
+    
+    const planProduct = products.find(
+      product => (product.metadata?.plan || product.name.toLowerCase()) === userSubscription.plan
+    );
+    
+    return planProduct ? {
+      name: planProduct.name,
+      price: planProduct.price,
+      description: planProduct.description || `Our popular plan for ${userSubscription.plan} users`
+    } : null;
+  };
+
+  const currentPlan = getCurrentPlanDetails();
+
   return (
     <div className=" text-white ">
       <div className=" mx-auto">
@@ -20,12 +47,16 @@ const BillingOverview = () => {
         <UpgradePlanPopup
           open={showUpgradeModal}
           onClose={() => setShowUpgradeModal(false)}
-          onUpgrade={() => setShowUpgradeModal(false)}
+          onUpgrade={() => {
+            setShowUpgradeModal(false);
+            // Refresh subscription data after upgrade
+            dispatch(fetchUserSubscription());
+          }}
         />
 
         {/* Cards Container */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Starter Plan Card */}
+          {/* Current Plan Card */}
           <div className="bg-[#2A2A39]  p-6 relative overflow-hidden">
             {/* Cyan blurred glow bottom right */}
             <div
@@ -38,18 +69,24 @@ const BillingOverview = () => {
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <h2 className="text-white text-xl font-medium">
-                    Starter Plan
+                    {userSubscriptionLoading ? "Loading..." : (currentPlan?.name || "No Plan")}
                   </h2>
-                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
-                    Active
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    userSubscription?.status === 'active' 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {userSubscription?.status === 'active' ? 'Active' : 'Inactive'}
                   </span>
                 </div>
                 <p className="text-slate-400 text-sm">
-                  Our popular plan for small teams
+                  {currentPlan?.description || "No active subscription"}
                 </p>
               </div>
               <div className="text-right ml-4">
-                <div className="text-white text-4xl font-bold">10$</div>
+                <div className="text-white text-4xl font-bold">
+                  {userSubscriptionLoading ? "..." : (currentPlan?.price ? `$${currentPlan.price}` : "N/A")}
+                </div>
                 <div className="text-slate-400 text-sm">per month</div>
               </div>
             </div>
@@ -57,23 +94,27 @@ const BillingOverview = () => {
             {/* Usage Section */}
             <div className="mb-6">
               <div className="text-white text-sm font-medium mb-2">
-                10 of 20 users
+                Subscription Status
               </div>
               <div className="w-full bg-slate-600 rounded-full h-2">
                 <div
-                  className="bg-teal-400 h-2 rounded-full"
-                  style={{ width: "50%" }}
+                  className={`h-2 rounded-full ${
+                    userSubscription?.status === 'active' ? 'bg-teal-400' : 'bg-red-400'
+                  }`}
+                  style={{ width: userSubscription?.status === 'active' ? "100%" : "0%" }}
                 ></div>
               </div>
             </div>
 
-            {/* Upgrade Button */}
-            <button
-              className="bg-transparent border border-slate-600 text-slate-300 py-2 px-4  hover:bg-slate-600 hover:text-white transition-colors text-sm font-medium"
-              onClick={() => setShowUpgradeModal(true)}
-            >
-              Upgrade plan
-            </button>
+            {/* Upgrade Button - only show if user has active subscription */}
+            {userSubscription?.status === 'active' && (
+              <button
+                className="bg-transparent border border-slate-600 text-slate-300 py-2 px-4  hover:bg-slate-600 hover:text-white transition-colors text-sm font-medium"
+                onClick={() => setShowUpgradeModal(true)}
+              >
+                Upgrade plan
+              </button>
+            )}
           </div>
 
           {/* Payment Method Card */}

@@ -83,6 +83,7 @@ export async function Login(reqBody) {
         id: user._id,
         name: user.name,
         email: user.email,
+        mobileNumber: user.mobileNumber || "",
         userType: user.userType,
         accountStatus: user.accountStatus,
         subscription: user.subscription || null,
@@ -189,17 +190,25 @@ export async function updateUser(userId, userData, file) {
       userData.profileImage = cloudinaryRes.secure_url;
     }
 
-    // ✅ Remove empty string fields (treat them as "don't update")
+    // ✅ Remove empty string fields (treat them as "don't update") - but allow mobileNumber to be updated even if empty
     Object.keys(userData).forEach(key => {
-      if (userData[key] === "") {
+      if (userData[key] === "" && key !== "mobileNumber") {
         delete userData[key];
       }
     });
 
-    const updatedUser = await User.findByIdAndUpdate(userId, userData, {
-      new: true,
-      runValidators: true,
-    });
+    // Debug log
+    console.log('userData:', userData);
+
+    // Use $set to ensure fields are always updated
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: userData },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     if (!updatedUser) {
       throw new Error("User not found");
@@ -211,6 +220,7 @@ export async function updateUser(userId, userData, file) {
         id: updatedUser._id,
         name: updatedUser.name,
         email: updatedUser.email,
+        mobileNumber: updatedUser.mobileNumber || "",
         accountStatus: updatedUser.accountStatus,
         profileImage: updatedUser.profileImage || "",
       },
@@ -369,6 +379,7 @@ export const handleGoogleCallback = async (req, res) => {
       id: user._id,
       name: user.name,
       email: user.email,
+      mobileNumber: user.mobileNumber || "",
       userType: user.userType,
       accountStatus: user.accountStatus,
       profileImage: user.profileImage || "",
@@ -499,6 +510,7 @@ export const googleAuthWithCode = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        mobileNumber: user.mobileNumber || "",
         userType: user.userType,
         accountStatus: user.accountStatus,
         profileImage: user.profileImage || "",
@@ -538,6 +550,7 @@ export const handleFacebookCallback = async (req, res) => {
       id: user._id,
       name: user.name,
       email: user.email,
+      mobileNumber: user.mobileNumber || "",
       userType: user.userType,
       accountStatus: user.accountStatus,
       profileImage: user.profileImage || "",
@@ -661,6 +674,7 @@ export const facebookAuthWithCode = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        mobileNumber: user.mobileNumber || "",
         userType: user.userType,
         accountStatus: user.accountStatus,
         profileImage: user.profileImage || "",
