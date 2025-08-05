@@ -192,6 +192,51 @@ export const updateUserProfile = createAsyncThunk(
   }
 );
 
+// Async thunk for deleting a user
+export const deleteUser = createAsyncThunk(
+  'user/deleteUser',
+  async (userId, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.delete(`/delete/${userId}`);
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.error || err.message || 'Failed to delete user'
+      );
+    }
+  }
+);
+
+// Async thunk for suspending a user
+export const suspendUser = createAsyncThunk(
+  'user/suspendUser',
+  async (userId, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.put(`/suspend/${userId}`);
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.error || err.message || 'Failed to suspend user'
+      );
+    }
+  }
+);
+
+// Async thunk for reactivating a user
+export const reactivateUser = createAsyncThunk(
+  'user/reactivateUser',
+  async (userId, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.put(`/reactivate/${userId}`);
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.error || err.message || 'Failed to reactivate user'
+      );
+    }
+  }
+);
+
 // Helper function to get initial user state from localStorage
 const getInitialUserState = () => {
   const token = localStorage.getItem('token');
@@ -347,6 +392,18 @@ const userSlice = createSlice({
         if (action.payload.user.mobileNumber !== undefined) {
           localStorage.setItem('userMobileNumber', action.payload.user.mobileNumber);
         }
+      })
+      .addCase(deleteUser.fulfilled, (state) => {
+        state.status = 'succeeded';
+        state.error = null;
+      })
+      .addCase(suspendUser.fulfilled, (state) => {
+        state.status = 'succeeded';
+        state.error = null;
+      })
+      .addCase(reactivateUser.fulfilled, (state) => {
+        state.status = 'succeeded';
+        state.error = null;
       })
       .addMatcher(
         (action) => action.type.endsWith('/pending'),

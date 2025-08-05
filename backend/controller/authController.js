@@ -173,6 +173,64 @@ export async function deleteUser(userId) {
   }
 }
 
+//suspend user
+export async function suspendUser(userId) {
+  try {
+    await connectDB();
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { accountStatus: "suspended" },
+      { new: true, runValidators: true }
+    );
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return {
+      message: "User suspended successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        accountStatus: user.accountStatus,
+      },
+    };
+  } catch (error) {
+    throw new Error(error.message || "Failed to suspend user");
+  }
+}
+
+//reactivate user
+export async function reactivateUser(userId) {
+  try {
+    await connectDB();
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { accountStatus: "active" },
+      { new: true, runValidators: true }
+    );
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return {
+      message: "User reactivated successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        accountStatus: user.accountStatus,
+      },
+    };
+  } catch (error) {
+    throw new Error(error.message || "Failed to reactivate user");
+  }
+}
+
 //update user
 // updateUser.js
 export async function updateUser(userId, userData, file) {

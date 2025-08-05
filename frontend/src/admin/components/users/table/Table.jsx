@@ -77,11 +77,8 @@ export default function Table() {
     }
   };
 
-  const paidUsers = users.filter(
-    (user) => user.subscription?.status === "active"
-  );
-
-  const sortedUsers = [...paidUsers].sort((a, b) => {
+  // Show all users instead of just paid users
+  const sortedUsers = [...users].sort((a, b) => {
     if (sortBy === "name") {
       return sortOrder === "asc"
         ? a.name.localeCompare(b.name)
@@ -125,7 +122,7 @@ export default function Table() {
                 Signup Date
               </th>
               <th className="text-left py-4 px-2 text-slate-300 font-medium text-sm">
-                Status
+                Account Status
               </th>
               <th className="text-left py-4 px-2 text-slate-300 font-medium text-sm whitespace-nowrap">
                 Quiz Engagement
@@ -206,12 +203,12 @@ export default function Table() {
                   <td className="py-4 px-2">
                     <span
                       className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
-                        user.subscription?.status === "active"
+                        user.accountStatus === "active"
                           ? "bg-[#D4F7D4] text-[#0B3C0C]"
                           : "bg-[#F01212] text-[#FFFFFF]"
                       }`}
                     >
-                      {user.subscription?.status || "N/A"}
+                      {user.accountStatus || "N/A"}
                     </span>
                   </td>
                   <td className="py-4 px-4">

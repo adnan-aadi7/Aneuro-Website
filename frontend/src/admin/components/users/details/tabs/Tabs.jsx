@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { deleteUser } from "../../../../../store/Slice/UserSlice";
 import GeneralDetails from "../generalDetails/GeneralDetails";
 import { useLocation } from "react-router-dom";
 import SubscriptionTierExact from "../subscriptionTier/SubscriptionTierExact";
@@ -11,6 +14,9 @@ import ResetConfirmation from "../generalDetails/passwordReset/ResetConfirmation
 
 export default function Tabs({ user: userProp }) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  
   // Prefer prop, fallback to location.state.user
   const user = userProp || location.state?.user || {};
   const [activeTab, setActiveTab] = useState("General Details");
@@ -27,8 +33,16 @@ export default function Tabs({ user: userProp }) {
     setShowDeletePopup(false);
   };
 
-  const handleDeleteUser = () => {
-    setShowDeletePopup(false);
+  const handleDeleteUser = async () => {
+    try {
+      await dispatch(deleteUser(user._id)).unwrap();
+      setShowDeletePopup(false);
+      // Navigate back to users list after successful deletion
+      navigate("/admin/users");
+    } catch (error) {
+      console.error("Delete user error:", error);
+      // You can show an error message here if needed
+    }
   };
 
   const handleGetCode = () => {
@@ -92,6 +106,14 @@ export default function Tabs({ user: userProp }) {
             <p className="text-slate-400 text-xs sm:text-sm">
               {user?.email || "user@email.com"}
             </p>
+            {/* Account Status Badge */}
+            <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium mt-1 ${
+              user?.accountStatus === "suspended" 
+                ? "bg-red-100 text-red-800" 
+                : "bg-green-100 text-green-800"
+            }`}>
+              {user?.accountStatus === "suspended" ? "Suspended" : "Active"}
+            </span>
           </div>
         </div>
 
