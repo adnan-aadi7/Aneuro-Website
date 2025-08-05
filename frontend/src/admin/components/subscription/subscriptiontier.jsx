@@ -1,9 +1,8 @@
-import { useNavigate } from "react-router-dom";
 import React from "react";
 import { SiVisa } from "react-icons/si";
 
 const Subscriptiontier = () => {
-  const navigate = useNavigate();
+  
   return (
     <div className="flex flex-col gap-4  lg:flex-row items-center gap-7 w-full mt-8 ">
       <div
@@ -42,7 +41,7 @@ const Subscriptiontier = () => {
         </div>
 
         <button
-          onClick={() => navigate("/client/manage-subscription/subscriptions")}
+        
           className="mt-3 border p-4 text-[15px] border-[#12DCF0]  w-[200px] cursor-pointer"
         >
           Upgrade plan

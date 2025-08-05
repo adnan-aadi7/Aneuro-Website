@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import GeneralDetails from "../generalDetails/GeneralDetails";
+import { useLocation } from "react-router-dom";
 import SubscriptionTierExact from "../subscriptionTier/SubscriptionTierExact";
 import BillingHistoryTable from "../subscriptionTier/BillingHistoryTable";
 import DeletePopup from "../generalDetails/DeletePopup";
@@ -8,7 +9,10 @@ import EnterCode from "../generalDetails/passwordReset/EnterCode";
 import CreateNewPassword from "../generalDetails/passwordReset/CreateNewPassword";
 import ResetConfirmation from "../generalDetails/passwordReset/ResetConfirmation";
 
-export default function Tabs() {
+export default function Tabs({ user: userProp }) {
+  const location = useLocation();
+  // Prefer prop, fallback to location.state.user
+  const user = userProp || location.state?.user || {};
   const [activeTab, setActiveTab] = useState("General Details");
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [showGetCode, setShowGetCode] = useState(false);
@@ -57,28 +61,36 @@ export default function Tabs() {
         {/* User Info */}
         <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
           <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden bg-slate-600">
-            <img
-              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=56&h=56&fit=crop&crop=face"
-              alt="Devon Lane"
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.target.style.display = "none";
-                e.target.nextSibling.style.display = "flex";
-              }}
-            />
+            {user?.profileImage ? (
+              <img
+                src={user.profileImage}
+                alt={user.name || "User"}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = "none";
+                  e.target.nextSibling.style.display = "flex";
+                }}
+              />
+            ) : null}
             <div
               className="w-full h-full bg-[#2A2A39] rounded-full flex items-center justify-center text-white text-base sm:text-lg font-medium"
-              style={{ display: "none" }}
+              style={{ display: user?.profileImage ? "none" : "flex" }}
             >
-              DL
+              {user?.name
+                ? user.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase()
+                : "U"}
             </div>
           </div>
           <div>
             <h1 className="text-white text-lg sm:text-xl font-semibold">
-              Devon Lane
+              {user?.name || "User Name"}
             </h1>
             <p className="text-slate-400 text-xs sm:text-sm">
-              yourname@gmail.com
+              {user?.email || "user@email.com"}
             </p>
           </div>
         </div>
@@ -157,13 +169,13 @@ export default function Tabs() {
       {/* Tab Content */}
       {activeTab === "General Details" && (
         <div className="mt-6 sm:mt-8 flex justify-start">
-          <GeneralDetails />
+          <GeneralDetails user={user} />
         </div>
       )}
       {activeTab === "Subscription Tier" && (
         <div className="mt-6 sm:mt-8 flex flex-col gap-6 sm:gap-8">
-          <SubscriptionTierExact />
-          <BillingHistoryTable />
+          <SubscriptionTierExact user={user} />
+          <BillingHistoryTable user={user} />
         </div>
       )}
     </div>

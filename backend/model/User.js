@@ -15,6 +15,10 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: [true, "Password is required"],
     },
+    mobileNumber: {
+      type: String,
+      default: "",
+    },
     userType: {
       type: String,
       enum: ["admin", "user"],
@@ -27,7 +31,7 @@ const UserSchema = new mongoose.Schema(
     },
     otp: String,
     otpExpires: Date,
-     profileImage: {
+    profileImage: {
       type: String, 
       default: "",  
     },

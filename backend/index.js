@@ -14,7 +14,7 @@ import googlePassport from './services/googlePassport.js';
 import facebookPassport from './services/facebookPassport.js';
 
 const app = express();
-const port = 3000;
+const port = 4000;
 
 // Initialize server function
 const startServer = async () => {
@@ -27,7 +27,7 @@ const startServer = async () => {
 
     // Now add CORS and JSON body parser for the rest of the app
     app.use(cors({
-      origin: ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'],
+      origin: ['http://localhost:5173'],
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
