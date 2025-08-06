@@ -133,23 +133,23 @@ export default function SubscriptionTierExact({ user }) {
           {/* Usage Section */}
           <div className="mb-6">
             <div className="text-white text-sm font-medium mb-2">
-              10 of 20 users
+             
             </div>
             <div className="w-full bg-slate-600 rounded-full h-2">
               <div
                 className="bg-teal-400 h-2 rounded-full"
-                style={{ width: "50%" }}
+                style={{ width: "100%" }}
               ></div>
             </div>
           </div>
 
           {/* Upgrade Button */}
-          <button
+          {/* <button
             className="bg-transparent border border-slate-600 text-slate-300 py-2 px-4 rounded-md hover:bg-slate-600 hover:text-white transition-colors text-sm font-medium"
             onClick={() => setShowUpgrade(true)}
           >
             Upgrade plan
-          </button>
+          </button> */}
         </div>
 
         {/* Payment Method Card */}

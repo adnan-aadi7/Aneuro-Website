@@ -237,6 +237,21 @@ export const reactivateUser = createAsyncThunk(
   }
 );
 
+// Async thunk for fetching all users
+export const getAllUsers = createAsyncThunk(
+  'user/getAllUsers',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get('/users');
+      return response.data.users;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.error || err.message || 'Failed to fetch users'
+      );
+    }
+  }
+);
+
 // Helper function to get initial user state from localStorage
 const getInitialUserState = () => {
   const token = localStorage.getItem('token');
@@ -279,7 +294,12 @@ const getInitialUserState = () => {
 
 const userSlice = createSlice({
   name: 'user',
-  initialState: getInitialUserState(),
+  initialState: {
+    ...getInitialUserState(),
+    users: [],
+    usersLoading: false,
+    usersError: null,
+  },
   reducers: {
     logout: (state) => {
       state.user = null;
@@ -318,7 +338,7 @@ const userSlice = createSlice({
         localStorage.setItem('userId', action.payload.user.id);
         localStorage.setItem('userEmail', action.payload.user.email);
         localStorage.setItem('userName', action.payload.user.name);
-        localStorage.setItem('userProfileImage', action.payload.user.profileImage || "");
+        localStorage.setItem('userProfileImage', action.payload.user.profileImage || ""); // Always Cloudinary URL
         localStorage.setItem('userMobileNumber', action.payload.user.mobileNumber || "");
         localStorage.setItem('token', action.payload.token);
         // Save subscription to localStorage for plan-based UI
@@ -387,7 +407,7 @@ const userSlice = createSlice({
           localStorage.setItem('userName', action.payload.user.name);
         }
         if (action.payload.user.profileImage) {
-          localStorage.setItem('userProfileImage', action.payload.user.profileImage);
+          localStorage.setItem('userProfileImage', action.payload.user.profileImage); // Always Cloudinary URL
         }
         if (action.payload.user.mobileNumber !== undefined) {
           localStorage.setItem('userMobileNumber', action.payload.user.mobileNumber);
@@ -404,6 +424,20 @@ const userSlice = createSlice({
       .addCase(reactivateUser.fulfilled, (state) => {
         state.status = 'succeeded';
         state.error = null;
+      })
+      // Fetch users list
+      .addCase(getAllUsers.pending, (state) => {
+        state.usersLoading = true;
+        state.usersError = null;
+      })
+      .addCase(getAllUsers.fulfilled, (state, action) => {
+        state.usersLoading = false;
+        state.users = action.payload || [];
+        state.usersError = null;
+      })
+      .addCase(getAllUsers.rejected, (state, action) => {
+        state.usersLoading = false;
+        state.usersError = action.payload || 'Failed to fetch users';
       })
       .addMatcher(
         (action) => action.type.endsWith('/pending'),

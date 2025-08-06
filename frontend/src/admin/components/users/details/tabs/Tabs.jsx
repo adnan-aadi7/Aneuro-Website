@@ -11,6 +11,9 @@ import GetCode from "../generalDetails/passwordReset/GetCode";
 import EnterCode from "../generalDetails/passwordReset/EnterCode";
 import CreateNewPassword from "../generalDetails/passwordReset/CreateNewPassword";
 import ResetConfirmation from "../generalDetails/passwordReset/ResetConfirmation";
+import Cards from "../quizEngaged/Cards";
+import Charts from "../quizEngaged/Charts";
+import QuizEngagedHeading from "../quizEngaged/QuizEngaedHeading";
 
 export default function Tabs({ user: userProp }) {
   const location = useLocation();
@@ -198,6 +201,13 @@ export default function Tabs({ user: userProp }) {
         <div className="mt-6 sm:mt-8 flex flex-col gap-6 sm:gap-8">
           <SubscriptionTierExact user={user} />
           <BillingHistoryTable user={user} />
+        </div>
+      )}
+      {activeTab === "Quiz Engagement" && (
+        <div className="mt-6 sm:mt-8 flex flex-col gap-6 sm:gap-8">
+         <QuizEngagedHeading />
+         <Cards />
+         <Charts />
         </div>
       )}
     </div>

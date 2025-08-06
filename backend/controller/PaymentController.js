@@ -146,7 +146,13 @@ export const getUserPayments = async (req, res) => {
     const payments = await Payment.find({ userId: req.params.userId })
       .sort({ createdAt: -1 })
       .populate('userId', 'name email');
-    res.json({ payments });
+    // Map createdAt to billingDate for each payment
+    const paymentsWithBillingDate = payments.map(payment => {
+      const obj = payment.toObject();
+      obj.billingDate = payment.createdAt;
+      return obj;
+    });
+    res.json({ payments: paymentsWithBillingDate });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

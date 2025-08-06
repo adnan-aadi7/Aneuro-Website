@@ -13,9 +13,7 @@ export default function ProfileSettigs() {
     mobileNumber: "",
   });
 
-  const [avatar, setAvatar] = useState(
-    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
-  );
+  const [avatar, setAvatar] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: "", type: "" });
@@ -36,10 +34,8 @@ export default function ProfileSettigs() {
         mobileNumber: user.mobileNumber || "",
       });
       
-      // Set avatar from user profile image or default
-      if (user.profileImage) {
-        setAvatar(user.profileImage);
-      }
+      // Always use Cloudinary URL from Redux user.profileImage
+      setAvatar(user.profileImage || "");
     }
   }, [user]);
 
@@ -106,9 +102,8 @@ export default function ProfileSettigs() {
         mobileNumber: user.mobileNumber || "",
       });
       
-      if (user.profileImage) {
-        setAvatar(user.profileImage);
-      }
+      // Always use Cloudinary URL from Redux user.profileImage
+      setAvatar(user.profileImage || "");
     }
     
     // Reset selected file
@@ -124,8 +119,7 @@ export default function ProfileSettigs() {
     if (file) {
       // Store the file for upload
       setSelectedFile(file);
-      
-      // Preview the image
+      // Preview the image locally until upload is done
       const reader = new FileReader();
       reader.onload = (event) => {
         setAvatar(event.target.result);

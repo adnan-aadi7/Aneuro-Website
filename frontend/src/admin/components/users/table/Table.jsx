@@ -1,32 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../../../../store/axiosInstance";
+import { useDispatch, useSelector } from "react-redux";
+import { getAllUsers } from "../../../../store/Slice/UserSlice";
 
 export default function Table() {
+  const dispatch = useDispatch();
+  const users = useSelector((state) => state.user.users);
+  const loading = useSelector((state) => state.user.usersLoading);
+  const error = useSelector((state) => state.user.usersError);
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState("asc");
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await axiosInstance.get("/users");
-        console.log(response.data.users);
-        setUsers(response.data.users || []);
-      } catch {
-        setError("Failed to fetch users");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUsers();
-  }, []);
+    dispatch(getAllUsers());
+  }, [dispatch]);
 
   const CircularProgress = ({ percentage }) => {
     const size = 20;
@@ -100,7 +89,7 @@ export default function Table() {
         <table className="w-full">
           <thead className="bg-[#2A2A39]">
             <tr>
-              <th className="text-left py-4 px-2 text-slate-300 font-medium text-sm">
+              <th className="text-left py-4 text-slate-300 font-medium text-sm">
                 <div
                   className="flex items-center gap-2 cursor-pointer"
                   onClick={() => handleSort("name")}
@@ -109,25 +98,25 @@ export default function Table() {
                   <ChevronDown size={16} className="text-slate-400" />
                 </div>
               </th>
-              <th className="text-left py-4 px-2 text-slate-300 font-medium text-sm">
+              <th className="text-left py-4 text-slate-300 font-medium text-sm">
                 User ID
               </th>
-              <th className="text-left py-4 px-2 text-slate-300 font-medium text-sm">
+              <th className="text-left py-4 text-slate-300 font-medium text-sm">
                 Email Address
               </th>
-              <th className="text-left py-4 px-2 text-slate-300 font-medium text-sm whitespace-nowrap">
+              <th className="text-left py-4 text-slate-300 font-medium text-sm whitespace-nowrap">
                 Subscription Tier
               </th>
-              <th className="text-left py-4 px-2 text-slate-300 font-medium text-sm">
+              <th className="text-left py-4 text-slate-300 font-medium text-sm">
                 Signup Date
               </th>
-              <th className="text-left py-4 px-2 text-slate-300 font-medium text-sm">
+              <th className="text-left py-4 text-slate-300 font-medium text-sm whitespace-nowrap">
                 Account Status
               </th>
-              <th className="text-left py-4 px-2 text-slate-300 font-medium text-sm whitespace-nowrap">
+              <th className="text-left py-4 text-slate-300 font-medium text-sm whitespace-nowrap">
                 Quiz Engagement
               </th>
-              <th className="text-left py-4 px-6 text-slate-300 font-medium text-sm">
+              <th className="text-left py-4 text-slate-300 font-medium text-sm">
                 Action
               </th>
             </tr>
@@ -163,7 +152,7 @@ export default function Table() {
                   key={user._id}
                   className="hover:bg-slate-700/50 transition-colors"
                 >
-                  <td className="py-4 px-2">
+                  <td className="py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center overflow-hidden">
                         <img
@@ -189,18 +178,18 @@ export default function Table() {
                   </td>
 
                   {/* ✅ Shortened ID */}
-                  <td className="py-4 px-2 text-slate-300">
+                  <td className="py-4 text-slate-300">
                     {user._id ? `${user._id.slice(0, 6)}...${user._id.slice(-4)}` : "N/A"}
                   </td>
 
-                  <td className="py-4 px-2 text-slate-300">{user.email}</td>
-                  <td className="py-4 px-2 text-slate-300">
+                  <td className="py-4 text-slate-300">{user.email}</td>
+                  <td className="py-4 text-slate-300">
                     {user.subscription?.plan || "N/A"}
                   </td>
-                  <td className="py-4 px-2 text-slate-300">
+                  <td className="py-4 text-slate-300">
                     {new Date(user.createdAt).toLocaleDateString()}
                   </td>
-                  <td className="py-4 px-2">
+                  <td className="py-4">
                     <span
                       className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
                         user.accountStatus === "active"
@@ -211,10 +200,10 @@ export default function Table() {
                       {user.accountStatus || "N/A"}
                     </span>
                   </td>
-                  <td className="py-4 px-4">
+                  <td className="py-4">
                     <CircularProgress percentage={0} />
                   </td>
-                  <td className="py-4 px-4">
+                  <td className="py-4">
                     <button
                       className="bg-[#B6FFD6] text-green-900 font-semibold rounded-full px-5 py-1 text-sm focus:outline-none transition-all hover:brightness-95 cursor-pointer"
                       onClick={() => navigate("/admin/user/details", { state: { user } })}

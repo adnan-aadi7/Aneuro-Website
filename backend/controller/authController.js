@@ -87,6 +87,7 @@ export async function Login(reqBody) {
         userType: user.userType,
         accountStatus: user.accountStatus,
         subscription: user.subscription || null,
+        profileImage: user.profileImage || "",
       },
     };
   } catch (error) {
