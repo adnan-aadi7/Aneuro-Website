@@ -1,16 +1,81 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchStripeProducts, upgradeSubscription } from "../../../../../store/Slice/PaymentSlice";
 import UpgradePlan from "./upgradePlans/UpgradePlan";
 import UpgradeConfirmationPopup from "./upgradePlans/UpgradeConfirmationPopup";
 
-export default function SubscriptionTierExact() {
+export default function SubscriptionTierExact({ user }) {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("");
+  const [upgradeError, setUpgradeError] = useState(null);
+  const dispatch = useDispatch();
+  const { products, productsLoading } = useSelector((state) => state.payment);
 
-  const handleUpgrade = (plan) => {
-    setShowUpgrade(false);
+  useEffect(() => {
+    dispatch(fetchStripeProducts());
+  }, [dispatch]);
+
+  const handleUpgrade = async (plan) => {
     setSelectedPlan(plan);
-    setShowConfirmation(true);
+    setUpgradeError(null);
+
+    try {
+      // Call the upgrade API
+      await dispatch(upgradeSubscription({ 
+        userId: user._id, 
+        newPlan: plan 
+      })).unwrap();
+      
+      // Close the modal after successful upgrade
+      setShowUpgrade(false);
+      
+      // Show success popup
+      setShowConfirmation(true);
+    } catch (err) {
+      setUpgradeError(err.message || "Upgrade failed");
+      console.error("Upgrade error:", err);
+      // Don't close modal on error, let user retry
+    }
+  };
+
+  // Find the user's current plan from Stripe products
+  const getUserPlanPrice = () => {
+    if (!products || products.length === 0) {
+      return user?.subscription?.price || "10$";
+    }
+
+    const userPlan = user?.subscription?.plan;
+    if (!userPlan) {
+      return "10$";
+    }
+
+    // Find matching plan from Stripe products
+    const matchingPlan = products.find(product => 
+      product.plan.toLowerCase() === userPlan.toLowerCase() ||
+      product.name.toLowerCase() === userPlan.toLowerCase()
+    );
+
+    return matchingPlan ? `$${matchingPlan.price}` : (user?.subscription?.price ? `$${user.subscription.price}` : "10$");
+  };
+
+  const getUserPlanName = () => {
+    if (!products || products.length === 0) {
+      return user?.subscription?.plan || "Starter Plan";
+    }
+
+    const userPlan = user?.subscription?.plan;
+    if (!userPlan) {
+      return "Starter Plan";
+    }
+
+    // Find matching plan from Stripe products
+    const matchingPlan = products.find(product => 
+      product.plan.toLowerCase() === userPlan.toLowerCase() ||
+      product.name.toLowerCase() === userPlan.toLowerCase()
+    );
+
+    return matchingPlan ? matchingPlan.name : (user?.subscription?.plan || "Starter Plan");
   };
 
   return (
@@ -24,6 +89,13 @@ export default function SubscriptionTierExact() {
           Download your previous plan receipts and useage details
         </p>
       </div>
+
+      {/* Error Message */}
+      {upgradeError && (
+        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          {upgradeError}
+        </div>
+      )}
 
       {/* Cards Container */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -39,9 +111,11 @@ export default function SubscriptionTierExact() {
           <div className="flex items-start justify-between mb-6">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <h2 className="text-white text-xl font-medium">Starter Plan</h2>
-                <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
-                  Active
+                <h2 className="text-white text-xl font-medium">
+                  {productsLoading ? "Loading..." : getUserPlanName()}
+                </h2>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${user?.subscription?.status === "active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                  {user?.subscription?.status ? user.subscription.status.charAt(0).toUpperCase() + user.subscription.status.slice(1) : "Inactive"}
                 </span>
               </div>
               <p className="text-slate-400 text-sm">
@@ -49,7 +123,9 @@ export default function SubscriptionTierExact() {
               </p>
             </div>
             <div className="text-right ml-4">
-              <div className="text-white text-4xl font-bold">10$</div>
+              <div className="text-white text-4xl font-bold">
+                {productsLoading ? "..." : getUserPlanPrice()}
+              </div>
               <div className="text-slate-400 text-sm">per month</div>
             </div>
           </div>
@@ -57,23 +133,23 @@ export default function SubscriptionTierExact() {
           {/* Usage Section */}
           <div className="mb-6">
             <div className="text-white text-sm font-medium mb-2">
-              10 of 20 users
+             
             </div>
             <div className="w-full bg-slate-600 rounded-full h-2">
               <div
                 className="bg-teal-400 h-2 rounded-full"
-                style={{ width: "50%" }}
+                style={{ width: "100%" }}
               ></div>
             </div>
           </div>
 
           {/* Upgrade Button */}
-          <button
+          {/* <button
             className="bg-transparent border border-slate-600 text-slate-300 py-2 px-4 rounded-md hover:bg-slate-600 hover:text-white transition-colors text-sm font-medium"
             onClick={() => setShowUpgrade(true)}
           >
             Upgrade plan
-          </button>
+          </button> */}
         </div>
 
         {/* Payment Method Card */}

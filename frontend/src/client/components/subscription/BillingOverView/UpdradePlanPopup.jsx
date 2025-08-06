@@ -1,27 +1,53 @@
 import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchStripeProducts, upgradeSubscription } from "../../../../store/Slice/PaymentSlice";
 
 export default function UpgradePlanPopup({ open, onClose, onUpgrade }) {
-  const [plan, setPlan] = useState("Growth");
+  const [plan, setPlan] = useState(null);
+  const dispatch = useDispatch();
+  const { status, error, products, productsLoading } = useSelector((state) => state.payment);
+  const userId = localStorage.getItem("userId");
+
+  React.useEffect(() => {
+    dispatch(fetchStripeProducts());
+  }, [dispatch]);
+
+  // Filter out the "Basic" plan and get the actual plans from Stripe
+  const displayPlans = products.filter(
+    (product) => product.plan !== "basic" && product.plan !== "Basic"
+  );
+
+  React.useEffect(() => {
+    if (displayPlans.length > 0 && !plan) {
+      setPlan(displayPlans[0].plan);
+    }
+  }, [displayPlans, plan]);
 
   if (!open) return null;
+  if (productsLoading) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div className="text-white text-xl">Loading plans...</div>
+      </div>
+    );
+  }
 
-  const plans = [
-    {
-      name: "Starter",
-      desc: "Individuals and for tiny teams",
-      price: 10,
-    },
-    {
-      name: "Growth",
-      desc: "Expanding teams",
-      price: 50,
-    },
-    {
-      name: "Enterprise",
-      desc: "For huge organizations",
-      price: 90,
-    },
-  ];
+  const handleUpgrade = () => {
+    if (!userId) {
+      alert("User not logged in");
+      return;
+    }
+    console.log("Upgrading to plan:", plan); // Debug log
+    dispatch(upgradeSubscription({ userId, newPlan: plan }))
+      .unwrap()
+      .then(() => {
+        if (onUpgrade) onUpgrade(plan);
+      })
+      .catch((error) => {
+        console.error("Upgrade error:", error);
+        // error handled by Redux, but can show here if needed
+      });
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -42,15 +68,13 @@ export default function UpgradePlanPopup({ open, onClose, onUpgrade }) {
         <div className="text-slate-400 text-sm text-center mb-6">
           Select the plan that suits your business
         </div>
-        {/* Toggle */}
-
         {/* Plans */}
         <div className="flex flex-col gap-4 w-full mb-6">
-          {plans.map((p) => (
+          {displayPlans.map((p) => (
             <label
-              key={p.name}
+              key={p.id}
               className={`flex items-center justify-between border rounded-lg px-6 py-4 cursor-pointer transition-colors ${
-                plan === p.name
+                plan === p.plan
                   ? "border-cyan-400 bg-[#232432]"
                   : "border-slate-600 bg-transparent"
               }`}
@@ -59,30 +83,33 @@ export default function UpgradePlanPopup({ open, onClose, onUpgrade }) {
                 <input
                   type="radio"
                   name="plan"
-                  checked={plan === p.name}
-                  onChange={() => setPlan(p.name)}
+                  checked={plan === p.plan}
+                  onChange={() => setPlan(p.plan)}
                   className="form-radio accent-cyan-400 w-5 h-5"
                 />
                 <div>
-                  <div className="text-white text-lg font-semibold">
-                    {p.name}
-                  </div>
-                  <div className="text-slate-400 text-xs">{p.desc}</div>
+                  <div className="text-white text-lg font-semibold">{p.name}</div>
+                  <div className="text-slate-400 text-xs">{p.description || p.desc}</div>
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-white text-2xl font-bold">{p.price}$</div>
-                <div className="text-slate-400 text-xs">per month</div>
+                <div className="text-slate-400 text-xs">per {p.interval}</div>
               </div>
             </label>
           ))}
         </div>
+        {/* Error Message */}
+        {error && status === "failed" && (
+          <div className="text-red-400 text-sm mb-2 w-full text-center">{error}</div>
+        )}
         {/* Upgrade Button */}
         <button
           className="w-full py-3 bg-cyan-400 text-[#232432] font-semibold hover:bg-cyan-300 transition-colors"
-          onClick={() => onUpgrade(plan)}
+          onClick={handleUpgrade}
+          disabled={status === "loading"}
         >
-          Upgrade Now
+          {status === "loading" ? "Upgrading..." : "Upgrade Now"}
         </button>
       </div>
     </div>

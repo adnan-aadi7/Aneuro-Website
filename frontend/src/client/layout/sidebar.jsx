@@ -30,7 +30,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
     {
       icon: TbCurrencyDollar,
       label: "Manage Subscription",
-      to: "/client/manage-subscription",
+      to: "/client/manage-subscription/subscriptions",
     },
     { icon: TbHeadset, label: "Support Center", to: "/support-center" },
     { icon: TbMessage2, label: "Leave Feedback", to: "/leave-feedback" },

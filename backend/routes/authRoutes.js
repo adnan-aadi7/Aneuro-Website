@@ -16,7 +16,9 @@ import {
   googleAuthWithCode,
   handleFacebookCallback,
   getFacebookAuthUrl,
-  facebookAuthWithCode
+  facebookAuthWithCode,
+  suspendUser,
+  reactivateUser
 } from "../controller/authController.js";
 import upload from "../middleware/multer.js";
 import { authenticateGoogle, authenticateGoogleCallback } from "../services/googlePassport.js";
@@ -202,6 +204,68 @@ router.get("/user/:id", async (req, res) => {
 router.delete("/delete/:id", async (req, res) => {
   try {
     const result = await deleteUser(req.params.id);
+    res.status(200).json(result);
+  } catch (error) {
+    const statusCode = error.message === "User not found" ? 404 : 500;
+    res.status(statusCode).json({ error: error.message });
+  }
+});
+
+/**
+ * @swagger
+ * /api/suspend/{id}:
+ *   put:
+ *     summary: Suspend a user by ID
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the user to suspend
+ *     responses:
+ *       200:
+ *         description: User suspended successfully
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put("/suspend/:id", async (req, res) => {
+  try {
+    const result = await suspendUser(req.params.id);
+    res.status(200).json(result);
+  } catch (error) {
+    const statusCode = error.message === "User not found" ? 404 : 500;
+    res.status(statusCode).json({ error: error.message });
+  }
+});
+
+/**
+ * @swagger
+ * /api/reactivate/{id}:
+ *   put:
+ *     summary: Reactivate a user by ID
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the user to reactivate
+ *     responses:
+ *       200:
+ *         description: User reactivated successfully
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put("/reactivate/:id", async (req, res) => {
+  try {
+    const result = await reactivateUser(req.params.id);
     res.status(200).json(result);
   } catch (error) {
     const statusCode = error.message === "User not found" ? 404 : 500;

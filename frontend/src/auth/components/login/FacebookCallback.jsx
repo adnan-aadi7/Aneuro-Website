@@ -37,6 +37,9 @@ export default function FacebookCallback() {
         // Store the data in localStorage (similar to regular login)
         localStorage.setItem('userId', user.id);
         localStorage.setItem('userEmail', user.email);
+        localStorage.setItem('userName', user.name);
+        localStorage.setItem('userProfileImage', user.profileImage || "");
+        localStorage.setItem('userMobileNumber', user.mobileNumber || "");
         localStorage.setItem('token', token);
         localStorage.setItem('subscription', JSON.stringify(user.subscription || null));
 

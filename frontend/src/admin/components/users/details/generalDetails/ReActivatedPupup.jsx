@@ -1,7 +1,14 @@
 import React from "react";
 
-export default function ReActivatedPupup({ open, onClose }) {
+export default function ReActivatedPupup({ open, onClose, onReactivate }) {
   if (!open) return null;
+
+  const handleReactivate = () => {
+    if (onReactivate) {
+      onReactivate();
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
       {/* Modal Box */}
@@ -29,11 +36,26 @@ export default function ReActivatedPupup({ open, onClose }) {
         </div>
         {/* Title */}
         <div className="text-white text-2xl font-bold mb-2 text-center">
-          Account Reactivate
+          Reactivate Account
         </div>
         {/* Subtitle */}
-        <div className="text-white text-sm text-center opacity-80 mb-2">
-          Restore Platform Access For This User.
+        <div className="text-white text-sm text-center opacity-80 mb-6">
+          Are you sure you want to restore platform access for this user?
+        </div>
+        {/* Action Buttons */}
+        <div className="flex w-full gap-4 mt-2">
+          <button
+            className="flex-1 py-2 bg-white text-[#232432] font-medium hover:bg-slate-100 transition-colors"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+          <button
+            className="flex-1 py-2 bg-green-600 text-white font-medium hover:bg-green-700 transition-colors"
+            onClick={handleReactivate}
+          >
+            Reactivate User
+          </button>
         </div>
       </div>
     </div>

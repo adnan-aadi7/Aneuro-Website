@@ -33,7 +33,7 @@ export default function Header() {
             }`}
           >
             <span
-              className={`inline-block h-3.5 w-3.5 sm:h-4 sm:w-4 transform rounded-full bg-white transition-transform ${
+              className={`inline-block h-3.5 w-3.5 sm:h-4 sm:w-4 transform rounded-full bg-black transition-transform ${
                 isYearly ? "translate-x-5 sm:translate-x-6" : "translate-x-1"
               }`}
             />

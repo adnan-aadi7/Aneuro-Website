@@ -6,7 +6,8 @@ import {
   getUserPayments, 
   getUserSubscription, 
   getAllPayments,
-  getStripeProducts
+  getStripeProducts,
+  upgradeSubscription
 } from '../controller/PaymentController.js';
 
 const router = express.Router();
@@ -31,5 +32,8 @@ router.get('/user-subscription/:userId', getUserSubscription);
 
 // Get all payments (admin route)
 router.get('/all-payments', getAllPayments);
+
+// Add this route for upgrading subscription
+router.post('/upgrade-subscription', upgradeSubscription);
 
 export default router;

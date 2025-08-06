@@ -1,7 +1,14 @@
 import React from "react";
 
-export default function SuspendPopup({ open, onClose }) {
+export default function SuspendPopup({ open, onClose, onSuspend }) {
   if (!open) return null;
+
+  const handleSuspend = () => {
+    if (onSuspend) {
+      onSuspend();
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
       {/* Modal Box */}
@@ -31,13 +38,26 @@ export default function SuspendPopup({ open, onClose }) {
         </div>
         {/* Title */}
         <div className="text-white text-2xl font-bold mb-2 text-center">
-          Account Suspended!
+          Suspend Account
         </div>
         {/* Subtitle */}
-        <div className="text-white text-sm text-center opacity-80 mb-2">
-          Temporarily Disable This User's
-          <br />
-          Access To The Platform.
+        <div className="text-white text-sm text-center opacity-80 mb-6">
+          Are you sure you want to temporarily disable this user's access to the platform?
+        </div>
+        {/* Action Buttons */}
+        <div className="flex w-full gap-4 mt-2">
+          <button
+            className="flex-1 py-2 bg-white text-[#232432] font-medium hover:bg-slate-100 transition-colors"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+          <button
+            className="flex-1 py-2 bg-red-600 text-white font-medium hover:bg-red-700 transition-colors"
+            onClick={handleSuspend}
+          >
+            Suspend User
+          </button>
         </div>
       </div>
     </div>

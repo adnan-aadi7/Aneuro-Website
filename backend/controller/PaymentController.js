@@ -146,7 +146,13 @@ export const getUserPayments = async (req, res) => {
     const payments = await Payment.find({ userId: req.params.userId })
       .sort({ createdAt: -1 })
       .populate('userId', 'name email');
-    res.json({ payments });
+    // Map createdAt to billingDate for each payment
+    const paymentsWithBillingDate = payments.map(payment => {
+      const obj = payment.toObject();
+      obj.billingDate = payment.createdAt;
+      return obj;
+    });
+    res.json({ payments: paymentsWithBillingDate });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -226,5 +232,158 @@ export const getStripeProducts = async (req, res) => {
   } catch (error) {
     console.error('Error fetching Stripe products:', error);
     res.status(500).json({ error: 'Failed to fetch products' });
+  }
+};
+
+/**
+ * Upgrade a user's Stripe subscription to a new plan
+ * Expects: { userId, newPlan }
+ */
+export const upgradeSubscription = async (req, res) => {
+  const { userId, newPlan } = req.body;
+  if (!userId || !newPlan) {
+    return res.status(400).json({ error: 'userId and newPlan are required.' });
+  }
+  try {
+    await connectDB();
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+    if (!user.subscription || !user.subscription.stripeSubscriptionId) {
+      return res.status(400).json({ error: 'User does not have an active subscription.' });
+    }
+    const stripeSubscriptionId = user.subscription.stripeSubscriptionId;
+
+    // Fetch all Stripe products to get the priceId for the new plan
+    const products = await stripe.products.list({ active: true, expand: ['data.default_price'] });
+    const planProduct = products.data.find(
+      p => (p.metadata?.plan || p.name.toLowerCase()) === newPlan
+    );
+    if (!planProduct) {
+      return res.status(400).json({ error: 'Invalid plan selected.' });
+    }
+    
+    const newPriceId = planProduct.default_price.id;
+    const newPriceAmount = planProduct.default_price.unit_amount / 100; // Convert cents to dollars
+    
+    console.log(`Found plan product: ${planProduct.name}, price: $${newPriceAmount}, priceId: ${newPriceId}`);
+
+    // Retrieve the current subscription from Stripe
+    const subscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+    if (!subscription) {
+      return res.status(404).json({ error: 'Stripe subscription not found.' });
+    }
+    
+    // Check if subscription is active
+    if (subscription.status !== 'active') {
+      return res.status(400).json({ error: 'Subscription is not active. Cannot upgrade.' });
+    }
+    
+    const currentItem = subscription.items.data[0];
+    if (!currentItem) {
+      return res.status(400).json({ error: 'No subscription item found.' });
+    }
+
+    console.log(`Upgrading subscription ${stripeSubscriptionId} from ${user.subscription.plan} to ${newPlan} ($${newPriceAmount})`);
+
+    // Update the subscription to the new price with immediate payment
+    const updatedSubscription = await stripe.subscriptions.update(stripeSubscriptionId, {
+      items: [{ id: currentItem.id, price: newPriceId }],
+      proration_behavior: 'create_prorations',
+      billing_cycle_anchor: 'now', // Start new billing cycle immediately
+      metadata: {
+        ...subscription.metadata,
+        plan: newPlan,
+        upgradedAt: new Date().toISOString(),
+        previousPlan: user.subscription.plan,
+      },
+    });
+
+    console.log(`Subscription updated in Stripe: ${updatedSubscription.id}, status: ${updatedSubscription.status}`);
+
+    // Verify the subscription was updated successfully
+    if (updatedSubscription.status !== 'active') {
+      throw new Error(`Subscription update failed. Status: ${updatedSubscription.status}`);
+    }
+
+    // Check if there are any pending payments or invoices
+    const invoices = await stripe.invoices.list({
+      subscription: stripeSubscriptionId,
+      limit: 1,
+      status: 'open',
+    });
+
+    if (invoices.data.length > 0) {
+      console.log(`Found ${invoices.data.length} pending invoices for subscription ${stripeSubscriptionId}`);
+      // Attempt to pay any pending invoices
+      for (const invoice of invoices.data) {
+        try {
+          await stripe.invoices.pay(invoice.id);
+          console.log(`Paid invoice ${invoice.id}`);
+        } catch (payError) {
+          console.error(`Failed to pay invoice ${invoice.id}:`, payError.message);
+        }
+      }
+    }
+
+    // Update user document with new subscription details
+    user.subscription.plan = newPlan;
+    user.subscription.status = 'active';
+    user.subscription.startDate = new Date();
+    user.subscription.endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 1 month from now
+    user.subscription.stripeSubscriptionId = updatedSubscription.id;
+    await user.save();
+
+    console.log(`User ${userId} subscription upgraded to ${newPlan}`);
+
+    // Create a payment record for the upgrade (without stripePaymentIntentId to avoid unique constraint)
+    try {
+      const paymentData = {
+        userId: user._id,
+        amount: newPriceAmount,
+        currency: planProduct.default_price.currency,
+        plan: newPlan,
+        status: 'succeeded',
+        customerEmail: user.email,
+        stripeSubscriptionId: updatedSubscription.id,
+        // Use a unique identifier for subscription upgrades to avoid duplicate key error
+        stripePaymentIntentId: `upgrade_${updatedSubscription.id}_${Date.now()}`,
+        metadata: {
+          type: 'upgrade',
+          previousPlan: user.subscription.plan,
+          newPlan: newPlan,
+          upgradedAt: new Date(),
+          stripePriceId: newPriceId,
+          stripeProductId: planProduct.id,
+        },
+      };
+      
+      const payment = new Payment(paymentData);
+      await payment.save();
+      console.log(`Payment record created for upgrade: ${payment._id}`);
+    } catch (paymentError) {
+      console.error('Failed to create payment record:', paymentError);
+      // Don't fail the upgrade if payment record creation fails
+    }
+
+    res.json({
+      message: 'Subscription upgraded successfully.',
+      subscriptionId: updatedSubscription.id,
+      plan: newPlan,
+      price: newPriceAmount,
+      currency: planProduct.default_price.currency,
+      status: updatedSubscription.status,
+      stripeSubscription: {
+        id: updatedSubscription.id,
+        status: updatedSubscription.status,
+        current_period_end: updatedSubscription.current_period_end,
+        current_period_start: updatedSubscription.current_period_start,
+      },
+    });
+  } catch (error) {
+    console.error('Upgrade subscription error:', error);
+    res.status(500).json({ 
+      error: error.message || 'Failed to upgrade subscription.',
+      details: error.type || 'unknown_error'
+    });
   }
 };

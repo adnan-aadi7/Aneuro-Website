@@ -1,6 +1,10 @@
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { changePassword } from "../../../store/Slice/UserSlice";
 
 export default function ResetPasswordPopup({ onClose }) {
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.user);
   const [form, setForm] = useState({
     current: "",
     new: "",
@@ -11,6 +15,9 @@ export default function ResetPasswordPopup({ onClose }) {
     new: false,
     confirm: false,
   });
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -20,16 +27,53 @@ export default function ResetPasswordPopup({ onClose }) {
     setShow((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add password reset logic here
-    if (onClose) onClose();
+    setError("");
+    setSuccess("");
+    
+    // Validation
+    if (!form.current || !form.new || !form.confirm) {
+      setError("All fields are required.");
+      return;
+    }
+    
+    if (form.new !== form.confirm) {
+      setError("New password and confirm password do not match.");
+      return;
+    }
+    
+    if (form.new.length < 6) {
+      setError("New password must be at least 6 characters long.");
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      await dispatch(
+        changePassword({
+          userId: user.id,
+          currentPassword: form.current,
+          newPassword: form.new,
+        })
+      ).unwrap();
+      
+      setSuccess("Password changed successfully!");
+      setTimeout(() => {
+        if (onClose) onClose();
+      }, 1500);
+    } catch (err) {
+      setError(err || "Failed to change password.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
       <div
-        className="relative w-full max-w-md mx-auto rounded-lg p-8 bg-[#232336] shadow-2xl"
+        className="relative w-full max-w-md mx-auto  p-8 bg-[#232336] shadow-2xl"
         style={{ boxShadow: "inset 0 0 20px 0 #12DCF080" }}
       >
         <h2 className="text-2xl font-semibold text-white mb-8">
@@ -46,6 +90,7 @@ export default function ResetPasswordPopup({ onClose }) {
               placeholder="Current Password"
               className="w-full bg-transparent border border-cyan-400 rounded px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-cyan-300"
               autoComplete="current-password"
+              disabled={isLoading}
             />
           </div>
           {/* New Password */}
@@ -58,12 +103,14 @@ export default function ResetPasswordPopup({ onClose }) {
               placeholder="New Password"
               className="w-full bg-transparent border border-cyan-400 rounded px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-cyan-300"
               autoComplete="new-password"
+              disabled={isLoading}
             />
             <button
               type="button"
               className="absolute right-3 top-1/2 -translate-y-1/2 text-cyan-400"
               onClick={() => toggleShow("new")}
               tabIndex={-1}
+              disabled={isLoading}
             >
               {show.new ? (
                 <svg
@@ -113,12 +160,14 @@ export default function ResetPasswordPopup({ onClose }) {
               placeholder="Confirm Password"
               className="w-full bg-transparent border border-cyan-400 rounded px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-cyan-300"
               autoComplete="new-password"
+              disabled={isLoading}
             />
             <button
               type="button"
               className="absolute right-3 top-1/2 -translate-y-1/2 text-cyan-400"
               onClick={() => toggleShow("confirm")}
               tabIndex={-1}
+              disabled={isLoading}
             >
               {show.confirm ? (
                 <svg
@@ -158,11 +207,25 @@ export default function ResetPasswordPopup({ onClose }) {
               )}
             </button>
           </div>
+          
+          {/* Error and Success Messages */}
+          {error && (
+            <div className="text-red-400 text-sm bg-red-900/20 border border-red-500/30 rounded px-3 py-2">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="text-green-400 text-sm bg-green-900/20 border border-green-500/30 rounded px-3 py-2">
+              {success}
+            </div>
+          )}
+          
           <button
             type="submit"
-            className="w-full bg-cyan-400 text-black font-medium py-3 rounded mt-4 hover:bg-cyan-300 transition-colors"
+            disabled={isLoading}
+            className="w-full bg-cyan-400 text-black font-medium py-3 rounded mt-4 hover:bg-cyan-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Password Reset
+            {isLoading ? "Changing Password..." : "Change Password"}
           </button>
         </form>
       </div>

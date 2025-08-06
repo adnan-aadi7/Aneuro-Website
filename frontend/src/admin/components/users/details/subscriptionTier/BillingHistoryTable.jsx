@@ -1,16 +1,20 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { ChevronDown, Download } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchUserPayments } from "../../../../../store/Slice/PaymentSlice";
 
-export default function BillingHistoryTable() {
-  const billingData = [
-    {
-      invoice: "Invoice #001",
-      billingDate: "Dec30, 2025",
-      amount: "USD $20.00",
-      plan: "Starter",
-      users: "10",
-    },
-  ];
+export default function BillingHistoryTable({ user }) {
+  const dispatch = useDispatch();
+  const { userPayments, userPaymentsLoading, userPaymentsError } = useSelector(
+    (state) => state.payment
+  );
+
+  useEffect(() => {
+    if (user?._id) {
+      dispatch(fetchUserPayments(user._id));
+    }
+  }, [dispatch, user?._id]);
+  console.log(userPayments, "userPayments");
 
   return (
     <div className="w-full bg-[#2A2A39] ">
@@ -20,7 +24,7 @@ export default function BillingHistoryTable() {
           Billing History
         </h1>
         <p className="text-slate-400 text-sm">
-          Download your previous plan receipts and useage details
+          Download your previous plan receipts and usage details
         </p>
       </div>
 
@@ -53,26 +57,45 @@ export default function BillingHistoryTable() {
             </tr>
           </thead>
           <tbody>
-            {billingData.map((row, index) => (
-              <tr key={index} className="border-b border-slate-700">
-                <td className="py-4 px-0 text-white text-sm">{row.invoice}</td>
-                <td className="py-4 px-6 text-slate-300 text-sm">
-                  {row.billingDate}
-                </td>
-                <td className="py-4 px-6 text-slate-300 text-sm">
-                  {row.amount}
-                </td>
-                <td className="py-4 px-6 text-slate-300 text-sm">{row.plan}</td>
-                <td className="py-4 px-6 text-slate-300 text-sm">
-                  {row.users}
-                </td>
-                <td className="py-4 px-6">
-                  <button className="text-teal-400 hover:text-teal-300 transition-colors">
-                    <Download size={16} />
-                  </button>
+            {userPaymentsLoading ? (
+              <tr>
+                <td colSpan="6" className="text-center text-white py-8">
+                  Loading billing history...
                 </td>
               </tr>
-            ))}
+            ) : userPaymentsError ? (
+              <tr>
+                <td colSpan="6" className="text-center text-red-400 py-8">
+                  {userPaymentsError}
+                </td>
+              </tr>
+            ) : userPayments && userPayments.length > 0 ? (
+              userPayments.map((row, index) => (
+                <tr key={row._id || index} className="border-b border-slate-700">
+                  <td className="py-4 px-0 text-white text-sm">{row.invoiceNumber || row.stripeSubscriptionId
+ || "-"}</td>
+                  <td className="py-4 px-6 text-slate-300 text-sm">
+                    {row.billingDate ? new Date(row.billingDate).toLocaleDateString() : "-"}
+                  </td>
+                  <td className="py-4 px-6 text-slate-300 text-sm">
+                    {row.amount ? `USD $${row.amount}` : "-"}
+                  </td>
+                  <td className="py-4 px-6 text-slate-300 text-sm">{row.plan || "-"}</td>
+                  <td className="py-4 px-6 text-slate-300 text-sm">{row.users || "-"}</td>
+                  <td className="py-4 px-6">
+                    <button className="text-teal-400 hover:text-teal-300 transition-colors">
+                      <Download size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="text-center text-white py-8">
+                  No billing history found.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
