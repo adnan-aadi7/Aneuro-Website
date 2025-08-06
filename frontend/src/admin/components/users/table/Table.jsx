@@ -6,16 +6,21 @@ import { getAllUsers } from "../../../../store/Slice/UserSlice";
 
 export default function Table() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
   const users = useSelector((state) => state.user.users);
   const loading = useSelector((state) => state.user.usersLoading);
   const error = useSelector((state) => state.user.usersError);
+  const totalPages = useSelector((state) => state.user.totalPages);
+
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState("asc");
-  const navigate = useNavigate();
 
   useEffect(() => {
-    dispatch(getAllUsers());
-  }, [dispatch]);
+    dispatch(getAllUsers({ page, limit }));
+  }, [dispatch, page, limit]);
 
   const CircularProgress = ({ percentage }) => {
     const size = 20;
@@ -216,6 +221,36 @@ export default function Table() {
             )}
           </tbody>
         </table>
+      </div>
+      {/* Pagination Controls */}
+      <div className="mt-8 flex justify-center items-center gap-2 text-sm">
+        <button
+          className="px-2 py-1 text-white/70"
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          disabled={page === 1}
+        >
+          Previous
+        </button>
+        {[...Array(totalPages || 1)].map((_, idx) => (
+          <button
+            key={idx + 1}
+            className={`w-8 h-8 rounded-md ${
+              page === idx + 1
+                ? "bg-[#00D1FF] text-black font-semibold"
+                : "bg-[#1B1D29] text-white/70"
+            }`}
+            onClick={() => setPage(idx + 1)}
+          >
+            {idx + 1}
+          </button>
+        ))}
+        <button
+          className="px-2 py-1 text-white/70"
+          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          disabled={page === totalPages}
+        >
+          Next
+        </button>
       </div>
     </div>
   );

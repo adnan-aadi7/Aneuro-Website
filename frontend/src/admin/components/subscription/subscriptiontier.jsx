@@ -1,8 +1,22 @@
 import React from "react";
 import { SiVisa } from "react-icons/si";
+import { useSelector } from "react-redux";
 
-const Subscriptiontier = () => {
-  
+const Subscriptiontier = ({ user }) => {
+  const subscription = user?.subscription;
+  const stripeProducts = useSelector((state) => state.payment.products);
+
+  // Helper to get price from Stripe products by plan name
+  const getStripePrice = (plan) => {
+    if (!stripeProducts || stripeProducts.length === 0 || !plan) return "-";
+    const match = stripeProducts.find(
+      (p) =>
+        p.plan?.toLowerCase() === plan.toLowerCase() ||
+        p.name?.toLowerCase() === plan.toLowerCase()
+    );
+    return match && match.price ? `$${match.price}` : "-";
+  };
+
   return (
     <div className="flex flex-col gap-4  lg:flex-row items-center gap-7 w-full mt-8 ">
       <div
@@ -15,20 +29,20 @@ const Subscriptiontier = () => {
           backgroundBlendMode: "screen",
         }}
       >
-        <div className="flex flex-col gap-3 md:flex-row md:items-center justify-between w-full h-full">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-col gap-2">
             <div className="flex flex-row gap-4 items-center">
-              <h1 className="text-[23px] text-medium">Starter Plan</h1>
+              <h1 className="text-[23px] text-medium">{subscription?.plan || "-"}</h1>
               <button className="px-5 py-1 rounded-full bg-[#D4F7D4] text-[#0B3C0C] text-[13px]">
-                Active
+                {subscription?.status || "-"}
               </button>
             </div>
             <p className="text-[13px] font-medium">
               Our popular plan for small teams
             </p>
           </div>
-          <div className="flex flex-row items-center gap-2 ">
-            <p className="text-[52px] font-semibold">10$</p>
+          <div className="flex flex-row items-center gap-2">
+            <p className="text-[52px] font-semibold">{getStripePrice(subscription?.plan)}</p>
             <p className="opacity-70 mt-6">per month</p>
           </div>
         </div>
@@ -40,14 +54,12 @@ const Subscriptiontier = () => {
           </div>
         </div>
 
-        <button
-        
-          className="mt-3 border p-4 text-[15px] border-[#12DCF0]  w-[200px] cursor-pointer"
-        >
-          Upgrade plan
-        </button>
+        <div className="flex flex-row items-center w-full justify-end mt-4">
+          {/* <button className="text-black bg-[#12DCF0] px-10 py-2 text-[15px] cursor-pointer">
+            Upgrade
+          </button> */}
+        </div>
       </div>
-
       <div
         className="w-full p-4 flex flex-col gap-7 text-white h-[270px]"
         style={{
@@ -64,7 +76,6 @@ const Subscriptiontier = () => {
             Change how you pay for your plan
           </p>
         </div>
-
         <div className="flex flex-row items-center w-full justify-between mt-4">
           <div className="flex flex-row items-center gap-4 ">
             <div className="bg-[#232886] rounded w-[60px] md:w-[70px] h-[32px] md:h-[40px] flex items-center justify-center">

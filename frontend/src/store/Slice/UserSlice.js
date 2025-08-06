@@ -240,10 +240,10 @@ export const reactivateUser = createAsyncThunk(
 // Async thunk for fetching all users
 export const getAllUsers = createAsyncThunk(
   'user/getAllUsers',
-  async (_, { rejectWithValue }) => {
+  async ({ page = 1, limit = 10 } = {}, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get('/users');
-      return response.data.users;
+      const response = await axiosInstance.get(`/users?page=${page}&limit=${limit}`);
+      return response.data; // { users, total, page, totalPages }
     } catch (err) {
       return rejectWithValue(
         err.response?.data?.error || err.message || 'Failed to fetch users'
@@ -299,6 +299,9 @@ const userSlice = createSlice({
     users: [],
     usersLoading: false,
     usersError: null,
+    total: 0,
+    page: 1,
+    totalPages: 1,
   },
   reducers: {
     logout: (state) => {
@@ -432,8 +435,11 @@ const userSlice = createSlice({
       })
       .addCase(getAllUsers.fulfilled, (state, action) => {
         state.usersLoading = false;
-        state.users = action.payload || [];
+        state.users = action.payload.users || [];
         state.usersError = null;
+        state.total = action.payload.total;
+        state.page = action.payload.page;
+        state.totalPages = action.payload.totalPages;
       })
       .addCase(getAllUsers.rejected, (state, action) => {
         state.usersLoading = false;

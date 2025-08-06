@@ -14,7 +14,52 @@ export default function BillingHistoryTable({ user }) {
       dispatch(fetchUserPayments(user._id));
     }
   }, [dispatch, user?._id]);
-  console.log(userPayments, "userPayments");
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  // Format amount for display
+  const formatAmount = (amount, currency = 'usd') => {
+    return `${currency.toUpperCase()} $${Number(amount).toFixed(2)}`;
+  };
+
+  // Download single bill as CSV in a proper invoice format
+  const downloadSingleBill = (payment) => {
+    const headers = [
+      'Field', 'Value'
+    ];
+    const data = [
+      headers,
+      [],
+      ['Invoice Number', payment.stripePaymentIntentId ? `Invoice #${payment.stripePaymentIntentId.slice(-8)}` : `Payment #${payment._id?.slice(-8)}`],
+      ['Billing Date', formatDate(payment.billingDate || payment.createdAt)],
+      ['Amount', formatAmount(payment.amount, payment.currency)],
+      ['Plan', payment.plan],
+      ['Status', payment.status],
+      ['Customer Name', payment.name || (payment.userId && payment.userId.name) || '-'],
+      ['Customer Email', payment.customerEmail || payment.email || '-'],
+      ['Payment ID', payment._id],
+      ['Stripe Payment Intent', payment.stripePaymentIntentId || 'N/A'],
+      ['Stripe Subscription ID', payment.stripeSubscriptionId || 'N/A'],
+    ];
+    const csvContent = data.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `invoice_${payment._id?.slice(-8) || 'payment'}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="w-full bg-[#2A2A39] ">
@@ -72,18 +117,17 @@ export default function BillingHistoryTable({ user }) {
             ) : userPayments && userPayments.length > 0 ? (
               userPayments.map((row, index) => (
                 <tr key={row._id || index} className="border-b border-slate-700">
-                  <td className="py-4 px-0 text-white text-sm">{row.invoiceNumber || row.stripeSubscriptionId
- || "-"}</td>
+                  <td className="py-4 px-0 text-white text-sm">{row.invoiceNumber || row.stripeSubscriptionId || row._id || "-"}</td>
                   <td className="py-4 px-6 text-slate-300 text-sm">
-                    {row.billingDate ? new Date(row.billingDate).toLocaleDateString() : "-"}
+                    {row.billingDate ? formatDate(row.billingDate) : "-"}
                   </td>
                   <td className="py-4 px-6 text-slate-300 text-sm">
-                    {row.amount ? `USD $${row.amount}` : "-"}
+                    {row.amount ? formatAmount(row.amount, row.currency) : "-"}
                   </td>
                   <td className="py-4 px-6 text-slate-300 text-sm">{row.plan || "-"}</td>
                   <td className="py-4 px-6 text-slate-300 text-sm">{row.users || "-"}</td>
                   <td className="py-4 px-6">
-                    <button className="text-teal-400 hover:text-teal-300 transition-colors">
+                    <button className="text-teal-400 hover:text-teal-300 transition-colors" onClick={() => downloadSingleBill(row)}>
                       <Download size={16} />
                     </button>
                   </td>

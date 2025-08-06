@@ -1,9 +1,11 @@
+import { useLocation } from "react-router-dom";
 import Billinghistory from "../../components/subscription/billinghistory";
 import Subscriptiontier from "../../components/subscription/subscriptiontier";
-// import { useNavigate } from "react-router-dom";
 
 const UserDetails = () => {
-  // const navigate = useNavigate();
+  const location = useLocation();
+  const user = location.state?.user;
+
   return (
     <div className="text-white">
       <div>
@@ -34,24 +36,16 @@ const UserDetails = () => {
           <div className="flex flex-col md:flex-row gap-3  md:justify-between md:items-center">
             <div className="flex items-center gap-4">
               <img
-                src="/Frame 1000006611.png"
+                src={user?.profileImage || "/Frame 1000006611.png"}
                 alt="avatar"
                 className="w-12 h-12 rounded-full object-cover"
               />
               <div>
-                <p className="font-semibold">Devon Lane</p>
-                <p className="text-sm text-gray-400">yourname@gmail.com</p>
+                <p className="font-semibold">{user?.name || "-"}</p>
+                <p className="text-sm text-gray-400">{user?.email || "-"}</p>
               </div>
             </div>
-
-            <div className="flex gap-3">
-              {/* <button
-                  onClick={() => navigate("/admin/manage-subscription/refund-request")}
-                  className="bg-transparent cursor-pointer border border-gray-600 px-4 py-2 text-sm font-medium"
-                >
-                  View Refund Request
-                </button> */}
-            </div>
+            <div className="flex gap-3"></div>
           </div>
         </div>
 
@@ -63,8 +57,8 @@ const UserDetails = () => {
         </p>
 
         <div className="flex flex-col gap-12">
-          <Subscriptiontier />
-          <Billinghistory />
+          <Subscriptiontier user={user} />
+          <Billinghistory user={user} />
         </div>
       </div>
     </div>
