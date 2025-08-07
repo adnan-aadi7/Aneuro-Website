@@ -1,6 +1,6 @@
 import React from "react";
 
-const Email = ({ tickets }) => {
+const Email = ({ tickets, onSelectTicket }) => {
   if (!tickets || tickets.length === 0) {
     return <div className="text-gray-400 text-center">No tickets found.</div>;
   }
@@ -11,6 +11,7 @@ const Email = ({ tickets }) => {
           key={ticket._id}
           className="max-w-full mx-auto mt-8 p-15 rounded bg-[#232432] relative"
           style={{ boxShadow: "0 0 0 3px inset, 0 2px 82px 0 #0e7490 inset" }}
+          onClick={() => onSelectTicket && onSelectTicket(ticket._id)}
         >
           {/* User Info */}
           <div className="flex items-center mb-2">
@@ -18,7 +19,7 @@ const Email = ({ tickets }) => {
               <img
                 src={ticket.profileImage}
                 alt={ticket.name}
-                className="w-8 h-8 rounded-full object-cover border border-gray-500 mr-3"
+                className="w-15 h-15 rounded-full object-cover border border-gray-500 mr-3"
               />
             ) : (
               <div className="w-8 h-8 rounded-full bg-cyan-400 flex items-center justify-center text-white font-bold mr-3">

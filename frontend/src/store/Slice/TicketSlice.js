@@ -44,6 +44,12 @@ export const getTickets = createAsyncThunk(
       if (filters.email) {
         params.append('email', filters.email);
       }
+      if (filters.page) {
+        params.append('page', filters.page);
+      }
+      if (filters.limit) {
+        params.append('limit', filters.limit);
+      }
       const response = await axiosInstance.get(`/ticket?${params.toString()}`);
       return response.data;
     } catch (err) {

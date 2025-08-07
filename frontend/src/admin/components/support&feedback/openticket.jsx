@@ -1,47 +1,68 @@
 
+import React from 'react';
 import { Download } from 'lucide-react';
 
-const Openticket =()=>{
-
-    return(
+const Openticket = ({ tickets = [] }) => {
+  if (!tickets.length) {
+    return <div className="py-12 text-white px-4 md:px-8 mt-6">No open tickets found.</div>;
+  }
+  return (
+    <div>
+      {tickets.map((ticket) => (
         <div
-            className="py-12 text-white px-4 md:px-8 mt-6 shadow-md text-white font-inter w-full overflow-x-auto"
-  style={{
-    backgroundImage: ` url('/Group 1000004911.png')`,
-    backgroundSize: 'cover',
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: 'center',
-  }}
-          >
-            <p className="text-lg font-medium mb-2">Issue With My Aneuro Dashboard Access:</p>
-            <p className="text-sm leading-6 mb-4 opacity-80">
-              Hi Aneuro Support Team,
+          key={ticket._id}
+          className="py-12 text-white px-4 md:px-8 mt-6 shadow-md font-inter w-full overflow-x-auto"
+          style={{
+            backgroundImage: `url('/Group 1000004911.png')`,
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center',
+          }}
+        >
+         
+          {/* Subject (use first category or fallback) */}
+          <div className="mt-4 mb-2">
+            <span className="font-semibold text-white text-xl">
+              {Array.isArray(ticket.category) && ticket.category.length > 0
+                ? ticket.category[0]
+                : 'Support Ticket'}
+            </span>
+          </div>
+          {/* Message Body */}
+          <div className="text-gray-200 text-sm mb-4 mt-5">
+            <p className="mb-4">Hi Aneuro Support Team,</p>
+            <p className="mb-4">
+              {ticket.message}
               <br />
-              <br />
-              I’m experiencing an issue with my dashboard. Whenever I try to access the “Results Overview”
-              section, the page either fails to load or shows an error message.
-              <br />
-              Could you please look into this? I’ve attached a screenshot for reference.
-              <br />
-              Looking forward to your assistance.
-              <br />
-              <br />
-              Best regards,
-              <br />
-              Alice Roy
+              {ticket.category && ticket.category.length > 1 && (
+                <>
+                  <span className="text-xs text-cyan-400">Categories: {ticket.category.join(', ')}</span>
+                  <br />
+                </>
+              )}
+              Looking Forward To Your Assistance.
             </p>
-
-            {/* Attachment */}
+            <p className="mb-2">
+              Best Regards,
+              <br />
+              {ticket.name}
+            </p>
+          </div>
+          {/* Attachment */}
+          {ticket.fileUrl && (
             <div className="flex items-center gap-2 bg-[#202735] border border-[#12DCF0] px-4 py-3 mt-8 w-max ">
               <div className="bg-red-600 text-white px-2 py-1 rounded text-xs">PDF</div>
-              <div className="text-sm">Doc.Pdf</div>
-              <div className="text-xs text-gray-400">20KB</div>
-              <button>
+              <div className="text-sm">{ticket.fileUrl.split('/').pop()}</div>
+              <div className="text-xs text-gray-400">{ticket.fileSize ? `${ticket.fileSize}KB` : ''}</div>
+              <a href={ticket.fileUrl} target="_blank" rel="noopener noreferrer">
                 <Download className="text-white text-lg" />
-              </button>
+              </a>
             </div>
-          </div>
-    )
-}
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export default Openticket;

@@ -1,16 +1,20 @@
-import { MoreVertical, ArrowDown} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { MoreVertical, ArrowDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-const data = Array(8).fill({
-  name: 'Devon Lane',
-  email: 'Devon@gmail.con',
-  category: 'Support',
-  assignedTo: 'Support Agent',
-  date: '06/11/2025',
-  status: 'Resolved',
-});
+import { useDispatch, useSelector } from 'react-redux';
+import { getTickets } from '../../../store/Slice/TicketSlice';
 
 export default function Support() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { tickets = [], count = 0 } = useSelector((state) => state.ticket);
+  const [page, setPage] = useState(1);
+  const limit = 10;
+  const totalPages = Math.ceil(count / limit);
+
+  useEffect(() => {
+    dispatch(getTickets({ page, limit }));
+  }, [dispatch, page]);
 
   return (
     <div className='text-white'>
@@ -40,31 +44,31 @@ export default function Support() {
                </tr>
              </thead>
             <tbody>
-  {data.map((ticket, idx) => (
+  {tickets.map((ticket, idx) => (
     <tr
-      onClick={() => navigate('/admin/support/feedback/user-detail')}
-      key={idx}
+      onClick={() => navigate('/admin/support/feedback/user-detail', { state: { ticket } })}
+      key={ticket._id || idx}
       className="text-sm hover:bg-[#222431] transition-colors rounded-lg cursor-pointer"
     >
       <td className="flex flex-row items-center gap-2 px-6 py-4 border-b border-slate-300 ">
         <img
-          src="/Frame 1000006611.png"
+          src={ticket.profileImage || "/Frame 1000006611.png"}
           alt="avatar"
-          className="w-8 h-8 rounded-full"
+          className="w-10 h-9 rounded-full "
         />
         {ticket.name}
       </td>
-      <td className="py-4 px-6 border-b border-slate-300 ">
+      <td className="py-4 px-6 border-b border-slate-300  ">
         {ticket.email}
       </td>
       <td className="py-4 px-6 border-b border-slate-300 ">
-        {ticket.category}
+        {Array.isArray(ticket.category) ? ticket.category.join(", ") : ticket.category}
       </td>
       <td className="py-4 px-6 border-b border-slate-300 ">
         {ticket.assignedTo}
       </td>
       <td className="py-4 px-6 border-b border-slate-300 ">
-        {ticket.date}
+        {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : "-"}
       </td>
       <td className="py-4 px-6 border-b border-slate-300 ">
         <span
@@ -88,16 +92,29 @@ export default function Support() {
 
         {/* Pagination */}
         <div className="mt-12 flex justify-center items-center gap-2 text-sm">
-          <button className="px-2 py-1 text-white/70">Previous</button>
-          {[1, 2, 3].map((page) => (
+          <button
+            className="px-2 py-1 text-white/70"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            Previous
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <button
-              key={page}
-              className={`w-8 h-8 rounded-md ${page === 1 ? 'bg-[#00D1FF] text-black font-semibold' : 'bg-[#1B1D29] text-white/70'}`}
+              key={p}
+              onClick={() => setPage(p)}
+              className={`w-8 h-8 rounded-md ${p === page ? 'bg-[#00D1FF] text-black font-semibold' : 'bg-[#1B1D29] text-white/70'}`}
             >
-              {page}
+              {p}
             </button>
           ))}
-          <button className="px-2 py-1 text-white/70">Next</button>
+          <button
+            className="px-2 py-1 text-white/70"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>

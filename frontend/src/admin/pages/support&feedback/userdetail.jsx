@@ -2,13 +2,31 @@ import Openticket from '../../components/support&feedback/openticket';
 import Closeticket from '../../components/support&feedback/closeticket';
 import React, { useState, useRef, useEffect } from 'react';
 import { Bold, Italic, Underline, Strikethrough, Link, Paperclip, Image, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, ListOrdered } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { getTickets, addReplyToTicket } from '../../../store/Slice/TicketSlice';
 
 const Userdetail = () => {
+  const location = useLocation();
+  const ticket = location.state?.ticket;
+  const dispatch = useDispatch();
+  const allTickets = useSelector((state) => state.ticket.tickets);
   const [activeTab, setActiveTab] = useState('open');
   const [showReply, setShowReply] = useState(false);
   const [replyText, setReplyText] = useState('');
 const editorRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  // Fetch all tickets for this user on mount
+  useEffect(() => {
+    if (ticket?.email) {
+      dispatch(getTickets({ email: ticket.email }));
+    }
+  }, [dispatch, ticket?.email]);
+
+  // Filter tickets by status
+  const openTickets = allTickets.filter(t => t.status !== 'Resolved');
+  const closedTickets = allTickets.filter(t => t.status === 'Resolved');
 
   // Execute formatting commands
   const executeCommand = (command, value = null) => {
@@ -67,19 +85,25 @@ const editorRef = useRef(null);
   };
 
   // Handle send
-  const handleSend = () => {
+  const handleSend = async () => {
     const htmlContent = getHtmlContent();
-    const plainTextContent = getPlainTextContent();
-    
-    console.log('Reply Sent (HTML):', htmlContent);
-    console.log('Reply Sent (Plain Text):', plainTextContent);
-    
-    // Clear the editor
+    if (!ticket?._id) return;
+    try {
+      await dispatch(addReplyToTicket({
+        ticketId: ticket._id,
+        replyData: {
+          message: htmlContent,
+          repliedBy: 'admin',
+        },
+      }));
+      dispatch(getTickets({ email: ticket.email }));
+    } catch {
+      // handle error if needed
+    }
     if (editorRef.current) {
       editorRef.current.innerHTML = '';
       setReplyText('');
     }
-    
   };
   const formatButtons = [
     { icon: Bold, label: 'Bold', command: 'bold' },
@@ -128,13 +152,13 @@ const editorRef = useRef(null);
           <div className="flex flex-col md:flex-row gap-3  md:justify-between md:items-center">
             <div className="flex items-center gap-4">
               <img
-                src="/Frame 1000006611.png"
-                alt="avatar"
+                src={ticket?.profileImage || "/Frame 1000006611.png"}
+                alt={ticket?.name || "avatar"}
                 className="w-12 h-12 rounded-full object-cover"
               />
               <div>
-                <p className="font-semibold">Devon Lane</p>
-                <p className="text-sm text-gray-400">yourname@gmail.com</p>
+                <p className="font-semibold">{ticket?.name || "No Name"}</p>
+                <p className="text-sm text-gray-400">{ticket?.email || "No Email"}</p>
               </div>
             </div>
 
@@ -186,13 +210,13 @@ const editorRef = useRef(null);
           </div>
 
           {/* Ticket Message */}
-          {activeTab === 'open' && <Openticket />}
-          {activeTab === 'closed' && <Closeticket />}
+          {activeTab === 'open' && <Openticket tickets={openTickets} />}
+          {activeTab === 'closed' && <Closeticket tickets={closedTickets} />}
 
           {/* Reply Section (only in open tab) */}
           {activeTab === 'open' && showReply && (
             <div className=" mt-8   ">
-        <h2 className="text-xl font-medium text-white mb-6">Reply to Devon</h2>
+        <h2 className="text-xl font-medium text-white mb-6">Reply to {ticket?.name || "User"}</h2>
         
         {/* Formatting Toolbar */}
         <div className='border border-[#FFFFFF8F] '>
