@@ -3,6 +3,7 @@ import { ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllUsers } from "../../../../store/Slice/UserSlice";
+import { fetchUserCardInfo } from "../../../../store/Slice/PaymentSlice";
 
 export default function Table() {
   const dispatch = useDispatch();
@@ -69,6 +70,14 @@ export default function Table() {
       setSortBy(field);
       setSortOrder("asc");
     }
+  };
+
+  const handleViewUser = (user) => {
+    // Fetch user card information before navigating
+    dispatch(fetchUserCardInfo(user._id));
+    
+    // Navigate to user details page
+    navigate("/admin/user/details", { state: { user } });
   };
 
   // Show all users instead of just paid users
@@ -211,7 +220,7 @@ export default function Table() {
                   <td className="py-4">
                     <button
                       className="bg-[#B6FFD6] text-green-900 font-semibold rounded-full px-5 py-1 text-sm focus:outline-none transition-all hover:brightness-95 cursor-pointer"
-                      onClick={() => navigate("/admin/user/details", { state: { user } })}
+                      onClick={() => handleViewUser(user)}
                     >
                       View
                     </button>

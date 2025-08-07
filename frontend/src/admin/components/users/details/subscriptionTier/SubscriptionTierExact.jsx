@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchStripeProducts, upgradeSubscription } from "../../../../../store/Slice/PaymentSlice";
+import { fetchStripeProducts, upgradeSubscription, fetchUserCardInfo } from "../../../../../store/Slice/PaymentSlice";
 import UpgradePlan from "./upgradePlans/UpgradePlan";
 import UpgradeConfirmationPopup from "./upgradePlans/UpgradeConfirmationPopup";
 
@@ -11,10 +11,17 @@ export default function SubscriptionTierExact({ user }) {
   const [upgradeError, setUpgradeError] = useState(null);
   const dispatch = useDispatch();
   const { products, productsLoading } = useSelector((state) => state.payment);
+  const { userCardInfo, userCardInfoLoading, userCardInfoError } = useSelector((state) => state.payment);
 
   useEffect(() => {
     dispatch(fetchStripeProducts());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (user?._id) {
+      dispatch(fetchUserCardInfo(user._id));
+    }
+  }, [dispatch, user?._id]);
 
   const handleUpgrade = async (plan) => {
     setSelectedPlan(plan);
@@ -77,6 +84,28 @@ export default function SubscriptionTierExact({ user }) {
 
     return matchingPlan ? matchingPlan.name : (user?.subscription?.plan || "Starter Plan");
   };
+
+  // Get card information
+  const getCardInfo = () => {
+    if (userCardInfoLoading) {
+      return { brand: "Loading...", last4: "...", expMonth: "...", expYear: "..." };
+    }
+
+    if (userCardInfoError || !userCardInfo?.cards || userCardInfo.cards.length === 0) {
+      return { brand: "No Card", last4: "N/A", expMonth: "N/A", expYear: "N/A" };
+    }
+
+    // Get the default card or first card
+    const defaultCard = userCardInfo.cards.find(card => card.isDefault) || userCardInfo.cards[0];
+    return {
+      brand: defaultCard.card.brand.toUpperCase(),
+      last4: defaultCard.card.last4,
+      expMonth: defaultCard.card.expMonth.toString().padStart(2, '0'),
+      expYear: defaultCard.card.expYear.toString().slice(-2)
+    };
+  };
+
+  const cardInfo = getCardInfo();
 
   return (
     <div className="w-full bg-[#2A2A39] ">
@@ -169,31 +198,55 @@ export default function SubscriptionTierExact({ user }) {
               Change how you pay for your plan
             </p>
           </div>
-          <div className="flex items-center justify-between w-full mt-2">
-            {/* Left: VISA info */}
-            <div className="flex items-center gap-2 md:gap-4">
-              <div className="bg-[#232886] rounded w-[60px] md:w-[70px] h-[32px] md:h-[40px] flex items-center justify-center">
-                <span
-                  className="text-white text-lg md:text-2xl font-bold tracking-widest"
-                  style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
-                >
-                  VISA
-                </span>
-              </div>
-              <div className="flex flex-col justify-center">
-                <span className="text-white text-sm md:text-lg font-medium leading-tight">
-                  Visa ending in 1234
-                </span>
-                <span className="text-slate-400 text-xs md:text-sm leading-tight">
-                  Expiry 20/2025
-                </span>
-              </div>
+          
+          {userCardInfoLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-slate-400">Loading card information...</div>
             </div>
-            {/* Right: Edit button */}
-            <button className="bg-[#12DCF0] text-[#232432] px-6 md:px-13 py-2 rounded text-base md:text-lg font-semibold hover:bg-cyan-300 transition-colors shadow-none">
-              Edit
-            </button>
-          </div>
+          ) : userCardInfoError ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-red-400 text-sm">Failed to load card information</div>
+            </div>
+          ) : !userCardInfo?.hasCards ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-slate-400 text-sm">No payment method found</div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between w-full mt-2">
+              {/* Left: Card info */}
+              <div className="flex items-center gap-2 md:gap-4">
+                <div className={`rounded w-[60px] md:w-[70px] h-[32px] md:h-[40px] flex items-center justify-center ${
+                  cardInfo.brand === 'VISA' ? 'bg-[#232886]' :
+                  cardInfo.brand === 'MASTERCARD' ? 'bg-[#FF5F00]' :
+                  cardInfo.brand === 'AMEX' ? 'bg-[#006FCF]' :
+                  cardInfo.brand === 'DISCOVER' ? 'bg-[#FF6000]' :
+                  'bg-[#232886]'
+                }`}>
+                  <span
+                    className="text-white text-lg md:text-2xl font-bold tracking-widest"
+                    style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
+                  >
+                    {cardInfo.brand === 'Loading...' ? '...' : cardInfo.brand}
+                  </span>
+                </div>
+                <div className="flex flex-col justify-center">
+                  <span className="text-white text-sm md:text-lg font-medium leading-tight">
+                    {cardInfo.brand === 'Loading...' ? 'Loading...' : 
+                     cardInfo.brand === 'No Card' ? 'No payment method' :
+                     `${cardInfo.brand} ending in ${cardInfo.last4}`}
+                  </span>
+                  <span className="text-slate-400 text-xs md:text-sm leading-tight">
+                    {cardInfo.expMonth === 'N/A' ? 'No expiry date' :
+                     `Expiry ${cardInfo.expMonth}/${cardInfo.expYear}`}
+                  </span>
+                </div>
+              </div>
+              {/* Right: Edit button */}
+              <button className="bg-[#12DCF0] text-[#232432] px-6 md:px-13 py-2 rounded text-base md:text-lg font-semibold hover:bg-cyan-300 transition-colors shadow-none">
+                Edit
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

@@ -76,6 +76,42 @@ export const fetchUserPayments = createAsyncThunk(
   }
 );
 
+// Async thunk to fetch user card information
+export const fetchUserCardInfo = createAsyncThunk(
+  'payment/fetchUserCardInfo',
+  async (userId, { rejectWithValue }) => {
+    try {
+      if (!userId) {
+        throw new Error('User ID is required');
+      }
+      const response = await axiosInstance.get(`/payment/user-card-info/${userId}`);
+      return response.data; // { user, subscription, cards, customer, hasCards }
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.error || err.message || 'Failed to fetch user card info'
+      );
+    }
+  }
+);
+
+// Async thunk to fetch user payment methods (all types)
+export const fetchUserPaymentMethods = createAsyncThunk(
+  'payment/fetchUserPaymentMethods',
+  async (userId, { rejectWithValue }) => {
+    try {
+      if (!userId) {
+        throw new Error('User ID is required');
+      }
+      const response = await axiosInstance.get(`/payment/user-payment-methods/${userId}`);
+      return response.data; // { user, customer, paymentMethods, defaultPaymentMethod, totalPaymentMethods }
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.error || err.message || 'Failed to fetch user payment methods'
+      );
+    }
+  }
+);
+
 // Async thunk to upgrade a subscription (calls your backend)
 export const upgradeSubscription = createAsyncThunk(
   'payment/upgradeSubscription',
@@ -109,12 +145,26 @@ const paymentSlice = createSlice({
     userPayments: [],
     userPaymentsLoading: false,
     userPaymentsError: null,
+    userCardInfo: null,
+    userCardInfoLoading: false,
+    userCardInfoError: null,
+    userPaymentMethods: null,
+    userPaymentMethodsLoading: false,
+    userPaymentMethodsError: null,
   },
   reducers: {
     clearPaymentState: (state) => {
       state.subscriptionId = null;
       state.status = 'idle';
       state.error = null;
+    },
+    clearCardInfo: (state) => {
+      state.userCardInfo = null;
+      state.userCardInfoError = null;
+    },
+    clearPaymentMethods: (state) => {
+      state.userPaymentMethods = null;
+      state.userPaymentMethodsError = null;
     },
   },
   extraReducers: (builder) => {
@@ -171,6 +221,32 @@ const paymentSlice = createSlice({
         state.userPaymentsLoading = false;
         state.userPaymentsError = action.payload || 'Failed to fetch user payments';
       })
+      .addCase(fetchUserCardInfo.pending, (state) => {
+        state.userCardInfoLoading = true;
+        state.userCardInfoError = null;
+      })
+      .addCase(fetchUserCardInfo.fulfilled, (state, action) => {
+        state.userCardInfoLoading = false;
+        state.userCardInfo = action.payload;
+        state.userCardInfoError = null;
+      })
+      .addCase(fetchUserCardInfo.rejected, (state, action) => {
+        state.userCardInfoLoading = false;
+        state.userCardInfoError = action.payload || 'Failed to fetch user card info';
+      })
+      .addCase(fetchUserPaymentMethods.pending, (state) => {
+        state.userPaymentMethodsLoading = true;
+        state.userPaymentMethodsError = null;
+      })
+      .addCase(fetchUserPaymentMethods.fulfilled, (state, action) => {
+        state.userPaymentMethodsLoading = false;
+        state.userPaymentMethods = action.payload;
+        state.userPaymentMethodsError = null;
+      })
+      .addCase(fetchUserPaymentMethods.rejected, (state, action) => {
+        state.userPaymentMethodsLoading = false;
+        state.userPaymentMethodsError = action.payload || 'Failed to fetch user payment methods';
+      })
       .addCase(upgradeSubscription.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -186,5 +262,5 @@ const paymentSlice = createSlice({
   },
 });
 
-export const { clearPaymentState } = paymentSlice.actions;
+export const { clearPaymentState, clearCardInfo, clearPaymentMethods } = paymentSlice.actions;
 export default paymentSlice.reducer;

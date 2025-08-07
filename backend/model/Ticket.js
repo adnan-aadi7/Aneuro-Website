@@ -5,15 +5,7 @@ const TicketSchema = new mongoose.Schema({
   email: { type: String, required: true },
   mobileNumber: { type: String, required: true },
   category: {
-    type: String,
-    enum: [
-      'Sign In Problem',
-      'Registration Request',
-      'Billing Issue',
-      'Login/Logout Issues',
-      'Feedback',
-      'Other'
-    ],
+    type: [String],
     required: true
   },
   message: { type: String, required: true },

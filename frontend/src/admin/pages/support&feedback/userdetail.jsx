@@ -139,7 +139,7 @@ const editorRef = useRef(null);
             </div>
 
             <div className="flex gap-3">
-              <select className="bg-transparent border border-gray-600 px-4 py-2  text-sm outline-none">
+              <select className="bg-[#2A2A39] border border-gray-600 px-4 py-2  text-sm outline-none">
                 <option>Assign To Admin</option>
                 <option>Support Agent</option>
               </select>

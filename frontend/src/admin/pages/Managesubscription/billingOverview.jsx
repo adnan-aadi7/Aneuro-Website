@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import { getAllUsers } from "../../../store/Slice/UserSlice";
-import { fetchStripeProducts } from "../../../store/Slice/PaymentSlice";
+import { fetchStripeProducts, fetchUserCardInfo } from "../../../store/Slice/PaymentSlice";
 
 const BillingOverview = () => {
   const navigate = useNavigate();
@@ -34,10 +34,18 @@ const BillingOverview = () => {
     return match && match.price ? `$${match.price}` : "-";
   };
 
+  const handleUserClick = (user) => {
+    // Fetch user card information before navigating
+    dispatch(fetchUserCardInfo(user._id));
+    
+    // Navigate to user detail page
+    navigate("/admin/manage-subscription/user-detail", { state: { user } });
+  };
+
   return (
     <div className="text-white">
       <h1 className="text-[32px] font-medium font-dmsans">Billing Overview</h1>
-      <p className="opacity-70 text-[20px]">Let’s make the day productive</p>
+      <p className="opacity-70 text-[20px]">Let's make the day productive</p>
 
       <div
         className="p-6 mt-6 shadow-md text-white font-inter w-full"
@@ -83,9 +91,7 @@ const BillingOverview = () => {
               ) : (
                 users.map((user) => (
                   <tr
-                    onClick={() =>
-                      navigate("/admin/manage-subscription/user-detail", { state: { user } })
-                    }
+                    onClick={() => handleUserClick(user)}
                     key={user._id}
                     className="text-sm hover:bg-[#222431] transition-colors rounded-lg cursor-pointer"
                   >

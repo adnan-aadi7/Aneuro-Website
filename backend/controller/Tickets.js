@@ -1,10 +1,12 @@
 import { uploadToCloudinary } from '../middleware/uploadToCloudinary.js';
 import Ticket from '../model/Ticket.js';
+import User from '../model/User.js';
 
 export const createTicket = async (req, res) => {
   try {
     console.log('Incoming request');
     const { name, email, mobileNumber, category, message } = req.body;
+    // category is now expected to be an array of strings
     console.log('Body:', req.body);
 
     let fileUrl = '';
@@ -21,7 +23,7 @@ export const createTicket = async (req, res) => {
       name,
       email,
       mobileNumber,
-      category,
+      category, // now an array
       message,
       fileUrl,
       filePublicId
@@ -44,7 +46,7 @@ export const createTicket = async (req, res) => {
 
 export const getTickets = async (req, res) => {
   try {
-    let { status } = req.query;
+    let { status, email } = req.query;
 
     const filter = {};
     if (status) {
@@ -53,8 +55,22 @@ export const getTickets = async (req, res) => {
         filter.status = status;
       }
     }
+    if (email) {
+      filter.email = email;
+    }
 
-    const tickets = await Ticket.find(filter).sort({ createdAt: -1 });
+    let tickets = await Ticket.find(filter).sort({ createdAt: -1 });
+
+    // Populate profileImage from User collection
+    tickets = await Promise.all(
+      tickets.map(async (ticket) => {
+        const user = await User.findOne({ email: ticket.email });
+        return {
+          ...ticket.toObject(),
+          profileImage: user?.profileImage || null,
+        };
+      })
+    );
 
     return res.status(200).json({
       success: true,

@@ -387,3 +387,222 @@ export const upgradeSubscription = async (req, res) => {
     });
   }
 };
+
+/**
+ * Get card information for a specific user
+ * Expects: userId in params
+ */
+export const getUserCardInfo = async (req, res) => {
+  const { userId } = req.params;
+  
+  if (!userId) {
+    return res.status(400).json({ error: 'userId is required.' });
+  }
+
+  try {
+    await connectDB();
+    
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    // Check if user has a subscription
+    if (!user.subscription || !user.subscription.stripeSubscriptionId) {
+      return res.status(404).json({ 
+        error: 'User does not have an active subscription.',
+        hasSubscription: false 
+      });
+    }
+
+    // Get subscription details from Stripe
+    const subscription = await stripe.subscriptions.retrieve(user.subscription.stripeSubscriptionId);
+    if (!subscription) {
+      return res.status(404).json({ error: 'Stripe subscription not found.' });
+    }
+
+    // Get customer details
+    const customer = await stripe.customers.retrieve(subscription.customer);
+    if (!customer) {
+      return res.status(404).json({ error: 'Stripe customer not found.' });
+    }
+
+    // Get payment methods for the customer
+    const paymentMethods = await stripe.paymentMethods.list({
+      customer: customer.id,
+      type: 'card',
+    });
+
+    // Get default payment method
+    const defaultPaymentMethod = customer.invoice_settings?.default_payment_method;
+    
+    // Format card information
+    const cardInfo = paymentMethods.data.map(pm => ({
+      id: pm.id,
+      type: pm.type,
+      card: {
+        brand: pm.card.brand,
+        last4: pm.card.last4,
+        expMonth: pm.card.exp_month,
+        expYear: pm.card.exp_year,
+        country: pm.card.country,
+        funding: pm.card.funding,
+      },
+      billingDetails: {
+        name: pm.billing_details.name,
+        email: pm.billing_details.email,
+        phone: pm.billing_details.phone,
+        address: pm.billing_details.address,
+      },
+      isDefault: pm.id === defaultPaymentMethod,
+      created: pm.created,
+    }));
+
+    // Get subscription details
+    const subscriptionInfo = {
+      id: subscription.id,
+      status: subscription.status,
+      plan: user.subscription.plan,
+      currentPeriodStart: subscription.current_period_start,
+      currentPeriodEnd: subscription.current_period_end,
+      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      defaultPaymentMethod: defaultPaymentMethod,
+    };
+
+    res.json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+      subscription: subscriptionInfo,
+      cards: cardInfo,
+      customer: {
+        id: customer.id,
+        email: customer.email,
+        name: customer.name,
+        phone: customer.phone,
+      },
+      hasCards: cardInfo.length > 0,
+    });
+
+  } catch (error) {
+    console.error('Error getting user card info:', error);
+    res.status(500).json({ 
+      error: error.message || 'Failed to get user card information.',
+      details: error.type || 'unknown_error'
+    });
+  }
+};
+
+/**
+ * Get all payment methods for a specific user (including cards, bank accounts, etc.)
+ * Expects: userId in params
+ */
+export const getUserPaymentMethods = async (req, res) => {
+  const { userId } = req.params;
+  
+  if (!userId) {
+    return res.status(400).json({ error: 'userId is required.' });
+  }
+
+  try {
+    await connectDB();
+    
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    // Check if user has a subscription
+    if (!user.subscription || !user.subscription.stripeSubscriptionId) {
+      return res.status(404).json({ 
+        error: 'User does not have an active subscription.',
+        hasSubscription: false 
+      });
+    }
+
+    // Get subscription details from Stripe
+    const subscription = await stripe.subscriptions.retrieve(user.subscription.stripeSubscriptionId);
+    if (!subscription) {
+      return res.status(404).json({ error: 'Stripe subscription not found.' });
+    }
+
+    // Get customer details
+    const customer = await stripe.customers.retrieve(subscription.customer);
+    if (!customer) {
+      return res.status(404).json({ error: 'Stripe customer not found.' });
+    }
+
+    // Get all payment methods for the customer
+    const paymentMethods = await stripe.paymentMethods.list({
+      customer: customer.id,
+    });
+
+    // Get default payment method
+    const defaultPaymentMethod = customer.invoice_settings?.default_payment_method;
+    
+    // Format payment methods information
+    const paymentMethodsInfo = paymentMethods.data.map(pm => {
+      const baseInfo = {
+        id: pm.id,
+        type: pm.type,
+        isDefault: pm.id === defaultPaymentMethod,
+        created: pm.created,
+        billingDetails: {
+          name: pm.billing_details.name,
+          email: pm.billing_details.email,
+          phone: pm.billing_details.phone,
+          address: pm.billing_details.address,
+        },
+      };
+
+      // Add type-specific details
+      if (pm.type === 'card') {
+        baseInfo.card = {
+          brand: pm.card.brand,
+          last4: pm.card.last4,
+          expMonth: pm.card.exp_month,
+          expYear: pm.card.exp_year,
+          country: pm.card.country,
+          funding: pm.card.funding,
+        };
+      } else if (pm.type === 'bank_account') {
+        baseInfo.bankAccount = {
+          bankName: pm.bank_account.bank_name,
+          last4: pm.bank_account.last4,
+          routingNumber: pm.bank_account.routing_number,
+          country: pm.bank_account.country,
+        };
+      }
+
+      return baseInfo;
+    });
+
+    res.json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+      customer: {
+        id: customer.id,
+        email: customer.email,
+        name: customer.name,
+        phone: customer.phone,
+      },
+      paymentMethods: paymentMethodsInfo,
+      defaultPaymentMethod: defaultPaymentMethod,
+      totalPaymentMethods: paymentMethodsInfo.length,
+    });
+
+  } catch (error) {
+    console.error('Error getting user payment methods:', error);
+    res.status(500).json({ 
+      error: error.message || 'Failed to get user payment methods.',
+      details: error.type || 'unknown_error'
+    });
+  }
+};
