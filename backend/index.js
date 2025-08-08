@@ -14,6 +14,7 @@ import googlePassport from './services/googlePassport.js';
 import facebookPassport from './services/facebookPassport.js';
 import emailSequenceRoutes from './routes/emailSequencRoute.js';
 import promptpackRoutes from './routes/promptPackRoutes.js'
+import funneltemplatesRoutes from './routes/FunnelTemplateRoute.js'
 const app = express();
 const port = 4000;
 
@@ -61,6 +62,7 @@ const startServer = async () => {
     app.use("/api/payment", paymentRoutes);
     app.use("/api/email-sequences", emailSequenceRoutes);
     app.use("/api/prompt-packs", promptpackRoutes);
+    app.use("/api/funnel-templates", funneltemplatesRoutes);
 
     // Start server only after database connection is established
     app.listen(port, () => {

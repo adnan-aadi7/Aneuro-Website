@@ -1,0 +1,154 @@
+import express from 'express';
+import {
+  createFunnelTemplate,
+  getAllFunnelTemplates,
+  getFunnelTemplateById,
+  updateFunnelTemplate,
+  deleteFunnelTemplate
+} from '../controller/funnelTemplateController.js';
+
+const router = express.Router();
+
+/**
+ * @swagger
+ * tags:
+ *   name: FunnelTemplates
+ *   description: Funnel Template Management
+ */
+
+/**
+ * @swagger
+ * /api/funnel-templates:
+ *   post:
+ *     summary: Create a new funnel template
+ *     tags: [FunnelTemplates]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - pages
+ *               - category
+ *               - tier
+ *               - status
+ *             properties:
+ *               name:
+ *                 type: string
+ *               pages:
+ *                 type: number
+ *               category:
+ *                 type: string
+ *               tier:
+ *                 type: string
+ *                 enum: [basic, premium, enterprise]
+ *               status:
+ *                 type: string
+ *                 enum: [active, scheduled, inactive]
+ *     responses:
+ *       201:
+ *         description: Funnel template created
+ *       400:
+ *         description: Bad request
+ */
+router.post('/', createFunnelTemplate);
+
+/**
+ * @swagger
+ * /api/funnel-templates:
+ *   get:
+ *     summary: Get all funnel templates
+ *     tags: [FunnelTemplates]
+ *     responses:
+ *       200:
+ *         description: List of funnel templates
+ *       500:
+ *         description: Server error
+ */
+router.get('/', getAllFunnelTemplates);
+
+/**
+ * @swagger
+ * /api/funnel-templates/{id}:
+ *   get:
+ *     summary: Get a funnel template by ID
+ *     tags: [FunnelTemplates]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Funnel template ID
+ *     responses:
+ *       200:
+ *         description: Funnel template found
+ *       404:
+ *         description: Template not found
+ */
+router.get('/:id', getFunnelTemplateById);
+
+/**
+ * @swagger
+ * /api/funnel-templates/{id}:
+ *   put:
+ *     summary: Update a funnel template
+ *     tags: [FunnelTemplates]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Funnel template ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               pages:
+ *                 type: number
+ *               category:
+ *                 type: string
+ *               tier:
+ *                 type: string
+ *                 enum: [basic, premium, enterprise]
+ *               status:
+ *                 type: string
+ *                 enum: [active, scheduled, inactive]
+ *     responses:
+ *       200:
+ *         description: Funnel template updated
+ *       404:
+ *         description: Template not found
+ */
+router.put('/:id', updateFunnelTemplate);
+
+/**
+ * @swagger
+ * /api/funnel-templates/{id}:
+ *   delete:
+ *     summary: Delete a funnel template
+ *     tags: [FunnelTemplates]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Funnel template ID
+ *     responses:
+ *       200:
+ *         description: Funnel template deleted
+ *       404:
+ *         description: Template not found
+ */
+router.delete('/:id', deleteFunnelTemplate);
+
+export default router;
