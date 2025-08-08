@@ -40,12 +40,12 @@ const editorRef = useRef(null);
     }
   }, [dispatch, ticketId, ticketFromState]);
 
-  // Fetch all tickets for this user on mount
-  useEffect(() => {
-    if (ticket?.email) {
-      dispatch(getTickets({ email: ticket.email }));
-    }
-  }, [dispatch, ticket?.email]);
+  // Remove the fetch all tickets for user - we only need the specific ticket
+  // useEffect(() => {
+  //   if (ticket?.email) {
+  //     dispatch(getTickets({ email: ticket.email }));
+  //   }
+  // }, [dispatch, ticket?.email]);
 
   // Show error toast if there's an error
   useEffect(() => {
@@ -90,9 +90,9 @@ const editorRef = useRef(null);
     );
   }
 
-  // Filter tickets by status
-  const openTickets = allTickets.filter(t => t.status !== 'CLOSED');
-  const closedTickets = allTickets.filter(t => t.status === 'CLOSED');
+  // Filter tickets by status - now only show the current ticket
+  const openTickets = ticket.status !== 'CLOSED' ? [ticket] : [];
+  const closedTickets = ticket.status === 'CLOSED' ? [ticket] : [];
 
   // Execute formatting commands
   const executeCommand = (command, value = null) => {
@@ -168,7 +168,8 @@ const editorRef = useRef(null);
       // Show success message
       showToast('Reply sent successfully!', 'success');
       
-      dispatch(getTickets({ email: ticket.email }));
+      // Refresh only the current ticket
+      dispatch(getTicketById(ticket._id));
     } catch (error) {
       console.error('Failed to send reply:', error);
       showToast('Failed to send reply. Please try again.', 'error');
@@ -195,8 +196,8 @@ const editorRef = useRef(null);
       // Show success message
       showToast('Ticket closed successfully!', 'success');
       
-      // Refresh tickets list
-      dispatch(getTickets({ email: ticket.email }));
+      // Refresh only the current ticket
+      dispatch(getTicketById(ticket._id));
       
       // Switch to closed tab
       setActiveTab('closed');
@@ -220,8 +221,8 @@ const editorRef = useRef(null);
       // Show success message
       showToast('Ticket reopened successfully!', 'success');
       
-      // Refresh tickets list
-      dispatch(getTickets({ email: ticket.email }));
+      // Refresh only the current ticket
+      dispatch(getTicketById(ticket._id));
       
       // Switch to open tab
       setActiveTab('open');
@@ -260,7 +261,7 @@ const editorRef = useRef(null);
     <div className="text-white">
       <div>
         <h1 className="text-[32px] font-medium inline-block pb-1">Support Center</h1>
-        <p className="text-[20px] opacity-70 mt-1">Let's make the day productive</p>
+        <p className="text-[20px] opacity-70 mt-1">Ticket #{ticket._id?.slice(-8) || 'N/A'}</p>
       </div>
 
       <div
