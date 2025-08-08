@@ -4,17 +4,14 @@ import Looper3 from "../../../assets/resultOverView/Looper-3.png";
 const cards = [
   {
     icon: (
-      <svg width="32" height="32" fill="none" viewBox="0 0 32 32">
-        <circle cx="16" cy="16" r="16" fill="#12DCF0" fillOpacity="0.2" />
-        <path
-          d="M16 8v8l5 3"
-          stroke="#232432"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+      <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFFFFF47' }}>
+        <img 
+          src="/dashoboardIcons/Group.png" 
+          alt="New Subscribers" 
+          width="25" 
+          height="25"
         />
-        <circle cx="16" cy="16" r="7" stroke="#232432" strokeWidth="2" />
-      </svg>
+      </div>
     ),
     title: "New Subscribers",
     value: "+124",
@@ -26,25 +23,14 @@ const cards = [
   },
   {
     icon: (
-      <svg width="32" height="32" fill="none" viewBox="0 0 32 32">
-        <circle
-          cx="16"
-          cy="16"
-          r="14"
-          stroke="#fff"
-          strokeWidth="2"
-          fill="#fff"
-          fillOpacity="0.08"
+      <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFFFFF47' }}>
+        <img 
+          src="/dashoboardIcons/Group (1).png" 
+          alt="Delinquent Subscriber" 
+          width="25" 
+          height="25"
         />
-        <path
-          d="M10 18c0-2 4-2 4 0m4 0c0-2 4-2 4 0"
-          stroke="#fff"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        <circle cx="12" cy="14" r="2" fill="#fff" fillOpacity="0.5" />
-        <circle cx="20" cy="14" r="2" fill="#fff" fillOpacity="0.5" />
-      </svg>
+      </div>
     ),
     title: "Delinquent Subscriber",
     value: "25",
@@ -55,23 +41,14 @@ const cards = [
   },
   {
     icon: (
-      <svg width="32" height="32" fill="none" viewBox="0 0 32 32">
-        <rect
-          x="8"
-          y="8"
-          width="16"
-          height="16"
-          rx="4"
-          fill="#fff"
-          fillOpacity="0.08"
+      <div className="w-12 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFFFFF47' }}>
+        <img 
+          src="/dashoboardIcons/Group (2).png" 
+          alt="Average Quiz Completion Time" 
+          width="15" 
+          height="15"
         />
-        <path
-          d="M12 16h8M16 12v8"
-          stroke="#fff"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-      </svg>
+      </div>
     ),
     title: "Average Quiz Completion Time",
     value: "2m 14s",
@@ -82,23 +59,14 @@ const cards = [
   },
   {
     icon: (
-      <svg width="32" height="32" fill="none" viewBox="0 0 32 32">
-        <rect
-          x="8"
-          y="8"
-          width="16"
-          height="16"
-          rx="4"
-          fill="#fff"
-          fillOpacity="0.08"
+      <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFFFFF47' }}>
+        <img 
+          src="/dashoboardIcons/Group (2).png" 
+          alt="Heading Here" 
+          width="15" 
+          height="15"
         />
-        <path
-          d="M16 12v8"
-          stroke="#fff"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-      </svg>
+      </div>
     ),
     title: "Heading Here",
     value: "$825,491.73",
@@ -111,7 +79,7 @@ const cards = [
 
 const Cards = () => {
   return (
-    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 w-full mt-7">
+    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 w-full mt-7 ">
       {cards.map((card, i) => (
         <div
           key={i}
@@ -133,7 +101,7 @@ const Cards = () => {
             {card.icon}
             <span className="text-base font-medium">{card.title}</span>
           </div>
-          <div className="z-10 text-3xl font-bold mb-2 px-8">{card.value}</div>
+          <div className="z-10 text-2xl font-bold mb-2 ">{card.value}</div>
           <div className="z-10 flex items-end justify-between w-full mt-auto">
             <span
               className={`text-xs font-medium ${

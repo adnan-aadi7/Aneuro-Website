@@ -1,14 +1,36 @@
 import Openticket from '../../components/support&feedback/openticket';
 import Closeticket from '../../components/support&feedback/closeticket';
+import CloseTicketReply from '../../components/support&feedback/CloseTicketReply';
 import React, { useState, useRef, useEffect } from 'react';
 import { Bold, Italic, Underline, Strikethrough, Link, Paperclip, Image, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, ListOrdered } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { getTickets, addReplyToTicket, updateTicketStatus } from '../../../store/Slice/TicketSlice';
 
 const Userdetail = () => {
+  const location = useLocation();
+  const ticket = location.state?.ticket;
+  const dispatch = useDispatch();
+  const allTickets = useSelector((state) => state.ticket.tickets);
   const [activeTab, setActiveTab] = useState('open');
   const [showReply, setShowReply] = useState(false);
   const [replyText, setReplyText] = useState('');
+  const [closeLoading, setCloseLoading] = useState(false);
+  const [replyLoading, setReplyLoading] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 const editorRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  // Fetch all tickets for this user on mount
+  useEffect(() => {
+    if (ticket?.email) {
+      dispatch(getTickets({ email: ticket.email }));
+    }
+  }, [dispatch, ticket?.email]);
+
+  // Filter tickets by status
+  const openTickets = allTickets.filter(t => t.status !== 'CLOSED');
+  const closedTickets = allTickets.filter(t => t.status === 'CLOSED');
 
   // Execute formatting commands
   const executeCommand = (command, value = null) => {
@@ -67,19 +89,90 @@ const editorRef = useRef(null);
   };
 
   // Handle send
-  const handleSend = () => {
+  const handleSend = async () => {
     const htmlContent = getHtmlContent();
-    const plainTextContent = getPlainTextContent();
+    if (!ticket?._id) return;
     
-    console.log('Reply Sent (HTML):', htmlContent);
-    console.log('Reply Sent (Plain Text):', plainTextContent);
-    
-    // Clear the editor
+    setReplyLoading(true);
+    try {
+      await dispatch(addReplyToTicket({
+        ticketId: ticket._id,
+        replyData: {
+          message: htmlContent,
+          repliedBy: 'admin',
+        },
+      }));
+      
+      // Show success message
+      showToast('Reply sent successfully!', 'success');
+      
+      dispatch(getTickets({ email: ticket.email }));
+    } catch (error) {
+      console.error('Failed to send reply:', error);
+      showToast('Failed to send reply. Please try again.', 'error');
+    } finally {
+      setReplyLoading(false);
+    }
     if (editorRef.current) {
       editorRef.current.innerHTML = '';
       setReplyText('');
     }
+  };
+
+  // Show toast message
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
+  };
+
+  // Handle close ticket
+  const handleCloseTicket = async () => {
+    if (!ticket?._id) return;
     
+    setCloseLoading(true);
+    try {
+      await dispatch(updateTicketStatus({ 
+        ticketId: ticket._id, 
+        status: 'CLOSED' 
+      })).unwrap();
+      
+      // Show success message
+      showToast('Ticket closed successfully!', 'success');
+      
+      // Refresh tickets list
+      dispatch(getTickets({ email: ticket.email }));
+      
+      // Switch to closed tab
+      setActiveTab('closed');
+      setShowReply(false);
+    } catch (error) {
+      console.error('Failed to close ticket:', error);
+      showToast('Failed to close ticket. Please try again.', 'error');
+    } finally {
+      setCloseLoading(false);
+    }
+  };
+
+  // Handle reopen ticket
+  const handleReopenTicket = async (ticketId) => {
+    try {
+      await dispatch(updateTicketStatus({ 
+        ticketId: ticketId, 
+        status: 'OPEN' 
+      })).unwrap();
+      
+      // Show success message
+      showToast('Ticket reopened successfully!', 'success');
+      
+      // Refresh tickets list
+      dispatch(getTickets({ email: ticket.email }));
+      
+      // Switch to open tab
+      setActiveTab('open');
+    } catch (error) {
+      console.error('Failed to reopen ticket:', error);
+      showToast('Failed to reopen ticket. Please try again.', 'error');
+    }
   };
   const formatButtons = [
     { icon: Bold, label: 'Bold', command: 'bold' },
@@ -128,29 +221,38 @@ const editorRef = useRef(null);
           <div className="flex flex-col md:flex-row gap-3  md:justify-between md:items-center">
             <div className="flex items-center gap-4">
               <img
-                src="/Frame 1000006611.png"
-                alt="avatar"
+                src={ticket?.profileImage || "/Frame 1000006611.png"}
+                alt={ticket?.name || "avatar"}
                 className="w-12 h-12 rounded-full object-cover"
               />
               <div>
-                <p className="font-semibold">Devon Lane</p>
-                <p className="text-sm text-gray-400">yourname@gmail.com</p>
+                <p className="font-semibold">{ticket?.name || "No Name"}</p>
+                <p className="text-sm text-gray-400">{ticket?.email || "No Email"}</p>
               </div>
             </div>
 
             <div className="flex gap-3">
-              <select className="bg-transparent border border-gray-600 px-4 py-2  text-sm outline-none">
+              <select className="bg-[#2A2A39] border border-gray-600 px-4 py-2  text-sm outline-none">
                 <option>Assign To Admin</option>
                 <option>Support Agent</option>
               </select>
 
               {activeTab === 'open' && (
-                <button
-                  onClick={() => setShowReply(!showReply)}
-                  className="bg-transparent cursor-pointer border border-gray-600 px-4 py-2 text-sm  font-medium"
-                >
-                  Reply To This
-                </button>
+                <>
+                  <button
+                    onClick={() => setShowReply(!showReply)}
+                    className="bg-transparent cursor-pointer border border-gray-600 px-4 py-2 text-sm font-medium"
+                  >
+                    Reply To This
+                  </button>
+                  <button
+                    onClick={handleCloseTicket}
+                    disabled={closeLoading}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 text-sm font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {closeLoading ? 'Closing...' : 'Close Ticket'}
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -186,13 +288,17 @@ const editorRef = useRef(null);
           </div>
 
           {/* Ticket Message */}
-          {activeTab === 'open' && <Openticket />}
-          {activeTab === 'closed' && <Closeticket />}
+          {activeTab === 'open' && <Openticket tickets={openTickets} />}
+          {activeTab === 'closed' && (
+            <div className="mt-8">
+              <Closeticket tickets={closedTickets} onReopenTicket={handleReopenTicket} />
+            </div>
+          )}
 
           {/* Reply Section (only in open tab) */}
           {activeTab === 'open' && showReply && (
             <div className=" mt-8   ">
-        <h2 className="text-xl font-medium text-white mb-6">Reply to Devon</h2>
+        <h2 className="text-xl font-medium text-white mb-6">Reply to {ticket?.name || "User"}</h2>
         
         {/* Formatting Toolbar */}
         <div className='border border-[#FFFFFF8F] '>
@@ -313,10 +419,20 @@ const editorRef = useRef(null);
           
           <button
             onClick={handleSend}
-            className="px-12 cursor-pointer py-3 bg-[#12DCF0] text-black font-semibold mt-5"
-            disabled={!replyText.trim()}
+            disabled={!replyText.trim() || replyLoading}
+            className="px-12 cursor-pointer py-3 bg-[#12DCF0] text-black font-semibold mt-5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Send
+            {replyLoading ? (
+              <>
+                <svg className="animate-spin h-5 w-5 mr-2 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                </svg>
+                Sending...
+              </>
+            ) : (
+              "Send"
+            )}
           </button>
         </div>
 
@@ -325,6 +441,17 @@ const editorRef = useRef(null);
           )}
         </div>
       </div>
+      
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transition-all duration-300 ${
+          toast.type === 'success' 
+            ? 'bg-green-600 text-white' 
+            : 'bg-red-600 text-white'
+        }`}>
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 };

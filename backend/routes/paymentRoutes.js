@@ -7,7 +7,9 @@ import {
   getUserSubscription, 
   getAllPayments,
   getStripeProducts,
-  upgradeSubscription
+  upgradeSubscription,
+  getUserCardInfo,
+  getUserPaymentMethods
 } from '../controller/PaymentController.js';
 
 const router = express.Router();
@@ -29,6 +31,12 @@ router.get('/user-payments/:userId', getUserPayments);
 
 // Get user subscription status
 router.get('/user-subscription/:userId', getUserSubscription);
+
+// Get user card information
+router.get('/user-card-info/:userId', getUserCardInfo);
+
+// Get user payment methods (all types)
+router.get('/user-payment-methods/:userId', getUserPaymentMethods);
 
 // Get all payments (admin route)
 router.get('/all-payments', getAllPayments);

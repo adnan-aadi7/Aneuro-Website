@@ -1,28 +1,16 @@
-const Billinghistory = () => {
-  const billingData = [
-    {
-      id: "#53535",
-      amount: "$200",
-      plan: "Premium",
-      period: "May 1–May 31, 2025",
-      status: "Paid",
-    },
-    {
-      id: "#53535",
-      amount: "$200",
-      plan: "Premium",
-      period: "May 1–May 31, 2025",
-      status: "Paid",
-    },
-    {
-      id: "#53535",
-      amount: "$200",
-      plan: "Premium",
-      period: "May 1–May 31, 2025",
-      status: "Paid",
-    },
-    // You can add more rows here
-  ];
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { fetchUserPayments } from "../../../store/Slice/PaymentSlice";
+
+const Billinghistory = ({ user }) => {
+  const dispatch = useDispatch();
+  const { userPayments, userPaymentsLoading, userPaymentsError } = useSelector((state) => state.payment);
+
+  useEffect(() => {
+    if (user?._id) {
+      dispatch(fetchUserPayments(user._id));
+    }
+  }, [dispatch, user?._id]);
 
   return (
     <div className="text-white w-full px-4 md:px-6">
@@ -32,11 +20,10 @@ const Billinghistory = () => {
           Download your previous plan receipts and usage details
         </p>
       </div>
-
       <div className="mt-6 w-full overflow-x-auto">
         <table className="w-full  border-separate border-spacing-y-3">
           <thead>
-            <tr className="">
+            <tr className="text-left">
               <th className="pb-2 border-b-2 border-slate-300 whitespace-nowrap px-4">
                 Transaction ID
               </th>
@@ -47,7 +34,7 @@ const Billinghistory = () => {
                 Subscription Plan
               </th>
               <th className="pb-2 border-b-2 border-slate-300 whitespace-nowrap px-4">
-                Billing Period
+                Billing Date
               </th>
               <th className="pb-2 border-b-2 border-slate-300 whitespace-nowrap px-4">
                 Status
@@ -55,27 +42,35 @@ const Billinghistory = () => {
             </tr>
           </thead>
           <tbody>
-            {billingData.map((item, idx) => (
-              <tr key={idx} className="text-sm text-center">
-                <td className="py-3 border-b-2 border-slate-300  px-4">
-                  {item.id}
-                </td>
-                <td className="py-3 border-b-2 border-slate-300  px-4">
-                  {item.amount}
-                </td>
-                <td className="py-3 border-b-2 border-slate-300  px-4">
-                  {item.plan}
-                </td>
-                <td className="py-3 border-b-2 border-slate-300  px-4">
-                  {item.period}
-                </td>
-                <td className="py-3 border-b-2 border-slate-300  px-4">
-                  <span className="bg-[#D9FDEB] text-[#2C6B47] px-3 py-1 text-xs font-medium rounded-full">
-                    {item.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
+            {userPaymentsLoading ? (
+              <tr><td colSpan="5">Loading...</td></tr>
+            ) : userPaymentsError ? (
+              <tr><td colSpan="5" className="text-red-400">{userPaymentsError}</td></tr>
+            ) : userPayments && userPayments.length > 0 ? (
+              userPayments.map((item, idx) => (
+                <tr key={item._id || idx} className="text-sm text-left">
+                  <td className="py-3 border-b-2 border-slate-300  px-4">
+                    {item.stripePaymentIntentId || item._id || "-"}
+                  </td>
+                  <td className="py-3 border-b-2 border-slate-300  px-4">
+                    {item.amount ? `$${item.amount}` : "-"}
+                  </td>
+                  <td className="py-3 border-b-2 border-slate-300  px-4">
+                    {item.plan || "-"}
+                  </td>
+                  <td className="py-3 border-b-2 border-slate-300  px-4">
+                    {item.billingDate ? new Date(item.billingDate).toLocaleDateString() : "-"}
+                  </td>
+                  <td className="py-3 border-b-2 border-slate-300  px-4">
+                    <span className="bg-[#D9FDEB] text-[#2C6B47] px-3 py-1 text-xs font-medium rounded-full">
+                      {item.status || "-"}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr><td colSpan="5">No billing history found.</td></tr>
+            )}
           </tbody>
         </table>
       </div>
