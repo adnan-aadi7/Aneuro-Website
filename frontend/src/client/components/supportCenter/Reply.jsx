@@ -40,15 +40,19 @@ const Reply = ({ ticketId }) => {
           </div>
           {/* Subject */}
           <div className="mt-2 mb-2">
-            <span className="font-semibold text-white text-lg">
-              {ticket.subject || "Support Ticket"} – Ticket #{ticketId}
-            </span>
+          <span className="font-semibold text-white text-lg">
+  {ticket.category?.length
+    ? typeof ticket.category === "string"
+      ? ticket.category
+      : ticket.category.join(", ")
+    : "Support Ticket"} – Ticket #{ticketId}
+</span>
           </div>
           {/* Greeting and Reply Message */}
           <div className="text-gray-200 text-sm mb-4 mt-2">
             <p className="mb-2">Hi {ticket.name},</p>
             <p className="mb-4">{reply.message}</p>
-            <p className="mb-2">Thank You For Your Patience.<br />Regards,</p>
+            <p className="mb-2">Thank You For Your Patience.<br />Regards,<br />Support Center</p>
           </div>
         </div>
       ))}

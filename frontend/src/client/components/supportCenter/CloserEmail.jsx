@@ -1,6 +1,6 @@
 import React from "react";
 
-const CloserEmail = () => {
+const CloserEmail = ({ email }) => {
   return (
     <div
       className="max-w-full mx-auto mt-8 p-15  bg-[#232432] relative"
@@ -11,13 +11,13 @@ const CloserEmail = () => {
       {/* User Info */}
       <div className="flex items-center mb-2">
         <img
-          src="https://randomuser.me/api/portraits/men/32.jpg"
-          alt="Aneuro Support"
-          className="w-8 h-8 rounded-full object-cover border border-gray-500 mr-3"
+          src="/logo.png"
+          alt="ANEURO"
+          className="w-12 h-12 rounded-full  bg-white mr-3"
         />
         <div>
           <span className="font-semibold text-white mr-2">Reply To:</span>
-          <span className="text-white">Devon Lane 13@gmail.</span>
+          <span className="text-white">{email || "13@gmail."}</span>
         </div>
       </div>
       {/* Closure Message */}

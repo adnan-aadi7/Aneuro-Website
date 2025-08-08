@@ -30,6 +30,7 @@ const Header = () => {
       setSelectedTicketId(null);
     }
   }, [tickets]);
+
   return (
     <div className="  py-6 px-1">
       <h1 className="text-4xl font-semibold text-white mb-2">
@@ -62,7 +63,13 @@ const Header = () => {
       )}
       {activeTab === "Closure" && (
         <div className="mt-8">
-          <CloserEmail />
+          {tickets && tickets.length > 0 ? (
+            <CloserEmail 
+              email={userEmail}
+            />
+          ) : (
+            <div className="text-gray-400 text-center py-8">No closed tickets found.</div>
+          )}
         </div>
       )}
     </div>

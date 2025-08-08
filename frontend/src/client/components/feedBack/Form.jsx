@@ -14,6 +14,10 @@ const CATEGORY_OPTIONS = [
 ];
 
 const Form = () => {
+  const dispatch = useDispatch();
+  const { createStatus, error } = useSelector((state) => state.ticket);
+  const currentUser = useSelector((state) => state.user.user);
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -26,10 +30,19 @@ const Form = () => {
   const [showThank, setShowThank] = useState(false);
   const dropdownRef = useRef(null);
 
-  const dispatch = useDispatch();
-  const { createStatus, error } = useSelector((state) => state.ticket);
-
   const fileInputRef = useRef(null);
+
+  // Populate form with user data when component mounts or user changes
+  useEffect(() => {
+    if (currentUser) {
+      setForm(prev => ({
+        ...prev,
+        name: currentUser.name || currentUser.firstName || "",
+        email: currentUser.email || "",
+        mobile: currentUser.mobileNumber || currentUser.phone || "",
+      }));
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -134,21 +147,24 @@ const Form = () => {
             value={form.name}
             onChange={handleInputChange}
             placeholder="Name"
-            className="bg-[#23232C] text-white px-4 py-3 rounded focus:outline-none placeholder-gray-400"
+            readOnly
+            className="bg-[#23232C] text-white px-4 py-3 rounded focus:outline-none placeholder-gray-400 opacity-60 cursor-not-allowed"
           />
           <input
             name="email"
             value={form.email}
             onChange={handleInputChange}
             placeholder="Email"
-            className="bg-[#23232C] text-white px-4 py-3 rounded focus:outline-none placeholder-gray-400"
+            readOnly
+            className="bg-[#23232C] text-white px-4 py-3 rounded focus:outline-none placeholder-gray-400 opacity-60 cursor-not-allowed"
           />
           <input
             name="mobile"
             value={form.mobile}
             onChange={handleInputChange}
             placeholder="Mobile Number"
-            className="bg-[#23232C] text-white px-4 py-3 rounded focus:outline-none placeholder-gray-400"
+            readOnly
+            className="bg-[#23232C] text-white px-4 py-3 rounded focus:outline-none placeholder-gray-400 opacity-60 cursor-not-allowed"
           />
           {/* Category Dropdown */}
           <div className="relative">

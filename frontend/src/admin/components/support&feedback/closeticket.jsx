@@ -1,12 +1,13 @@
 import React from 'react';
 import { Download } from 'lucide-react';
+import CloseTicketReply from './CloseTicketReply';
 
-const Closeticket = ({ tickets = [] }) => {
+const Closeticket = ({ tickets = [], onReopenTicket }) => {
   if (!tickets.length) {
     return <div className="py-12 text-white px-4 md:px-8 mt-6">No closed tickets found.</div>;
   }
   return (
-    <div>
+    <div className=''>
       {tickets.map((ticket) => (
         <div
           key={ticket._id}
@@ -16,6 +17,7 @@ const Closeticket = ({ tickets = [] }) => {
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'center',
+            boxShadow: "0 0 0  inset, 0 2px 25px 0 #0e7490 inset"
           }}
         >
           {/* Subject (use first category or fallback) */}
@@ -57,6 +59,12 @@ const Closeticket = ({ tickets = [] }) => {
               </a>
             </div>
           )}
+          
+          {/* Close Ticket Reply */}
+          <CloseTicketReply 
+            ticket={ticket} 
+            onReopenTicket={() => onReopenTicket && onReopenTicket(ticket._id)}
+          />
         </div>
       ))}
     </div>
