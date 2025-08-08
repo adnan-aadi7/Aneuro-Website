@@ -71,47 +71,9 @@ router.post("/signup", async (req, res) => {
 
 /**
  * @swagger
- * /api/login:
- *   post:
- *     summary: Login a user
- *     tags: [Users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: Login successful
- *       400:
- *         description: Invalid credentials
- *       500:
- *         description: Internal server error
- */
-router.post("/login", async (req, res) => {
-  try {
-    const result = await Login(req.body);
-    res.status(200).json(result);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-
-/**
- * @swagger
  * /api/users:
  *   get:
- *     summary: Get all users with pagination and optional accountStatus filter
+ *     summary: Get all users with pagination and optional filters
  *     tags: [Users]
  *     parameters:
  *       - in: query
@@ -119,26 +81,36 @@ router.post("/login", async (req, res) => {
  *         schema:
  *           type: integer
  *         default: 1
+ *         description: Page number for pagination
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
  *         default: 10
+ *         description: Number of users per page
  *       - in: query
  *         name: accountStatus
  *         schema:
  *           type: string
  *           enum: [active, suspended]
+ *         description: Filter users by account status
+ *       - in: query
+ *         name: userType
+ *         schema:
+ *           type: string
+ *           enum: [admin, user]
+ *         description: Filter users by user type
  *     responses:
  *       200:
  *         description: List of users
  *       500:
  *         description: Internal server error
  */
+
 router.get("/users", async (req, res) => {
   try {
-    const { page, limit, accountStatus } = req.query;
-    const result = await getAllUsers({ page, limit, accountStatus });
+const { page, limit, accountStatus, userType } = req.query;
+const result = await getAllUsers({ page, limit, accountStatus, userType });
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });

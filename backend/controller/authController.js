@@ -95,13 +95,17 @@ export async function Login(reqBody) {
   }
 }
 
-//get api
-export async function getAllUsers({ page = 1, limit = 10, accountStatus }) {
+export async function getAllUsers({ page = 1, limit = 10, accountStatus, userType }) {
   await connectDB();
 
   const query = {};
+
   if (accountStatus && accountStatus !== "all") {
     query.accountStatus = accountStatus;
+  }
+
+  if (userType && userType !== "all") {
+    query.userType = userType;
   }
 
   const users = await User.find(query)
@@ -128,6 +132,7 @@ export async function getAllUsers({ page = 1, limit = 10, accountStatus }) {
     totalPages: Math.ceil(total / limit),
   };
 }
+
 
 export async function getUserById({ id, accountStatus }) {
   await connectDB();
