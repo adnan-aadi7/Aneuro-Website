@@ -3,15 +3,18 @@ import Closeticket from '../../components/support&feedback/closeticket';
 import CloseTicketReply from '../../components/support&feedback/CloseTicketReply';
 import React, { useState, useRef, useEffect } from 'react';
 import { Bold, Italic, Underline, Strikethrough, Link, Paperclip, Image, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, ListOrdered } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { getTickets, addReplyToTicket, updateTicketStatus } from '../../../store/Slice/TicketSlice';
+import { getTickets, addReplyToTicket, updateTicketStatus, getTicketById } from '../../../store/Slice/TicketSlice';
 
 const Userdetail = () => {
   const location = useLocation();
-  const ticket = location.state?.ticket;
+  const { ticketId } = useParams();
+  const ticketFromState = location.state?.ticket;
   const dispatch = useDispatch();
   const allTickets = useSelector((state) => state.ticket.tickets);
+  const currentTicket = useSelector((state) => state.ticket.currentTicket);
+  const { loading, error } = useSelector((state) => state.ticket);
   const [activeTab, setActiveTab] = useState('open');
   const [showReply, setShowReply] = useState(false);
   const [replyText, setReplyText] = useState('');
@@ -21,12 +24,71 @@ const Userdetail = () => {
 const editorRef = useRef(null);
   const fileInputRef = useRef(null);
 
+  // Determine which ticket to use
+  const ticket = ticketFromState || currentTicket;
+
+  // Show toast message
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
+  };
+
+  // Fetch ticket by ID if not available in state
+  useEffect(() => {
+    if (ticketId && !ticketFromState) {
+      dispatch(getTicketById(ticketId));
+    }
+  }, [dispatch, ticketId, ticketFromState]);
+
   // Fetch all tickets for this user on mount
   useEffect(() => {
     if (ticket?.email) {
       dispatch(getTickets({ email: ticket.email }));
     }
   }, [dispatch, ticket?.email]);
+
+  // Show error toast if there's an error
+  useEffect(() => {
+    if (error) {
+      showToast(error, 'error');
+    }
+  }, [error]);
+
+  // Show toast for no ticket found
+  useEffect(() => {
+    if (!loading && !ticket && ticketId) {
+      showToast('Ticket not found', 'error');
+    }
+  }, [loading, ticket, ticketId]);
+
+  // Loading state
+  if (loading && !ticket) {
+    return (
+      <div className="text-white flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#12DCF0] mx-auto mb-4"></div>
+          <p>Loading ticket details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // No ticket found - show empty state with toast
+  if (!ticket) {
+    return (
+      <div className="text-white flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-gray-400 mb-4">No ticket data available</p>
+          <button 
+            onClick={() => window.history.back()}
+            className="bg-[#12DCF0] text-black px-4 py-2 rounded"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Filter tickets by status
   const openTickets = allTickets.filter(t => t.status !== 'CLOSED');
@@ -117,12 +179,6 @@ const editorRef = useRef(null);
       editorRef.current.innerHTML = '';
       setReplyText('');
     }
-  };
-
-  // Show toast message
-  const showToast = (message, type = 'success') => {
-    setToast({ show: true, message, type });
-    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
   };
 
   // Handle close ticket
@@ -444,12 +500,23 @@ const editorRef = useRef(null);
       
       {/* Toast Notification */}
       {toast.show && (
-        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transition-all duration-300 ${
+        <div className={`fixed top-4 right-4 z-[9999] px-6 py-3 rounded-lg shadow-lg transition-all duration-300 transform translate-x-0 ${
           toast.type === 'success' 
-            ? 'bg-green-600 text-white' 
-            : 'bg-red-600 text-white'
+            ? 'bg-green-600 text-white border border-green-500' 
+            : 'bg-red-600 text-white border border-red-500'
         }`}>
-          {toast.message}
+          <div className="flex items-center gap-2">
+            {toast.type === 'success' ? (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            )}
+            {toast.message}
+          </div>
         </div>
       )}
     </div>

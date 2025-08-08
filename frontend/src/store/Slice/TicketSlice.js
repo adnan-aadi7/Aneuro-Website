@@ -221,6 +221,8 @@ const ticketSlice = createSlice({
         state.status = 'succeeded';
         state.loading = false;
         state.tickets = action.payload.tickets;
+        state.count = action.payload.count;
+        state.pagination = action.payload.pagination;
         state.error = null;
       })
       .addCase(getTickets.rejected, (state, action) => {

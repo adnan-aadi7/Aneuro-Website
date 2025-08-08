@@ -293,7 +293,7 @@ function App() {
           }
         />
         <Route
-          path="/admin/support/feedback/user-detail"
+          path="/admin/support/feedback/user-detail/:ticketId"
           element={
             <AdminLayout>
               <Userdetail />

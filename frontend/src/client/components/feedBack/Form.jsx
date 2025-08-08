@@ -28,9 +28,19 @@ const Form = () => {
   });
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showThank, setShowThank] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
   const dropdownRef = useRef(null);
 
   const fileInputRef = useRef(null);
+
+  // Show error toast when there's an error
+  useEffect(() => {
+    if (error && createStatus === 'failed') {
+      setToast({ show: true, message: error, type: 'error' });
+      // Auto-hide toast after 5 seconds
+      setTimeout(() => setToast({ show: false, message: '', type: 'error' }), 5000);
+    }
+  }, [error, createStatus]);
 
   // Populate form with user data when component mounts or user changes
   useEffect(() => {
@@ -109,15 +119,11 @@ const Form = () => {
     // Check if the ticket was created successfully
     if (createTicket.fulfilled.match(resultAction)) {
       setShowThank(true);
-      // Optionally reset the form here
-      setForm({
-        name: "",
-        email: "",
-        mobile: "",
+      // Only clear the message field, keep other fields
+      setForm(prev => ({
+        ...prev,
         message: "",
-        categories: ["Quiz Problem", "Bug/Error Report"],
-        file: null,
-      });
+      }));
     } else {
       // Error feedback is handled below
     }
@@ -138,9 +144,6 @@ const Form = () => {
   return (
     <>
       <form className="w-full max-w-full mx-auto mt-4" onSubmit={handleSubmit}>
-        {createStatus === "failed" && error && (
-          <div className="text-red-400 text-center mb-2">{error}</div>
-        )}
         <div className="flex flex-col gap-4">
           <input
             name="name"
@@ -163,8 +166,7 @@ const Form = () => {
             value={form.mobile}
             onChange={handleInputChange}
             placeholder="Mobile Number"
-            readOnly
-            className="bg-[#23232C] text-white px-4 py-3 rounded focus:outline-none placeholder-gray-400 opacity-60 cursor-not-allowed"
+            className="bg-[#23232C] text-white px-4 py-3 rounded focus:outline-none placeholder-gray-400"
           />
           {/* Category Dropdown */}
           <div className="relative">
@@ -275,6 +277,23 @@ const Form = () => {
           </div>
         </div>
       </form>
+      
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className={`fixed top-4 right-4 z-[9999] px-6 py-3 rounded-lg shadow-lg transition-all duration-300 transform translate-x-0 ${
+          toast.type === 'error' 
+            ? 'bg-red-600 text-white border border-red-500' 
+            : 'bg-green-600 text-white border border-green-500'
+        }`}>
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            {toast.message}
+          </div>
+        </div>
+      )}
+      
       {showThank && <ThankPopup onClose={() => setShowThank(false)} />}
     </>
   );
