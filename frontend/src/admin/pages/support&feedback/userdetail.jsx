@@ -5,7 +5,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Bold, Italic, Underline, Strikethrough, Link, Paperclip, Image, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, ListOrdered } from 'lucide-react';
 import { useLocation, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { addReplyToTicket, updateTicketStatus, getTicketById } from '../../../store/Slice/TicketSlice';
+import { addReplyToTicket, updateTicketStatus, getTicketById, assignTicket } from '../../../store/Slice/TicketSlice';
 
 const Userdetail = () => {
   const location = useLocation();
@@ -19,6 +19,8 @@ const Userdetail = () => {
   const [replyText, setReplyText] = useState('');
   const [closeLoading, setCloseLoading] = useState(false);
   const [replyLoading, setReplyLoading] = useState(false);
+  const [assignLoading, setAssignLoading] = useState(false);
+  const [selectedAdmin, setSelectedAdmin] = useState('');
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 const editorRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -66,6 +68,11 @@ const editorRef = useRef(null);
       showToast('Ticket not found', 'error');
     }
   }, [loading, ticket, ticketId]);
+
+  // Reset selected admin when ticket changes
+  useEffect(() => {
+    setSelectedAdmin('');
+  }, [ticket?._id]);
 
   // Loading state
   if (loading && !ticket) {
@@ -237,6 +244,33 @@ const editorRef = useRef(null);
       showToast('Failed to reopen ticket. Please try again.', 'error');
     }
   };
+
+  // Handle assign ticket
+  const handleAssignTicket = async () => {
+    if (!selectedAdmin || !ticket?._id) return;
+    
+    setAssignLoading(true);
+    try {
+      await dispatch(assignTicket({
+        ticketId: ticket._id,
+        assignedTo: selectedAdmin
+      })).unwrap();
+      
+      // Show success message
+      showToast(`Ticket assigned to ${selectedAdmin} successfully!`, 'success');
+      
+      // Refresh only the current ticket
+      dispatch(getTicketById(ticket._id));
+      
+      // Reset selection
+      setSelectedAdmin('');
+    } catch (error) {
+      console.error('Failed to assign ticket:', error);
+      showToast('Failed to assign ticket. Please try again.', 'error');
+    } finally {
+      setAssignLoading(false);
+    }
+  };
   const formatButtons = [
     { icon: Bold, label: 'Bold', command: 'bold' },
     { icon: Italic, label: 'Italic', command: 'italic' },
@@ -287,11 +321,31 @@ const editorRef = useRef(null);
               </div>
             </div>
 
-            <div className="flex gap-3">
-              <select className="bg-[#2A2A39] border border-gray-600 px-4 py-2  text-sm outline-none">
-                <option>Assign To Admin</option>
-                <option>Support Agent</option>
-              </select>
+            <div className="flex gap-3 flex-wrap">
+              <div className="flex gap-2">
+                <select 
+                  value={selectedAdmin} 
+                  onChange={(e) => setSelectedAdmin(e.target.value)}
+                  className="bg-[#2A2A39] border border-gray-600 px-1 py-2 text-sm outline-none text-white"
+                >
+                  {/* <option value="">
+                    {ticket?.assignedTo ? `Currently: ${ticket.assignedTo}` : 'Assign To Admin'}
+                  </option> */}
+                  <option value="Admin 1">Admin</option>
+                  <option value="Admin 2">Support Agent</option>
+                  
+                </select>
+                
+                {selectedAdmin && (
+                  <button
+                    onClick={handleAssignTicket}
+                    disabled={assignLoading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 text-sm font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {assignLoading ? 'Assigning...' : 'Assign'}
+                  </button>
+                )}
+              </div>
 
               {activeTab === 'open' && (
                 <>
