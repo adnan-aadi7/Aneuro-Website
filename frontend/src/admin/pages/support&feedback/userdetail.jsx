@@ -5,14 +5,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Bold, Italic, Underline, Strikethrough, Link, Paperclip, Image, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, ListOrdered } from 'lucide-react';
 import { useLocation, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { getTickets, addReplyToTicket, updateTicketStatus, getTicketById } from '../../../store/Slice/TicketSlice';
+import { addReplyToTicket, updateTicketStatus, getTicketById } from '../../../store/Slice/TicketSlice';
 
 const Userdetail = () => {
   const location = useLocation();
   const { ticketId } = useParams();
   const ticketFromState = location.state?.ticket;
   const dispatch = useDispatch();
-  const allTickets = useSelector((state) => state.ticket.tickets);
   const currentTicket = useSelector((state) => state.ticket.currentTicket);
   const { loading, error } = useSelector((state) => state.ticket);
   const [activeTab, setActiveTab] = useState('open');
@@ -32,6 +31,13 @@ const editorRef = useRef(null);
     setToast({ show: true, message, type });
     setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
   };
+
+  // Focus the editor when component mounts
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.focus();
+    }
+  }, []);
 
   // Fetch ticket by ID if not available in state
   useEffect(() => {
@@ -249,13 +255,6 @@ const editorRef = useRef(null);
     { icon: List, label: 'Bullet List', command: 'insertUnorderedList' },
     { icon: ListOrdered, label: 'Numbered List', command: 'insertOrderedList' },
   ];
-
-  // Focus the editor when component mounts
-  useEffect(() => {
-    if (editorRef.current) {
-      editorRef.current.focus();
-    }
-  }, []);
 
   return (
     <div className="text-white">
