@@ -6,7 +6,7 @@ export const createFunnelTemplate = createAsyncThunk(
   'funnelTemplate/create',
   async (templateData, { rejectWithValue }) => {
     try {
-      const response = await axios.post('/api/funnel-templates', templateData);
+      const response = await axios.post('/funnel-templates', templateData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to create funnel template' });
@@ -18,7 +18,7 @@ export const fetchFunnelTemplates = createAsyncThunk(
   'funnelTemplate/fetchAll',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get('/api/funnel-templates');
+      const response = await axios.get('/funnel-templates');
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to fetch funnel templates' });
@@ -30,7 +30,7 @@ export const fetchFunnelTemplateById = createAsyncThunk(
   'funnelTemplate/fetchById',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`/api/funnel-templates/${id}`);
+      const response = await axios.get(`/funnel-templates/${id}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to fetch funnel template' });
@@ -42,7 +42,7 @@ export const updateFunnelTemplate = createAsyncThunk(
   'funnelTemplate/update',
   async ({ id, updateData }, { rejectWithValue }) => {
     try {
-      const response = await axios.put(`/api/funnel-templates/${id}`, updateData);
+      const response = await axios.put(`/funnel-templates/${id}`, updateData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to update funnel template' });
@@ -54,7 +54,7 @@ export const deleteFunnelTemplate = createAsyncThunk(
   'funnelTemplate/delete',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.delete(`/api/funnel-templates/${id}`);
+      const response = await axios.delete(`/funnel-templates/${id}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to delete funnel template' });
@@ -66,7 +66,7 @@ export const fetchFunnelTemplateStats = createAsyncThunk(
   'funnelTemplate/fetchStats',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get('/api/funnel-templates/stats');
+      const response = await axios.get('/funnel-templates/stats');
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to fetch funnel template stats' });

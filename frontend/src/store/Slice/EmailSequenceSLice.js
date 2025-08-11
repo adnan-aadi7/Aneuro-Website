@@ -28,7 +28,7 @@ export const createEmailSequence = createAsyncThunk(
         formData.append('emailTemplate', JSON.stringify(sequenceData.emailTemplate));
       }
       
-      const response = await axios.post('/api/email-sequences', formData, {
+      const response = await axios.post('/email-sequences', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -55,7 +55,7 @@ export const fetchEmailSequences = createAsyncThunk(
       if (params.sortBy) queryParams.append('sortBy', params.sortBy);
       if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
       
-      const response = await axios.get(`/api/email-sequences?${queryParams.toString()}`);
+      const response = await axios.get(`/email-sequences?${queryParams.toString()}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to fetch email sequences' });
@@ -67,7 +67,7 @@ export const fetchEmailSequenceById = createAsyncThunk(
   'emailSequence/fetchById',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`/api/email-sequences/${id}`);
+      const response = await axios.get(`/email-sequences/${id}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to fetch email sequence' });
@@ -79,7 +79,7 @@ export const updateEmailSequence = createAsyncThunk(
   'emailSequence/update',
   async ({ id, updateData }, { rejectWithValue }) => {
     try {
-      const response = await axios.put(`/api/email-sequences/${id}`, updateData);
+      const response = await axios.put(`/email-sequences/${id}`, updateData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to update email sequence' });
@@ -91,7 +91,7 @@ export const deleteEmailSequence = createAsyncThunk(
   'emailSequence/delete',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.delete(`/api/email-sequences/${id}`);
+      const response = await axios.delete(`/email-sequences/${id}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to delete email sequence' });
@@ -103,7 +103,7 @@ export const bulkDeleteEmailSequences = createAsyncThunk(
   'emailSequence/bulkDelete',
   async (ids, { rejectWithValue }) => {
     try {
-      const response = await axios.delete('/api/email-sequences/bulk/delete', {
+      const response = await axios.delete('/email-sequences/bulk/delete', {
         data: { ids }
       });
       return response.data;
@@ -117,7 +117,7 @@ export const fetchEmailSequenceStats = createAsyncThunk(
   'emailSequence/fetchStats',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get('/api/email-sequences/stats');
+      const response = await axios.get('/email-sequences/stats');
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to fetch email sequence stats' });
