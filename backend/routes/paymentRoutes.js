@@ -14,7 +14,6 @@ import {
 
 const router = express.Router();
 
-// Create subscription
 router.post('/create-subscription', createSubscription);
 
 // Create one-time payment intent

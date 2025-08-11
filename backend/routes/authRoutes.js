@@ -60,6 +60,7 @@ const router = express.Router();
  *         description: Internal server error
  * 
  */
+
 router.post("/signup", async (req, res) => {
   try {
     const result = await Signup(req.body);

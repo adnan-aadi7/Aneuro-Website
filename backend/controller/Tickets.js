@@ -6,7 +6,6 @@ export const createTicket = async (req, res) => {
   try {
     console.log('Incoming request');
     const { name, email, mobileNumber, category, message } = req.body;
-    // category is now expected to be an array of strings
     console.log('Body:', req.body);
 
     let fileUrl = '';

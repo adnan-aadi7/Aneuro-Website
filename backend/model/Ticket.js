@@ -18,7 +18,7 @@ const TicketSchema = new mongoose.Schema({
   },
   assignedTo: {
     type: String,
-    default: 'admin'  // 👈 Set default value here
+    default: 'admin'  
   },
   replies: [
     {
