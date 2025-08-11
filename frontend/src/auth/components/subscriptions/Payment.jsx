@@ -81,7 +81,7 @@ const VisaIcon = () => (
       // Load Stripe.js
       const loadStripe = async () => {
         try {
-          const stripeInstance = await window.Stripe('pk_test_51RnDUYHHuap1a33PaQ9XatvN6vHvqizSjYydG3kNREglcLjTp2kpbOe3KYFsOCgEuO1qj7udKoUrlKhbppCflQ0a000eMJDOjh');
+          const stripeInstance = await window.Stripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
           setStripe(stripeInstance);
           const elementsInstance = stripeInstance.elements();
           const card = elementsInstance.create('card', {
