@@ -4,7 +4,6 @@ import mongoose from 'mongoose';
 const PromptSchema = new mongoose.Schema({
   content: {
     type: String,
-    required: true,
   },
   type: {
     type: String,
@@ -27,6 +26,8 @@ const PromptPackSchema = new mongoose.Schema({
     enum: ['basic', 'premium', 'enterprise'],
     required: true,
   },
+    releaseDateTime: { type: Date, required: true },
+
   status: {
     type: String,
     enum: ['active', 'scheduled'],
@@ -37,6 +38,10 @@ const PromptPackSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  fileUrl: {
+  type: String,
+},
+
   createdDate: {
     type: Date,
     default: Date.now,

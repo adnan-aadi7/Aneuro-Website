@@ -1,5 +1,64 @@
-// controllers/promptPackController.js
 import PromptPack from "../model/Promptpack.js";
+import { uploadToCloudinary } from '../middleware/uploadToCloudinary.js'
+
+import path from 'path';
+
+export const uploadPromptPack = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    if (!req.body.tier) {
+      return res.status(400).json({ success: false, message: 'Tier is required' });
+    }
+
+    // Upload to Cloudinary
+    const cloudinaryResult = await uploadToCloudinary(req.file.buffer);
+    const fileUrl = cloudinaryResult?.secure_url;
+
+    // Parse file content
+    const fileContent = req.file.buffer.toString('utf8');
+    let prompts = [];
+
+    if (req.file.originalname.endsWith('.json')) {
+      prompts = JSON.parse(fileContent);
+    } else if (
+      req.file.originalname.endsWith('.txt') ||
+      req.file.originalname.endsWith('.md')
+    ) {
+      prompts = fileContent
+        .split('\n')
+        .filter(line => line.trim()) // remove empty lines
+        .map(line => ({
+          content: line.trim(),
+          type: 'analytical', // default type
+        }));
+    }
+
+    // Save to MongoDB
+    const newPack = new PromptPack({
+      name: path.parse(req.file.originalname).name, // filename without extension
+      category: 'General', // default category
+      tier: req.body.tier,
+      status: 'scheduled', // default status
+      prompts,
+      fileUrl, // store the Cloudinary URL
+    });
+
+    const savedPack = await newPack.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Prompt pack uploaded successfully',
+      data: savedPack,
+    });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 
 // CREATE - Create new prompt pack
 export async function create(req, res) {
@@ -417,6 +476,7 @@ export async function incrementUsage(req, res) {
 // GET STATISTICS - Get usage statistics
 export async function getStatistics(req, res) {
   try {
+    // Overall statistics
     const stats = await PromptPack.aggregate([
       {
         $group: {
@@ -425,11 +485,13 @@ export async function getStatistics(req, res) {
           totalUsage: { $sum: "$usageCount" },
           avgUsage: { $avg: "$usageCount" },
           maxUsage: { $max: "$usageCount" },
-          minUsage: { $min: "$usageCount" }
+          minUsage: { $min: "$usageCount" },
+          avgRating: { $avg: "$rating" } // overall avg rating
         }
       }
     ]);
 
+    // Category statistics
     const categoryStats = await PromptPack.aggregate([
       {
         $group: {
@@ -440,6 +502,7 @@ export async function getStatistics(req, res) {
       }
     ]);
 
+    // Tier statistics
     const tierStats = await PromptPack.aggregate([
       {
         $group: {
@@ -450,12 +513,49 @@ export async function getStatistics(req, res) {
       }
     ]);
 
+    // Status statistics (Active / Scheduled) + prompts count + avg rating
+    const statusStats = await PromptPack.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          totalPromptPacks: { $sum: 1 },
+          totalPrompts: { $sum: { $size: "$prompts" } }, // counts prompts array length
+          avgRating: { $avg: "$rating" },
+          totalUsage: { $sum: "$usageCount" }
+        }
+      }
+    ]);
+
+    const activeStats = statusStats.find(s => s._id === "active") || {
+      totalPromptPacks: 0,
+      totalPrompts: 0,
+      avgRating: 0
+    };
+
+    const scheduledStats = statusStats.find(s => s._id === "scheduled") || {
+      totalPromptPacks: 0,
+      totalPrompts: 0,
+      avgRating: 0
+    };
+
     res.status(200).json({
       success: true,
       data: {
         overall: stats[0] || {},
         byCategory: categoryStats,
-        byTier: tierStats
+        byTier: tierStats,
+        status: {
+          active: {
+            totalPacks: activeStats.totalPromptPacks,
+            totalPrompts: activeStats.totalPrompts,
+            avgRating: activeStats.avgRating
+          },
+          scheduled: {
+            totalPacks: scheduledStats.totalPromptPacks,
+            totalPrompts: scheduledStats.totalPrompts,
+            avgRating: scheduledStats.avgRating
+          }
+        }
       }
     });
   } catch (error) {

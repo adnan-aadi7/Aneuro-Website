@@ -5,12 +5,16 @@ const EmailSequenceSchema = new mongoose.Schema(
     name: { type: String, required: true },
     emailCount: { type: Number, default: 0 },
     emails: { type: Number, default: 0 },
+    opens: { type: Number, default: 0 }, // NEW
+    clicks: { type: Number, default: 0 }, // NEW
+    rating: { type: Number, default: 0 }, // NEW
 
     tier: {
       type: String,
       enum: ['basic', 'premium', 'enterprise'],
       required: true,
     },
+  releaseDateTime: { type: Date },
 
     status: {
       type: String,

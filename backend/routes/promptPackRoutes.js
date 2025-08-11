@@ -9,9 +9,10 @@ import {
   addPrompt,
   removePrompt,
   incrementUsage,
-  getStatistics
+  getStatistics,
+  uploadPromptPack
 } from '../controller/promptPackController.js';
-
+import upload from '../middleware/multer.js';
 const router = express.Router();
 
 /**
@@ -20,6 +21,63 @@ const router = express.Router();
  *   name: PromptPacks
  *   description: Prompt pack management APIs
  */
+/**
+ * @swagger
+ * /api/prompt-packs/upload:
+ *   post:
+ *     summary: Upload a prompt pack file
+ *     description: >
+ *       Uploads a `.txt`, `.json`, or `.md` file containing prompts.  
+ *       The file will be uploaded to Cloudinary, parsed, and stored in the database  
+ *       with the provided tier. Other fields like `name`, `category`, and `status`  
+ *       are set automatically by the server.
+ *     tags: [PromptPacks]
+ *     consumes:
+ *       - multipart/form-data
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - file
+ *               - tier
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: The prompt pack file to upload (.txt, .json, .md)
+ *               tier:
+ *                 type: string
+ *                 enum: [basic, premium, enterprise]
+ *                 description: Access tier for the prompt pack
+ *                 example: basic
+ *     responses:
+ *       201:
+ *         description: Prompt pack uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Prompt pack uploaded successfully
+ *                 data:
+ *                   type: object
+ *                   description: The saved prompt pack object, including Cloudinary file URL
+ *       400:
+ *         description: Bad request (e.g., missing file or tier, invalid file format)
+ *       500:
+ *         description: Server error while uploading prompt pack
+ */
+router.post('/upload', upload.single('file'), uploadPromptPack);
+
+
 
 /**
  * @swagger
@@ -253,7 +311,7 @@ router.delete('/:id/prompts/:promptId', removePrompt);
 /**
  * @swagger
  * /api/prompt-packs/{id}/usage:
- *   patch:
+ *   put:
  *     summary: Increment usage count of a prompt pack
  *     tags: [PromptPacks]
  *     parameters:
@@ -266,6 +324,6 @@ router.delete('/:id/prompts/:promptId', removePrompt);
  *       200:
  *         description: Usage count incremented
  */
-router.patch('/:id/usage', incrementUsage);
+router.put('/:id/usage', incrementUsage);
 
 export default router;

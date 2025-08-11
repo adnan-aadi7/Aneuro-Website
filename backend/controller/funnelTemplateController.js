@@ -62,3 +62,56 @@ export const deleteFunnelTemplate = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+
+
+export const getFunnelTemplateStats = async (req, res) => {
+  try {
+    const mainStats = await FunnelTemplate.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalTemplates: { $sum: 1 },
+          totalUsage: { $sum: "$usage" },
+          totalConversions: { $sum: "$conversions" },
+          averageUserRating: { $avg: "$userRating" }
+        }
+      }
+    ]);
+
+    const totalActive = await FunnelTemplate.countDocuments({ status: "active" });
+    const totalScheduled = await FunnelTemplate.countDocuments({ status: "scheduled" });
+
+    // Breakdown by tier
+    const categoryStats = await FunnelTemplate.aggregate([
+      {
+        $group: {
+          _id: "$tier",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalTemplates: mainStats[0]?.totalTemplates || 0,
+        totalUsage: mainStats[0]?.totalUsage || 0,
+        totalConversions: mainStats[0]?.totalConversions || 0,
+        averageUserRating: mainStats[0]?.averageUserRating || 0,
+        totalActive,
+        totalScheduled,
+        categoryCounts: categoryStats.reduce((acc, item) => {
+          acc[item._id] = item.count;
+          return acc;
+        }, {})
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching funnel template statistics",
+      error: error.message
+    });
+  }
+};

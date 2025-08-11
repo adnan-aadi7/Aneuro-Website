@@ -6,8 +6,13 @@ const FunnelTemplateSchema = new mongoose.Schema({
   category: { type: String, required: true },
   tier: { type: String, enum: ['basic', 'premium', 'enterprise'], required: true },
   status: { type: String, enum: ['active', 'scheduled', 'inactive'], required: true },
-  usage: { type: Number, default: 0 },
-  createdAt: { type: Date, default: Date.now }
+  usage: { type: Number, default: 0 },          // Leads generated
+  conversions: { type: Number, default: 0 },    // Conversions from leads
+  userRating: { type: Number, min: 0, max: 5 }, // Average user rating
+  createdAt: { type: Date, default: Date.now },
+    releaseDateTime: { type: Date, required: true },
+
 });
 
-export default mongoose.models.FunnelTemplate || mongoose.model('FunnelTemplate', FunnelTemplateSchema);
+export default mongoose.models.FunnelTemplate ||
+  mongoose.model('FunnelTemplate', FunnelTemplateSchema);

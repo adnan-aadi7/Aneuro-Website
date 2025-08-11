@@ -4,7 +4,8 @@ import {
   getAllFunnelTemplates,
   getFunnelTemplateById,
   updateFunnelTemplate,
-  deleteFunnelTemplate
+  deleteFunnelTemplate,
+  getFunnelTemplateStats
 } from '../controller/funnelTemplateController.js';
 
 const router = express.Router();
@@ -68,6 +69,21 @@ router.post('/', createFunnelTemplate);
  *         description: Server error
  */
 router.get('/', getAllFunnelTemplates);
+
+/**
+ * @swagger
+ * /api/funnel-templates/stats:
+ *   get:
+ *     summary: Get funnel template statistics
+ *     tags: [FunnelTemplates]
+ *     responses:
+ *       200:
+ *         description: Statistics retrieved successfully
+ *       500:
+ *         description: Server error
+ */
+router.get('/stats', getFunnelTemplateStats);
+
 
 /**
  * @swagger

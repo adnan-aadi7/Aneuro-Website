@@ -1,18 +1,11 @@
 import EmailSequence from "../model/EmailSequence.js";
 import { uploadToCloudinary } from "../middleware/uploadToCloudinary.js";
-import fs from 'fs';
+import { logAction } from "../config/logAction.js";
 
 export async function create(req, res) {
   try {
     const {
-      name,
-      emailCount,
-      emails,
-      tier,
-      status,
-      type,
-      manualContent,
-      emailTemplate
+      name, emailCount, emails, tier, status, type, manualContent, emailTemplate
     } = req.body;
 
     let fileUrl = req.body.fileUrl;
@@ -24,15 +17,13 @@ export async function create(req, res) {
       });
     }
 
-    // 🟡 Handle file uploads
     if (type === 'file') {
-      if (!req.file || !req.file.path) {
+      if (!req.file || !req.file.buffer) {
         return res.status(400).json({ success: false, message: 'File is required' });
       }
-console.log('Uploaded file:', req.file);
 
-      const uploadResult = await uploadToCloudinary(req.file.path);
-      if (!uploadResult || !uploadResult.secure_url) {
+      const uploadResult = await uploadToCloudinary(req.file.buffer);
+      if (!uploadResult?.secure_url) {
         return res.status(500).json({
           success: false,
           message: 'Failed to upload file to Cloudinary'
@@ -40,22 +31,16 @@ console.log('Uploaded file:', req.file);
       }
 
       fileUrl = uploadResult.secure_url;
-
-      // Clean temp file
-      fs.unlinkSync(req.file.path);
     }
 
     if (type === 'manual' && !manualContent) {
       return res.status(400).json({ success: false, message: 'Manual content required' });
     }
 
-    // ✅ Parse emailTemplate JSON
     let parsedTemplate = { subject: '', body: '', footer: '' };
     try {
-      if (emailTemplate) {
-        parsedTemplate = JSON.parse(emailTemplate);
-      }
-    } catch (e) {
+      if (emailTemplate) parsedTemplate = JSON.parse(emailTemplate);
+    } catch {
       return res.status(400).json({ success: false, message: 'Invalid emailTemplate JSON' });
     }
 
@@ -73,6 +58,18 @@ console.log('Uploaded file:', req.file);
 
     const savedSequence = await newSequence.save();
 
+    // ✅ Log this action
+ await logAction({
+      action: "CREATE", // must match your schema enum
+      user: {
+        id: req.user?._id || null,
+        email: req.user?.email || "guest",
+        ipAddress: req.ip || req.headers["x-forwarded-for"] || "unknown"
+      },
+      affectedAsset: savedSequence._id,
+      contentType: "email-sequence",
+      details: `Created email sequence: ${savedSequence.name}`
+    });
     res.status(201).json({
       success: true,
       message: 'Email sequence created successfully',
@@ -86,6 +83,7 @@ console.log('Uploaded file:', req.file);
     });
   }
 }
+
 
 // GET ALL
 export async function getAll(req, res) {
@@ -281,3 +279,60 @@ export async function bulkDelete(req, res) {
     });
   }
 }
+
+
+export async function getStats(req, res) {
+  try {
+    const mainStats = await EmailSequence.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalSequences: { $sum: 1 },
+          totalEmails: { $sum: "$emailCount" },
+          totalOpens: { $sum: "$opens" },
+          totalClicks: { $sum: "$clicks" },
+          totalUsage: { $sum: "$usage.count" },
+          averageRating: { $avg: "$rating" }
+        }
+      }
+    ]);
+
+    const totalActive = await EmailSequence.countDocuments({ status: "active" });
+    const totalScheduled = await EmailSequence.countDocuments({ status: "scheduled" });
+
+    // 🔹 Count by tier/category
+    const categoryStats = await EmailSequence.aggregate([
+      {
+        $group: {
+          _id: "$tier", // Group by category (tier)
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalSequences: mainStats[0]?.totalSequences || 0,
+        totalEmails: mainStats[0]?.totalEmails || 0,
+        totalOpens: mainStats[0]?.totalOpens || 0,
+        totalClicks: mainStats[0]?.totalClicks || 0,
+        totalUsage: mainStats[0]?.totalUsage || 0,
+        totalActive,
+        totalScheduled,
+        averageRating: mainStats[0]?.averageRating || 0,
+        categoryCounts: categoryStats.reduce((acc, item) => {
+          acc[item._id] = item.count;
+          return acc;
+        }, {})
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching email sequence statistics",
+      error: error.message
+    });
+  }
+}
+

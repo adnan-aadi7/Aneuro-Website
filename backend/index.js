@@ -15,6 +15,9 @@ import facebookPassport from './services/facebookPassport.js';
 import emailSequenceRoutes from './routes/emailSequencRoute.js';
 import promptpackRoutes from './routes/promptPackRoutes.js'
 import funneltemplatesRoutes from './routes/FunnelTemplateRoute.js'
+import schduleRoutes from './routes/scheduleRoutes.js'
+import activityRoutes from "./routes/activityRoutes.js";
+import logRoutes from './routes/logRoutes.js'
 const app = express();
 const port = 4000;
 
@@ -63,6 +66,9 @@ const startServer = async () => {
     app.use("/api/email-sequences", emailSequenceRoutes);
     app.use("/api/prompt-packs", promptpackRoutes);
     app.use("/api/funnel-templates", funneltemplatesRoutes);
+    app.use("/api/schedule", schduleRoutes);
+    app.use("/api/activities", activityRoutes);
+    app.use("/api/system-logs", logRoutes);
 
     // Start server only after database connection is established
     app.listen(port, () => {

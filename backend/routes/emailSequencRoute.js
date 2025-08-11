@@ -5,7 +5,8 @@ import {
   getById,
   update,
   deleteSequence,
-  bulkDelete
+  bulkDelete,
+  getStats
 } from '../controller/emailSequenceController.js';
 import upload from '../middleware/multer.js';
 const router = express.Router();
@@ -115,6 +116,19 @@ router.post('/', upload.single('file'), create);
  */
 router.get('/', getAll);
 
+/**
+ * @swagger
+ * /api/email-sequences/stats:
+ *   get:
+ *     summary: Get email sequence statistics
+ *     tags: [EmailSequences]
+ *     responses:
+ *       200:
+ *         description: Statistics retrieved successfully
+ *       500:
+ *         description: Server error
+ */
+router.get('/stats', getStats);
 /**
  * @swagger
  * /api/email-sequences/{id}:
@@ -242,5 +256,7 @@ router.delete('/:id', deleteSequence);
  *         description: Server error
  */
 router.delete('/bulk/delete', bulkDelete);
+
+
 
 export default router;
