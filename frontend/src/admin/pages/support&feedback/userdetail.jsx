@@ -3,34 +3,109 @@ import Closeticket from '../../components/support&feedback/closeticket';
 import CloseTicketReply from '../../components/support&feedback/CloseTicketReply';
 import React, { useState, useRef, useEffect } from 'react';
 import { Bold, Italic, Underline, Strikethrough, Link, Paperclip, Image, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, ListOrdered } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { getTickets, addReplyToTicket, updateTicketStatus } from '../../../store/Slice/TicketSlice';
+import { addReplyToTicket, updateTicketStatus, getTicketById, assignTicket } from '../../../store/Slice/TicketSlice';
 
 const Userdetail = () => {
   const location = useLocation();
-  const ticket = location.state?.ticket;
+  const { ticketId } = useParams();
+  const ticketFromState = location.state?.ticket;
   const dispatch = useDispatch();
-  const allTickets = useSelector((state) => state.ticket.tickets);
+  const currentTicket = useSelector((state) => state.ticket.currentTicket);
+  const { loading, error } = useSelector((state) => state.ticket);
   const [activeTab, setActiveTab] = useState('open');
   const [showReply, setShowReply] = useState(false);
   const [replyText, setReplyText] = useState('');
   const [closeLoading, setCloseLoading] = useState(false);
   const [replyLoading, setReplyLoading] = useState(false);
+  const [assignLoading, setAssignLoading] = useState(false);
+  const [selectedAdmin, setSelectedAdmin] = useState('');
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 const editorRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Fetch all tickets for this user on mount
-  useEffect(() => {
-    if (ticket?.email) {
-      dispatch(getTickets({ email: ticket.email }));
-    }
-  }, [dispatch, ticket?.email]);
+  // Determine which ticket to use
+  const ticket = ticketFromState || currentTicket;
 
-  // Filter tickets by status
-  const openTickets = allTickets.filter(t => t.status !== 'CLOSED');
-  const closedTickets = allTickets.filter(t => t.status === 'CLOSED');
+  // Show toast message
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
+  };
+
+  // Focus the editor when component mounts
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.focus();
+    }
+  }, []);
+
+  // Fetch ticket by ID if not available in state
+  useEffect(() => {
+    if (ticketId && !ticketFromState) {
+      dispatch(getTicketById(ticketId));
+    }
+  }, [dispatch, ticketId, ticketFromState]);
+
+  // Remove the fetch all tickets for user - we only need the specific ticket
+  // useEffect(() => {
+  //   if (ticket?.email) {
+  //     dispatch(getTickets({ email: ticket.email }));
+  //   }
+  // }, [dispatch, ticket?.email]);
+
+  // Show error toast if there's an error
+  useEffect(() => {
+    if (error) {
+      showToast(error, 'error');
+    }
+  }, [error]);
+
+  // Show toast for no ticket found
+  useEffect(() => {
+    if (!loading && !ticket && ticketId) {
+      showToast('Ticket not found', 'error');
+    }
+  }, [loading, ticket, ticketId]);
+
+  // Reset selected admin when ticket changes
+  useEffect(() => {
+    setSelectedAdmin('');
+  }, [ticket?._id]);
+
+  // Loading state
+  if (loading && !ticket) {
+    return (
+      <div className="text-white flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#12DCF0] mx-auto mb-4"></div>
+          <p>Loading ticket details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // No ticket found - show empty state with toast
+  if (!ticket) {
+    return (
+      <div className="text-white flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-gray-400 mb-4">No ticket data available</p>
+          <button 
+            onClick={() => window.history.back()}
+            className="bg-[#12DCF0] text-black px-4 py-2 rounded"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Filter tickets by status - now only show the current ticket
+  const openTickets = ticket.status !== 'CLOSED' ? [ticket] : [];
+  const closedTickets = ticket.status === 'CLOSED' ? [ticket] : [];
 
   // Execute formatting commands
   const executeCommand = (command, value = null) => {
@@ -106,7 +181,8 @@ const editorRef = useRef(null);
       // Show success message
       showToast('Reply sent successfully!', 'success');
       
-      dispatch(getTickets({ email: ticket.email }));
+      // Refresh only the current ticket
+      dispatch(getTicketById(ticket._id));
     } catch (error) {
       console.error('Failed to send reply:', error);
       showToast('Failed to send reply. Please try again.', 'error');
@@ -117,12 +193,6 @@ const editorRef = useRef(null);
       editorRef.current.innerHTML = '';
       setReplyText('');
     }
-  };
-
-  // Show toast message
-  const showToast = (message, type = 'success') => {
-    setToast({ show: true, message, type });
-    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
   };
 
   // Handle close ticket
@@ -139,8 +209,8 @@ const editorRef = useRef(null);
       // Show success message
       showToast('Ticket closed successfully!', 'success');
       
-      // Refresh tickets list
-      dispatch(getTickets({ email: ticket.email }));
+      // Refresh only the current ticket
+      dispatch(getTicketById(ticket._id));
       
       // Switch to closed tab
       setActiveTab('closed');
@@ -164,14 +234,41 @@ const editorRef = useRef(null);
       // Show success message
       showToast('Ticket reopened successfully!', 'success');
       
-      // Refresh tickets list
-      dispatch(getTickets({ email: ticket.email }));
+      // Refresh only the current ticket
+      dispatch(getTicketById(ticket._id));
       
       // Switch to open tab
       setActiveTab('open');
     } catch (error) {
       console.error('Failed to reopen ticket:', error);
       showToast('Failed to reopen ticket. Please try again.', 'error');
+    }
+  };
+
+  // Handle assign ticket
+  const handleAssignTicket = async () => {
+    if (!selectedAdmin || !ticket?._id) return;
+    
+    setAssignLoading(true);
+    try {
+      await dispatch(assignTicket({
+        ticketId: ticket._id,
+        assignedTo: selectedAdmin
+      })).unwrap();
+      
+      // Show success message
+      showToast(`Ticket assigned to ${selectedAdmin} successfully!`, 'success');
+      
+      // Refresh only the current ticket
+      dispatch(getTicketById(ticket._id));
+      
+      // Reset selection
+      setSelectedAdmin('');
+    } catch (error) {
+      console.error('Failed to assign ticket:', error);
+      showToast('Failed to assign ticket. Please try again.', 'error');
+    } finally {
+      setAssignLoading(false);
     }
   };
   const formatButtons = [
@@ -193,18 +290,11 @@ const editorRef = useRef(null);
     { icon: ListOrdered, label: 'Numbered List', command: 'insertOrderedList' },
   ];
 
-  // Focus the editor when component mounts
-  useEffect(() => {
-    if (editorRef.current) {
-      editorRef.current.focus();
-    }
-  }, []);
-
   return (
     <div className="text-white">
       <div>
         <h1 className="text-[32px] font-medium inline-block pb-1">Support Center</h1>
-        <p className="text-[20px] opacity-70 mt-1">Let's make the day productive</p>
+        <p className="text-[20px] opacity-70 mt-1">Ticket #{ticket._id?.slice(-8) || 'N/A'}</p>
       </div>
 
       <div
@@ -231,11 +321,31 @@ const editorRef = useRef(null);
               </div>
             </div>
 
-            <div className="flex gap-3">
-              <select className="bg-[#2A2A39] border border-gray-600 px-4 py-2  text-sm outline-none">
-                <option>Assign To Admin</option>
-                <option>Support Agent</option>
-              </select>
+            <div className="flex gap-3 flex-wrap">
+              <div className="flex gap-2">
+                <select 
+                  value={selectedAdmin} 
+                  onChange={(e) => setSelectedAdmin(e.target.value)}
+                  className="bg-[#2A2A39] border border-gray-600 px-1 py-2 text-sm outline-none text-white"
+                >
+                  {/* <option value="">
+                    {ticket?.assignedTo ? `Currently: ${ticket.assignedTo}` : 'Assign To Admin'}
+                  </option> */}
+                  <option value="Admin 1">Admin</option>
+                  <option value="Admin 2">Support Agent</option>
+                  
+                </select>
+                
+                {selectedAdmin && (
+                  <button
+                    onClick={handleAssignTicket}
+                    disabled={assignLoading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 text-sm font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {assignLoading ? 'Assigning...' : 'Assign'}
+                  </button>
+                )}
+              </div>
 
               {activeTab === 'open' && (
                 <>
@@ -444,12 +554,23 @@ const editorRef = useRef(null);
       
       {/* Toast Notification */}
       {toast.show && (
-        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transition-all duration-300 ${
+        <div className={`fixed top-4 right-4 z-[9999] px-6 py-3 rounded-lg shadow-lg transition-all duration-300 transform translate-x-0 ${
           toast.type === 'success' 
-            ? 'bg-green-600 text-white' 
-            : 'bg-red-600 text-white'
+            ? 'bg-green-600 text-white border border-green-500' 
+            : 'bg-red-600 text-white border border-red-500'
         }`}>
-          {toast.message}
+          <div className="flex items-center gap-2">
+            {toast.type === 'success' ? (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            )}
+            {toast.message}
+          </div>
         </div>
       )}
     </div>

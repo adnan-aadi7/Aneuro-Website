@@ -45,7 +45,7 @@ export const createTicket = async (req, res) => {
 
 export const getTickets = async (req, res) => {
   try {
-    let { status, email } = req.query;
+    let { status, email, page = 1, limit = 10 } = req.query;
 
     const filter = {};
     if (status) {
@@ -55,10 +55,25 @@ export const getTickets = async (req, res) => {
       }
     }
     if (email) {
-      filter.email = email;
+      // Case-insensitive email search
+      filter.email = { $regex: email, $options: 'i' };
     }
 
-    let tickets = await Ticket.find(filter).sort({ createdAt: -1 });
+    // Convert page and limit to numbers
+    page = parseInt(page);
+    limit = parseInt(limit);
+    
+    // Calculate skip value for pagination
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination
+    const totalCount = await Ticket.countDocuments(filter);
+
+    // Get tickets with pagination
+    let tickets = await Ticket.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
     // Populate profileImage from User collection
     tickets = await Promise.all(
@@ -73,8 +88,14 @@ export const getTickets = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      count: tickets.length,
+      count: totalCount,
       tickets,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalCount / limit),
+        hasNextPage: page * limit < totalCount,
+        hasPrevPage: page > 1
+      }
     });
   } catch (error) {
     console.error('Error fetching tickets:', error);

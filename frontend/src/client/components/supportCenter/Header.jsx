@@ -4,14 +4,12 @@ import CloserEmail from "./CloserEmail";
 import { useSelector, useDispatch } from "react-redux";
 import { getTickets } from "../../../store/Slice/TicketSlice";
 import { useEffect } from "react";
-import Reply from "./Reply";
 
 const Header = () => {
   const [activeTab, setActiveTab] = useState("Open");
   const dispatch = useDispatch();
   const userEmail = useSelector((state) => state.user.user?.email);
   const tickets = useSelector((state) => state.ticket.tickets);
-  const [selectedTicketId, setSelectedTicketId] = useState(null); // <-- NEW
 
   useEffect(() => {
     if (userEmail && activeTab === "Open") {
@@ -21,15 +19,6 @@ const Header = () => {
       dispatch(getTickets({ status: "CLOSED", email: userEmail }));
     }
   }, [userEmail, activeTab, dispatch]);
-
-  // When tickets change, select the first ticket by default
-  useEffect(() => {
-    if (tickets && tickets.length > 0) {
-      setSelectedTicketId(tickets[0]._id);
-    } else {
-      setSelectedTicketId(null);
-    }
-  }, [tickets]);
 
   return (
     <div className="  py-6 px-1">
@@ -57,8 +46,7 @@ const Header = () => {
       </div>
       {activeTab === "Open" && (
         <div className="mt-8">
-          <Email tickets={tickets} onSelectTicket={setSelectedTicketId} />
-          {selectedTicketId && <Reply ticketId={selectedTicketId} />}
+          <Email tickets={tickets} />
         </div>
       )}
       {activeTab === "Closure" && (

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MoreVertical, ArrowDown } from 'lucide-react';
+import { MoreVertical, ArrowDown, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getTickets } from '../../../store/Slice/TicketSlice';
@@ -7,19 +7,52 @@ import { getTickets } from '../../../store/Slice/TicketSlice';
 export default function Support() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { tickets = [], count = 0 } = useSelector((state) => state.ticket);
+  const { tickets = [], count = 0, pagination } = useSelector((state) => state.ticket);
   const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState({
+    status: '',
+    email: ''
+  });
   const limit = 10;
-  const totalPages = Math.ceil(count / limit);
+  const totalPages = pagination?.totalPages || Math.ceil(count / limit);
 
   useEffect(() => {
-    dispatch(getTickets({ page, limit }));
-  }, [dispatch, page]);
+    dispatch(getTickets({ page, limit, ...filters }));
+  }, [dispatch, page, filters]);
+
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+    setPage(1); // Reset to first page when filters change
+  };
 
   return (
     <div className='text-white'>
-      <h1 className="text-[32px] font-medium">All Users</h1>
-      <p className="opacity-70 text-[20px]">Let’s make the day productive</p>
+      <h1 className="text-[32px] font-medium">All Tickets</h1>
+      <p className="opacity-70 text-[20px]">Let's make the day productive</p>
+
+      {/* Filters */}
+      <div className="mt-6 flex flex-wrap gap-4 items-center">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50" size={16} />
+          <input
+            type="text"
+            placeholder="Search by email..."
+            value={filters.email}
+            onChange={(e) => handleFilterChange('email', e.target.value)}
+            className="bg-[#1B1D29] border border-white/20 rounded-lg px-10 py-2 text-white placeholder-white/50 focus:outline-none focus:border-[#00D1FF]"
+          />
+        </div>
+        
+        <select
+          value={filters.status}
+          onChange={(e) => handleFilterChange('status', e.target.value)}
+          className="bg-[#1B1D29] border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#00D1FF]"
+        >
+          <option value="">All Status</option>
+          <option value="OPEN">Open</option>
+          <option value="CLOSED">Closed</option>
+        </select>
+      </div>
 
       <div
         className="p-6 mt-6 shadow-md text-white font-inter w-full"
@@ -46,11 +79,11 @@ export default function Support() {
             <tbody>
   {tickets.map((ticket, idx) => (
     <tr
-      onClick={() => navigate('/admin/support/feedback/user-detail', { state: { ticket } })}
+      onClick={() => navigate(`/admin/support/feedback/user-detail/${ticket._id}`, { state: { ticket } })}
       key={ticket._id || idx}
       className="text-sm hover:bg-[#222431] transition-colors rounded-lg cursor-pointer"
     >
-      <td className="flex flex-row items-center gap-2 px-6 py-4 border-b border-slate-300 ">
+      <td className="flex flex-row items-center gap-2 px-6 py-5 border-b border-slate-300">
         <img
           src={ticket.profileImage || "/Frame 1000006611.png"}
           alt="avatar"
@@ -58,29 +91,29 @@ export default function Support() {
         />
         {ticket.name}
       </td>
-      <td className="py-4 px-6 border-b border-slate-300  ">
+      <td className="py-4 px-6 border-b border-slate-300">
         {ticket.email}
       </td>
-      <td className="py-4 px-6 border-b border-slate-300 ">
+      <td className="py-4 px-6 border-b border-slate-300">
         {Array.isArray(ticket.category) ? ticket.category.join(", ") : ticket.category}
       </td>
-      <td className="py-4 px-6 border-b border-slate-300 ">
-        {ticket.assignedTo}
+      <td className="py-4 px-6 border-b border-slate-300">
+        {ticket.assignedTo || "Not Assigned"}
       </td>
-      <td className="py-4 px-6 border-b border-slate-300 ">
+      <td className="py-4 px-6 border-b border-slate-300">
         {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : "-"}
       </td>
-      <td className="py-4 px-6 border-b border-slate-300 ">
+      <td className="py-4 px-6 border-b border-slate-300">
         <span
           className={`px-3 py-1 text-xs font-semibold rounded-full 
-            ${ticket.status === 'Resolved'
+            ${ticket.status === 'CLOSED'
               ? 'bg-[#C2FFE3] text-[#1A7759]'
               : 'bg-[#D2FFF8] text-[#007872]'}`}
         >
           {ticket.status}
         </span>
       </td>
-      <td className="text-center py-4 px-6 border-b border-slate-300  ">
+      <td className="text-center py-4 px-6 border-b border-slate-300">
         <MoreVertical size={16} className="cursor-pointer text-white/70" />
       </td>
     </tr>
@@ -91,31 +124,49 @@ export default function Support() {
         </div>
 
         {/* Pagination */}
-        <div className="mt-12 flex justify-center items-center gap-2 text-sm">
-          <button
-            className="px-2 py-1 text-white/70"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >
-            Previous
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+        {totalPages > 1 && (
+          <div className="mt-12 flex justify-center items-center gap-2 text-sm">
             <button
-              key={p}
-              onClick={() => setPage(p)}
-              className={`w-8 h-8 rounded-md ${p === page ? 'bg-[#00D1FF] text-black font-semibold' : 'bg-[#1B1D29] text-white/70'}`}
+              className="px-2 py-1 text-white/70 disabled:opacity-50"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
             >
-              {p}
+              Previous
             </button>
-          ))}
-          <button
-            className="px-2 py-1 text-white/70"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-          >
-            Next
-          </button>
-        </div>
+            
+            {/* Show page numbers */}
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (page <= 3) {
+                pageNum = i + 1;
+              } else if (page >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = page - 2 + i;
+              }
+              
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setPage(pageNum)}
+                  className={`w-8 h-8 rounded-md ${pageNum === page ? 'bg-[#00D1FF] text-black font-semibold' : 'bg-[#1B1D29] text-white/70'}`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+            
+            <button
+              className="px-2 py-1 text-white/70 disabled:opacity-50"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
