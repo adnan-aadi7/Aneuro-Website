@@ -21,7 +21,6 @@ import logRoutes from './routes/logRoutes.js'
 const app = express();
 const port = 4000;
 
-// Initialize server function
 const startServer = async () => {
   try {
     // Connect to MongoDB first
