@@ -10,7 +10,7 @@ export const createFunnelTemplate = async (req, res) => {
   }
 };
 
-// GET all funnel templates
+
 export const getAllFunnelTemplates = async (req, res) => {
   try {
     const templates = await FunnelTemplate.find();

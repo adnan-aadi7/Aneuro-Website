@@ -1,3 +1,4 @@
+//ticket model
 import mongoose from 'mongoose';
 
 const TicketSchema = new mongoose.Schema({

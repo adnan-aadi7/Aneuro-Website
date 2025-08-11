@@ -155,7 +155,7 @@ export async function getUserById({ id, accountStatus }) {
 }
 
 
-//delete user
+
 export async function deleteUser(userId) {
   try {
     await connectDB();

@@ -22,7 +22,7 @@ export const createTicket = async (req, res) => {
       name,
       email,
       mobileNumber,
-      category, // now an array
+      category, 
       message,
       fileUrl,
       filePublicId

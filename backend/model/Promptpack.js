@@ -1,4 +1,4 @@
-// models/PromptPack.js
+//prompt model
 import mongoose from 'mongoose';
 
 const PromptSchema = new mongoose.Schema({

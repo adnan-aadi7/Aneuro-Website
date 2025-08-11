@@ -1,3 +1,4 @@
+//funnel model
 import mongoose from 'mongoose';
 
 const FunnelTemplateSchema = new mongoose.Schema({

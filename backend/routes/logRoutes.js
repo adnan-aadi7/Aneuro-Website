@@ -1,4 +1,4 @@
-// routes/logRoutes.js
+// logRoutes.js
 import { Router } from 'express';
 import { getLogs } from '../controller/logController.js';
 

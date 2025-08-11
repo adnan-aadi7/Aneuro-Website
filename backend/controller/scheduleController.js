@@ -1,6 +1,6 @@
 import EmailSequence from '../model/EmailSequence.js';
 import FunnelTemplate from '../model/FunnelTemplate.js';
-import PromptPack from '../model/Promptpack.js';
+import PromptPack from '../model/PromptPack.js';
 
 // Utility to update expired schedules
 export const updateStatuses = async () => {

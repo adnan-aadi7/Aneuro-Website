@@ -1,3 +1,5 @@
+//ticket routes
+
 import { createTicket, getTickets, getTicketById, updateTicket, updateTicketStatus, deleteTicket, addReplyToTicket, assignTicket } from "../controller/Tickets.js";
 import upload from "../middleware/multer.js";
 import express from 'express';

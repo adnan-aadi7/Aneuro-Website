@@ -1,3 +1,5 @@
+//activity routes
+
 import express from "express";
 import { getRecentActivities } from "../controller/activityController.js";
 

@@ -1,3 +1,4 @@
+//email model
 import mongoose from 'mongoose';
 
 const EmailSequenceSchema = new mongoose.Schema(

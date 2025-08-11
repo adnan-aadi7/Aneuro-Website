@@ -5,7 +5,6 @@ import FunnelTemplate from "../model/FunnelTemplate.js";
 
 export const getRecentActivities = async (req, res) => {
   try {
-    // Fetch all data
     const promptPacks = await PromptPack.find().select("name status createdDate releaseDateTime").lean();
     const emailSequences = await EmailSequence.find().select("name status createdAt releaseDateTime").lean();
     const funnelTemplates = await FunnelTemplate.find().select("name status createdAt releaseDateTime").lean();
