@@ -1,3 +1,4 @@
+//schdule realse route
 import express from "express";
 import {
   getAllScheduled,

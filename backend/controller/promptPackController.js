@@ -1,4 +1,4 @@
-import PromptPack from "../model/Promptpack.js";
+import PromptPack from '../model/PromptPack.js';
 import { uploadToCloudinary } from '../middleware/uploadToCloudinary.js'
 
 import path from 'path';

@@ -1,4 +1,4 @@
-// routes/authRoutes.js
+// authRoutes.js
 import express from "express";
 import { 
   Signup,

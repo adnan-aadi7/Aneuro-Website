@@ -58,7 +58,6 @@ export const createSubscription = async (req, res) => {
       invoice_settings: { default_payment_method: paymentMethodId },
     });
 
-    // Check if customer already has an active subscription
     const existingSubscriptions = await stripe.subscriptions.list({
       customer: customer.id,
       status: 'active',

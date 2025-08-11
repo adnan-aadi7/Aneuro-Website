@@ -8,6 +8,7 @@ export const getLogs = async (req, res) => {
     if (action) filter.action = action.toUpperCase();
     if (user) filter['user.email'] = user;
 
+    //time range
     if (timeRange && timeRange !== 'all_time') {
       let fromDate;
       if (timeRange === 'last_24h') fromDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
