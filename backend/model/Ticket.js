@@ -1,3 +1,4 @@
+//ticket model
 import mongoose from 'mongoose';
 
 const TicketSchema = new mongoose.Schema({
@@ -18,7 +19,7 @@ const TicketSchema = new mongoose.Schema({
   },
   assignedTo: {
     type: String,
-    default: 'admin'  // 👈 Set default value here
+    default: 'admin'  
   },
   replies: [
     {

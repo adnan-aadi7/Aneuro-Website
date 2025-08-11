@@ -1,3 +1,4 @@
+//quix model
 import mongoose from 'mongoose';
 
 const quizSessionSchema = new mongoose.Schema({

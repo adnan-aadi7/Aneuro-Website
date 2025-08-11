@@ -16,7 +16,6 @@ import facebookPassport from './services/facebookPassport.js';
 const app = express();
 const port = 4000;
 
-// Initialize server function
 const startServer = async () => {
   try {
     // Connect to MongoDB first
@@ -46,13 +45,11 @@ const startServer = async () => {
       }
     }));
 
-    // Initialize Passport (both Google and Facebook)
     app.use(googlePassport.initialize());
     app.use(googlePassport.session());
     app.use(facebookPassport.initialize());
     app.use(facebookPassport.session());
 
-    // Swagger docs route
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
     app.use("/api/", authRoutes);

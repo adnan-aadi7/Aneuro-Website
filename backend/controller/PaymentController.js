@@ -28,7 +28,6 @@ export const createSubscription = async (req, res) => {
       return res.status(404).json({ error: 'User not found.' });
     }
 
-    // Check if user already has an active subscription
     if (user.subscription && user.subscription.status === 'active') {
       return res.status(400).json({ 
         error: 'User already has an active subscription. Please cancel the existing subscription first.' 
@@ -59,7 +58,6 @@ export const createSubscription = async (req, res) => {
       invoice_settings: { default_payment_method: paymentMethodId },
     });
 
-    // Check if customer already has an active subscription
     const existingSubscriptions = await stripe.subscriptions.list({
       customer: customer.id,
       status: 'active',
