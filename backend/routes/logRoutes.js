@@ -4,6 +4,7 @@ import { getLogs } from '../controller/logController.js';
 
 const router = Router();
 
+
 /**
  * @swagger
  * tags:

@@ -6,9 +6,9 @@ const FunnelTemplateSchema = new mongoose.Schema({
   category: { type: String, required: true },
   tier: { type: String, enum: ['basic', 'premium', 'enterprise'], required: true },
   status: { type: String, enum: ['active', 'scheduled', 'inactive'], required: true },
-  usage: { type: Number, default: 0 },          // Leads generated
-  conversions: { type: Number, default: 0 },    // Conversions from leads
-  userRating: { type: Number, min: 0, max: 5 }, // Average user rating
+  usage: { type: Number, default: 0 },         
+  conversions: { type: Number, default: 0 },   
+  userRating: { type: Number, min: 0, max: 5 }, 
   createdAt: { type: Date, default: Date.now },
     releaseDateTime: { type: Date, required: true },
 

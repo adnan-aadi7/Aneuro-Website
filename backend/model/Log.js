@@ -1,4 +1,3 @@
-// models/Log.js
 import mongoose from 'mongoose';
 
 const logSchema = new mongoose.Schema({

@@ -18,7 +18,7 @@ const PromptPackSchema = new mongoose.Schema({
     required: true,
   },
   category: {
-    type: String, // e.g., 'Content', 'Sales', 'Business'
+    type: String, 
     required: true,
   },
   tier: {

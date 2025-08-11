@@ -6,6 +6,7 @@ import {
   deleteSchedule
 } from "../controller/scheduleController.js";
 
+
 const router = express.Router();
 
 /**

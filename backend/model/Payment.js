@@ -9,7 +9,7 @@ const PaymentSchema = new mongoose.Schema(
     },
     stripePaymentIntentId: {
       type: String,
-      required: false, // Made optional for subscriptions
+      required: false, 
     },
     amount: {
       type: Number,

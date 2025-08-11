@@ -5,9 +5,9 @@ const EmailSequenceSchema = new mongoose.Schema(
     name: { type: String, required: true },
     emailCount: { type: Number, default: 0 },
     emails: { type: Number, default: 0 },
-    opens: { type: Number, default: 0 }, // NEW
-    clicks: { type: Number, default: 0 }, // NEW
-    rating: { type: Number, default: 0 }, // NEW
+    opens: { type: Number, default: 0 }, 
+    clicks: { type: Number, default: 0 }, 
+    rating: { type: Number, default: 0 }, 
 
     tier: {
       type: String,

@@ -1,5 +1,6 @@
 import Log from '../model/Log.js';
 
+
 /**
  * Logs a system action to MongoDB
  * @param {Object} params
@@ -23,7 +24,7 @@ export async function logAction({
 }) {
   try {
     const logEntry = new Log({
-      action, // must be one of schema's enum values
+      action, 
       user: {
         id: user?.id || "system",
         email: user?.email || "system@localhost",

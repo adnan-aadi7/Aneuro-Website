@@ -9,7 +9,9 @@ import {
   getStats
 } from '../controller/emailSequenceController.js';
 import upload from '../middleware/multer.js';
+
 const router = express.Router();
+
 
 /**
  * @swagger
