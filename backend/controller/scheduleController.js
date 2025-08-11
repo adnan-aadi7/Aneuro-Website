@@ -244,3 +244,64 @@ export const deleteSchedule = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const getScheduledStats = async (req, res) => {
+  try {
+    await updateStatuses(); // Ensure statuses are updated before calculating stats
+
+    const [emails, prompts, funnels] = await Promise.all([
+      EmailSequence.find({ status: 'scheduled' }).lean(),
+      PromptPack.find({ status: 'scheduled' }).lean(),
+      FunnelTemplate.find({ status: 'scheduled' }).lean(),
+    ]);
+
+    const combined = [...emails, ...prompts, ...funnels];
+
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const upcomingCount = combined.filter(item =>
+      item.scheduledDate &&
+      new Date(item.scheduledDate) >= now &&
+      new Date(item.scheduledDate) <= new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+    ).length;
+
+    const thisWeekCount = combined.filter(item =>
+      item.scheduledDate &&
+      new Date(item.scheduledDate) >= startOfWeek &&
+      new Date(item.scheduledDate) <= endOfWeek
+    ).length;
+
+    const thisMonthCount = combined.filter(item =>
+      item.scheduledDate &&
+      new Date(item.scheduledDate) >= startOfMonth &&
+      new Date(item.scheduledDate) <= endOfMonth
+    ).length;
+
+    const overdueCount = combined.filter(item =>
+      item.scheduledDate && new Date(item.scheduledDate) < now
+    ).length;
+
+    res.json({
+      success: true,
+      stats: {
+        upcoming: upcomingCount,
+        thisWeek: thisWeekCount,
+        thisMonth: thisMonthCount,
+        overdue: overdueCount
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
