@@ -56,7 +56,6 @@ const startServer = async () => {
     app.use("/api/ticket", ticketRoutes);
     app.use("/api/payment", paymentRoutes);
 
-    // Start server only after database connection is established
     app.listen(port, () => {
       console.log(`✅ Server running at http://localhost:${port}`);
       console.log(`📚 Swagger docs available at http://localhost:${port}/api-docs`);
