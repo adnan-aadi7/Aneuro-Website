@@ -6,9 +6,10 @@ import {
   getFunnelTemplateById,
   updateFunnelTemplate,
   deleteFunnelTemplate,
-  getFunnelTemplateStats
+  getFunnelTemplateStats,
+  createFunnelTemplateWithFile
 } from '../controller/funnelTemplateController.js';
-
+import upload from '../middleware/multer.js';
 
 const router = express.Router();
 
@@ -18,6 +19,43 @@ const router = express.Router();
  *   name: FunnelTemplates
  *   description: Funnel Template Management
  */
+/**
+ * @swagger
+ * /api/funnel-templates/file:
+ *   post:
+ *     summary: Create a new funnel template with file upload and tier
+ *     tags:
+ *       - FunnelTemplates
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - tier
+ *               - file
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "My New Funnel"
+ *               tier:
+ *                 type: string
+ *                 example: "Premium"
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       201:
+ *         description: Funnel template created successfully
+ *       400:
+ *         description: No file uploaded
+ *       500:
+ *         description: Server error
+ */
+router.post('/file', upload.single('file'), createFunnelTemplateWithFile);
+
 
 /**
  * @swagger

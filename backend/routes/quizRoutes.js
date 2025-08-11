@@ -1,5 +1,5 @@
 import express from 'express';
-import { saveAnswer, getProgress, createAudience, getAudienceSessions } from '../controller/quizController.js';
+import { saveAnswer, getProgress, createAudience, getAudienceSessions,sendIncompleteQuizNotifications } from '../controller/quizController.js';
 
 const router = express.Router();
 
@@ -15,7 +15,7 @@ const router = express.Router();
  * /api/quiz/start:
  *   post:
  *     summary: Start or continue a quiz session by saving audience answer tied to subscriber user ID
- *     tags: [Quiz]
+ *     tags: [Audience Quiz]
  *     requestBody:
  *       required: true
  *       content:
@@ -72,23 +72,38 @@ const router = express.Router();
  */
 
 router.post('/start', createAudience);
+
+
 /**
  * @swagger
  * /api/quiz/sessions:
  *   get:
- *     summary: Get all audience quiz sessions tied to a subscriber's user ID excluding subscriber's own quiz sessions
- *     tags: [Quiz]
+ *     summary: Get audience quiz sessions (with optional completion filter)
+ *     description: >
+ *       Returns quiz sessions for a specific user, excluding the subscriber's own quizzes.  
+ *       Optionally filter by completion status (`true` or `false`).  
+ *       Results are sorted by completion status (completed first).
+ *     tags: [Audience Quiz]
  *     parameters:
  *       - in: query
  *         name: user_id
+ *         required: true
  *         schema:
  *           type: string
- *         required: true
- *         description: Subscriber's user ID to filter audience sessions
- *         example: 64f3bc9f1234567890abcdef
+ *         description: ID of the user whose audience quiz sessions you want to fetch.
+ *       - in: query
+ *         name: is_completed
+ *         required: false
+ *         schema:
+ *           type: boolean
+ *         description: >
+ *           Filter sessions by completion status.  
+ *           - `true` → only completed quizzes  
+ *           - `false` → only incomplete quizzes  
+ *           - Omit this parameter to get all quizzes (sorted by completed first)
  *     responses:
  *       200:
- *         description: List of audience quiz sessions found
+ *         description: List of audience quiz sessions with progress and reminders.
  *         content:
  *           application/json:
  *             schema:
@@ -99,11 +114,43 @@ router.post('/start', createAudience);
  *                   example: true
  *                 data:
  *                   type: array
- *                   description: Array of audience quiz session objects
  *                   items:
  *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: "64e5d4a2b0a97f4a12345678"
+ *                       user_id:
+ *                         type: string
+ *                         example: "64e5d4a2b0a97f4a12345600"
+ *                       quiz_title:
+ *                         type: string
+ *                         example: "General Knowledge Quiz"
+ *                       is_completed:
+ *                         type: boolean
+ *                         example: false
+ *                       questions_completed:
+ *                         type: integer
+ *                         example: 5
+ *                       reminders:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             _id:
+ *                               type: string
+ *                               example: "64e5d4a2b0a97f4a12345690"
+ *                             quizSessionId:
+ *                               type: string
+ *                               example: "64e5d4a2b0a97f4a12345678"
+ *                             sentTo:
+ *                               type: string
+ *                               example: "user@example.com"
+ *                             sentBy:
+ *                               type: string
+ *                               example: "64e5d4a2b0a97f4a12345600"
  *       400:
- *         description: Missing user_id query parameter
+ *         description: Missing required parameters.
  *         content:
  *           application/json:
  *             schema:
@@ -114,23 +161,13 @@ router.post('/start', createAudience);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: user_id query parameter is required
+ *                   example: "user_id query parameter is required"
  *       404:
- *         description: No audience quiz sessions found for this user_id
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: No audience quiz sessions found for this user_id
+ *         description: No quiz sessions found.
  *       500:
- *         description: Server error
+ *         description: Internal server error.
  */
+
 router.get('/sessions', getAudienceSessions);
 
 
@@ -212,5 +249,48 @@ router.post('/save', saveAnswer);
  *         description: Server error
  */
 router.get('/progress/:user_id', getProgress);
+
+
+
+/**
+ * @swagger
+ * /api/quiz/send-incomplete-reminders:
+ *   post:
+ *     summary: Send reminder emails for incomplete quizzes and save reminders in DB
+ *     tags: [Audience Quiz]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - user_id
+ *               - quizId
+ *               - audienceEmails
+ *             properties:
+ *               user_id:
+ *                 type: string
+ *                 example: "64f5a1b9d1d4c9a123456789"
+ *               quizId:
+ *                 type: string
+ *                 example: "64f5a2b1d1d4c9a987654321"
+ *               audienceEmails:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["test1@example.com", "test2@example.com"]
+ *     responses:
+ *       200:
+ *         description: Emails sent and reminders saved
+ *       400:
+ *         description: Missing required fields
+ *       404:
+ *         description: Quiz not found
+ *       500:
+ *         description: Internal server error
+ */
+
+router.post('/send-incomplete-reminders', sendIncompleteQuizNotifications);
 
 export default router;

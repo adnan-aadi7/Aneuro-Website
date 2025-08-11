@@ -1,4 +1,47 @@
-import FunnelTemplate from '../model/FunnelTemplate.js'
+import FunnelTemplate from '../model/FunnelTemplate.js';
+import { uploadToCloudinary } from '../middleware/uploadToCloudinary.js';
+
+// Create new Funnel Template with file upload & tier
+export const createFunnelTemplateWithFile = async (req, res) => {
+  try {
+    const { name, tier } = req.body; // Name & tier from request
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file uploaded',
+      });
+    }
+
+    // Upload file to Cloudinary
+    const uploadResult = await uploadToCloudinary(req.file.buffer, 'funnel_templates');
+
+    if (!uploadResult || !uploadResult.secure_url) {
+      return res.status(500).json({
+        success: false,
+        message: 'File upload failed',
+      });
+    }
+
+    // Create new FunnelTemplate
+    const newTemplate = new FunnelTemplate({
+      name,
+      tier,
+      fileUrl: uploadResult.secure_url,
+      status: 'scheduled', // optional default
+    });
+
+    await newTemplate.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Funnel Template created successfully',
+      data: newTemplate,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 // CREATE  funnel template
 export const createFunnelTemplate = async (req, res) => {
   try {

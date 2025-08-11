@@ -1,4 +1,7 @@
 import QuizSession from '../model/quiz.js';
+import nodemailer from 'nodemailer';
+import { incompleteQuizTemplate } from '../config/emailTemplates.js';
+import Reminder from '../model/reminder.js';
 
 const TOTAL_QUESTIONS = 10;
 // Confirming from your doc — you mentioned 1, 5, 8 in “Optional Weighting”
@@ -240,32 +243,101 @@ export const createAudience = async (req, res) => {
 
 export const getAudienceSessions = async (req, res) => {
   try {
-    const { user_id } = req.query;
+    const { user_id, is_completed } = req.query;
 
     if (!user_id) {
       return res.status(400).json({ success: false, message: "user_id query parameter is required" });
     }
 
-    // Find audience sessions for subscriber user_id but exclude subscriber's own quiz sessions
-    const sessions = await QuizSession.find({
+    // Build base query
+    const query = {
       user_id,
-      is_subscriber_quiz: { $ne: true }  // exclude subscriber's own quizzes
-    });
+      is_subscriber_quiz: { $ne: true }
+    };
+
+    // Apply completion filter if provided
+    if (is_completed !== undefined) {
+      // Convert string to boolean
+      const completedBool = is_completed === "true";
+      query.is_completed = completedBool;
+    }
+
+    let sessions = await QuizSession.find(query);
 
     if (!sessions || sessions.length === 0) {
       return res.status(404).json({ success: false, message: "No audience quiz sessions found for this user_id" });
     }
 
-    // Add questions_completed field to each session
-    const sessionsWithProgress = sessions.map(session => {
+    // Fetch reminders for these sessions
+    const sessionIds = sessions.map(s => s._id);
+    const reminders = await Reminder.find({ quizSessionId: { $in: sessionIds } });
+
+    // Attach progress & reminders to each session
+    let sessionsWithData = sessions.map(session => {
       const sessionObj = session.toObject();
       sessionObj.questions_completed = session.answers ? session.answers.length : 0;
+      sessionObj.reminders = reminders.filter(r => r.quizSessionId.toString() === session._id.toString());
       return sessionObj;
     });
 
-    return res.status(200).json({ success: true, data: sessionsWithProgress });
+    // Sort by is_completed (completed first)
+    sessionsWithData.sort((a, b) => {
+      return (b.is_completed === true) - (a.is_completed === true);
+    });
+
+    return res.status(200).json({ success: true, data: sessionsWithData });
   } catch (error) {
     console.error("Error fetching quiz sessions:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+export const sendIncompleteQuizNotifications = async (req, res) => {
+  try {
+    const { user_id, audienceEmails, quizId } = req.body;
+
+    if (!user_id || !audienceEmails || !Array.isArray(audienceEmails) || audienceEmails.length === 0 || !quizId) {
+      return res.status(400).json({ success: false, message: "user_id, quizId, and audienceEmails array are required" });
+    }
+
+    const quizSession = await QuizSession.findOne({ _id: quizId, user_id });
+    if (!quizSession) {
+      return res.status(404).json({ success: false, message: "Quiz not found for this user" });
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+    });
+
+    const sendPromises = audienceEmails.map(async (email) => {
+      const htmlContent = incompleteQuizTemplate(
+        '', 
+        quizSession.quiz_title || 'Your Quiz',
+        `${process.env.FRONTEND_URL}/quiz/${quizId}`
+      );
+
+      await transporter.sendMail({
+        from: `"Quiz Notifications" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: `Reminder: Complete the quiz "${quizSession.quiz_title}"`,
+        html: htmlContent,
+      });
+
+      // Save reminder in DB
+      await Reminder.create({
+        quizSessionId: quizId,
+        sentTo: email,
+        sentBy: user_id
+      });
+    });
+
+    await Promise.all(sendPromises);
+
+    return res.status(200).json({ success: true, message: "Emails sent & reminders saved successfully" });
+  } catch (error) {
+    console.error("Error sending emails:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };

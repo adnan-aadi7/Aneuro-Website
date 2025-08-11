@@ -65,4 +65,6 @@ quizSessionSchema.statics.calculateResult = function(answers) {
   return { brainType, scores, challenger };
 };
 
+
+
 export default mongoose.model('QuizSession', quizSessionSchema);
