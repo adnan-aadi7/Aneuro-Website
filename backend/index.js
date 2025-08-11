@@ -23,13 +23,10 @@ const port = 4000;
 
 const startServer = async () => {
   try {
-    // Connect to MongoDB first
     await connectDB();
     
-    // Mount webhook route BEFORE body parsers
     app.use('/api/webhook', webhookRoutes);
 
-    // Now add CORS and JSON body parser for the rest of the app
     app.use(cors({
       origin: ['http://localhost:5173'],
       credentials: true,
@@ -77,5 +74,4 @@ const startServer = async () => {
   }
 };
 
-// Start the server
 startServer();
