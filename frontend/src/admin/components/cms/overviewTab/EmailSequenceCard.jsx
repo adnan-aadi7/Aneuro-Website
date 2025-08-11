@@ -1,15 +1,47 @@
 // import { useState } from "react";
-import { Upload, Mail, Settings } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Upload, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { createEmailSequence, selectEmailSequenceLoading, selectEmailSequenceError, selectEmailSequenceSuccess, clearError, clearSuccess } from "../../../../store/Slice/EmailSequenceSLice";
+import { Toaster, toast } from "react-hot-toast";
 import DiamondIcon from "../../../../../public/icons/diamond.png";
 import KingIcon from "../../../../../public/icons/king.png";
 import StarIcon from "../../../../../public/icons/star.png";
 
 export default function EmailSequenceCard() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const loading = useSelector(selectEmailSequenceLoading);
+  const error = useSelector(selectEmailSequenceError);
+  const success = useSelector(selectEmailSequenceSuccess);
 
-  const handleFileUpload = () => {
-    // handle files
+  // Local state for file, tier, and type
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedTiers, setSelectedTiers] = useState([]); // ["basic", "premium", "enterprise"]
+
+  // Toast on success/error
+  useEffect(() => {
+    if (success) {
+      toast.success(success);
+      setSelectedFile(null);
+      setSelectedTiers([]);
+      dispatch(clearSuccess());
+    }
+  }, [success, dispatch]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(typeof error === 'string' ? error : 'Operation failed');
+      dispatch(clearError());
+    }
+  }, [error, dispatch]);
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+    }
   };
 
   const handleDragOver = (e) => {
@@ -25,15 +57,40 @@ export default function EmailSequenceCard() {
   const handleDrop = (e) => {
     e.preventDefault();
     // setIsDragOver(false); // This line was removed as per the edit hint
-    // handle files
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      setSelectedFile(file);
+    }
   };
 
-  const handleTierSelect = () => {
-    // handle tier select
+  const handleTierSelect = (e) => {
+    const tier = e.target.id === "premium" ? "premium" : e.target.id === "vip" ? "enterprise" : "basic";
+    setSelectedTiers((prev) =>
+      e.target.checked
+        ? [...new Set([...prev, tier])]
+        : prev.filter((t) => t !== tier)
+    );
   };
 
   const handleUpload = () => {
-    console.log("Upload Email Sequences clicked");
+    if (!selectedFile) {
+      toast.error("Please select a file first");
+      return;
+    }
+    
+    if (selectedTiers.length === 0) {
+      toast.error("Please select at least one tier");
+      return;
+    }
+    
+    // Only one tier allowed per upload (based on backend model)
+    const payload = {
+      name: selectedFile.name,
+      tier: selectedTiers[0],
+      type: "file",
+      file: selectedFile,
+    };
+    dispatch(createEmailSequence(payload));
   };
 
   const handleManualEmailChange = (e) => {
@@ -44,6 +101,7 @@ export default function EmailSequenceCard() {
 
   return (
     <div className="bg-[#1F2937]  p-6 w-full mx-auto">
+      <Toaster position="top-right" />
       {/* Header */}
       <div className="flex items-start gap-3 mb-6 ">
         <div className="w-10 h-10  rounded flex items-center justify-center mt-1 border-1 border-[#1E40AF]">
@@ -77,7 +135,7 @@ export default function EmailSequenceCard() {
         onDrop={handleDrop}
       >
         <div className="mb-4">
-          <Upload className="w-6 h-6 text-gray-400 mx-auto mb-3" />
+          <Upload className="w-8 h-8  mx-auto mb-3" />
           <p className="text-gray-400 text-sm mb-3">Drag & drop files here</p>
           <label className="inline-block">
             <input
@@ -85,14 +143,22 @@ export default function EmailSequenceCard() {
               multiple
               className="hidden"
               onChange={handleFileUpload}
-              accept=".html,.txt,.json"
             />
-            <span className="bg-gray-600 text-white px-4 py-2 rounded text-sm cursor-pointer hover:bg-gray-500">
+            <span className="bg-transparent border border-gray-400 text-white px-4 py-2 rounded text-sm cursor-pointer hover:bg-gray-700 transition">
               Choose Files
             </span>
           </label>
         </div>
-        <p className="text-gray-500 text-xs">Accepts .txt, html and</p>
+        <p className="text-gray-500 text-xs">Accepts all file formats</p>
+        {/* Show selected file name (truncated within card width) */}
+        {selectedFile && (
+          <div className="text-gray-300 text-xs mt-2 flex items-center gap-1">
+            <span>Selected:</span>
+            <span className="truncate flex-1" title={selectedFile.name}>{selectedFile.name}</span>
+          </div>
+        )}
+        {/* Show loading */}
+        {loading && <div className="text-blue-400 text-xs mt-2">Uploading...</div>}
       </div>
 
       {/* Tier Access Control */}
@@ -106,6 +172,9 @@ export default function EmailSequenceCard() {
             <input
               type="checkbox"
               className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+              id="basic"
+              checked={selectedTiers.includes("basic")}
+              onChange={handleTierSelect}
             />
             <img
               src={StarIcon}
@@ -129,6 +198,7 @@ export default function EmailSequenceCard() {
               type="checkbox"
               id="premium"
               className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+              checked={selectedTiers.includes("premium")}
               onChange={handleTierSelect}
             />
             <img
@@ -151,6 +221,7 @@ export default function EmailSequenceCard() {
               type="checkbox"
               id="vip"
               className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+              checked={selectedTiers.includes("enterprise")}
               onChange={handleTierSelect}
             />
             <img
@@ -173,6 +244,7 @@ export default function EmailSequenceCard() {
       <button
         onClick={handleUpload}
         className="w-full bg-cyan-400 text-black font-medium py-3  hover:bg-cyan-300 transition-colors text-sm"
+        disabled={loading}
       >
         Upload Email Sequences
       </button>
