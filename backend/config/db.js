@@ -3,9 +3,11 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 dotenv.config();
 
-const MONGODB_URI = process.env.MONGODB_URI || "";
+//const MONGODB_URI = process.env.MONGODB_URI || "";
 
 const connectDB = async () => {
+      const MONGODB_URI = 'mongodb://localhost:27017/aneuro';
+
   try {
     await mongoose.connect(MONGODB_URI, 
   { useNewUrlParser: true, useUnifiedTopology: true }
