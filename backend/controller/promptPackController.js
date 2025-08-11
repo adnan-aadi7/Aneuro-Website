@@ -13,7 +13,6 @@ export const uploadPromptPack = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Tier is required' });
     }
 
-    // Upload to Cloudinary
     const cloudinaryResult = await uploadToCloudinary(req.file.buffer);
     const fileUrl = cloudinaryResult?.secure_url;
 

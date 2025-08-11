@@ -2,9 +2,7 @@ import PromptPack from "../model/PromptPack.js";
 import EmailSequence from "../model/EmailSequence.js";
 import FunnelTemplate from "../model/FunnelTemplate.js";
 
-/**
- * Get recent activities from PromptPack, EmailSequence, and FunnelTemplate
- */
+
 export const getRecentActivities = async (req, res) => {
   try {
     // Fetch all data

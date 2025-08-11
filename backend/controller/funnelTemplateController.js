@@ -1,5 +1,5 @@
 import FunnelTemplate from '../model/FunnelTemplate.js'
-// CREATE new funnel template
+// CREATE  funnel template
 export const createFunnelTemplate = async (req, res) => {
   try {
     const newTemplate = new FunnelTemplate(req.body);

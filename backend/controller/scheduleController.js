@@ -33,7 +33,7 @@ export const getAllScheduled = async (req, res) => {
         type: 'Email Sequence',
         scheduledDate: e.scheduledDate,
         time: e.scheduledTime,
-        releaseDateTime: e.releaseDateTime, // ✅ Added full release time
+        releaseDateTime: e.releaseDateTime, 
         tier: e.tier,
         status: e.status
       })),
@@ -43,7 +43,7 @@ export const getAllScheduled = async (req, res) => {
         type: 'Prompt Pack',
         scheduledDate: p.scheduledDate,
         time: p.scheduledTime,
-        releaseDateTime: p.releaseDateTime, // ✅ Added
+        releaseDateTime: p.releaseDateTime, 
         tier: p.tier,
         status: p.status
       })),
@@ -53,7 +53,7 @@ export const getAllScheduled = async (req, res) => {
         type: 'Funnel Template',
         scheduledDate: f.scheduledDate,
         time: f.scheduledTime,
-        releaseDateTime: f.releaseDateTime, // ✅ Added
+        releaseDateTime: f.releaseDateTime,
         tier: f.tier,
         status: f.status
       }))

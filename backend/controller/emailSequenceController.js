@@ -1,7 +1,7 @@
 import EmailSequence from "../model/EmailSequence.js";
 import { uploadToCloudinary } from "../middleware/uploadToCloudinary.js";
 import { logAction } from "../config/logAction.js";
-
+//email
 export async function create(req, res) {
   try {
     const {

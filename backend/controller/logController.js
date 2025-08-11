@@ -1,4 +1,3 @@
-// controllers/logController.js
 import Log from '../model/Log.js';
 
 export const getLogs = async (req, res) => {
