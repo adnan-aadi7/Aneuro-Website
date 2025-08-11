@@ -23,13 +23,10 @@ const port = 4000;
 
 const startServer = async () => {
   try {
-    // Connect to MongoDB first
     await connectDB();
     
-    // Mount webhook route BEFORE body parsers
     app.use('/api/webhook', webhookRoutes);
 
-    // Now add CORS and JSON body parser for the rest of the app
     app.use(cors({
       origin: ['http://localhost:5173'],
       credentials: true,
@@ -67,7 +64,6 @@ const startServer = async () => {
     app.use("/api/activities", activityRoutes);
     app.use("/api/system-logs", logRoutes);
 
-    // Start server only after database connection is established
     app.listen(port, () => {
       console.log(`✅ Server running at http://localhost:${port}`);
       console.log(`📚 Swagger docs available at http://localhost:${port}/api-docs`);
@@ -78,5 +74,4 @@ const startServer = async () => {
   }
 };
 
-// Start the server
 startServer();
