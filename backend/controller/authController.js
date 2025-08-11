@@ -6,6 +6,8 @@ import nodemailer from "nodemailer";
 import { uploadToCloudinary } from '../middleware/uploadToCloudinary.js';
 import { generateGoogleToken } from '../services/googlePassport.js';
 import { generateFacebookToken } from '../services/facebookPassport.js';
+import QuizSession from '../model/quiz.js';
+
 
 export async function Signup(reqBody) {
   try {
@@ -96,6 +98,8 @@ export async function Login(reqBody) {
 }
 
 //get api
+const TOTAL_QUESTIONS = 10; // change this to your actual total quiz questions
+
 export async function getAllUsers({ page = 1, limit = 10, accountStatus }) {
   await connectDB();
 
@@ -107,25 +111,41 @@ export async function getAllUsers({ page = 1, limit = 10, accountStatus }) {
   const users = await User.find(query)
     .skip((page - 1) * limit)
     .limit(Number(limit))
-    .select("-password");
+    .select("-password")
+    .lean(); // use lean to easily add fields
+
+  const userIds = users.map(u => u._id);
+  const quizSessions = await QuizSession.find({ user_id: { $in: userIds } })
+    .select('user_id answers is_completed')
+    .lean();
+
+  // Map quiz progress
+  const progressMap = {};
+  quizSessions.forEach(qs => {
+    const answeredCount = qs.answers.length;
+    const completion = Math.round((answeredCount / TOTAL_QUESTIONS) * 100);
+    progressMap[qs.user_id.toString()] = {
+      completionPercentage: completion,
+      isCompleted: qs.is_completed
+    };
+  });
+
+  // Attach to users
+  const usersWithProgress = users.map(u => ({
+    ...u,
+    quizProgress: progressMap[u._id.toString()] || {
+      completionPercentage: 0,
+      isCompleted: false
+    }
+  }));
 
   const total = await User.countDocuments(query);
 
-  if (!users || users.length === 0) {
-    return {
-      users: [],
-      total: 0,
-      page: Number(page),
-      totalPages: 0,
-      message: "No users found",
-    };
-  }
-
   return {
-    users,
+    users: usersWithProgress,
     total,
     page: Number(page),
-    totalPages: Math.ceil(total / limit),
+    totalPages: Math.ceil(total / limit)
   };
 }
 
@@ -137,7 +157,9 @@ export async function getUserById({ id, accountStatus }) {
     query.accountStatus = accountStatus;
   }
 
-  const user = await User.findOne(query).select("-password");
+  const user = await User.findOne(query)
+    .select("-password")
+    .lean();
 
   if (!user) {
     return {
@@ -146,7 +168,26 @@ export async function getUserById({ id, accountStatus }) {
     };
   }
 
-  return user;
+  const quizSession = await QuizSession.findOne({ user_id: id })
+    .select('answers is_completed')
+    .lean();
+
+  let completionPercentage = 0;
+  let isCompleted = false;
+  if (quizSession) {
+    completionPercentage = Math.round(
+      (quizSession.answers.length / TOTAL_QUESTIONS) * 100
+    );
+    isCompleted = quizSession.is_completed;
+  }
+
+  return {
+    ...user,
+    quizProgress: {
+      completionPercentage,
+      isCompleted
+    }
+  };
 }
 
 

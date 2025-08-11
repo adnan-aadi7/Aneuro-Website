@@ -1,4 +1,3 @@
-//user model
 import mongoose from "mongoose";
 
 const UserSchema = new mongoose.Schema(
@@ -33,8 +32,8 @@ const UserSchema = new mongoose.Schema(
     otp: String,
     otpExpires: Date,
     profileImage: {
-      type: String, 
-      default: "",  
+      type: String,
+      default: "",
     },
     subscription: {
       plan: {
@@ -58,6 +57,12 @@ const UserSchema = new mongoose.Schema(
         default: null,
       },
     },
+
+    // ✅ Quiz completion percentage
+    quizCompletion: {
+      type: Number, // value between 0 - 100
+      default: 0,
+    }
   },
   { timestamps: true }
 );
