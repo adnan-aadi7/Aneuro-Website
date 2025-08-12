@@ -5,7 +5,6 @@ import { toast, Toaster } from "react-hot-toast";
 import { 
   fetchEmailSequences, 
   deleteEmailSequence,
-  updateEmailSequence,
   clearError,
   clearSuccess,
   selectEmailSequences,
@@ -13,25 +12,19 @@ import {
   selectEmailSequenceError,
   selectEmailSequenceSuccess
 } from "../../../../store/Slice/EmailSequenceSLice";
+import { useNavigate } from "react-router-dom";
 
 const EmailSequences = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const sequences = useSelector(selectEmailSequences);
   const loading = useSelector(selectEmailSequenceLoading);
   const error = useSelector(selectEmailSequenceError);
   const success = useSelector(selectEmailSequenceSuccess);
-
-  // State for modals
-  const [viewModal, setViewModal] = useState(false);
-  const [editModal, setEditModal] = useState(false);
+  
+  // State for delete modal
   const [deleteModal, setDeleteModal] = useState(false);
   const [selectedSequence, setSelectedSequence] = useState(null);
-  const [editForm, setEditForm] = useState({
-    name: '',
-    tier: '',
-    status: '',
-    emailCount: 0
-  });
 
   // Debug logging to see what data we're getting
   useEffect(() => {
@@ -48,9 +41,7 @@ const EmailSequences = () => {
     if (success) {
       toast.success(success);
       dispatch(clearSuccess());
-      // Close modals on success
-      setViewModal(false);
-      setEditModal(false);
+      // Close delete modal on success
       setDeleteModal(false);
       setSelectedSequence(null);
     }
@@ -63,22 +54,6 @@ const EmailSequences = () => {
     }
   }, [error, dispatch]);
 
-  const handleView = (sequence) => {
-    setSelectedSequence(sequence);
-    setViewModal(true);
-  };
-
-  const handleEdit = (sequence) => {
-    setSelectedSequence(sequence);
-    setEditForm({
-      name: sequence.name || '',
-      tier: sequence.tier || '',
-      status: sequence.status || '',
-      emailCount: sequence.emailCount || sequence.emails || 0
-    });
-    setEditModal(true);
-  };
-
   const handleDelete = (sequence) => {
     setSelectedSequence(sequence);
     setDeleteModal(true);
@@ -90,20 +65,6 @@ const EmailSequences = () => {
         await dispatch(deleteEmailSequence(selectedSequence._id)).unwrap();
       } catch (error) {
         console.error('Delete failed:', error);
-      }
-    }
-  };
-
-  const handleEditSubmit = async (e) => {
-    e.preventDefault();
-    if (selectedSequence?._id) {
-      try {
-        await dispatch(updateEmailSequence({
-          id: selectedSequence._id,
-          updateData: editForm
-        })).unwrap();
-      } catch (error) {
-        console.error('Update failed:', error);
       }
     }
   };
@@ -258,14 +219,13 @@ const EmailSequences = () => {
                         <button 
                           className="text-gray-400 hover:text-white transition-colors"
                           title="View"
-                          onClick={() => handleView(sequence)}
+                          onClick={() => navigate('/admin/analytics/email-details')}
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button 
                           className="text-gray-400 hover:text-white transition-colors"
                           title="Edit"
-                          onClick={() => handleEdit(sequence)}
                         >
                           <Edit className="w-4 h-4" />
                         </button>
@@ -285,159 +245,6 @@ const EmailSequences = () => {
           </tbody>
         </table>
       </div>
-
-      {/* View Modal */}
-      {viewModal && selectedSequence && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#1F2937] rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-white">View Email Sequence</h3>
-              <button
-                onClick={() => setViewModal(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="space-y-3 text-sm">
-              <div>
-                <span className="text-gray-400">Name:</span>
-                <span className="text-white ml-2">{safeRender(selectedSequence.name, 'N/A')}</span>
-              </div>
-              <div>
-                <span className="text-gray-400">Tier:</span>
-                <span className="ml-2">
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${getTierBadge(
-                    safeRender(selectedSequence.tier)
-                  )}`}>
-                    {safeRender(selectedSequence.tier, 'N/A')}
-                  </span>
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-400">Status:</span>
-                <span className="ml-2">
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadge(
-                    safeRender(selectedSequence.status)
-                  )}`}>
-                    {safeRender(selectedSequence.status, 'N/A')}
-                  </span>
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-400">Email Count:</span>
-                <span className="text-white ml-2">{safeRender(selectedSequence.emailCount || selectedSequence.emails, 0)}</span>
-              </div>
-              <div>
-                <span className="text-gray-400">Usage:</span>
-                <span className="text-white ml-2">{safeRender(selectedSequence.usage, 0)}</span>
-              </div>
-              <div>
-                <span className="text-gray-400">Created:</span>
-                <span className="text-white ml-2">{formatDate(selectedSequence.createdAt)}</span>
-              </div>
-              {/* Debug: Show raw data structure */}
-              <div className="mt-4 p-3 bg-gray-800 rounded text-xs">
-                <span className="text-gray-400">Debug Info:</span>
-                <pre className="text-gray-300 mt-1 overflow-auto">
-                  {JSON.stringify(selectedSequence, null, 2)}
-                </pre>
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={() => setViewModal(false)}
-                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Modal */}
-      {editModal && selectedSequence && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-[#1F2937] rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-white">Edit Email Sequence</h3>
-              <button
-                onClick={() => setEditModal(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <form onSubmit={handleEditSubmit} className="space-y-4">
-              <div>
-                <label className="block text-gray-400 text-sm mb-2">Name</label>
-                <input
-                  type="text"
-                  value={editForm.name}
-                  onChange={(e) => setEditForm({...editForm, name: e.target.value})}
-                  className="w-full bg-[#374151] border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-gray-400 text-sm mb-2">Tier</label>
-                <select
-                  value={editForm.tier}
-                  onChange={(e) => setEditForm({...editForm, tier: e.target.value})}
-                  className="w-full bg-[#374151] border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-                  required
-                >
-                  <option value="">Select Tier</option>
-                  <option value="basic">Basic</option>
-                  <option value="premium">Premium</option>
-                  <option value="enterprise">Enterprise</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-gray-400 text-sm mb-2">Status</label>
-                <select
-                  value={editForm.status}
-                  onChange={(e) => setEditForm({...editForm, status: e.target.value})}
-                  className="w-full bg-[#374151] border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-                  required
-                >
-                  <option value="">Select Status</option>
-                  <option value="active">Active</option>
-                  <option value="scheduled">Scheduled</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-gray-400 text-sm mb-2">Email Count</label>
-                <input
-                  type="number"
-                  value={editForm.emailCount}
-                  onChange={(e) => setEditForm({...editForm, emailCount: parseInt(e.target.value)})}
-                  className="w-full bg-[#374151] border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-                  min="0"
-                  required
-                />
-              </div>
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setEditModal(false)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500"
-                >
-                  Update
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Delete Modal */}
       {deleteModal && selectedSequence && (

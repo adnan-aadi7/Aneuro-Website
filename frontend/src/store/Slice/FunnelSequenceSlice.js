@@ -14,6 +14,22 @@ export const createFunnelTemplate = createAsyncThunk(
   }
 );
 
+export const createFunnelTemplateWithFile = createAsyncThunk(
+  'funnelTemplate/createWithFile',
+  async (formData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post('/funnel-templates/file', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to create funnel template with file' });
+    }
+  }
+);
+
 export const fetchFunnelTemplates = createAsyncThunk(
   'funnelTemplate/fetchAll',
   async (_, { rejectWithValue }) => {
@@ -141,13 +157,30 @@ const funnelTemplateSlice = createSlice({
       })
       .addCase(createFunnelTemplate.fulfilled, (state, action) => {
         state.loading = false;
-        state.success = 'Funnel template created successfully';
+        state.success = action.payload.message || 'Funnel template created successfully';
         state.templates.unshift(action.payload.data);
         state.stats.totalTemplates += 1;
       })
       .addCase(createFunnelTemplate.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || 'Failed to create funnel template';
+      });
+
+    // Create with File
+    builder
+      .addCase(createFunnelTemplateWithFile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createFunnelTemplateWithFile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = action.payload.message || 'Funnel template created successfully with file';
+        state.templates.unshift(action.payload.data);
+        state.stats.totalTemplates += 1;
+      })
+      .addCase(createFunnelTemplateWithFile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || 'Failed to create funnel template with file';
       });
 
     // Fetch All
@@ -188,7 +221,7 @@ const funnelTemplateSlice = createSlice({
       })
       .addCase(updateFunnelTemplate.fulfilled, (state, action) => {
         state.loading = false;
-        state.success = 'Funnel template updated successfully';
+        state.success = action.payload.message || 'Funnel template updated successfully';
         const index = state.templates.findIndex(template => template._id === action.payload.data._id);
         if (index !== -1) {
           state.templates[index] = action.payload.data;
@@ -211,11 +244,9 @@ const funnelTemplateSlice = createSlice({
       .addCase(deleteFunnelTemplate.fulfilled, (state, action) => {
         state.loading = false;
         state.success = action.payload.message;
-        state.templates = state.templates.filter(template => template._id !== action.payload.data.deletedId);
-        state.stats.totalTemplates -= 1;
-        if (state.currentTemplate && state.currentTemplate._id === action.payload.data.deletedId) {
-          state.currentTemplate = null;
-        }
+        // Remove the deleted template from the list
+        // Note: Backend doesn't return the deleted ID, so we need to handle this differently
+        // The component should refresh the list after successful deletion
       })
       .addCase(deleteFunnelTemplate.rejected, (state, action) => {
         state.loading = false;

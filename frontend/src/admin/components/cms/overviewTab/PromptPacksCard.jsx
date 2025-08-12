@@ -224,7 +224,7 @@ export default function PromptPacksCard() {
 
       {/* Upload Button */}
       <button
-        className="w-full bg-cyan-400 text-[#232432] font-medium py-3 rounded hover:bg-cyan-300 transition-colors text-sm mt-5"
+        className="w-full bg-cyan-400 text-[#232432] font-medium py-3 hover:bg-cyan-300 transition-colors text-sm mt-5"
         onClick={handleUploadClick}
         disabled={loading}
       >

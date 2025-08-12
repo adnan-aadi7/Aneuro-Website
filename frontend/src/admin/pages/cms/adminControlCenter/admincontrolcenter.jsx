@@ -1,7 +1,7 @@
 import { useState } from "react";
+import { toast, Toaster } from "react-hot-toast";
 import EmailSequencesTab from "../../../components/cms/emailsequenceTab/EmailSequencetab";
 import FunnelTemplatesTab from "../../../components/cms/funnelTab/FunnelTemplates";
-import ScheduledReleasesTab from "../../../components/cms/sheduleReleasesTab/ScheduledReleasesTable";
 import EmailSequenceCard from "../../../components/cms/overviewTab/EmailSequenceCard";
 import PromptPacksCard from "../../../components/cms/overviewTab/PromptPacksCard";
 import FunnelTemplateCard from "../../../components/cms/overviewTab/FunnelTemplateCard";
@@ -37,6 +37,23 @@ const AdminControlCenter = () => {
     "Prompt Packs": "Organize and publish AI prompt packs",
     "Funnel Templates": "Configure and customize funnel templates",
     "Scheduled Releases": "Set up and control scheduled content releases",
+  };
+
+  const handleScheduleSuccess = (message) => {
+    toast.success(message);
+    setShowSchedulePopup(false);
+  };
+
+  const handleScheduleError = (message) => {
+    toast.error(message);
+  };
+
+  const handleTableSuccess = (message) => {
+    toast.success(message);
+  };
+
+  const handleTableError = (message) => {
+    toast.error(message);
   };
 
   return (
@@ -163,7 +180,10 @@ const AdminControlCenter = () => {
         {activeTab === "Scheduled Releases" && (
           <>
             <Cards />
-            <ScheduledReleasesTable />
+            <ScheduledReleasesTable 
+              onSuccess={handleTableSuccess}
+              onError={handleTableError}
+            />
           </>
         )}
       </div>
@@ -171,8 +191,10 @@ const AdminControlCenter = () => {
       <AddShedulePopup
         open={showSchedulePopup}
         onClose={() => setShowSchedulePopup(false)}
-        bgColor="#1E293B"
+        onSuccess={handleScheduleSuccess}
+        onError={handleScheduleError}
       />
+      <Toaster position="top-right" />
     </div>
   );
 };

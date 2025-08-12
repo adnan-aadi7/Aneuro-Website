@@ -108,7 +108,7 @@ export const getAllScheduled = async (req, res) => {
 
 export const scheduleContent = async (req, res) => {
   try {
-    const { id, modelType, scheduledDate, scheduledTime } = req.body;
+    const { id, modelType, scheduledDate, scheduledTime, tier } = req.body;
 
     // Combine into a single Date object
     const releaseDateTime = new Date(`${scheduledDate}T${scheduledTime}:00Z`);
@@ -127,15 +127,23 @@ export const scheduleContent = async (req, res) => {
       });
     }
 
+    // Prepare update data
+    const updateData = {
+      releaseDateTime,
+      scheduledDate,
+      scheduledTime,
+      status: "scheduled",
+    };
+
+    // Add tier if provided
+    if (tier) {
+      updateData.tier = tier;
+    }
+
     // Update the document
     const updatedDoc = await Model.findByIdAndUpdate(
       id,
-      {
-        releaseDateTime,
-        scheduledDate,
-        scheduledTime,
-        status: "scheduled",
-      },
+      updateData,
       { new: true, runValidators: true }
     );
 
@@ -166,7 +174,7 @@ export const scheduleContent = async (req, res) => {
 
 export const updateSchedule = async (req, res) => {
   try {
-    const { id, modelType, scheduledDate, scheduledTime, status } = req.body;
+    const { id, modelType, scheduledDate, scheduledTime, status, tier } = req.body;
 
     const models = {
       EmailSequence,
@@ -188,6 +196,7 @@ export const updateSchedule = async (req, res) => {
       updateData.scheduledTime = scheduledTime;
     }
     if (status) updateData.status = status;
+    if (tier) updateData.tier = tier;
 
     const updatedDoc = await Model.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
 

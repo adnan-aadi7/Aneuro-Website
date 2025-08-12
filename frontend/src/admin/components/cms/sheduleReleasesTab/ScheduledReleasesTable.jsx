@@ -1,37 +1,29 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Edit, Trash2, Mail, Zap, Filter } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAllScheduled, selectScheduled, selectScheduleLoading, selectScheduleError, deleteSchedule } from "../../../../store/Slice/ScheduleSlice";
+import AddShedulePopup from "./AddShedulePopup";
 
-const ScheduledReleasesTable = () => {
-  const scheduledReleases = [
-    {
-      content: "Customer Retention Series",
-      type: "Email Sequence",
-      icon: "mail",
-      scheduledDate: "2/1/2024",
-      time: "09:00",
-      tier: "enterprise",
-      status: "scheduled",
-    },
-    {
-      content: "AI Business Automation Pack",
-      type: "Prompt Pack",
-      icon: "zap",
-      scheduledDate: "2/5/2024",
-      time: "14:30",
-      tier: "premium",
-      status: "scheduled",
-    },
-    {
-      content: "Coaching Program Funnel",
-      type: "Funnel Template",
-      icon: "filter",
-      scheduledDate: "2/10/2024",
-      time: "10:00",
-      tier: "basic",
-      status: "scheduled",
-    },
-  ];
+const ScheduledReleasesTable = ({ onSuccess, onError }) => {
+  const dispatch = useDispatch();
+  const scheduledReleases = useSelector(selectScheduled);
+  const loading = useSelector(selectScheduleLoading);
+  const error = useSelector(selectScheduleError);
+  
+  // State for edit popup
+  const [editPopupOpen, setEditPopupOpen] = useState(false);
+  const [editingRelease, setEditingRelease] = useState(null);
+  
+  // State for delete confirmation popup
+  const [deletePopupOpen, setDeletePopupOpen] = useState(false);
+  const [deletingRelease, setDeletingRelease] = useState(null);
 
+  // Fetch scheduled releases on component mount
+  useEffect(() => {
+    dispatch(fetchAllScheduled());
+  }, [dispatch]);
+
+  console.log("scheduledReleases", scheduledReleases);
   const getTierBadge = (tier) => {
     const styles = {
       premium: "bg-blue-100 text-blue-800",
@@ -44,27 +36,159 @@ const ScheduledReleasesTable = () => {
   const getStatusBadge = (status) => {
     const styles = {
       scheduled: "bg-blue-100 text-blue-800",
+      active: "bg-green-100 text-green-800",
+      expired: "bg-red-100 text-red-800",
     };
     return styles[status] || "bg-gray-100 text-gray-800";
   };
 
-  const getIcon = (iconType) => {
-    switch (iconType) {
-      case "mail":
+  const getIcon = (type) => {
+    switch (type) {
+      case "Email Sequence":
         return <Mail className="w-4 h-4 mr-2" />;
-      case "zap":
+      case "Prompt Pack":
         return <Zap className="w-4 h-4 mr-2" />;
-      case "filter":
+      case "Funnel Template":
         return <Filter className="w-4 h-4 mr-2" />;
       default:
         return null;
     }
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "Not set";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const formatTime = (dateString) => {
+    if (!dateString) return "Not set";
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const truncateContentName = (name, maxLength = 30) => {
+    if (!name) return "Unnamed";
+    if (name.length <= maxLength) return name;
+    return `${name.substring(0, maxLength)}...`;
+  };
+
+  const handleEdit = (release) => {
+    setEditingRelease(release);
+    setEditPopupOpen(true);
+  };
+
+  const handleEditClose = () => {
+    setEditingRelease(null);
+    setEditPopupOpen(false);
+    // Refresh the table after edit
+    dispatch(fetchAllScheduled());
+  };
+
+  const handleEditSuccess = () => {
+    // Refresh the table after successful edit
+    dispatch(fetchAllScheduled());
+  };
+
+  const handleDelete = (release) => {
+    setDeletingRelease(release);
+    setDeletePopupOpen(true);
+  };
+
+  const handleDeleteClose = () => {
+    setDeletingRelease(null);
+    setDeletePopupOpen(false);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (deletingRelease) {
+      try {
+        // Get modelType from the release type
+        const modelType = getModelTypeFromContentType(deletingRelease.type);
+        
+        await dispatch(deleteSchedule({ 
+          id: deletingRelease.id, 
+          modelType: modelType 
+        })).unwrap();
+        // Refresh the table after successful deletion
+        dispatch(fetchAllScheduled());
+        handleDeleteClose();
+        // Show success message through parent's toast system
+        if (onSuccess) {
+          onSuccess("Scheduled release deleted successfully!");
+        }
+      } catch (error) {
+        console.error('Failed to delete schedule:', error);
+        // Show error message through parent's toast system
+        if (onError) {
+          onError("Failed to delete scheduled release.");
+        }
+      }
+    }
+  };
+
+  // Helper function to get model type from content type
+  const getModelTypeFromContentType = (contentType) => {
+    switch (contentType) {
+      case 'Email Sequence':
+        return 'EmailSequence';
+      case 'Prompt Pack':
+        return 'PromptPack';
+      case 'Funnel Template':
+        return 'FunnelTemplate';
+      default:
+        return '';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="bg- text-white w-full mt-3 border border-slate-800 p-5">
+        <h1 className="text-3xl font-medium mb-6">All Scheduled Releases</h1>
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mr-3"></div>
+          <span className="text-gray-400">Loading scheduled releases...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg- text-white w-full mt-3 border border-slate-800 p-5">
+        <h1 className="text-3xl font-medium mb-6">All Scheduled Releases</h1>
+        <div className="text-center py-8">
+          <p className="text-red-400 mb-4">Error loading scheduled releases</p>
+          <button 
+            onClick={() => dispatch(fetchAllScheduled())}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg- text-white  w-full mt-3 border border-slate-800 p-5">
+    <div className="bg- text-white w-full mt-3 border border-slate-800 p-5">
       {/* Header */}
-      <h1 className="text-3xl font-medium mb-6">All Scheduled Releases</h1>
+      <div className="mb-6">
+        <h1 className="text-3xl font-medium">
+          All Scheduled Releases
+          {scheduledReleases.length > 0 && (
+            <span className="text-gray-400 text-lg ml-3">({scheduledReleases.length})</span>
+          )}
+        </h1>
+      </div>
 
       {/* Table */}
       <div className="overflow-x-auto">
@@ -95,59 +219,124 @@ const ScheduledReleasesTable = () => {
             </tr>
           </thead>
           <tbody>
-            {scheduledReleases.map((release, index) => (
-              <tr
-                key={index}
-                className="border-b border-slate-800 hover:bg-slate-800/50"
-              >
-                <td className="py-4 px-4 text-white text-sm">
-                  {release.content}
-                </td>
-                <td className="py-4 px-4 text-gray-300 text-sm">
-                  <div className="flex items-center">
-                    {getIcon(release.icon)}
-                    {release.type}
-                  </div>
-                </td>
-                <td className="py-4 px-4 text-gray-300 text-sm">
-                  {release.scheduledDate}
-                </td>
-                <td className="py-4 px-4 text-gray-300 text-sm">
-                  {release.time}
-                </td>
-                <td className="py-4 px-4">
-                  <span
-                    className={`px-2 py-1 rounded text-xs font-medium ${getTierBadge(
-                      release.tier
-                    )}`}
-                  >
-                    {release.tier}
-                  </span>
-                </td>
-                <td className="py-4 px-4">
-                  <span
-                    className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadge(
-                      release.status
-                    )}`}
-                  >
-                    {release.status}
-                  </span>
-                </td>
-                <td className="py-4 px-4">
-                  <div className="flex items-center space-x-2">
-                    <button className="text-gray-400 hover:text-white transition-colors">
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button className="text-gray-400 hover:text-white transition-colors">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+            {scheduledReleases.length === 0 ? (
+              <tr>
+                <td colSpan="7" className="py-8 text-center text-gray-400">
+                  No scheduled releases found
                 </td>
               </tr>
-            ))}
+            ) : (
+              scheduledReleases.map((release) => (
+                <tr
+                  key={release.id}
+                  className="border-b border-slate-800 hover:bg-slate-800/50"
+                >
+                  <td className="py-4 px-4 text-white text-sm">
+                    <div title={release.content}>
+                      {truncateContentName(release.content)}
+                    </div>
+                  </td>
+                  <td className="py-4 px-4 text-gray-300 text-sm">
+                    <div className="flex items-center">
+                      {getIcon(release.type)}
+                      {release.type}
+                    </div>
+                  </td>
+                  <td className="py-4 px-4 text-gray-300 text-sm">
+                    {formatDate(release.releaseDateTime)}
+                  </td>
+                  <td className="py-4 px-4 text-gray-300 text-sm">
+                    {formatTime(release.releaseDateTime)}
+                  </td>
+                  <td className="py-4 px-4">
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-medium ${getTierBadge(
+                        release.tier
+                      )}`}
+                    >
+                      {release.tier}
+                    </span>
+                  </td>
+                  <td className="py-4 px-4">
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadge(
+                        release.status
+                      )}`}
+                    >
+                      {release.status}
+                    </span>
+                  </td>
+                  <td className="py-4 px-4">
+                    <div className="flex items-center space-x-2">
+                      <button 
+                        onClick={() => handleEdit(release)}
+                        className="text-gray-400 hover:text-white transition-colors"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(release)}
+                        className="text-gray-400 hover:text-white transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
+
+      {/* Edit Schedule Popup */}
+      {editPopupOpen && editingRelease && (
+        <AddShedulePopup
+          open={editPopupOpen}
+          onClose={handleEditClose}
+          editingRelease={editingRelease}
+          onSuccess={handleEditSuccess}
+        />
+      )}
+
+      {/* Delete Confirmation Popup */}
+      {deletePopupOpen && deletingRelease && (
+        <div className="fixed inset-0 bg-[#1E293B]/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[#23283A] p-6 rounded-lg shadow-xl border border-slate-700 max-w-md w-full mx-4">
+            <h3 className="text-lg font-medium text-white mb-4">Confirm Deletion</h3>
+            <div className="mb-6">
+              <p className="text-sm text-gray-300 mb-2">
+                Are you sure you want to delete this scheduled release?
+              </p>
+              <div className="bg-slate-800 p-3 rounded border border-slate-600">
+                <p className="text-white font-medium text-sm break-words">
+                  {deletingRelease.content}
+                </p>
+                <p className="text-gray-400 text-xs mt-1">
+                  {deletingRelease.type} • {deletingRelease.tier} • {formatDate(deletingRelease.releaseDateTime)}
+                </p>
+              </div>
+              <p className="text-red-400 text-xs mt-2">
+                This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={handleDeleteClose}
+                className="flex-1 px-4 py-2 bg-slate-600 text-white text-sm font-medium rounded-md hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                className="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -5,7 +5,6 @@ import { toast, Toaster } from "react-hot-toast";
 import { 
   fetchPromptPacks, 
   deletePromptPack,
-  updatePromptPack,
   clearError,
   clearSuccess,
   selectPromptPacks,
@@ -13,26 +12,19 @@ import {
   selectPromptPackError,
   selectPromptPackSuccess
 } from "../../../../store/Slice/PromptPacksSlice";
+import { useNavigate } from "react-router-dom";
 
 const PromptPacks = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const promptPacks = useSelector(selectPromptPacks);
   const loading = useSelector(selectPromptPackLoading);
   const error = useSelector(selectPromptPackError);
   const success = useSelector(selectPromptPackSuccess);
 
-  // State for modals
-  const [viewModal, setViewModal] = useState(false);
-  const [editModal, setEditModal] = useState(false);
+  // State for delete modal
   const [deleteModal, setDeleteModal] = useState(false);
   const [selectedPack, setSelectedPack] = useState(null);
-  const [editForm, setEditForm] = useState({
-    name: '',
-    category: '',
-    tier: '',
-    status: '',
-    prompts: []
-  });
 
   // Debug logging to see what data we're getting
   useEffect(() => {
@@ -49,9 +41,7 @@ const PromptPacks = () => {
     if (success) {
       toast.success(success);
       dispatch(clearSuccess());
-      // Close modals on success
-      setViewModal(false);
-      setEditModal(false);
+      // Close delete modal on success
       setDeleteModal(false);
       setSelectedPack(null);
     }
@@ -64,23 +54,6 @@ const PromptPacks = () => {
     }
   }, [error, dispatch]);
 
-  const handleView = (pack) => {
-    setSelectedPack(pack);
-    setViewModal(true);
-  };
-
-  const handleEdit = (pack) => {
-    setSelectedPack(pack);
-    setEditForm({
-      name: pack.name || '',
-      category: pack.category || '',
-      tier: pack.tier || '',
-      status: pack.status || '',
-      prompts: pack.prompts || []
-    });
-    setEditModal(true);
-  };
-
   const handleDelete = (pack) => {
     setSelectedPack(pack);
     setDeleteModal(true);
@@ -92,20 +65,6 @@ const PromptPacks = () => {
         await dispatch(deletePromptPack(selectedPack._id)).unwrap();
       } catch (error) {
         console.error('Delete failed:', error);
-      }
-    }
-  };
-
-  const handleEditSubmit = async (e) => {
-    e.preventDefault();
-    if (selectedPack?._id) {
-      try {
-        await dispatch(updatePromptPack({
-          id: selectedPack._id,
-          updateData: editForm
-        })).unwrap();
-      } catch (error) {
-        console.error('Update failed:', error);
       }
     }
   };
@@ -266,14 +225,13 @@ const PromptPacks = () => {
                         <button 
                           className="text-gray-400 hover:text-white transition-colors"
                           title="View"
-                          onClick={() => handleView(pack)}
+                          onClick={() => navigate('/admin/analytics/prompts-details')}
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button 
                           className="text-gray-400 hover:text-white transition-colors"
                           title="Edit"
-                          onClick={() => handleEdit(pack)}
                         >
                           <Edit className="w-4 h-4" />
                         </button>
@@ -293,162 +251,6 @@ const PromptPacks = () => {
           </tbody>
         </table>
       </div>
-
-      {/* View Modal */}
-      {viewModal && selectedPack && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#1F2937] rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-white">View Prompt Pack</h3>
-              <button
-                onClick={() => setViewModal(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="space-y-3 text-sm">
-              <div>
-                <span className="text-gray-400">Name:</span>
-                <span className="text-white ml-2">{safeRender(selectedPack.name, 'N/A')}</span>
-              </div>
-              <div>
-                <span className="text-gray-400">Category:</span>
-                <span className="text-white ml-2">{safeRender(selectedPack.category, 'N/A')}</span>
-              </div>
-              <div>
-                <span className="text-gray-400">Tier:</span>
-                <span className="ml-2">
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${getTierBadge(
-                    safeRender(selectedPack.tier)
-                  )}`}>
-                    {safeRender(selectedPack.tier, 'N/A')}
-                  </span>
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-400">Status:</span>
-                <span className="ml-2">
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadge(
-                    safeRender(selectedPack.status)
-                  )}`}>
-                    {safeRender(selectedPack.status, 'N/A')}
-                  </span>
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-400">Prompts:</span>
-                <span className="text-white ml-2">{selectedPack.prompts ? selectedPack.prompts.length : 0} prompts</span>
-              </div>
-              <div>
-                <span className="text-gray-400">Usage:</span>
-                <span className="text-white ml-2">{safeRender(selectedPack.usageCount || selectedPack.usage, 0)}</span>
-              </div>
-              <div>
-                <span className="text-gray-400">Created:</span>
-                <span className="text-white ml-2">{formatDate(selectedPack.createdAt)}</span>
-              </div>
-              {/* Debug: Show raw data structure */}
-              <div className="mt-4 p-3 bg-gray-800 rounded text-xs">
-                <span className="text-gray-400">Debug Info:</span>
-                <pre className="text-gray-300 mt-1 overflow-auto">
-                  {JSON.stringify(selectedPack, null, 2)}
-                </pre>
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={() => setViewModal(false)}
-                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Modal */}
-      {editModal && selectedPack && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#1F2937] rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-white">Edit Prompt Pack</h3>
-              <button
-                onClick={() => setEditModal(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <form onSubmit={handleEditSubmit} className="space-y-4">
-              <div>
-                <label className="block text-gray-400 text-sm mb-2">Name</label>
-                <input
-                  type="text"
-                  value={editForm.name}
-                  onChange={(e) => setEditForm({...editForm, name: e.target.value})}
-                  className="w-full bg-[#374151] border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-gray-400 text-sm mb-2">Category</label>
-                <input
-                  type="text"
-                  value={editForm.category}
-                  onChange={(e) => setEditForm({...editForm, category: e.target.value})}
-                  className="w-full bg-[#374151] border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-gray-400 text-sm mb-2">Tier</label>
-                <select
-                  value={editForm.tier}
-                  onChange={(e) => setEditForm({...editForm, tier: e.target.value})}
-                  className="w-full bg-[#374151] border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-                  required
-                >
-                  <option value="">Select Tier</option>
-                  <option value="basic">Basic</option>
-                  <option value="premium">Premium</option>
-                  <option value="enterprise">Enterprise</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-gray-400 text-sm mb-2">Status</label>
-                <select
-                  value={editForm.status}
-                  onChange={(e) => setEditForm({...editForm, status: e.target.value})}
-                  className="w-full bg-[#374151] border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-                  required
-                >
-                  <option value="">Select Status</option>
-                  <option value="active">Active</option>
-                  <option value="scheduled">Scheduled</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setEditModal(false)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500"
-                >
-                  Update
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Delete Modal */}
       {deleteModal && selectedPack && (

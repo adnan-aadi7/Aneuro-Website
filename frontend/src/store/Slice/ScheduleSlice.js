@@ -14,11 +14,32 @@ export const fetchAllScheduled = createAsyncThunk(
   }
 );
 
+export const fetchScheduledStats = createAsyncThunk(
+  'schedule/fetchStats',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get('/schedule/stats');
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to fetch scheduled stats' });
+    }
+  }
+);
+
 export const scheduleContent = createAsyncThunk(
   'schedule/scheduleContent',
   async (payload, { rejectWithValue }) => {
     try {
-      const response = await axios.post('/schedule', payload);
+      // Map frontend payload to backend expectations
+      const backendPayload = {
+        id: payload.contentId, // Map contentId to id
+        modelType: payload.modelType,
+        scheduledDate: payload.scheduledDate,
+        scheduledTime: payload.scheduledTime,
+        tier: payload.tier // Include tier if needed by backend
+      };
+      
+      const response = await axios.post('/schedule', backendPayload);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to schedule content' });
@@ -54,12 +75,18 @@ export const deleteSchedule = createAsyncThunk(
 const initialState = {
   scheduled: [],
   stats: {
+    // Stats from getAllScheduled endpoint
     totalPending: 0,
     totalPrompts: 0,
     totalEmails: 0,
     totalFunnels: 0,
     thisWeekReleases: 0,
-    nextRelease: null
+    nextRelease: null,
+    // Stats from getScheduledStats endpoint
+    upcoming: 0,
+    thisWeek: 0,
+    thisMonth: 0,
+    overdue: 0
   },
   loading: false,
   error: null,
@@ -79,7 +106,7 @@ const scheduleSlice = createSlice({
     }
   },
   extraReducers: (builder) => {
-    // Fetch All
+    // Fetch All Scheduled
     builder
       .addCase(fetchAllScheduled.pending, (state) => {
         state.loading = true;
@@ -88,12 +115,36 @@ const scheduleSlice = createSlice({
       .addCase(fetchAllScheduled.fulfilled, (state, action) => {
         state.loading = false;
         state.scheduled = action.payload.data;
-        state.stats = action.payload.stats;
+        // Update stats from getAllScheduled response
+        state.stats = {
+          ...state.stats,
+          ...action.payload.stats
+        };
         state.success = 'Fetched scheduled content successfully';
       })
       .addCase(fetchAllScheduled.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || 'Failed to fetch scheduled content';
+      });
+
+    // Fetch Scheduled Stats
+    builder
+      .addCase(fetchScheduledStats.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchScheduledStats.fulfilled, (state, action) => {
+        state.loading = false;
+        // Update stats from getScheduledStats response
+        state.stats = {
+          ...state.stats,
+          ...action.payload.stats
+        };
+        state.success = 'Fetched scheduled stats successfully';
+      })
+      .addCase(fetchScheduledStats.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || 'Failed to fetch scheduled stats';
       });
 
     // Schedule Content
@@ -105,6 +156,8 @@ const scheduleSlice = createSlice({
       .addCase(scheduleContent.fulfilled, (state, action) => {
         state.loading = false;
         state.success = action.payload.message;
+        // Note: The component should dispatch fetchAllScheduled after successful scheduling
+        // to refresh the scheduled content list
       })
       .addCase(scheduleContent.rejected, (state, action) => {
         state.loading = false;

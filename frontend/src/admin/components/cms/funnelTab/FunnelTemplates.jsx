@@ -5,7 +5,6 @@ import { toast, Toaster } from "react-hot-toast";
 import {
   fetchFunnelTemplates,
   deleteFunnelTemplate,
-  updateFunnelTemplate,
   clearError,
   clearSuccess,
   selectFunnelTemplates,
@@ -13,37 +12,30 @@ import {
   selectFunnelTemplateError,
   selectFunnelTemplateSuccess
 } from "../../../../store/Slice/FunnelSequenceSlice";
+import { useNavigate } from "react-router-dom";
 
 const FunnelTemplates = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const funnelTemplates = useSelector(selectFunnelTemplates);
   const loading = useSelector(selectFunnelTemplateLoading);
   const error = useSelector(selectFunnelTemplateError);
   const success = useSelector(selectFunnelTemplateSuccess);
 
-  // State for modals
-  const [viewModal, setViewModal] = useState(false);
-  const [editModal, setEditModal] = useState(false);
+  // State for delete modal
   const [deleteModal, setDeleteModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [editForm, setEditForm] = useState({
-    name: '',
-    pages: 1,
-    category: '',
-    tier: '',
-    status: ''
-  });
 
   useEffect(() => {
     dispatch(fetchFunnelTemplates());
   }, [dispatch]);
+ 
 
   useEffect(() => {
     if (success) {
       toast.success(success);
       dispatch(clearSuccess());
-      setViewModal(false);
-      setEditModal(false);
+      // Close delete modal on success
       setDeleteModal(false);
       setSelectedTemplate(null);
     }
@@ -56,23 +48,6 @@ const FunnelTemplates = () => {
     }
   }, [error, dispatch]);
 
-  const handleView = (template) => {
-    setSelectedTemplate(template);
-    setViewModal(true);
-  };
-
-  const handleEdit = (template) => {
-    setSelectedTemplate(template);
-    setEditForm({
-      name: template.name || '',
-      pages: template.pages || 1,
-      category: template.category || '',
-      tier: template.tier || '',
-      status: template.status || ''
-    });
-    setEditModal(true);
-  };
-
   const handleDelete = (template) => {
     setSelectedTemplate(template);
     setDeleteModal(true);
@@ -84,20 +59,6 @@ const FunnelTemplates = () => {
         await dispatch(deleteFunnelTemplate(selectedTemplate._id)).unwrap();
       } catch (error) {
         console.error('Delete failed:', error);
-      }
-    }
-  };
-
-  const handleEditSubmit = async (e) => {
-    e.preventDefault();
-    if (selectedTemplate?._id) {
-      try {
-        await dispatch(updateFunnelTemplate({
-          id: selectedTemplate._id,
-          updateData: editForm
-        })).unwrap();
-      } catch (error) {
-        console.error('Update failed:', error);
       }
     }
   };
@@ -255,14 +216,13 @@ const FunnelTemplates = () => {
                         <button
                           className="text-gray-400 hover:text-white transition-colors"
                           title="View"
-                          onClick={() => handleView(template)}
+                          onClick={() => navigate('/admin/analytics/funnel-details')}
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
                           className="text-gray-400 hover:text-white transition-colors"
                           title="Edit"
-                          onClick={() => handleEdit(template)}
                         >
                           <Edit className="w-4 h-4" />
                         </button>
@@ -283,176 +243,9 @@ const FunnelTemplates = () => {
         </table>
       </div>
 
-      {/* View Modal */}
-      {viewModal && selectedTemplate && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#1F2937] rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-white">View Funnel Template</h3>
-              <button
-                onClick={() => setViewModal(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="space-y-3 text-sm">
-              <div>
-                <span className="text-gray-400">Name:</span>
-                <span className="text-white ml-2">{safeRender(selectedTemplate.name, 'N/A')}</span>
-              </div>
-              <div>
-                <span className="text-gray-400">Pages:</span>
-                <span className="text-white ml-2">{safeRender(selectedTemplate.pages, 0)}</span>
-              </div>
-              <div>
-                <span className="text-gray-400">Category:</span>
-                <span className="text-white ml-2">{safeRender(selectedTemplate.category, 'N/A')}</span>
-              </div>
-              <div>
-                <span className="text-gray-400">Tier:</span>
-                <span className="ml-2">
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${getTierBadge(
-                    safeRender(selectedTemplate.tier)
-                  )}`}>
-                    {safeRender(selectedTemplate.tier, 'N/A')}
-                  </span>
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-400">Status:</span>
-                <span className="ml-2">
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadge(
-                    safeRender(selectedTemplate.status)
-                  )}`}>
-                    {safeRender(selectedTemplate.status, 'N/A')}
-                  </span>
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-400">Usage:</span>
-                <span className="text-white ml-2">{safeRender(selectedTemplate.usage, 0)}</span>
-              </div>
-              <div>
-                <span className="text-gray-400">Created:</span>
-                <span className="text-white ml-2">{formatDate(selectedTemplate.createdAt)}</span>
-              </div>
-              {/* Debug: Show raw data structure */}
-              <div className="mt-4 p-3 bg-gray-800 rounded text-xs">
-                <span className="text-gray-400">Debug Info:</span>
-                <pre className="text-gray-300 mt-1 overflow-auto">
-                  {JSON.stringify(selectedTemplate, null, 2)}
-                </pre>
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={() => setViewModal(false)}
-                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Modal */}
-      {editModal && selectedTemplate && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#1F2937] rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-white">Edit Funnel Template</h3>
-              <button
-                onClick={() => setEditModal(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <form onSubmit={handleEditSubmit} className="space-y-4">
-              <div>
-                <label className="block text-gray-400 text-sm mb-2">Name</label>
-                <input
-                  type="text"
-                  value={editForm.name}
-                  onChange={(e) => setEditForm({...editForm, name: e.target.value})}
-                  className="w-full bg-[#374151] border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-gray-400 text-sm mb-2">Pages</label>
-                <input
-                  type="number"
-                  value={editForm.pages}
-                  onChange={(e) => setEditForm({...editForm, pages: parseInt(e.target.value)})}
-                  className="w-full bg-[#374151] border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-                  min="1"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-gray-400 text-sm mb-2">Category</label>
-                <input
-                  type="text"
-                  value={editForm.category}
-                  onChange={(e) => setEditForm({...editForm, category: e.target.value})}
-                  className="w-full bg-[#374151] border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-gray-400 text-sm mb-2">Tier</label>
-                <select
-                  value={editForm.tier}
-                  onChange={(e) => setEditForm({...editForm, tier: e.target.value})}
-                  className="w-full bg-[#374151] border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-                  required
-                >
-                  <option value="">Select Tier</option>
-                  <option value="basic">Basic</option>
-                  <option value="premium">Premium</option>
-                  <option value="enterprise">Enterprise</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-gray-400 text-sm mb-2">Status</label>
-                <select
-                  value={editForm.status}
-                  onChange={(e) => setEditForm({...editForm, status: e.target.value})}
-                  className="w-full bg-[#374151] border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-                  required
-                >
-                  <option value="">Select Status</option>
-                  <option value="active">Active</option>
-                  <option value="scheduled">Scheduled</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setEditModal(false)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500"
-                >
-                  Update
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
       {/* Delete Modal */}
       {deleteModal && selectedTemplate && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg_black/20 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-[#1F2937] rounded-lg p-6 w-full max-w-md mx-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-semibold text-white">Delete Funnel Template</h3>
@@ -485,7 +278,7 @@ const FunnelTemplates = () => {
               </button>
               <button
                 onClick={confirmDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500"
+                className="px-4 py-2 bg-red-600 text_white rounded hover:bg-red-500"
               >
                 Delete
               </button>

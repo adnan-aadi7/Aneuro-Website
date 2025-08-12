@@ -1,46 +1,44 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { toast, Toaster } from "react-hot-toast";
-import {
-  scheduleContent,
-  clearError,
-  clearSuccess,
-  selectScheduleLoading,
-  selectScheduleError,
-  selectScheduleSuccess
-} from "../../../../store/Slice/ScheduleSlice";
-import {
-  selectEmailSequences,
-  fetchEmailSequences
+import { 
+  fetchEmailSequences, 
+  selectEmailSequences, 
+  selectEmailSequenceLoading 
 } from "../../../../store/Slice/EmailSequenceSLice";
-import {
-  selectPromptPacks,
-  fetchPromptPacks
-} from "../../../../store/Slice/PromptPacksSlice";
-import {
-  selectFunnelTemplates,
-  fetchFunnelTemplates
+import { 
+  fetchFunnelTemplates, 
+  selectFunnelTemplates, 
+  selectFunnelTemplateLoading 
 } from "../../../../store/Slice/FunnelSequenceSlice";
-import {
-  fetchStripeProducts,
-  selectStripeProducts,
-  selectStripeProductsLoading
-} from "../../../../store/Slice/PaymentSlice";
+import { 
+  fetchPromptPacks, 
+  selectPromptPacks, 
+  selectPromptPackLoading 
+} from "../../../../store/Slice/PromptPacksSlice";
+import { 
+  scheduleContent, 
+  clearError, 
+  selectScheduleLoading, 
+  selectScheduleError
+} from "../../../../store/Slice/ScheduleSlice";
 
-const AddShedulePopup = ({ open, onClose }) => {
+const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = null, onError = null }) => {
   const dispatch = useDispatch();
-  const loading = useSelector(selectScheduleLoading);
-  const error = useSelector(selectScheduleError);
-  const success = useSelector(selectScheduleSuccess);
   
-  // Fetch available content
+  // Redux selectors
   const emailSequences = useSelector(selectEmailSequences);
-  const promptPacks = useSelector(selectPromptPacks);
   const funnelTemplates = useSelector(selectFunnelTemplates);
-  
-  // Fetch Stripe products for tier options
-  const stripeProducts = useSelector(selectStripeProducts);
-  const stripeProductsLoading = useSelector(selectStripeProductsLoading);
+  const promptPacks = useSelector(selectPromptPacks);
+  const emailLoading = useSelector(selectEmailSequenceLoading);
+  const funnelLoading = useSelector(selectFunnelTemplateLoading);
+  const promptLoading = useSelector(selectPromptPackLoading);
+  const scheduleLoading = useSelector(selectScheduleLoading);
+  const scheduleError = useSelector(selectScheduleError);
+
+  // Get error states from content slices
+  const emailError = useSelector((state) => state.emailSequence.error);
+  const funnelError = useSelector((state) => state.promptPack.error);
+  const promptError = useSelector((state) => state.funnelTemplate.error);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -51,31 +49,65 @@ const AddShedulePopup = ({ open, onClose }) => {
     tier: ''
   });
 
-  // Fetch content on component mount
+  // Pre-fill form when editing
+  useEffect(() => {
+    if (editingRelease && open) {
+      // Parse the releaseDateTime to get date and time
+      const releaseDate = new Date(editingRelease.releaseDateTime);
+      const dateStr = releaseDate.toISOString().split('T')[0];
+      const timeStr = releaseDate.toTimeString().split(' ')[0].substring(0, 5);
+      
+      setFormData({
+        contentId: editingRelease.id,
+        modelType: getModelTypeFromContentType(editingRelease.type),
+        scheduledDate: dateStr,
+        scheduledTime: timeStr,
+        tier: editingRelease.tier
+      });
+    } else if (!editingRelease) {
+      // Reset form when not editing
+      setFormData({
+        contentId: '',
+        modelType: '',
+        scheduledDate: '',
+        scheduledTime: '',
+        tier: ''
+      });
+    }
+  }, [editingRelease, open]);
+
+  // Helper function to get model type from content type
+  const getModelTypeFromContentType = (contentType) => {
+    switch (contentType) {
+      case 'Email Sequence':
+        return 'EmailSequence';
+      case 'Prompt Pack':
+        return 'PromptPack';
+      case 'Funnel Template':
+        return 'FunnelTemplate';
+      default:
+        return '';
+    }
+  };
+
+  // Fetch all content on component mount
   useEffect(() => {
     if (open) {
       dispatch(fetchEmailSequences());
-      dispatch(fetchPromptPacks());
       dispatch(fetchFunnelTemplates());
-      dispatch(fetchStripeProducts());
+      dispatch(fetchPromptPacks());
     }
-  }, [open, dispatch]);
+  }, [dispatch, open]);
 
   // Handle success and error messages
   useEffect(() => {
-    if (success) {
-      toast.success(success);
-      dispatch(clearSuccess());
-      handleClose();
-    }
-  }, [success, dispatch]);
-
-  useEffect(() => {
-    if (error) {
-      toast.error(error);
+    if (scheduleError) {
+      if (onError) {
+        onError(scheduleError);
+      }
       dispatch(clearError());
     }
-  }, [error, dispatch]);
+  }, [scheduleError, dispatch, onError]);
 
   const handleClose = () => {
     setFormData({
@@ -99,88 +131,124 @@ const AddShedulePopup = ({ open, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation
     if (!formData.contentId || !formData.modelType || !formData.scheduledDate || !formData.scheduledTime || !formData.tier) {
-      toast.error('Please fill in all required fields');
+      if (onError) {
+        onError('Please fill in all required fields');
+      }
       return;
     }
 
-    // Check if date is in the future
-    const scheduledDateTime = new Date(`${formData.scheduledDate}T${formData.scheduledTime}`);
-    const now = new Date();
-    if (scheduledDateTime <= now) {
-      toast.error('Scheduled date and time must be in the future');
+    // Validate that the selected content still exists
+    const selectedOption = generateContentOptions().find(option => option.value === formData.contentId);
+    if (!selectedOption) {
+      if (onError) {
+        onError('Selected content is no longer available. Please refresh and try again.');
+      }
       return;
     }
 
     try {
       await dispatch(scheduleContent(formData)).unwrap();
+      const successMessage = editingRelease ? 'Release updated successfully!' : 'Content scheduled successfully!';
+      if (onSuccess) {
+        onSuccess(successMessage);
+      }
+      handleClose();
     } catch (error) {
-      console.error('Schedule creation failed:', error);
-      if (error.message && error.message.includes('Content not found')) {
-        toast.error('Selected content no longer exists. Please refresh and try again.');
-      } else {
-        toast.error(error.message || 'Failed to schedule content');
+      // Show more specific error message
+      let errorMessage = 'Failed to schedule content. Please try again.';
+      if (error.message === 'Invalid modelType') {
+        errorMessage = `Invalid model type: ${formData.modelType}. Please try again.`;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      if (onError) {
+        onError(errorMessage);
       }
     }
   };
 
-  // Get available content options
-  const getContentOptions = () => {
+  // Generate content options for dropdown
+  const generateContentOptions = () => {
     const options = [];
     
     // Add email sequences
-    if (Array.isArray(emailSequences)) {
-      emailSequences.forEach(seq => {
-        if (seq.status !== 'scheduled') {
+    if (emailSequences && emailSequences.length > 0) {
+      emailSequences.forEach(sequence => {
+        if (sequence && sequence._id && sequence.name) {
+          const displayName = sequence.name.length > 25 ? `${sequence.name.substring(0, 25)}...` : sequence.name;
           options.push({
-            id: seq._id,
-            name: seq.name,
-            type: 'EmailSequence',
-            displayName: `Email Sequence: ${seq.name}`
+            value: sequence._id,
+            label: displayName,
+            fullName: sequence.name,
+            type: 'EmailSequence'
           });
         }
       });
     }
-
-    // Add prompt packs
-    if (Array.isArray(promptPacks)) {
-      promptPacks.forEach(pack => {
-        if (pack.status !== 'scheduled') {
-          options.push({
-            id: pack._id,
-            name: pack.name,
-            type: 'PromptPack',
-            displayName: `Prompt Pack: ${pack.name}`
-          });
-        }
-      });
-    }
-
+    
     // Add funnel templates
-    if (Array.isArray(funnelTemplates)) {
+    if (funnelTemplates && funnelTemplates.length > 0) {
       funnelTemplates.forEach(template => {
-        if (template.status !== 'scheduled') {
+        if (template && template._id && template.name) {
+          const displayName = template.name.length > 25 ? `${template.name.substring(0, 25)}...` : template.name;
           options.push({
-            id: template._id,
-            name: template.name,
-            type: 'FunnelTemplate',
-            displayName: `Funnel Template: ${template.name}`
+            value: template._id,
+            label: displayName,
+            fullName: template.name,
+            type: 'FunnelTemplate'
           });
         }
       });
     }
-
+    
+    // Add prompt packs
+    if (promptPacks && promptPacks.length > 0) {
+      promptPacks.forEach(pack => {
+        if (pack && pack._id && pack.name) {
+          const displayName = pack.name.length > 25 ? `${pack.name.substring(0, 25)}...` : pack.name;
+          options.push({
+            value: pack._id,
+            label: displayName,
+            fullName: pack.name,
+            type: 'PromptPack'
+          });
+        }
+      });
+    }
+    
     return options;
   };
 
-  const contentOptions = getContentOptions();
+  // Handle content selection to auto-set model type
+  const handleContentChange = (e) => {
+    const contentId = e.target.value;
+    const selectedOption = generateContentOptions().find(option => option.value === contentId);
+    
+    setFormData(prev => ({
+      ...prev,
+      contentId,
+      modelType: selectedOption ? selectedOption.type : ''
+    }));
+  };
+
+  // Check if any content is available
+  const hasContent = generateContentOptions().length > 0;
+
+  // Check if content is still loading
+  const isContentLoading = emailLoading || funnelLoading || promptLoading;
+
+  // Check if there was an error loading content
+  const hasContentError = emailError || funnelError || promptError;
+
+  // Check if we should show the no content message
+  const shouldShowNoContent = !isContentLoading && !hasContentError && !hasContent;
 
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1E293B]/60 backdrop-blur-sm">
-      <Toaster position="top-right" />
       <div className="bg-[#23283A] rounded-lg shadow-lg w-full max-w-md p-8 relative">
         {/* Close Button */}
         <button
@@ -190,10 +258,12 @@ const AddShedulePopup = ({ open, onClose }) => {
         >
           &times;
         </button>
+        
         {/* Title */}
         <h2 className="text-2xl font-bold text-white mb-8 text-center">
-          Schedule New Release
+          {editingRelease ? 'Edit Scheduled Release' : 'Schedule New Release'}
         </h2>
+        
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Select Content */}
@@ -204,27 +274,28 @@ const AddShedulePopup = ({ open, onClose }) => {
             <select 
               name="contentId"
               value={formData.contentId}
-              onChange={(e) => {
-                const selectedOption = contentOptions.find(opt => opt.id === e.target.value);
-                setFormData(prev => ({
-                  ...prev,
-                  contentId: e.target.value,
-                  modelType: selectedOption ? selectedOption.type : ''
-                }));
-              }}
+              onChange={handleContentChange}
               className="w-full bg-[#23283A] border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-400"
               required
+              disabled={isContentLoading || !hasContent || editingRelease}
             >
-              <option value="">Select Content</option>
-              {contentOptions.map(option => (
-                <option key={option.id} value={option.id}>
-                  {option.displayName}
+              <option value="">
+                {editingRelease ? editingRelease.content : (isContentLoading ? 'Loading content...' : !hasContent ? 'No content available' : 'Select Content')}
+              </option>
+              {!isContentLoading && hasContent && !editingRelease && generateContentOptions().map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>
-            {contentOptions.length === 0 && (
+            {!isContentLoading && shouldShowNoContent && (
+              <p className="text-yellow-400 text-xs mt-1">
+                No content available to schedule. Please create some content first.
+              </p>
+            )}
+            {hasContentError && (
               <p className="text-red-400 text-xs mt-1">
-                No available content to schedule. Please create some content first.
+                Error loading content. Please try refreshing the page.
               </p>
             )}
           </div>
@@ -275,35 +346,20 @@ const AddShedulePopup = ({ open, onClose }) => {
               required
             >
               <option value="">Select Tier</option>
-              {stripeProductsLoading ? (
-                <option value="">Loading tiers...</option>
-              ) : (
-                stripeProducts.map(product => (
-                  <option key={product.id} value={product.id}>
-                    {product.name}
-                  </option>
-                ))
-              )}
+              <option value="basic">Basic</option>
+              <option value="premium">Premium</option>
+              <option value="enterprise">Enterprise</option>
             </select>
-            {!formData.tier && formData.tier !== '' && (
-              <p className="text-red-400 text-xs mt-1">
-                Please select a tier
-              </p>
-            )}
           </div>
 
           {/* Submit Button */}
           <div className="flex justify-start">
             <button
               type="submit"
-              disabled={loading || contentOptions.length === 0 || !formData.tier || stripeProductsLoading}
-              className={`bg-cyan-400 text-black font-semibold px-4 py-2 mt-2 transition-all text-sm ${
-                loading || contentOptions.length === 0 || !formData.tier || stripeProductsLoading
-                  ? 'opacity-50 cursor-not-allowed' 
-                  : 'hover:bg-cyan-300'
-              }`}
+              disabled={scheduleLoading || isContentLoading || !hasContent}
+              className="bg-cyan-400 text-black font-semibold px-4 py-2 mt-2 transition-all text-sm hover:bg-cyan-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Scheduling...' : 'Schedule Release'}
+              {scheduleLoading ? (editingRelease ? 'Updating...' : 'Scheduling...') : (editingRelease ? 'Update Release' : 'Schedule Release')}
             </button>
           </div>
         </form>
