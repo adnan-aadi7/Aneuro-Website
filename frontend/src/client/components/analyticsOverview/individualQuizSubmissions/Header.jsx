@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FiCalendar, FiChevronDown, FiSearch, FiShare2 } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import { FiCalendar, FiChevronDown, FiSearch } from "react-icons/fi";
+import { useDispatch } from "react-redux";
+import { fetchQuizSessions } from "../../../../store/Slice/QuizSlice";
 
 const Header = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -9,7 +10,7 @@ const Header = () => {
     incompletion: false,
   });
   const dropdownRef = useRef(null);
-  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -29,15 +30,23 @@ const Header = () => {
   }, [dropdownOpen]);
 
   const handleCompletionChange = () => {
-    setCategories((c) => ({ completion: !c.completion, incompletion: false }));
+    const newState = { completion: !categories.completion, incompletion: false };
+    setCategories(newState);
+
+    // Fetch completed quizzes
+    if (!categories.completion) {
+      dispatch(fetchQuizSessions({ isCompleted: true }));
+    }
   };
+
   const handleIncompletionChange = () => {
-    setCategories((c) => {
-      if (!c.incompletion) {
-        navigate("/incomplete-quiz");
-      }
-      return { completion: false, incompletion: !c.incompletion };
-    });
+    const newState = { completion: false, incompletion: !categories.incompletion };
+    setCategories(newState);
+
+    // Fetch incompleted quizzes
+    if (!categories.incompletion) {
+      dispatch(fetchQuizSessions({ isCompleted: false }));
+    }
   };
 
   return (
