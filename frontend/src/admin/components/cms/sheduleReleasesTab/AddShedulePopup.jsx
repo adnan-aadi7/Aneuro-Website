@@ -52,18 +52,44 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
   // Pre-fill form when editing
   useEffect(() => {
     if (editingRelease && open) {
-      // Parse the releaseDateTime to get date and time
-      const releaseDate = new Date(editingRelease.releaseDateTime);
-      const dateStr = releaseDate.toISOString().split('T')[0];
-      const timeStr = releaseDate.toTimeString().split(' ')[0].substring(0, 5);
-      
-      setFormData({
-        contentId: editingRelease.id,
-        modelType: getModelTypeFromContentType(editingRelease.type),
-        scheduledDate: dateStr,
-        scheduledTime: timeStr,
-        tier: editingRelease.tier
-      });
+      try {
+        // Validate and parse the releaseDateTime
+        let releaseDate;
+        if (editingRelease.releaseDateTime) {
+          releaseDate = new Date(editingRelease.releaseDateTime);
+          
+          // Check if the date is valid
+          if (isNaN(releaseDate.getTime())) {
+            console.warn('Invalid releaseDateTime:', editingRelease.releaseDateTime);
+            // Use current date as fallback
+            releaseDate = new Date();
+          }
+        } else {
+          // No releaseDateTime, use current date
+          releaseDate = new Date();
+        }
+        
+        const dateStr = releaseDate.toISOString().split('T')[0];
+        const timeStr = releaseDate.toTimeString().split(' ')[0].substring(0, 5);
+        
+        setFormData({
+          contentId: editingRelease.id,
+          modelType: getModelTypeFromContentType(editingRelease.type),
+          scheduledDate: dateStr,
+          scheduledTime: timeStr,
+          tier: editingRelease.tier
+        });
+      } catch (error) {
+        console.error('Error parsing releaseDateTime:', error);
+        // Set default values on error
+        setFormData({
+          contentId: editingRelease.id,
+          modelType: getModelTypeFromContentType(editingRelease.type),
+          scheduledDate: new Date().toISOString().split('T')[0],
+          scheduledTime: new Date().toTimeString().split(' ')[0].substring(0, 5),
+          tier: editingRelease.tier
+        });
+      }
     } else if (!editingRelease) {
       // Reset form when not editing
       setFormData({

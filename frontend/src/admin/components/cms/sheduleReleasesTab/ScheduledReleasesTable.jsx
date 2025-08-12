@@ -57,22 +57,48 @@ const ScheduledReleasesTable = ({ onSuccess, onError }) => {
 
   const formatDate = (dateString) => {
     if (!dateString) return "Not set";
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+    
+    try {
+      const date = new Date(dateString);
+      
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date string:', dateString);
+        return "Invalid date";
+      }
+      
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return "Invalid date";
+    }
   };
 
   const formatTime = (dateString) => {
     if (!dateString) return "Not set";
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
+    
+    try {
+      const date = new Date(dateString);
+      
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid time string:', dateString);
+        return "Invalid time";
+      }
+      
+      return date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return "Invalid time";
+    }
   };
 
   const truncateContentName = (name, maxLength = 30) => {
@@ -82,6 +108,19 @@ const ScheduledReleasesTable = ({ onSuccess, onError }) => {
   };
 
   const handleEdit = (release) => {
+    // Validate release data before opening edit popup
+    if (!release || !release.id) {
+      console.error('Invalid release data:', release);
+      if (onError) {
+        onError('Invalid release data. Please try again.');
+      }
+      return;
+    }
+    
+    console.log('Editing release data:', release);
+    console.log('releaseDateTime:', release.releaseDateTime);
+    console.log('releaseDateTime type:', typeof release.releaseDateTime);
+    
     setEditingRelease(release);
     setEditPopupOpen(true);
   };
