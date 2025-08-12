@@ -4,6 +4,7 @@ import logo from "../../../assets/auth/logo.png";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser, resetUserStatus, googleLogin, facebookLogin } from "../../../store/Slice/UserSlice";
+import { toastError, toastInfo, toastPromise, toastSuccess } from "../../../toast";
 
 export default function LoginForm() {
   const navigate = useNavigate();
@@ -47,45 +48,102 @@ export default function LoginForm() {
     }));
   };
 
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    try {
-      const resultAction = await dispatch(loginUser(formData));
-      if (loginUser.fulfilled.match(resultAction)) {
-        const user = resultAction.payload.user;
-        
-        // Check if user has active subscription
-        const hasActiveSubscription = user.subscription && 
-                                   user.subscription.plan && 
-                                   user.subscription.status === 'active';
-        
-        // Navigate based on user type and subscription status
-        if (user.userType === "admin") {
-          navigate("/admin/dashboard");
-        } else if (hasActiveSubscription) {
-          // User has active subscription, go to dashboard
-          navigate("/client/dashboard");
-        } else {
-          // User has no subscription or inactive subscription, go to plan selection
-          navigate("/plan");
-        }
-      } else {
-        setError(resultAction.payload || "Login failed");
-      }
-    } catch {
-      setError("Login failed");
+  e.preventDefault();
+  setError("");
+
+  // turn the thunk into a reject/resolve promise
+  const op = dispatch(loginUser(formData)).unwrap();
+
+  try {
+    const payload = await toastPromise(
+      op,
+      {
+        loading: "Signing you in…",
+        success: "Welcome back!",
+        error: (err) =>
+          typeof err === "string" ? err : err?.message || "Login failed",
+      },
+      { duration: 3000 }
+    );
+
+    const user = payload.user;
+    const hasActiveSubscription =
+      user.subscription &&
+      user.subscription.plan &&
+      user.subscription.status === "active";
+
+    if (user.userType === "admin") {
+      navigate("/admin/dashboard");
+    } else if (hasActiveSubscription) {
+      navigate("/client/dashboard");
+    } else {
+      navigate("/plan");
     }
-  };
+  } catch (err) {
+    setError(typeof err === "string" ? err : err?.message || "Login failed");
+  }
+};
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setError("");
+  //   try {
+  //     const resultAction = await dispatch(loginUser(formData));
+  //     if (loginUser.fulfilled.match(resultAction)) {
+  //       const user = resultAction.payload.user;
+        
+  //       // Check if user has active subscription
+  //       const hasActiveSubscription = user.subscription && 
+  //                                  user.subscription.plan && 
+  //                                  user.subscription.status === 'active';
+        
+  //       // Navigate based on user type and subscription status
+  //       if (user.userType === "admin") {
+  //         navigate("/admin/dashboard");
+  //       } else if (hasActiveSubscription) {
+  //         // User has active subscription, go to dashboard
+  //         navigate("/client/dashboard");
+  //       } else {
+  //         // User has no subscription or inactive subscription, go to plan selection
+  //         navigate("/plan");
+  //       }
+  //     } else {
+  //       setError(resultAction.payload || "Login failed");
+  //     }
+  //   } catch {
+  //     setError("Login failed");
+  //   }
+  // };
 
   const handleGoogleLogin = async () => {
-    setError("");
-    try {
-      await dispatch(googleLogin());
-    } catch {
-      setError("Google authentication failed");
-    }
-  };
+  setError("");
+  try {
+    const op = dispatch(googleLogin()).unwrap();
+    await toastPromise(
+      op,
+      {
+        loading: "Connecting to Google…",
+        success: "Authenticated with Google",
+        error: "Google authentication failed",
+      },
+      { duration: 3000 }
+    );
+  } catch (e) {
+    setError(typeof e === "string" ? e : e?.message || "Google authentication failed");
+  }
+};
+
+
+  // const handleGoogleLogin = async () => {
+  //   setError("");
+  //   try {
+  //     await dispatch(googleLogin());
+  //   } catch {
+  //     setError("Google authentication failed");
+  //   }
+  // };
 
   const handleFacebookLogin = async () => {
     setError("");
@@ -113,12 +171,7 @@ export default function LoginForm() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Error Message */}
-            {error && (
-              <div className="text-red-400 text-xs sm:text-sm text-center mb-2">
-                {error}
-              </div>
-            )}
+
             {/* Email Field */}
             <div>
               <label className="block text-white text-xs sm:text-sm font-medium mb-2">
@@ -165,6 +218,12 @@ export default function LoginForm() {
                 </Link>
               </div>
             </div>
+                        {/* Error Message */}
+            {error && (
+              <div className="text-red-400 text-xs sm:text-sm text-center mb-2">
+                {error}
+              </div>
+            )}
 
             {/* Sign In Button */}
             <button
