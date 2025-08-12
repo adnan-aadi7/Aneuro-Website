@@ -18,6 +18,8 @@ import funneltemplatesRoutes from './routes/FunnelTemplateRoute.js'
 import schduleRoutes from './routes/scheduleRoutes.js'
 import activityRoutes from "./routes/activityRoutes.js";
 import logRoutes from './routes/logRoutes.js'
+import quizRoutes from './routes/quizRoutes.js'
+
 const app = express();
 const port = 4000;
 
@@ -63,6 +65,7 @@ const startServer = async () => {
     app.use("/api/schedule", schduleRoutes);
     app.use("/api/activities", activityRoutes);
     app.use("/api/system-logs", logRoutes);
+    app.use("/api/quiz", quizRoutes);
 
     app.listen(port, () => {
       console.log(`✅ Server running at http://localhost:${port}`);

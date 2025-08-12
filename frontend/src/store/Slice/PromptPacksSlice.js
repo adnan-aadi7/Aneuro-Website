@@ -10,7 +10,7 @@ export const uploadPromptPack = createAsyncThunk(
       formData.append('file', uploadData.file);
       formData.append('tier', uploadData.tier);
       
-      const response = await axios.post('/api/prompt-packs/upload', formData, {
+      const response = await axios.post('/prompt-packs/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -27,7 +27,7 @@ export const createPromptPack = createAsyncThunk(
   'promptPack/create',
   async (packData, { rejectWithValue }) => {
     try {
-      const response = await axios.post('/api/prompt-packs', packData);
+      const response = await axios.post('/prompt-packs', packData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to create prompt pack' });
@@ -52,7 +52,7 @@ export const fetchPromptPacks = createAsyncThunk(
       if (params.sortBy) queryParams.append('sortBy', params.sortBy);
       if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
       
-      const response = await axios.get(`/api/prompt-packs?${queryParams.toString()}`);
+      const response = await axios.get(`/prompt-packs?${queryParams.toString()}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to fetch prompt packs' });
@@ -64,7 +64,7 @@ export const fetchPromptPackById = createAsyncThunk(
   'promptPack/fetchById',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`/api/prompt-packs/${id}`);
+      const response = await axios.get(`/prompt-packs/${id}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to fetch prompt pack' });
@@ -76,7 +76,7 @@ export const updatePromptPack = createAsyncThunk(
   'promptPack/update',
   async ({ id, updateData }, { rejectWithValue }) => {
     try {
-      const response = await axios.put(`/api/prompt-packs/${id}`, updateData);
+      const response = await axios.put(`/prompt-packs/${id}`, updateData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to update prompt pack' });
@@ -88,7 +88,7 @@ export const deletePromptPack = createAsyncThunk(
   'promptPack/delete',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.delete(`/api/prompt-packs/${id}`);
+      const response = await axios.delete(`/prompt-packs/${id}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to delete prompt pack' });
@@ -100,7 +100,7 @@ export const bulkDeletePromptPacks = createAsyncThunk(
   'promptPack/bulkDelete',
   async (ids, { rejectWithValue }) => {
     try {
-      const response = await axios.delete('/api/prompt-packs', {
+      const response = await axios.delete('/prompt-packs', {
         data: { ids }
       });
       return response.data;
@@ -114,7 +114,7 @@ export const addPromptToPack = createAsyncThunk(
   'promptPack/addPrompt',
   async ({ id, promptData }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`/api/prompt-packs/${id}/prompts`, promptData);
+      const response = await axios.post(`/prompt-packs/${id}/prompts`, promptData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to add prompt to pack' });
@@ -126,7 +126,7 @@ export const removePromptFromPack = createAsyncThunk(
   'promptPack/removePrompt',
   async ({ id, promptId }, { rejectWithValue }) => {
     try {
-      const response = await axios.delete(`/api/prompt-packs/${id}/prompts/${promptId}`);
+      const response = await axios.delete(`/prompt-packs/${id}/prompts/${promptId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to remove prompt from pack' });
@@ -138,7 +138,7 @@ export const incrementPromptPackUsage = createAsyncThunk(
   'promptPack/incrementUsage',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.put(`/api/prompt-packs/${id}/usage`);
+      const response = await axios.put(`/prompt-packs/${id}/usage`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to increment usage count' });
@@ -150,7 +150,7 @@ export const fetchPromptPackStats = createAsyncThunk(
   'promptPack/fetchStats',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get('/api/prompt-packs/statistics');
+      const response = await axios.get('/prompt-packs/statistics');
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to fetch prompt pack stats' });

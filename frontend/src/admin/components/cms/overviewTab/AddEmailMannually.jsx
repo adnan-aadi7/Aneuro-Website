@@ -1,8 +1,57 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Toaster, toast } from "react-hot-toast";
+import {
+  createEmailSequence,
+  selectEmailSequenceLoading,
+  selectEmailSequenceError,
+  selectEmailSequenceSuccess,
+  clearError,
+  clearSuccess,
+} from "../../../../store/Slice/EmailSequenceSLice";
 
 const AddEmailMannually = () => {
+  const dispatch = useDispatch();
+  const loading = useSelector(selectEmailSequenceLoading);
+  const error = useSelector(selectEmailSequenceError);
+  const success = useSelector(selectEmailSequenceSuccess);
+
+  const [manualContent, setManualContent] = useState("");
+
+  useEffect(() => {
+    if (success) {
+      toast.success(success);
+      setManualContent("");
+      dispatch(clearSuccess());
+    }
+  }, [success, dispatch]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(typeof error === "string" ? error : "Failed to send email");
+      dispatch(clearError());
+    }
+  }, [error, dispatch]);
+
+  const handleSend = () => {
+    if (!manualContent.trim()) {
+      toast.error("Please write your email content first");
+      return;
+    }
+
+    const payload = {
+      name: `Manual Email - ${new Date().toLocaleString()}`,
+      tier: "basic",
+      type: "manual",
+      manualContent,
+    };
+
+    dispatch(createEmailSequence(payload));
+  };
+
   return (
     <div className="bg-[#2A2A39] min-h-screen p-2">
+      <Toaster position="top-right" />
       {/* Sender Section */}
       <div className="flex items-center gap-3 mb-2 mt-4 ml-6">
         <img
@@ -12,10 +61,10 @@ const AddEmailMannually = () => {
         />
         <div>
           <div className="text-white text-sm font-semibold leading-tight">
-            Aneuro Admin
+            {localStorage.getItem('userName') || ''}
           </div>
           <div className="text-gray-300 text-xs leading-tight">
-            admin@aneuro.com
+            {localStorage.getItem('userEmail') || ''}
           </div>
         </div>
       </div>
@@ -41,11 +90,17 @@ const AddEmailMannually = () => {
             rows={5}
             className="w-full bg-transparent border-0 outline-none text-white resize-none mt-4 relative z-10"
             placeholder=""
+            value={manualContent}
+            onChange={(e) => setManualContent(e.target.value)}
           />
         </div>
         <div className="flex justify-start ml-6 mt-4">
-          <button className="cursor-pointer bg-cyan-400 text-black font-semibold px-10 py-2 rounded hover:bg-cyan-300 transition-all text-sm ">
-            Send
+          <button
+            className="cursor-pointer bg-cyan-400 text-black font-semibold px-10 py-2 rounded hover:bg-cyan-300 transition-all text-sm "
+            onClick={handleSend}
+            disabled={loading}
+          >
+            {loading ? "Sending..." : "Send"}
           </button>
         </div>
       </div>
@@ -88,6 +143,7 @@ const AddEmailMannually = () => {
           className="w-full bg-transparent border-0 outline-none text-white resize-none mt-4 relative z-10"
           placeholder=""
           readOnly
+          value={""}
         />
       </div>
     </div>

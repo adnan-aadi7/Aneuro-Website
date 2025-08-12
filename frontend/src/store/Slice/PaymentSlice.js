@@ -263,4 +263,10 @@ const paymentSlice = createSlice({
 });
 
 export const { clearPaymentState, clearCardInfo, clearPaymentMethods } = paymentSlice.actions;
+
+// Selectors
+export const selectStripeProducts = (state) => state.payment.products;
+export const selectStripeProductsLoading = (state) => state.payment.productsLoading;
+export const selectStripeProductsError = (state) => state.payment.productsError;
+
 export default paymentSlice.reducer;

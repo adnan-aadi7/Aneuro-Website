@@ -21,7 +21,8 @@ export const uploadPromptPack = async (req, res) => {
     let prompts = [];
 
     if (req.file.originalname.endsWith('.json')) {
-      prompts = JSON.parse(fileContent);
+      const parsed = JSON.parse(fileContent);
+      prompts = normalizePrompts(parsed);
     } else if (
       req.file.originalname.endsWith('.txt') ||
       req.file.originalname.endsWith('.md')
@@ -43,6 +44,7 @@ export const uploadPromptPack = async (req, res) => {
       status: 'scheduled', // default status
       prompts,
       fileUrl, // store the Cloudinary URL
+      releaseDateTime: new Date(),
     });
 
     const savedPack = await newPack.save();
@@ -62,7 +64,7 @@ export const uploadPromptPack = async (req, res) => {
 // CREATE - Create new prompt pack
 export async function create(req, res) {
   try {
-    const { name, category, tier, status, prompts } = req.body;
+    const { name, category, tier, status, prompts, releaseDateTime } = req.body;
 
     // Validation
     if (!name || !category || !tier || !status) {
@@ -72,16 +74,10 @@ export async function create(req, res) {
       });
     }
 
-    // Validate prompts array if provided
-    if (prompts && Array.isArray(prompts)) {
-      for (const prompt of prompts) {
-        if (!prompt.content || !prompt.type) {
-          return res.status(400).json({
-            success: false,
-            message: 'Each prompt must have content and type'
-          });
-        }
-      }
+    // Validate/normalize prompts array if provided
+    let normalizedPrompts = [];
+    if (prompts) {
+      normalizedPrompts = normalizePrompts(prompts);
     }
 
     const newPromptPack = new PromptPack({
@@ -89,7 +85,8 @@ export async function create(req, res) {
       category,
       tier,
       status,
-      prompts: prompts || []
+      prompts: normalizedPrompts,
+      releaseDateTime: releaseDateTime ? new Date(releaseDateTime) : new Date()
     });
 
     const savedPromptPack = await newPromptPack.save();
@@ -231,14 +228,7 @@ export async function update(req, res) {
 
     // Validate prompts if being updated
     if (updateData.prompts && Array.isArray(updateData.prompts)) {
-      for (const prompt of updateData.prompts) {
-        if (!prompt.content || !prompt.type) {
-          return res.status(400).json({
-            success: false,
-            message: 'Each prompt must have content and type'
-          });
-        }
-      }
+      updateData.prompts = normalizePrompts(updateData.prompts);
     }
 
     const updatedPromptPack = await PromptPack.findByIdAndUpdate(
@@ -361,10 +351,10 @@ export async function addPrompt(req, res) {
       });
     }
 
-    if (!content || !type) {
+    if (!content) {
       return res.status(400).json({
         success: false,
-        message: 'Content and type are required'
+        message: 'Content is required'
       });
     }
 
@@ -376,7 +366,7 @@ export async function addPrompt(req, res) {
       });
     }
 
-    promptPack.prompts.push({ content, type });
+    promptPack.prompts.push({ content, type: type || 'analytical' });
     const updatedPromptPack = await promptPack.save();
 
     res.status(200).json({

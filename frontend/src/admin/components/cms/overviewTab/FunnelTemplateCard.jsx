@@ -45,7 +45,7 @@ export default function FunnelTemplateCard() {
 
       {/* Upload Area */}
       <div
-        className={`border-2 border-dashed border-gray-500 bg-[#11182780] rounded-lg p-12 text-center mt-17 ${
+        className={`border-2 border-dashed border-gray-500 bg-[#11182780] rounded-lg p-12 text-center mt-19 ${
           isDragOver ? "ring-2 ring-cyan-400" : ""
         }`}
         onDragOver={handleDragOver}
@@ -53,22 +53,20 @@ export default function FunnelTemplateCard() {
         onDrop={handleDrop}
       >
         <div className="mb-4">
-          <Upload className="w-8 h-8 text-cyan-400 mx-auto mb-3" />
+          <Upload className="w-8 h-8  mx-auto mb-3" />
           <p className="text-gray-400 text-sm mb-3">Drag & drop files here</p>
           <label className="inline-block">
             <input
               type="file"
-              multiple
               className="hidden"
               onChange={handleFileUpload}
-              accept=".zip,.html,.json"
             />
             <span className="bg-transparent border border-gray-400 text-white px-4 py-2 rounded text-sm cursor-pointer hover:bg-gray-700 transition">
               Choose Files
             </span>
           </label>
         </div>
-        <p className="text-gray-500 text-xs">Accepts: .zip, .html, .json</p>
+        <p className="text-gray-500 text-xs">Accepts all file formats</p>
       </div>
 
       {/* Tier Access Control */}
