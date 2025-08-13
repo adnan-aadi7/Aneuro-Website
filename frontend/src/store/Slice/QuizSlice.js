@@ -7,26 +7,21 @@ import axiosInstance from "../axiosInstance";
  */
 export const fetchQuizSessions = createAsyncThunk(
   "quiz/fetchQuizSessions",
-  async ({ isCompleted }, { getState, rejectWithValue }) => {
+  async ({ isCompleted } = {}, { getState, rejectWithValue }) => {
     try {
       const state = getState();
-      const userId = state.user?.user?.id; // Get user ID from UserSlice
+      const userId = state.user?.user?.id;
+      if (!userId) throw new Error("User ID not found. Please log in.");
 
-      if (!userId) {
-        throw new Error("User ID not found. Please log in.");
+      const params = { user_id: userId };
+      if (typeof isCompleted === "boolean") {
+        params.is_completed = isCompleted; // only include when filtering
       }
 
-      const res = await axiosInstance.get(`/quiz/sessions`, {
-        params: {
-          user_id: userId,
-          is_completed: isCompleted,
-        },
-      });
-      console.log('====================================');
+      const res = await axiosInstance.get(`/quiz/sessions`, { params });
       console.log(res.data);
-      console.log('====================================');
-
-      return res.data; // Adjust if backend sends { sessions: [...] }
+      
+      return res.data;
     } catch (err) {
       return rejectWithValue(
         err.response?.data?.error ||

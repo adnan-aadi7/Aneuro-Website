@@ -5,12 +5,20 @@ import { fetchQuizSessions } from "../../../../store/Slice/QuizSlice";
 
 const Header = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // Start with NONE selected → load ALL initially
   const [categories, setCategories] = useState({
-    completion: true,
+    completion: false,
     incompletion: false,
   });
+
   const dropdownRef = useRef(null);
   const dispatch = useDispatch();
+
+  // Load ALL on mount
+  useEffect(() => {
+    dispatch(fetchQuizSessions({})); // no filter → all
+  }, [dispatch]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -30,22 +38,35 @@ const Header = () => {
   }, [dropdownOpen]);
 
   const handleCompletionChange = () => {
-    const newState = { completion: !categories.completion, incompletion: false };
+    const next = !categories.completion;
+    const newState = { completion: next, incompletion: false };
     setCategories(newState);
 
-    // Fetch completed quizzes
-    if (!categories.completion) {
+    // Dispatch according to the next state
+    if (next) {
+      // Completion selected
       dispatch(fetchQuizSessions({ isCompleted: true }));
+    } else {
+      // Completion unselected; if none selected → fetch all
+      if (!categories.incompletion) {
+        dispatch(fetchQuizSessions({})); // all
+      }
     }
   };
 
   const handleIncompletionChange = () => {
-    const newState = { completion: false, incompletion: !categories.incompletion };
+    const next = !categories.incompletion;
+    const newState = { completion: false, incompletion: next };
     setCategories(newState);
 
-    // Fetch incompleted quizzes
-    if (!categories.incompletion) {
+    if (next) {
+      // Incompletion selected
       dispatch(fetchQuizSessions({ isCompleted: false }));
+    } else {
+      // Incompletion unselected; if none selected → fetch all
+      if (!categories.completion) {
+        dispatch(fetchQuizSessions({})); // all
+      }
     }
   };
 
@@ -62,6 +83,7 @@ const Header = () => {
             <span>04/09/2025</span>
             <FiChevronDown size={16} />
           </button>
+
           {/* Quiz Completion Dropdown */}
           <div className="relative">
             <button
@@ -92,15 +114,14 @@ const Header = () => {
                     onChange={handleIncompletionChange}
                     className="accent-cyan-400 w-5 h-5 rounded border-2 border-cyan-400 bg-transparent focus:ring-0"
                   />
-                  <span className="text-white text-base">
-                    Quiz In completion
-                  </span>
+                  <span className="text-white text-base">Quiz In completion</span>
                 </label>
               </div>
             )}
           </div>
         </div>
       </div>
+
       {/* Search Input */}
       <div className="flex items-center w-full sm:w-80 mt-10">
         <div className="relative w-full">

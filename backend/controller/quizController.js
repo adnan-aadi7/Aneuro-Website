@@ -264,7 +264,7 @@ export const getAudienceSessions = async (req, res) => {
 
     let sessions = await QuizSession.find(query);
 
-    if (!sessions || sessions.length === 0) {
+    if (!sessions) {
       return res.status(404).json({ success: false, message: "No audience quiz sessions found for this user_id" });
     }
 
