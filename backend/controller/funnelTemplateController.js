@@ -1,6 +1,7 @@
 import FunnelTemplate from '../model/FunnelTemplate.js';
 import { uploadToCloudinary } from '../middleware/uploadToCloudinary.js';
 import path from 'path';
+import { logAction } from "../config/logAction.js";
 
 // ✅ Create Funnel Template with file upload
 export const createFunnelTemplateWithFile = async (req, res) => {
@@ -38,12 +39,19 @@ export const createFunnelTemplateWithFile = async (req, res) => {
       name,
       tier,
       fileUrl: uploadResult.secure_url,
-      content: uploadResult.secure_url, // store URL in content as well
+      content: uploadResult.secure_url, 
       status: 'scheduled',
     });
 
     await newTemplate.save();
-
+ await logAction({
+      action: "UPLOAD",
+      user: { id: req.user?.id, email: req.user?.email },
+      affectedAsset: newTemplate.name,
+      contentType: "funnel-template",
+      description: "Created new funnel template with file",
+      req
+    });
     res.status(201).json({
       success: true,
       message: 'Funnel Template created successfully',
@@ -87,7 +95,16 @@ export const createFunnelTemplate = async (req, res) => {
     });
 
     await newTemplate.save();
-
+    
+    await logAction({
+      action: "CREATE",
+      user: { id: req.user?.id, email: req.user?.email },
+      affectedAsset: newTemplate.name,
+      contentType: "funnel-template",
+      description: "Created new funnel template",
+      req
+    });
+    
     res.status(201).json({
       success: true,
       message: 'Funnel Template created successfully',
@@ -122,12 +139,22 @@ export const getFunnelTemplateById = async (req, res) => {
 
 // ✅ Update Funnel Template
 export const updateFunnelTemplate = async (req, res) => {
+
   try {
     const { id } = req.params;
     const updateData = req.body;
 
     const updatedTemplate = await FunnelTemplate.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
     if (!updatedTemplate) return res.status(404).json({ success: false, message: 'Template not found' });
+    
+    await logAction({
+      action: "EDIT",
+      user: { id: req.user?.id, email: req.user?.email },
+      affectedAsset: updatedTemplate.name,
+      contentType: "funnel-template",
+      description: "Updated funnel template",
+      req
+    });
 
     res.status(200).json({ success: true, data: updatedTemplate });
   } catch (error) {
@@ -138,8 +165,20 @@ export const updateFunnelTemplate = async (req, res) => {
 // ✅ Delete Funnel Template
 export const deleteFunnelTemplate = async (req, res) => {
   try {
-    const deleted = await FunnelTemplate.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ success: false, message: 'Template not found' });
+    const deletedTemplate = await FunnelTemplate.findByIdAndDelete(req.params.id);
+
+    if (!deletedTemplate) {
+      return res.status(404).json({ success: false, message: 'Template not found' });
+    }
+
+    await logAction({
+      action: "DELETE",
+      user: { id: req.user?.id, email: req.user?.email },
+      affectedAsset: deletedTemplate.name,
+      contentType: "funnel-template",
+      description: "Deleted funnel template",
+      req
+    });
 
     res.status(200).json({ success: true, message: 'Deleted successfully' });
   } catch (error) {
@@ -147,7 +186,6 @@ export const deleteFunnelTemplate = async (req, res) => {
   }
 };
 
-// ✅ Get Funnel Template statistics
 export const getFunnelTemplateStats = async (req, res) => {
   try {
     const mainStats = await FunnelTemplate.aggregate([

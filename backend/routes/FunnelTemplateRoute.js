@@ -9,6 +9,7 @@ import {
   getFunnelTemplateStats
 } from '../controller/funnelTemplateController.js';
 import upload from '../middleware/multer.js';
+import { authUser } from '../middleware/userTracker.js';
 
 const router = express.Router();
 
@@ -25,6 +26,8 @@ const router = express.Router();
  *   post:
  *     summary: Create a new funnel template with file upload and tier
  *     tags: [FunnelTemplates]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -48,12 +51,24 @@ const router = express.Router();
  *     responses:
  *       201:
  *         description: Funnel template created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/FunnelTemplate'
  *       400:
- *         description: No file uploaded or invalid input
+ *         description: Bad request or missing file
  *       500:
  *         description: Server error
  */
-router.post('/file', upload.single('file'), createFunnelTemplateWithFile);
+router.post('/file', authUser, upload.single('file'), createFunnelTemplateWithFile);
 
 /**
  * @swagger
@@ -61,6 +76,8 @@ router.post('/file', upload.single('file'), createFunnelTemplateWithFile);
  *   post:
  *     summary: Create a new funnel template with direct content
  *     tags: [FunnelTemplates]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -86,10 +103,10 @@ router.post('/file', upload.single('file'), createFunnelTemplateWithFile);
  *               brainType:
  *                 type: string
  *                 enum: [Architect, Challenger, Synthesizer, Reflector, Catalyst]
- *              
  *               content:
  *                 type: string
- *              
+ *               fileUrl:
+ *                 type: string
  *               userRating:
  *                 type: number
  *               releaseDateTime:
@@ -97,11 +114,11 @@ router.post('/file', upload.single('file'), createFunnelTemplateWithFile);
  *                 format: date-time
  *     responses:
  *       201:
- *         description: Funnel template created
+ *         description: Funnel template created successfully
  *       400:
  *         description: Bad request
  */
-router.post('/', createFunnelTemplate);
+router.post('/', authUser, createFunnelTemplate);
 
 /**
  * @swagger
@@ -158,6 +175,8 @@ router.get('/:id', getFunnelTemplateById);
  *   put:
  *     summary: Update a funnel template
  *     tags: [FunnelTemplates]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -202,11 +221,11 @@ router.get('/:id', getFunnelTemplateById);
  *                 format: date-time
  *     responses:
  *       200:
- *         description: Funnel template updated
+ *         description: Funnel template updated successfully
  *       404:
  *         description: Template not found
  */
-router.put('/:id', updateFunnelTemplate);
+router.put('/:id', authUser, updateFunnelTemplate);
 
 /**
  * @swagger
@@ -214,6 +233,8 @@ router.put('/:id', updateFunnelTemplate);
  *   delete:
  *     summary: Delete a funnel template
  *     tags: [FunnelTemplates]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -223,10 +244,10 @@ router.put('/:id', updateFunnelTemplate);
  *         description: Funnel template ID
  *     responses:
  *       200:
- *         description: Funnel template deleted
+ *         description: Funnel template deleted successfully
  *       404:
  *         description: Template not found
  */
-router.delete('/:id', deleteFunnelTemplate);
+router.delete('/:id', authUser, deleteFunnelTemplate);
 
 export default router;
