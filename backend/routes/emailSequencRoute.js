@@ -11,9 +11,9 @@ import {
   getStats
 } from '../controller/emailSequenceController.js';
 import upload from '../middleware/multer.js';
+import { authUser } from "../middleware/userTracker.js";
 
 const router = express.Router();
-
 
 /**
  * @swagger
@@ -28,6 +28,8 @@ const router = express.Router();
  *   post:
  *     summary: Create a new email sequence
  *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []   # <-- Require JWT token
  *     consumes:
  *       - multipart/form-data
  *     requestBody:
@@ -40,27 +42,67 @@ const router = express.Router();
  *               - name
  *               - tier
  *               - type
+ *               - brainType
  *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Bearer token for authentication (set in Authorize button above)
+ *                 example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *               name:
  *                 type: string
+ *                 example: "Welcome Campaign"
  *               emailCount:
  *                 type: number
+ *                 example: 5
  *               emails:
  *                 type: number
+ *                 example: 100
+ *               opens:
+ *                 type: number
+ *                 example: 50
+ *               clicks:
+ *                 type: number
+ *                 example: 10
+ *               rating:
+ *                 type: number
+ *                 example: 4
  *               tier:
  *                 type: string
  *                 enum: [basic, premium, enterprise]
+ *                 example: "premium"
+ *               releaseDateTime:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2025-08-15T10:00:00Z"
  *               status:
  *                 type: string
  *                 enum: [active, scheduled]
+ *                 default: scheduled
+ *                 example: "scheduled"
+ *               usage.count:
+ *                 type: number
+ *                 example: 0
+ *               usage.users:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   description: MongoDB ObjectId of the user
+ *                 example: ["64f12c5b8d7a2c1f2a9b4567"]
  *               type:
  *                 type: string
  *                 enum: [manual, file]
+ *                 example: "file"
+ *               brainType:
+ *                 type: string
+ *                 enum: [Architect, Challenger, Synthesizer, Reflector, Catalyst]
+ *                 example: "Architect"
  *               manualContent:
  *                 type: string
+ *                 example: "This is the email content for manual type"
  *               emailTemplate:
  *                 type: string
- *                 description: JSON string of the email template, e.g. {"subject":"...","body":"...","footer":"..."}
+ *                 description: JSON string of the email template
+ *                 example: '{"subject":"Hello","body":"Welcome to our platform!","footer":"Best regards"}'
  *               file:
  *                 type: string
  *                 format: binary
@@ -69,12 +111,27 @@ const router = express.Router();
  *       201:
  *         description: Email sequence created successfully
  *       400:
- *         description: Missing required fields
+ *         description: Missing or invalid required fields
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
  *       500:
  *         description: Server error
  */
 
-router.post('/', upload.single('file'), create);
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ */
+
+router.post('/', upload.single('file'), authUser, create);
+
+
+
 
 /**
  * @swagger

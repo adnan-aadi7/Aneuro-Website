@@ -6,18 +6,44 @@ import { logAction } from "../config/logAction.js";
 export async function create(req, res) {
   try {
     const {
-      name, emailCount, emails, tier, status, type, manualContent, emailTemplate
+      name,
+      emailCount,
+      emails,
+      tier,
+      status,
+      type,
+      brainType,
+      manualContent,
+      emailTemplate,
+      releaseDateTime
     } = req.body;
 
     let fileUrl = req.body.fileUrl;
 
-    if (!name || !tier || !type) {
+    // ✅ Required field validation
+    if (!name || !tier || !type || !brainType) {
       return res.status(400).json({
         success: false,
-        message: 'Name, tier, and type are required'
+        message: 'Name, tier, type, and brainType are required'
       });
     }
 
+    // ✅ Validate enums
+    const allowedTiers = ['basic', 'premium', 'enterprise'];
+    const allowedTypes = ['manual', 'file'];
+    const allowedBrainTypes = ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst'];
+
+    if (!allowedTiers.includes(tier)) {
+      return res.status(400).json({ success: false, message: 'Invalid tier value' });
+    }
+    if (!allowedTypes.includes(type)) {
+      return res.status(400).json({ success: false, message: 'Invalid type value' });
+    }
+    if (!allowedBrainTypes.includes(brainType)) {
+      return res.status(400).json({ success: false, message: 'Invalid brainType value' });
+    }
+
+    // ✅ Handle file upload for "file" type
     if (type === 'file') {
       if (!req.file || !req.file.buffer) {
         return res.status(400).json({ success: false, message: 'File is required' });
@@ -34,10 +60,12 @@ export async function create(req, res) {
       fileUrl = uploadResult.secure_url;
     }
 
+    // ✅ Handle manual content for "manual" type
     if (type === 'manual' && !manualContent) {
-      return res.status(400).json({ success: false, message: 'Manual content required' });
+      return res.status(400).json({ success: false, message: 'Manual content is required' });
     }
 
+    // ✅ Parse emailTemplate JSON safely
     let parsedTemplate = { subject: '', body: '', footer: '' };
     try {
       if (emailTemplate) parsedTemplate = JSON.parse(emailTemplate);
@@ -45,37 +73,42 @@ export async function create(req, res) {
       return res.status(400).json({ success: false, message: 'Invalid emailTemplate JSON' });
     }
 
+    // ✅ Create new email sequence
     const newSequence = new EmailSequence({
       name,
       emailCount: Number(emailCount) || 0,
       emails: Number(emails) || 0,
       tier,
+      releaseDateTime: releaseDateTime || null,
       status: status || 'scheduled',
       type,
+      brainType,
       fileUrl,
       manualContent,
-      emailTemplate: parsedTemplate
+      emailTemplate: parsedTemplate,
+      usage: { count: 0, users: [] }
     });
 
     const savedSequence = await newSequence.save();
 
-    // ✅ Log this action
- await logAction({
-      action: "CREATE", // must match your schema enum
-      user: {
-        id: req.user?._id || null,
-        email: req.user?.email || "guest",
-        ipAddress: req.ip || req.headers["x-forwarded-for"] || "unknown"
-      },
-      affectedAsset: savedSequence._id,
-      contentType: "email-sequence",
-      details: `Created email sequence: ${savedSequence.name}`
-    });
+    await logAction({
+  action: "UPLOAD",
+  user: {
+    id: req.user?.id,
+    email: req.user?.email
+  },
+ affectedAsset: savedSequence.name,
+   contentType: "email-sequence",
+  description: "Created new email sequence",
+  req
+});
+
     res.status(201).json({
       success: true,
       message: 'Email sequence created successfully',
       data: savedSequence
     });
+
   } catch (error) {
     res.status(500).json({
       success: false,
