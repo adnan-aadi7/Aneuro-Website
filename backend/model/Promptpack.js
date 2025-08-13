@@ -7,8 +7,7 @@ const PromptSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['analytical', 'creative', 'empathic', 'strategic', 'practical'],
-    required: true,
+    enum: ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst'],
   },
 });
 

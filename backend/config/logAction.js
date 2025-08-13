@@ -1,44 +1,55 @@
-import Log from '../model/Log.js';
+// services/logService.js
+import Log from "../model/Log.js";
 
+export function getClientIp(req) {
+  let ip =
+    req?.headers?.["x-forwarded-for"]?.split(",")[0] ||
+    req?.connection?.remoteAddress ||
+    req?.socket?.remoteAddress ||
+    req?.ip ||
+    "unknown";
 
-/**
- * Logs a system action to MongoDB
- * @param {Object} params
- * @param {String} params.userId - ID of the user performing the action
- * @param {String} params.email - Email of the user
- * @param {String} params.ipAddress - IP address of the user
- * @param {String} params.action - The action performed (UPLOAD, EDIT, DELETE)
- * @param {String} params.contentType - Type of content affected
- * @param {String} params.affectedAsset - Name/ID of the affected asset
- * @param {String} [params.severity] - Severity level (default: info)
- * @param {String} [params.description] - Additional details
- */
+  // Normalize IPv6 localhost to IPv4
+  if (ip === "::1" || ip === "::ffff:127.0.0.1") {
+    ip = "127.0.0.1";
+  }
 
+  // If IPv6 mapped IPv4 (::ffff:x.x.x.x), strip the prefix
+  if (ip.startsWith("::ffff:")) {
+    ip = ip.substring(7);
+  }
 
+  return ip;
+}
 
 export async function logAction({
   action,
   user,
   affectedAsset,
   contentType,
-  details
+  description,
+  ipAddress,
+  req // pass req here if available
 }) {
   try {
+    const finalIp =
+      ipAddress || (req ? getClientIp(req) : "0.0.0.0");
+
     const logEntry = new Log({
-      action, 
+      action,
       user: {
         id: user?.id || "system",
         email: user?.email || "system@localhost",
-        ipAddress: user?.ipAddress || "0.0.0.0"
+        ipAddress: finalIp
       },
       affectedAsset,
       contentType,
-      details
+      description
     });
 
     await logEntry.save();
+    console.log("Log saved:", logEntry);
   } catch (err) {
     console.error("Failed to save log:", err.message);
   }
 }
-

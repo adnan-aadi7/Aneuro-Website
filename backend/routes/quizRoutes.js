@@ -1,5 +1,5 @@
 import express from 'express';
-import { saveAnswer, getProgress, createAudience, getAudienceSessions,sendIncompleteQuizNotifications } from '../controller/quizController.js';
+import { saveAnswer, getProgress, createAudience, getAudienceSessions,sendIncompleteQuizNotifications, getQuizAnalytics, getAudienceBrainTypeAnalyticsByUser, getUserWeeklyBrainTypeStats } from '../controller/quizController.js';
 
 const router = express.Router();
 
@@ -292,5 +292,227 @@ router.get('/progress/:user_id', getProgress);
  */
 
 router.post('/send-incomplete-reminders', sendIncompleteQuizNotifications);
+
+
+
+/**
+ * @swagger
+ * /api/quiz/analytics/{userId}:
+ *   get:
+ *     summary: Get quiz completion stats and audience breakdown by brain type for a specific user
+ *     tags:
+ *       - Quiz Analytics
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID to filter the quiz analytics
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved quiz analytics for the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     quizCompletion:
+ *                       type: object
+ *                       properties:
+ *                         lastWeek:
+ *                           type: integer
+ *                           description: Number of quizzes completed last week
+ *                           example: 15
+ *                         thisWeek:
+ *                           type: integer
+ *                           description: Number of quizzes completed this week
+ *                           example: 20
+ *                     audienceBreakdown:
+ *                       type: object
+ *                       description: Breakdown of audiences by brain type
+ *                       properties:
+ *                         Architect:
+ *                           type: integer
+ *                           example: 10
+ *                         Reflector:
+ *                           type: integer
+ *                           example: 5
+ *                         Catalyst:
+ *                           type: integer
+ *                           example: 3
+ *                         Synthesizer:
+ *                           type: integer
+ *                           example: 2
+ *                         Challenger:
+ *                           type: integer
+ *                           example: 1
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error"
+ */
+router.get('/analytics/:userId', getQuizAnalytics);
+
+
+/**
+ * @swagger
+ * /api/quiz/analytics/brain-types/{userId}:
+ *   get:
+ *     summary: Get audience brain type analytics (counts and percentages)
+ *     tags:
+ *       - Quiz Analytics
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Optional user ID to filter analytics for a specific user
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved brain type analytics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     Architect:
+ *                       type: object
+ *                       properties:
+ *                         count:
+ *                           type: integer
+ *                           example: 10
+ *                         percentage:
+ *                           type: number
+ *                           format: float
+ *                           example: 25.0
+ *                     Reflector:
+ *                       type: object
+ *                       properties:
+ *                         count:
+ *                           type: integer
+ *                           example: 5
+ *                         percentage:
+ *                           type: number
+ *                           format: float
+ *                           example: 12.5
+ *                     Catalyst:
+ *                       type: object
+ *                       properties:
+ *                         count:
+ *                           type: integer
+ *                           example: 8
+ *                         percentage:
+ *                           type: number
+ *                           format: float
+ *                           example: 20.0
+ *                     Synthesizer:
+ *                       type: object
+ *                       properties:
+ *                         count:
+ *                           type: integer
+ *                           example: 12
+ *                         percentage:
+ *                           type: number
+ *                           format: float
+ *                           example: 30.0
+ *                     Challenger:
+ *                       type: object
+ *                       properties:
+ *                         count:
+ *                           type: integer
+ *                           example: 5
+ *                         percentage:
+ *                           type: number
+ *                           format: float
+ *                           example: 12.5
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+router.get('/analytics/brain-types/:userId', getAudienceBrainTypeAnalyticsByUser);
+
+
+/**
+ * @swagger
+ * /api/quiz/{userId}/weekly-brain-types:
+ *   get:
+ *     summary: Get weekly brain type stats for a specific user's audience
+ *     tags: [Quiz Analytics]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the user whose audience data you want
+ *     responses:
+ *       200:
+ *         description: Weekly brain type stats for the given user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   year:
+ *                     type: integer
+ *                     example: 2025
+ *                   week:
+ *                     type: integer
+ *                     example: 32
+ *                   counts:
+ *                     type: object
+ *                     properties:
+ *                       Architect:
+ *                         type: integer
+ *                         example: 5
+ *                       Reflector:
+ *                         type: integer
+ *                         example: 3
+ *                       Catalyst:
+ *                         type: integer
+ *                         example: 2
+ *                       Synthesizer:
+ *                         type: integer
+ *                         example: 4
+ *                       Challenger:
+ *                         type: integer
+ *                         example: 1
+ */
+router.get('/:userId/weekly-brain-types', getUserWeeklyBrainTypeStats);
 
 export default router;

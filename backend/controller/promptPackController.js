@@ -1,50 +1,46 @@
-import PromptPack from '../model/PromptPack.js';
-import { uploadToCloudinary } from '../middleware/uploadToCloudinary.js'
-
+import PromptPack from '../model/Promptpack.js';
+import { uploadToCloudinary } from '../middleware/uploadToCloudinary.js';
 import path from 'path';
 
 export const uploadPromptPack = async (req, res) => {
   try {
-    if (!req.file) {
+    // 1️⃣ Validate file
+    if (!req.file)
       return res.status(400).json({ success: false, message: 'No file uploaded' });
-    }
 
-    if (!req.body.tier) {
+    if (!req.body.tier)
       return res.status(400).json({ success: false, message: 'Tier is required' });
-    }
 
+    // 2️⃣ Upload file to Cloudinary
     const cloudinaryResult = await uploadToCloudinary(req.file.buffer);
     const fileUrl = cloudinaryResult?.secure_url;
 
-    // Parse file content
-    const fileContent = req.file.buffer.toString('utf8');
-    let prompts = [];
+    if (!fileUrl)
+      return res.status(500).json({ success: false, message: 'Failed to upload file' });
 
-    if (req.file.originalname.endsWith('.json')) {
-      const parsed = JSON.parse(fileContent);
-      prompts = normalizePrompts(parsed);
-    } else if (
-      req.file.originalname.endsWith('.txt') ||
-      req.file.originalname.endsWith('.md')
-    ) {
-      prompts = fileContent
-        .split('\n')
-        .filter(line => line.trim()) // remove empty lines
-        .map(line => ({
-          content: line.trim(),
-          type: 'analytical', // default type
-        }));
-    }
+    const filename = req.file.originalname.toLowerCase();
 
-    // Save to MongoDB
+    // 3️⃣ Only allow specific file types
+    const allowedExtensions = ['.pdf', '.docx', '.md', '.html'];
+    const ext = path.extname(filename);
+
+    if (!allowedExtensions.includes(ext))
+      return res.status(400).json({ success: false, message: 'Unsupported file type' });
+
+    // 4️⃣ Save PromptPack to MongoDB
     const newPack = new PromptPack({
-      name: path.parse(req.file.originalname).name, // filename without extension
-      category: 'General', // default category
+      name: path.parse(req.file.originalname).name,
+      category: req.body.category || 'General',
       tier: req.body.tier,
-      status: 'scheduled', // default status
-      prompts,
-      fileUrl, // store the Cloudinary URL
-      releaseDateTime: new Date(),
+      status: req.body.status || 'scheduled',
+      fileUrl,
+      releaseDateTime: req.body.releaseDateTime || new Date(),
+      prompts: [
+        {
+          content: fileUrl,
+          type: req.body.type || '', 
+        },
+      ],
     });
 
     const savedPack = await newPack.save();
@@ -54,19 +50,19 @@ export const uploadPromptPack = async (req, res) => {
       message: 'Prompt pack uploaded successfully',
       data: savedPack,
     });
-  } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ success: false, message: error.message });
+
+  } catch (err) {
+    console.error('Upload error:', err);
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
 
-// CREATE - Create new prompt pack
+
 export async function create(req, res) {
   try {
     const { name, category, tier, status, prompts, releaseDateTime } = req.body;
 
-    // Validation
     if (!name || !category || !tier || !status) {
       return res.status(400).json({
         success: false,
@@ -74,21 +70,16 @@ export async function create(req, res) {
       });
     }
 
-    // Validate/normalize prompts array if provided
-    let normalizedPrompts = [];
-    if (prompts) {
-      normalizedPrompts = normalizePrompts(prompts);
-    }
-
     const newPromptPack = new PromptPack({
       name,
       category,
       tier,
       status,
-      prompts: normalizedPrompts,
+      prompts: prompts || [],
       releaseDateTime: releaseDateTime ? new Date(releaseDateTime) : new Date()
     });
 
+    // 3️⃣ Save to DB
     const savedPromptPack = await newPromptPack.save();
 
     res.status(201).json({
@@ -96,6 +87,7 @@ export async function create(req, res) {
       message: 'Prompt pack created successfully',
       data: savedPromptPack
     });
+
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -104,6 +96,7 @@ export async function create(req, res) {
     });
   }
 }
+
 
 // GET ALL - Get all prompt packs with filtering, sorting, and pagination
 export async function getAll(req, res) {
@@ -226,9 +219,12 @@ export async function update(req, res) {
     delete updateData.createdDate;
     delete updateData._id;
 
-    // Validate prompts if being updated
-    if (updateData.prompts && Array.isArray(updateData.prompts)) {
-      updateData.prompts = normalizePrompts(updateData.prompts);
+    // Keep prompts as-is, no normalization
+    if (updateData.prompts && !Array.isArray(updateData.prompts)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Prompts must be an array' 
+      });
     }
 
     const updatedPromptPack = await PromptPack.findByIdAndUpdate(
@@ -260,6 +256,7 @@ export async function update(req, res) {
     });
   }
 }
+
 
 // DELETE - Delete prompt pack
 export async function deletePromptPack(req, res) {
@@ -299,89 +296,7 @@ export async function deletePromptPack(req, res) {
   }
 }
 
-// BULK DELETE - Delete multiple prompt packs
-export async function bulkDelete(req, res) {
-  try {
-    const { ids } = req.body;
 
-    if (!Array.isArray(ids) || ids.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'IDs array is required' 
-      });
-    }
-
-    const invalidIds = ids.filter(id => !id.match(/^[0-9a-fA-F]{24}$/));
-    if (invalidIds.length > 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: `Invalid IDs: ${invalidIds.join(', ')}` 
-      });
-    }
-
-    const result = await PromptPack.deleteMany({ _id: { $in: ids } });
-
-    res.status(200).json({
-      success: true,
-      message: `${result.deletedCount} prompt packs deleted successfully`,
-      data: { 
-        deletedCount: result.deletedCount, 
-        requestedCount: ids.length 
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error deleting prompt packs',
-      error: error.message
-    });
-  }
-}
-
-// ADD PROMPT - Add single prompt to pack
-export async function addPrompt(req, res) {
-  try {
-    const { id } = req.params;
-    const { content, type } = req.body;
-
-    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid ID format' 
-      });
-    }
-
-    if (!content) {
-      return res.status(400).json({
-        success: false,
-        message: 'Content is required'
-      });
-    }
-
-    const promptPack = await PromptPack.findById(id);
-    if (!promptPack) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'Prompt pack not found' 
-      });
-    }
-
-    promptPack.prompts.push({ content, type: type || 'analytical' });
-    const updatedPromptPack = await promptPack.save();
-
-    res.status(200).json({
-      success: true,
-      message: 'Prompt added successfully',
-      data: updatedPromptPack
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error adding prompt',
-      error: error.message
-    });
-  }
-}
 
 // REMOVE PROMPT - Remove specific prompt from pack
 export async function removePrompt(req, res) {

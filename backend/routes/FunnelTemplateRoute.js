@@ -56,7 +56,6 @@ const router = express.Router();
  */
 router.post('/file', upload.single('file'), createFunnelTemplateWithFile);
 
-
 /**
  * @swagger
  * /api/funnel-templates:
@@ -88,6 +87,20 @@ router.post('/file', upload.single('file'), createFunnelTemplateWithFile);
  *               status:
  *                 type: string
  *                 enum: [active, scheduled, inactive]
+ *               brainType:
+ *                 type: string
+ *                 enum: [Architect, Challenger, Synthesizer, Reflector, Catalyst]
+ *               usage:
+ *                 type: number
+ *               conversions:
+ *                 type: number
+ *               fileUrl:
+ *                 type: string
+ *               userRating:
+ *                 type: number
+ *               releaseDateTime:
+ *                 type: string
+ *                 format: date-time
  *     responses:
  *       201:
  *         description: Funnel template created

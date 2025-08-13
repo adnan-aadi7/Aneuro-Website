@@ -45,7 +45,31 @@ export const createFunnelTemplateWithFile = async (req, res) => {
 // CREATE  funnel template
 export const createFunnelTemplate = async (req, res) => {
   try {
-    const newTemplate = new FunnelTemplate(req.body);
+    const { name, pages, category, tier, status, brainType, usage, conversions, fileUrl, userRating, releaseDateTime } = req.body;
+
+    // Validate brainType if provided
+    const allowedBrainTypes = ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst'];
+    if (brainType && !allowedBrainTypes.includes(brainType)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid brainType. Allowed values: ${allowedBrainTypes.join(', ')}`
+      });
+    }
+
+    const newTemplate = new FunnelTemplate({
+      name,
+      pages,
+      category,
+      tier,
+      status,
+      brainType,
+      usage,
+      conversions,
+      fileUrl,
+      userRating,
+      releaseDateTime
+    });
+
     await newTemplate.save();
     res.status(201).json({ success: true, data: newTemplate });
   } catch (error) {

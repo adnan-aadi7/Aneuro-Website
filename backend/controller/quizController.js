@@ -341,3 +341,201 @@ export const sendIncompleteQuizNotifications = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const getQuizAnalytics = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const now = new Date();
+
+    const startOfThisWeek = new Date(now);
+    startOfThisWeek.setHours(0, 0, 0, 0);
+    startOfThisWeek.setDate(now.getDate() - now.getDay());
+
+    const startOfLastWeek = new Date(startOfThisWeek);
+    startOfLastWeek.setDate(startOfThisWeek.getDate() - 7);
+
+    const endOfLastWeek = new Date(startOfThisWeek);
+    endOfLastWeek.setMilliseconds(-1);
+
+    // Filter for this user's completed quizzes
+    const baseFilter = {
+      user_id: userId,
+      is_completed: true,
+    };
+
+    // Counts for last week and this week
+    const lastWeekCount = await QuizSession.countDocuments({
+      ...baseFilter,
+      timestamp: { $gte: startOfLastWeek, $lte: endOfLastWeek }
+    });
+
+    const thisWeekCount = await QuizSession.countDocuments({
+      ...baseFilter,
+      timestamp: { $gte: startOfThisWeek, $lte: now }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        quizCompletion: {
+          lastWeek: lastWeekCount,
+          thisWeek: thisWeekCount
+        }
+      }
+    });
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+import mongoose from 'mongoose';
+
+export const getAudienceBrainTypeAnalyticsByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Validate userId
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ success: false, message: 'Invalid userId' });
+    }
+
+   const baseFilter = {
+  user_id: new mongoose.Types.ObjectId(userId),
+  is_completed: true,
+};
+
+
+    // Aggregate brain_type counts for this user
+    const aggregation = await QuizSession.aggregate([
+      { $match: baseFilter },
+      {
+        $group: {
+          _id: '$brain_type',
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Total quizzes completed by user
+    const total = aggregation.reduce((acc, item) => acc + item.count, 0);
+
+    const brainTypes = ['Architect', 'Reflector', 'Catalyst', 'Synthesizer', 'Challenger'];
+
+    const breakdown = brainTypes.reduce((acc, type) => {
+      const found = aggregation.find(item => item._id === type);
+      acc[type] = {
+        count: found ? found.count : 0,
+        percentage: total > 0 ? parseFloat(((found ? found.count : 0) / total * 100).toFixed(2)) : 0,
+      };
+      return acc;
+    }, {});
+
+    return res.status(200).json({ success: true, data: breakdown });
+  } catch (error) {
+    console.error('Error getting brain type analytics by user:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+export const getUserWeeklyBrainTypeStats = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    const now = new Date();
+
+    // Helper to get ISO week number
+    const getISOWeek = (date) => {
+      const tmp = new Date(date.getTime());
+      tmp.setHours(0, 0, 0, 0);
+      tmp.setDate(tmp.getDate() + 3 - ((tmp.getDay() + 6) % 7));
+      const week1 = new Date(tmp.getFullYear(), 0, 4);
+      return 1 + Math.round(
+        ((tmp - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7
+      );
+    };
+
+    const currentYear = now.getFullYear();
+    const currentWeek = getISOWeek(now);
+
+    // Month names
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    const stats = await QuizSession.aggregate([
+      {
+        $match: {
+          user_id: new mongoose.Types.ObjectId(userId),
+          is_completed: true,
+          brain_type: { $in: ['Architect', 'Reflector', 'Catalyst', 'Synthesizer', 'Challenger'] }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            week: { $isoWeek: "$createdAt" },
+            month: { $month: "$createdAt" },
+            brain_type: "$brain_type"
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $group: {
+          _id: { year: "$_id.year", week: "$_id.week", month: "$_id.month" },
+          brainTypes: { $push: { type: "$_id.brain_type", count: "$count" } }
+        }
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } }
+    ]);
+
+    const result = {
+      thisWeek: [],
+      lastWeek: [],
+      months: {}
+    };
+
+    stats.forEach(s => {
+      const { year, week, month } = s._id;
+      const monthName = monthNames[month - 1];
+
+      const formatted = {
+        year,
+        week,
+        month,
+        monthName,
+        counts: s.brainTypes.reduce((acc, bt) => {
+          acc[bt.type] = bt.count;
+          return acc;
+        }, {})
+      };
+
+      // Current & previous week
+      if (year === currentYear && week === currentWeek) {
+        result.thisWeek.push(formatted);
+      } else if (year === currentYear && week === currentWeek - 1) {
+        result.lastWeek.push(formatted);
+      }
+
+      // Monthly aggregation
+      if (!result.months[monthName]) {
+        result.months[monthName] = [];
+      }
+      result.months[monthName].push(formatted);
+    });
+
+    res.json(result);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch brain type stats' });
+  }
+};
