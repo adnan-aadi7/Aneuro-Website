@@ -42,13 +42,9 @@ const EmailSequenceSchema = new mongoose.Schema(
     },
 
     fileUrl: { type: String },
-    manualContent: { type: String },
 
-    emailTemplate: {
-      subject: { type: String, default: '' },
-      body: { type: String, default: '' },
-      footer: { type: String, default: '' }
-    },
+     emailTemplate: { type: String, default: '' }
+
   },
   { timestamps: true }
 );

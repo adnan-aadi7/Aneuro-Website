@@ -29,7 +29,7 @@ const router = express.Router();
  *     summary: Create a new email sequence
  *     tags: [EmailSequences]
  *     security:
- *       - bearerAuth: []   # <-- Require JWT token
+ *       - bearerAuth: []   # Require JWT token
  *     consumes:
  *       - multipart/form-data
  *     requestBody:
@@ -44,28 +44,10 @@ const router = express.Router();
  *               - type
  *               - brainType
  *             properties:
- *               token:
- *                 type: string
- *                 description: Bearer token for authentication (set in Authorize button above)
- *                 example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *               name:
  *                 type: string
  *                 example: "Welcome Campaign"
- *               emailCount:
- *                 type: number
- *                 example: 5
- *               emails:
- *                 type: number
- *                 example: 100
- *               opens:
- *                 type: number
- *                 example: 50
- *               clicks:
- *                 type: number
- *                 example: 10
- *               rating:
- *                 type: number
- *                 example: 4
+ *             
  *               tier:
  *                 type: string
  *                 enum: [basic, premium, enterprise]
@@ -96,13 +78,10 @@ const router = express.Router();
  *                 type: string
  *                 enum: [Architect, Challenger, Synthesizer, Reflector, Catalyst]
  *                 example: "Architect"
- *               manualContent:
- *                 type: string
- *                 example: "This is the email content for manual type"
  *               emailTemplate:
  *                 type: string
- *                 description: JSON string of the email template
- *                 example: '{"subject":"Hello","body":"Welcome to our platform!","footer":"Best regards"}'
+ *                 description: HTML or plain text email template
+ *                 example: "<html><body>Welcome to our platform!</body></html>"
  *               file:
  *                 type: string
  *                 format: binary
@@ -116,10 +95,7 @@ const router = express.Router();
  *         description: Unauthorized (missing or invalid token)
  *       500:
  *         description: Server error
- */
-
-/**
- * @swagger
+ *
  * components:
  *   securitySchemes:
  *     bearerAuth:
@@ -127,6 +103,7 @@ const router = express.Router();
  *       scheme: bearer
  *       bearerFormat: JWT
  */
+
 
 router.post('/', upload.single('file'), authUser, create);
 
@@ -218,12 +195,15 @@ router.get('/:id', getById);
  *   put:
  *     summary: Update an email sequence by ID
  *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
+ *         description: The ID of the email sequence
  *     requestBody:
  *       required: true
  *       content:
@@ -233,39 +213,48 @@ router.get('/:id', getById);
  *             properties:
  *               name:
  *                 type: string
+ *               emailCount:
+ *                 type: number
+ *               emails:
+ *                 type: number
+ *               opens:
+ *                 type: number
+ *               clicks:
+ *                 type: number
+ *               rating:
+ *                 type: number
  *               tier:
  *                 type: string
  *                 enum: [basic, premium, enterprise]
+ *               releaseDateTime:
+ *                 type: string
+ *                 format: date-time
  *               status:
  *                 type: string
  *                 enum: [active, scheduled]
  *               type:
  *                 type: string
  *                 enum: [manual, file]
+ *               brainType:
+ *                 type: string
+ *                 enum: [Architect, Challenger, Synthesizer, Reflector, Catalyst]
  *               fileUrl:
  *                 type: string
- *               manualContent:
- *                 type: string
  *               emailTemplate:
- *                 type: object
- *                 properties:
- *                   subject:
- *                     type: string
- *                   body:
- *                     type: string
- *                   footer:
- *                     type: string
+ *                 type: string
+ *                 description: Email template content (HTML or plain text)
  *     responses:
  *       200:
- *         description: Email sequence updated
+ *         description: Email sequence updated successfully
  *       400:
  *         description: Invalid input
  *       404:
- *         description: Not found
+ *         description: Email sequence not found
  *       500:
  *         description: Server error
  */
-router.put('/:id', update);
+router.put('/:id', authUser, update);
+
 
 /**
  * @swagger
@@ -273,21 +262,38 @@ router.put('/:id', update);
  *   delete:
  *     summary: Delete a single email sequence by ID
  *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []   # <-- Require JWT token
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
+ *           example: "64f12c5b8d7a2c1f2a9b4567"
+ *         description: MongoDB ObjectId of the email sequence
  *     responses:
  *       200:
  *         description: Deleted successfully
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
  *       404:
  *         description: Not found
  *       500:
  *         description: Server error
  */
-router.delete('/:id', deleteSequence);
+
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ */
+router.delete('/:id', authUser, deleteSequence);
+
 
 /**
  * @swagger
