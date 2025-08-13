@@ -1,13 +1,12 @@
-//funnel templates routes
 import express from 'express';
 import {
   createFunnelTemplate,
+  createFunnelTemplateWithFile,
   getAllFunnelTemplates,
   getFunnelTemplateById,
   updateFunnelTemplate,
   deleteFunnelTemplate,
-  getFunnelTemplateStats,
-  createFunnelTemplateWithFile
+  getFunnelTemplateStats
 } from '../controller/funnelTemplateController.js';
 import upload from '../middleware/multer.js';
 
@@ -19,13 +18,13 @@ const router = express.Router();
  *   name: FunnelTemplates
  *   description: Funnel Template Management
  */
+
 /**
  * @swagger
  * /api/funnel-templates/file:
  *   post:
  *     summary: Create a new funnel template with file upload and tier
- *     tags:
- *       - FunnelTemplates
+ *     tags: [FunnelTemplates]
  *     requestBody:
  *       required: true
  *       content:
@@ -50,7 +49,7 @@ const router = express.Router();
  *       201:
  *         description: Funnel template created successfully
  *       400:
- *         description: No file uploaded
+ *         description: No file uploaded or invalid input
  *       500:
  *         description: Server error
  */
@@ -60,7 +59,7 @@ router.post('/file', upload.single('file'), createFunnelTemplateWithFile);
  * @swagger
  * /api/funnel-templates:
  *   post:
- *     summary: Create a new funnel template
+ *     summary: Create a new funnel template with direct content
  *     tags: [FunnelTemplates]
  *     requestBody:
  *       required: true
@@ -70,10 +69,7 @@ router.post('/file', upload.single('file'), createFunnelTemplateWithFile);
  *             type: object
  *             required:
  *               - name
- *               - pages
- *               - category
  *               - tier
- *               - status
  *             properties:
  *               name:
  *                 type: string
@@ -90,12 +86,10 @@ router.post('/file', upload.single('file'), createFunnelTemplateWithFile);
  *               brainType:
  *                 type: string
  *                 enum: [Architect, Challenger, Synthesizer, Reflector, Catalyst]
- *               usage:
- *                 type: number
- *               conversions:
- *                 type: number
- *               fileUrl:
+ *              
+ *               content:
  *                 type: string
+ *              
  *               userRating:
  *                 type: number
  *               releaseDateTime:
@@ -136,7 +130,6 @@ router.get('/', getAllFunnelTemplates);
  *         description: Server error
  */
 router.get('/stats', getFunnelTemplateStats);
-
 
 /**
  * @swagger
@@ -191,6 +184,22 @@ router.get('/:id', getFunnelTemplateById);
  *               status:
  *                 type: string
  *                 enum: [active, scheduled, inactive]
+ *               brainType:
+ *                 type: string
+ *                 enum: [Architect, Challenger, Synthesizer, Reflector, Catalyst]
+ *               usage:
+ *                 type: number
+ *               conversions:
+ *                 type: number
+ *               content:
+ *                 type: string
+ *               fileUrl:
+ *                 type: string
+ *               userRating:
+ *                 type: number
+ *               releaseDateTime:
+ *                 type: string
+ *                 format: date-time
  *     responses:
  *       200:
  *         description: Funnel template updated

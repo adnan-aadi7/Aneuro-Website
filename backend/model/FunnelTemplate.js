@@ -21,6 +21,10 @@ const FunnelTemplateSchema = new mongoose.Schema({
   usage: { type: Number, default: 0 },         
   conversions: { type: Number, default: 0 },
   fileUrl: { type: String },
+  content: { 
+    type: String,
+    default: '', 
+  },
   userRating: { type: Number, min: 0, max: 5 },
   createdAt: { type: Date, default: Date.now },
   releaseDateTime: { type: Date },
