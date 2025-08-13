@@ -12,6 +12,7 @@ import {
   uploadPromptPack
 } from '../controller/promptPackController.js';
 import upload from '../middleware/multer.js';
+import { authUser } from "../middleware/userTracker.js";
 
 const router = express.Router();
 
@@ -21,6 +22,7 @@ const router = express.Router();
  *   name: PromptPacks
  *   description: Prompt pack management APIs
  */
+
 /**
  * @swagger
  * /api/prompt-packs/upload:
@@ -32,6 +34,8 @@ const router = express.Router();
  *       with the provided tier. Other fields like `name`, `category`, and `status`  
  *       are set automatically by the server.
  *     tags: [PromptPacks]
+ *     security:
+ *       - bearerAuth: []   # Added authentication requirement
  *     consumes:
  *       - multipart/form-data
  *     requestBody:
@@ -72,11 +76,12 @@ const router = express.Router();
  *                   description: The saved prompt pack object, including Cloudinary file URL
  *       400:
  *         description: Bad request (e.g., missing file or tier, invalid file format)
+ *       401:
+ *         description: Unauthorized (user must be authenticated)
  *       500:
  *         description: Server error while uploading prompt pack
  */
-router.post('/upload', upload.single('file'), uploadPromptPack);
-
+router.post('/upload', authUser, upload.single('file'), uploadPromptPack);
 
 
 /**
@@ -85,6 +90,8 @@ router.post('/upload', upload.single('file'), uploadPromptPack);
  *   post:
  *     summary: Create a new prompt pack
  *     tags: [PromptPacks]
+ *     security:
+ *       - bearerAuth: []   # Added for authentication
  *     requestBody:
  *       required: true
  *       content:
@@ -113,8 +120,10 @@ router.post('/upload', upload.single('file'), uploadPromptPack);
  *     responses:
  *       201:
  *         description: Prompt pack created successfully
+ *       401:
+ *         description: Unauthorized (user must be authenticated)
  */
-router.post('/', create);
+router.post('/', authUser, create);
 
 /**
  * @swagger
@@ -197,22 +206,58 @@ router.get('/:id', getById);
  *   put:
  *     summary: Update a prompt pack
  *     tags: [PromptPacks]
+ *     security:
+ *       - bearerAuth: []   # Authentication required
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
+ *           example: 64f123abc4567890def12345
+ *         description: The ID of the prompt pack to update
  *     requestBody:
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *               tier:
+ *                 type: string
+ *                 enum: [basic, premium, enterprise]
+ *               status:
+ *                 type: string
+ *                 enum: [active, scheduled]
+ *               releaseDateTime:
+ *                 type: string
+ *                 format: date-time
+ *               prompts:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     content:
+ *                       type: string
+ *                     type:
+ *                       type: string
  *     responses:
  *       200:
  *         description: Prompt pack updated successfully
+ *       400:
+ *         description: Invalid input
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Prompt pack not found
+ *       500:
+ *         description: Server error
  */
-router.put('/:id', update);
+router.put('/:id', authUser, update);
 
 /**
  * @swagger
@@ -220,17 +265,48 @@ router.put('/:id', update);
  *   delete:
  *     summary: Delete a prompt pack by ID
  *     tags: [PromptPacks]
+ *     security:
+ *       - bearerAuth: []   # Authentication required
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
+ *           example: 64f123abc4567890def12345
+ *         description: The ID of the prompt pack to delete
  *     responses:
  *       200:
- *         description: Prompt pack deleted
+ *         description: Prompt pack deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Prompt pack deleted successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     deletedId:
+ *                       type: string
+ *                     deletedName:
+ *                       type: string
+ *       400:
+ *         description: Invalid ID format
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Prompt pack not found
+ *       500:
+ *         description: Server error
  */
-router.delete('/:id', deletePromptPack);
+router.delete('/:id', authUser, deletePromptPack);
+
 
 
 
