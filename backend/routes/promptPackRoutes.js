@@ -6,8 +6,6 @@ import {
   getById,
   update,
   deletePromptPack,
-  bulkDelete,
-  addPrompt,
   removePrompt,
   incrementUsage,
   getStatistics,
@@ -234,58 +232,7 @@ router.put('/:id', update);
  */
 router.delete('/:id', deletePromptPack);
 
-/**
- * @swagger
- * /api/prompt-packs:
- *   delete:
- *     summary: Bulk delete prompt packs
- *     tags: [PromptPacks]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               ids:
- *                 type: array
- *                 items:
- *                   type: string
- *     responses:
- *       200:
- *         description: Prompt packs deleted successfully
- */
-router.delete('/', bulkDelete);
 
-/**
- * @swagger
- * /api/prompt-packs/{id}/prompts:
- *   post:
- *     summary: Add a prompt to a prompt pack
- *     tags: [PromptPacks]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [content, type]
- *             properties:
- *               content:
- *                 type: string
- *               type:
- *                 type: string
- *     responses:
- *       200:
- *         description: Prompt added successfully
- */
-router.post('/:id/prompts', addPrompt);
 
 /**
  * @swagger
