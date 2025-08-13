@@ -30,7 +30,7 @@ const PromptPackSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['active', 'scheduled'],
-    default: 'scheduled', // 👈 default value set here
+    default: 'scheduled', 
     required: true,
   },
   usageCount: {
