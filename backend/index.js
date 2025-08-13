@@ -19,7 +19,7 @@ import schduleRoutes from './routes/scheduleRoutes.js'
 import activityRoutes from "./routes/activityRoutes.js";
 import logRoutes from './routes/logRoutes.js'
 import quizRoutes from './routes/quizRoutes.js'
-
+import customizationRoutes from './routes/customizationRoutes.js';
 const app = express();
 const port = 4000;
 
@@ -37,6 +37,8 @@ const startServer = async () => {
     }));
 
     app.use(express.json());
+      
+     app.set("trust proxy", true);
 
     // Session configuration for Passport
     app.use(session({
@@ -66,6 +68,7 @@ const startServer = async () => {
     app.use("/api/activities", activityRoutes);
     app.use("/api/system-logs", logRoutes);
     app.use("/api/quiz", quizRoutes);
+    app.use("/api/customization", customizationRoutes);
 
     app.listen(port, () => {
       console.log(`✅ Server running at http://localhost:${port}`);

@@ -2,22 +2,46 @@ import EmailSequence from "../model/EmailSequence.js";
 import { uploadToCloudinary } from "../middleware/uploadToCloudinary.js";
 import { logAction } from "../config/logAction.js";
 
-
 export async function create(req, res) {
   try {
     const {
-      name, emailCount, emails, tier, status, type, manualContent, emailTemplate
+      name,
+      emailCount,
+      emails,
+      tier,
+      status,
+      type,
+      brainType,
+      emailTemplate,
+      releaseDateTime
     } = req.body;
 
     let fileUrl = req.body.fileUrl;
 
-    if (!name || !tier || !type) {
+    // ✅ Required field validation
+    if (!name || !tier || !type || !brainType) {
       return res.status(400).json({
         success: false,
-        message: 'Name, tier, and type are required'
+        message: 'Name, tier, type, and brainType are required'
       });
     }
 
+    // ✅ Validate enums
+    const allowedTiers = ['basic', 'premium', 'enterprise'];
+    const allowedTypes = ['manual', 'file'];
+    const allowedBrainTypes = ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst'];
+
+    if (!allowedTiers.includes(tier)) {
+      return res.status(400).json({ success: false, message: 'Invalid tier value' });
+    }
+    if (!allowedTypes.includes(type)) {
+      return res.status(400).json({ success: false, message: 'Invalid type value' });
+    }
+    if (!allowedBrainTypes.includes(brainType)) {
+      return res.status(400).json({ success: false, message: 'Invalid brainType value' });
+    }
+
+    // ✅ Handle file upload for "file" type
     if (type === 'file') {
       if (!req.file || !req.file.buffer) {
         return res.status(400).json({ success: false, message: 'File is required' });
@@ -34,48 +58,41 @@ export async function create(req, res) {
       fileUrl = uploadResult.secure_url;
     }
 
-    if (type === 'manual' && !manualContent) {
-      return res.status(400).json({ success: false, message: 'Manual content required' });
-    }
-
-    let parsedTemplate = { subject: '', body: '', footer: '' };
-    try {
-      if (emailTemplate) parsedTemplate = JSON.parse(emailTemplate);
-    } catch {
-      return res.status(400).json({ success: false, message: 'Invalid emailTemplate JSON' });
-    }
-
+    // ✅ Create new email sequence
     const newSequence = new EmailSequence({
       name,
       emailCount: Number(emailCount) || 0,
       emails: Number(emails) || 0,
       tier,
+      releaseDateTime: releaseDateTime || null,
       status: status || 'scheduled',
       type,
+      brainType,
       fileUrl,
-      manualContent,
-      emailTemplate: parsedTemplate
+      emailTemplate: emailTemplate || '',
+      usage: { count: 0, users: [] }
     });
 
     const savedSequence = await newSequence.save();
 
-    // ✅ Log this action
- await logAction({
-      action: "CREATE", // must match your schema enum
+    await logAction({
+      action: "UPLOAD",
       user: {
-        id: req.user?._id || null,
-        email: req.user?.email || "guest",
-        ipAddress: req.ip || req.headers["x-forwarded-for"] || "unknown"
+        id: req.user?.id,
+        email: req.user?.email
       },
-      affectedAsset: savedSequence._id,
+      affectedAsset: savedSequence.name,
       contentType: "email-sequence",
-      details: `Created email sequence: ${savedSequence.name}`
+      description: "Created new email sequence",
+      req
     });
+
     res.status(201).json({
       success: true,
       message: 'Email sequence created successfully',
       data: savedSequence
     });
+
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -84,6 +101,7 @@ export async function create(req, res) {
     });
   }
 }
+
 
 
 // GET ALL
@@ -166,7 +184,6 @@ export async function getById(req, res) {
 }
 
 // UPDATE
-// UPDATE
 export async function update(req, res) {
   try {
     const { id } = req.params;
@@ -176,45 +193,52 @@ export async function update(req, res) {
       return res.status(400).json({ success: false, message: 'Invalid ID format' });
     }
 
+    // Remove non-updatable fields
     delete updateData.usage;
     delete updateData.createdAt;
     delete updateData.updatedAt;
     delete updateData._id;
 
+    // Validation for "file" type sequences
     if (updateData.type === 'file' && !updateData.fileUrl) {
       return res.status(400).json({ success: false, message: 'File URL is required' });
     }
 
-    if (updateData.type === 'manual' && !updateData.manualContent) {
-      return res.status(400).json({ success: false, message: 'Manual content required' });
+    // Ensure emailTemplate is a string (HTML or plain text)
+    if (typeof updateData.emailTemplate !== 'string') {
+      updateData.emailTemplate = '';
     }
 
-    // Ensure emailTemplate fields exist or set to default
-    updateData.emailTemplate = {
-      subject: updateData?.emailTemplate?.subject || '',
-      body: updateData?.emailTemplate?.body || '',
-      footer: updateData?.emailTemplate?.footer || ''
-    };
-
+    // Update the sequence
     const updatedSequence = await EmailSequence.findByIdAndUpdate(id, updateData, {
       new: true,
-      runValidators: true
+      runValidators: true,
     }).populate('usage.users', 'name email');
 
     if (!updatedSequence) {
       return res.status(404).json({ success: false, message: 'Email sequence not found' });
     }
-
+ await logAction({
+      action: "UPDATE",
+      user: {
+        id: req.user?.id,
+        email: req.user?.email
+      },
+      affectedAsset: `${updatedSequence.name}`,
+      contentType: "email-sequence",
+      description: `Updated email sequence: ${updatedSequence.name}`,
+      req
+    });
     res.status(200).json({
       success: true,
       message: 'Email sequence updated successfully',
-      data: updatedSequence
+      data: updatedSequence,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error updating email sequence',
-      error: error.message
+      error: error.message,
     });
   }
 }
@@ -233,6 +257,18 @@ export async function deleteSequence(req, res) {
     if (!deletedSequence) {
       return res.status(404).json({ success: false, message: 'Email sequence not found' });
     }
+
+     await logAction({
+      action: "DELETE",
+      user: {
+        id: req.user?.id,
+        email: req.user?.email
+      },
+      affectedAsset: `${deletedSequence.name}`,
+      contentType: "email-sequence",
+      description: `Deleted email sequence: ${deletedSequence.name}`,
+      req
+    });
 
     res.status(200).json({
       success: true,

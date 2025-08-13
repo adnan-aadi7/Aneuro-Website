@@ -1,4 +1,3 @@
-//email model
 import mongoose from 'mongoose';
 
 const EmailSequenceSchema = new mongoose.Schema(
@@ -6,16 +5,17 @@ const EmailSequenceSchema = new mongoose.Schema(
     name: { type: String, required: true },
     emailCount: { type: Number, default: 0 },
     emails: { type: Number, default: 0 },
-    opens: { type: Number, default: 0 }, 
-    clicks: { type: Number, default: 0 }, 
-    rating: { type: Number, default: 0 }, 
+    opens: { type: Number, default: 0 },
+    clicks: { type: Number, default: 0 },
+    rating: { type: Number, default: 0 },
 
     tier: {
       type: String,
       enum: ['basic', 'premium', 'enterprise'],
       required: true,
     },
-  releaseDateTime: { type: Date },
+
+    releaseDateTime: { type: Date },
 
     status: {
       type: String,
@@ -34,14 +34,17 @@ const EmailSequenceSchema = new mongoose.Schema(
       required: true,
     },
 
-    fileUrl: { type: String },
-    manualContent: { type: String },
-
-    emailTemplate: {
-      subject: { type: String, default: '' },
-      body: { type: String, default: '' },
-      footer: { type: String, default: '' }
+    // Brain type with your given values
+    brainType: {
+      type: String,
+      enum: ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst'],
+      required: true,
     },
+
+    fileUrl: { type: String },
+
+     emailTemplate: { type: String, default: '' }
+
   },
   { timestamps: true }
 );

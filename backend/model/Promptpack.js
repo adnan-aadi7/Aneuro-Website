@@ -7,8 +7,7 @@ const PromptSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['analytical', 'creative', 'empathic', 'strategic', 'practical'],
-    required: true,
+    enum: ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst'],
   },
 });
 
@@ -31,7 +30,7 @@ const PromptPackSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['active', 'scheduled'],
-    default: 'scheduled', // 👈 default value set here
+    default: 'scheduled', 
     required: true,
   },
   usageCount: {

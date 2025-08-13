@@ -1,72 +1,79 @@
-import PromptPack from '../model/PromptPack.js';
-import { uploadToCloudinary } from '../middleware/uploadToCloudinary.js'
-
+import PromptPack from '../model/Promptpack.js';
+import { uploadToCloudinary } from '../middleware/uploadToCloudinary.js';
 import path from 'path';
+import { logAction } from "../config/logAction.js";
 
 export const uploadPromptPack = async (req, res) => {
   try {
-    if (!req.file) {
+    // 1️⃣ Validate file
+    if (!req.file)
       return res.status(400).json({ success: false, message: 'No file uploaded' });
-    }
 
-    if (!req.body.tier) {
+    if (!req.body.tier)
       return res.status(400).json({ success: false, message: 'Tier is required' });
-    }
 
+    // 2️⃣ Upload file to Cloudinary
     const cloudinaryResult = await uploadToCloudinary(req.file.buffer);
     const fileUrl = cloudinaryResult?.secure_url;
 
-    // Parse file content
-    const fileContent = req.file.buffer.toString('utf8');
-    let prompts = [];
+    if (!fileUrl)
+      return res.status(500).json({ success: false, message: 'Failed to upload file' });
 
-    if (req.file.originalname.endsWith('.json')) {
-      const parsed = JSON.parse(fileContent);
-      prompts = normalizePrompts(parsed);
-    } else if (
-      req.file.originalname.endsWith('.txt') ||
-      req.file.originalname.endsWith('.md')
-    ) {
-      prompts = fileContent
-        .split('\n')
-        .filter(line => line.trim()) // remove empty lines
-        .map(line => ({
-          content: line.trim(),
-          type: 'analytical', // default type
-        }));
-    }
+    const filename = req.file.originalname.toLowerCase();
 
-    // Save to MongoDB
+    // 3️⃣ Only allow specific file types
+    const allowedExtensions = ['.pdf', '.docx', '.md', '.html'];
+    const ext = path.extname(filename);
+
+    if (!allowedExtensions.includes(ext))
+      return res.status(400).json({ success: false, message: 'Unsupported file type' });
+
+    // 4️⃣ Save PromptPack to MongoDB
     const newPack = new PromptPack({
-      name: path.parse(req.file.originalname).name, // filename without extension
-      category: 'General', // default category
+      name: path.parse(req.file.originalname).name,
+      category: req.body.category || 'General',
       tier: req.body.tier,
-      status: 'scheduled', // default status
-      prompts,
-      fileUrl, // store the Cloudinary URL
-      releaseDateTime: new Date(),
+      status: req.body.status || 'scheduled',
+      fileUrl,
+      releaseDateTime: req.body.releaseDateTime || new Date(),
+      prompts: [
+        {
+          content: fileUrl,
+          type: req.body.type || 'Architect', 
+        },
+      ],
     });
 
     const savedPack = await newPack.save();
-
+ await logAction({
+      action: "UPLOAD",
+      user: {
+        id: req.user?.id,
+        email: req.user?.email
+      },
+      affectedAsset: savedPack.name,
+      contentType: "prompt-pack",
+      description: "Created new prompt pack",
+      req
+    });
     res.status(201).json({
       success: true,
       message: 'Prompt pack uploaded successfully',
       data: savedPack,
     });
-  } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ success: false, message: error.message });
+
+  } catch (err) {
+    console.error('Upload error:', err);
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
 
-// CREATE - Create new prompt pack
+
 export async function create(req, res) {
   try {
     const { name, category, tier, status, prompts, releaseDateTime } = req.body;
 
-    // Validation
     if (!name || !category || !tier || !status) {
       return res.status(400).json({
         success: false,
@@ -74,28 +81,35 @@ export async function create(req, res) {
       });
     }
 
-    // Validate/normalize prompts array if provided
-    let normalizedPrompts = [];
-    if (prompts) {
-      normalizedPrompts = normalizePrompts(prompts);
-    }
-
     const newPromptPack = new PromptPack({
       name,
       category,
       tier,
       status,
-      prompts: normalizedPrompts,
+      prompts: prompts || [],
       releaseDateTime: releaseDateTime ? new Date(releaseDateTime) : new Date()
     });
 
     const savedPromptPack = await newPromptPack.save();
+
+    await logAction({
+      action: "UPLOAD",
+      user: {
+        id: req.user?.id,
+        email: req.user?.email
+      },
+      affectedAsset: savedPromptPack.name,  
+      contentType: "prompt-pack",
+      description: "Created new prompt pack",
+      req
+    });
 
     res.status(201).json({
       success: true,
       message: 'Prompt pack created successfully',
       data: savedPromptPack
     });
+
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -104,6 +118,8 @@ export async function create(req, res) {
     });
   }
 }
+
+
 
 // GET ALL - Get all prompt packs with filtering, sorting, and pagination
 export async function getAll(req, res) {
@@ -210,6 +226,7 @@ export async function getById(req, res) {
 
 // UPDATE - Update prompt pack
 export async function update(req, res) {
+  let updatedPromptPack = null; 
   try {
     const { id } = req.params;
     const updateData = req.body;
@@ -221,17 +238,18 @@ export async function update(req, res) {
       });
     }
 
-    // Remove fields that shouldn't be updated directly
     delete updateData.usageCount;
     delete updateData.createdDate;
     delete updateData._id;
 
-    // Validate prompts if being updated
-    if (updateData.prompts && Array.isArray(updateData.prompts)) {
-      updateData.prompts = normalizePrompts(updateData.prompts);
+    if (updateData.prompts && !Array.isArray(updateData.prompts)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Prompts must be an array' 
+      });
     }
 
-    const updatedPromptPack = await PromptPack.findByIdAndUpdate(
+    updatedPromptPack = await PromptPack.findByIdAndUpdate(
       id, 
       updateData, 
       {
@@ -247,12 +265,37 @@ export async function update(req, res) {
       });
     }
 
+    await logAction({
+      action: "UPDATE",
+      user: {
+        id: req.user?.id,
+        email: req.user?.email
+      },
+      affectedAsset: updatedPromptPack.name,
+      contentType: "prompt-pack",
+      description: "Updated prompt pack",
+      req
+    });
+
     res.status(200).json({
       success: true,
       message: 'Prompt pack updated successfully',
       data: updatedPromptPack
     });
   } catch (error) {
+    // Log failed update attempt
+    await logAction({
+      action: "UPDATE_FAILED",
+      user: {
+        id: req.user?.id,
+        email: req.user?.email
+      },
+      affectedAsset: updatedPromptPack?.name || "Unknown",
+      contentType: "prompt-pack",
+      description: `Failed to update prompt pack: ${error.message}`,
+      req
+    });
+
     res.status(500).json({
       success: false,
       message: 'Error updating prompt pack',
@@ -261,8 +304,9 @@ export async function update(req, res) {
   }
 }
 
-// DELETE - Delete prompt pack
+
 export async function deletePromptPack(req, res) {
+  let deletedPromptPack = null; 
   try {
     const { id } = req.params;
 
@@ -273,7 +317,7 @@ export async function deletePromptPack(req, res) {
       });
     }
 
-    const deletedPromptPack = await PromptPack.findByIdAndDelete(id);
+    deletedPromptPack = await PromptPack.findByIdAndDelete(id);
 
     if (!deletedPromptPack) {
       return res.status(404).json({ 
@@ -281,6 +325,18 @@ export async function deletePromptPack(req, res) {
         message: 'Prompt pack not found' 
       });
     }
+
+    await logAction({
+      action: "DELETE",
+      user: {
+        id: req.user?.id,
+        email: req.user?.email
+      },
+      affectedAsset: deletedPromptPack.name,
+      contentType: "prompt-pack",
+      description: "Deleted prompt pack",
+      req
+    });
 
     res.status(200).json({
       success: true,
@@ -291,6 +347,18 @@ export async function deletePromptPack(req, res) {
       }
     });
   } catch (error) {
+    await logAction({
+      action: "DELETE_FAILED",
+      user: {
+        id: req.user?.id,
+        email: req.user?.email
+      },
+      affectedAsset: deletedPromptPack?.name || "Unknown",
+      contentType: "prompt-pack",
+      description: `Failed to delete prompt pack: ${error.message}`,
+      req
+    });
+
     res.status(500).json({
       success: false,
       message: 'Error deleting prompt pack',
@@ -299,89 +367,8 @@ export async function deletePromptPack(req, res) {
   }
 }
 
-// BULK DELETE - Delete multiple prompt packs
-export async function bulkDelete(req, res) {
-  try {
-    const { ids } = req.body;
 
-    if (!Array.isArray(ids) || ids.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'IDs array is required' 
-      });
-    }
 
-    const invalidIds = ids.filter(id => !id.match(/^[0-9a-fA-F]{24}$/));
-    if (invalidIds.length > 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: `Invalid IDs: ${invalidIds.join(', ')}` 
-      });
-    }
-
-    const result = await PromptPack.deleteMany({ _id: { $in: ids } });
-
-    res.status(200).json({
-      success: true,
-      message: `${result.deletedCount} prompt packs deleted successfully`,
-      data: { 
-        deletedCount: result.deletedCount, 
-        requestedCount: ids.length 
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error deleting prompt packs',
-      error: error.message
-    });
-  }
-}
-
-// ADD PROMPT - Add single prompt to pack
-export async function addPrompt(req, res) {
-  try {
-    const { id } = req.params;
-    const { content, type } = req.body;
-
-    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid ID format' 
-      });
-    }
-
-    if (!content) {
-      return res.status(400).json({
-        success: false,
-        message: 'Content is required'
-      });
-    }
-
-    const promptPack = await PromptPack.findById(id);
-    if (!promptPack) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'Prompt pack not found' 
-      });
-    }
-
-    promptPack.prompts.push({ content, type: type || 'analytical' });
-    const updatedPromptPack = await promptPack.save();
-
-    res.status(200).json({
-      success: true,
-      message: 'Prompt added successfully',
-      data: updatedPromptPack
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error adding prompt',
-      error: error.message
-    });
-  }
-}
 
 // REMOVE PROMPT - Remove specific prompt from pack
 export async function removePrompt(req, res) {
