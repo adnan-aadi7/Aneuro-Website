@@ -10,6 +10,12 @@ const AddAdmin = () => {
     confirmEmail: "",
     startDate: "",
   });
+  const [showModal, setShowModal] = useState(false);
+  const [setSelectedAdmin] = useState(null);
+  const [toggleStates, setToggleStates] = useState({
+    activate: true,
+    deactivate: false
+  });
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
@@ -31,6 +37,23 @@ const AddAdmin = () => {
     console.log("Cancel clicked");
   };
 
+  const handleAdminClick = (adminIndex) => {
+    setSelectedAdmin(adminIndex);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setSelectedAdmin(null);
+  };
+
+  const handleToggle = (toggleType) => {
+    setToggleStates(prev => ({
+      ...prev,
+      [toggleType]: !prev[toggleType]
+    }));
+  };
+
   return (
     <div className=" text-white">
       {/* Admin Profile Cards */}
@@ -44,7 +67,10 @@ const AddAdmin = () => {
               <h3 className="text-white font-medium">Aden Smith</h3>
               <p className="text-gray-400 text-sm">Commissions Manager</p>
             </div>
-            <button className="text-white hover:text-white">
+            <button 
+              className="text-white hover:text-white"
+              onClick={() => handleAdminClick(index)}
+            >
               <MoreVertical size={30} />
             </button>
           </div>
@@ -139,6 +165,59 @@ const AddAdmin = () => {
           </div>
         </form>
       </div>
+
+      {/* Admin Action Modal */}
+      {showModal && (
+        <div className="fixed inset-0  backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[#2A2A39] border border-[#374151] p-6 w-80">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-white text-lg font-semibold">Admin Actions</h3>
+              <button
+                onClick={closeModal}
+                className="text-gray-400 hover:text-white text-xl"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Activate Admin */}
+              <div className="flex items-center justify-between">
+                <span className={toggleStates.activate ? "text-green-400" : "text-white"}>
+                  Activate Admin
+                </span>
+                <button
+                  onClick={() => handleToggle('activate')}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    toggleStates.activate ? 'bg-green-500' : 'bg-gray-600'
+                  }`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    toggleStates.activate ? 'translate-x-6' : 'translate-x-1'
+                  }`} />
+                </button>
+              </div>
+              
+              {/* Deactivate Admin */}
+              <div className="flex items-center justify-between">
+                <span className={toggleStates.deactivate ? "text-red-400" : "text-white"}>
+                  Deactivate Admin
+                </span>
+                <button
+                  onClick={() => handleToggle('deactivate')}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    toggleStates.deactivate ? 'bg-red-500' : 'bg-gray-600'
+                  }`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    toggleStates.deactivate ? 'translate-x-6' : 'translate-x-1'
+                  }`} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

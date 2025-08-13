@@ -272,7 +272,7 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
     e.preventDefault();
     
     let hasError = false;
-    let errorMessage = '';
+    
 
     // Validate date
     const dateError = validateDate(formData.scheduledDate);
