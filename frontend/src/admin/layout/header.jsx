@@ -1,10 +1,11 @@
 import React from "react";
 import { ArrowLeft, Bell, User } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Header = ({ onHamburgerClick }) => {
   const location = useLocation();
   const isDashboard = location.pathname === "/client/dashboard";
+  const navigate = useNavigate();
   return (
     <header className=" text-white lg:px-6 py-5 flex items-center justify-between">
       {/* Left side - Hamburger (mobile) and Back button */}
@@ -32,31 +33,36 @@ const Header = ({ onHamburgerClick }) => {
         </button>
         {!isDashboard && (
           <>
-            {/* Search Bar */}
-            <div className="flex items-center  rounded-full px-4 py-2 w-28 sm:w-64 max-w-full">
-              <svg
-                width="24"
-                height="24"
-                fill="none"
-                stroke="#B0B0B0"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                className="mr-2"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Type Here To Search..."
-                className="hidden sm:block bg-transparent outline-none text-[#B0B0B0] placeholder-[#B0B0B0] w-full text-lg"
-              />
-              <input
-                type="text"
-                placeholder="Search"
-                className="block sm:hidden bg-transparent outline-none text-[#B0B0B0] placeholder-[#B0B0B0] w-full text-base"
-              />
-            </div>
+            {location.pathname === "/admin/settings/add-admin" ? (
+              <div className="text-white text-3xl font-semibold px-5">
+                All Admins
+              </div>
+            ) : (
+              <div className="flex items-center  rounded-full px-4 py-2 w-28 sm:w-64 max-w-full">
+                <svg
+                  width="24"
+                  height="24"
+                  fill="none"
+                  stroke="#B0B0B0"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  className="mr-2"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Type Here To Search..."
+                  className="hidden sm:block bg-transparent outline-none text-[#B0B0B0] placeholder-[#B0B0B0] w-full text-lg"
+                />
+                <input
+                  type="text"
+                  placeholder="Search"
+                  className="block sm:hidden bg-transparent outline-none text-[#B0B0B0] placeholder-[#B0B0B0] w-full text-base"
+                />
+              </div>
+            )}
           </>
         )}
       </div>
@@ -77,7 +83,10 @@ const Header = ({ onHamburgerClick }) => {
         </button>
 
         {/* Add Admin Button */}
-        <button className="px-2 py-2 lg:px-4 lg:py-3 hover:bg-gray-700 text-white text-xs lg:text-sm font-medium border border-gray-400 transition-colors cursor-pointer">
+        <button 
+          className="px-2 py-2 lg:px-4 lg:py-3 hover:bg-gray-700 text-white text-xs lg:text-sm font-medium border border-gray-400 transition-colors cursor-pointer"
+          onClick={() => navigate("/admin/settings/add-admin")}
+        >
           Add Admin
         </button>
       </div>

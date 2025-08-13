@@ -26,6 +26,11 @@ export default function PromptPacksCard() {
   const error = useSelector(selectPromptPackError);
   const success = useSelector(selectPromptPackSuccess);
 
+  const isAllowedFile = (file) => {
+    const name = file?.name?.toLowerCase() || "";
+    return name.endsWith('.pdf') || name.endsWith('.doc') || name.endsWith('.txt');
+  };
+
   useEffect(() => {
     if (success) {
       toast.success(success);
@@ -44,7 +49,13 @@ export default function PromptPacksCard() {
 
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
-    if (file) setSelectedFile(file);
+    if (file) {
+      if (!isAllowedFile(file)) {
+        toast.error("Only .pdf, .doc, .txt files are allowed");
+        return;
+      }
+      setSelectedFile(file);
+    }
   };
 
   const handleDragOver = (e) => {
@@ -61,7 +72,13 @@ export default function PromptPacksCard() {
     e.preventDefault();
     setIsDragOver(false);
     const file = e.dataTransfer.files?.[0];
-    if (file) setSelectedFile(file);
+    if (file) {
+      if (!isAllowedFile(file)) {
+        toast.error("Only .pdf, .doc, .txt files are allowed");
+        return;
+      }
+      setSelectedFile(file);
+    }
   };
 
   const handleManualPromptChange = (e) => {
@@ -123,6 +140,7 @@ export default function PromptPacksCard() {
               type="file"
               multiple
               className="hidden"
+              accept=".pdf,.doc,.txt"
               onChange={handleFileUpload}
             />
             <span className="bg-transparent border border-gray-400 text-white px-4 py-2 rounded text-sm cursor-pointer hover:bg-gray-700 transition">
@@ -130,7 +148,7 @@ export default function PromptPacksCard() {
             </span>
           </label>
         </div>
-        <p className="text-gray-500 text-xs">Accepts all file formats</p>
+        <p className="text-gray-500 text-xs">Accept: pdf, doc, txt</p>
         {selectedFile && (
           <div className="text-gray-300 text-xs mt-2 truncate" title={selectedFile.name}>
             Selected: {selectedFile.name}

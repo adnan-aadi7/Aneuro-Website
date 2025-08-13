@@ -20,6 +20,11 @@ export default function EmailSequenceCard() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedTiers, setSelectedTiers] = useState([]); // ["basic", "premium", "enterprise"]
 
+  const isAllowedFile = (file) => {
+    const name = file?.name?.toLowerCase() || "";
+    return name.endsWith('.pdf') || name.endsWith('.doc') || name.endsWith('.txt');
+  };
+
   // Toast on success/error
   useEffect(() => {
     if (success) {
@@ -40,6 +45,10 @@ export default function EmailSequenceCard() {
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (!isAllowedFile(file)) {
+        toast.error("Only .pdf, .doc, .txt files are allowed");
+        return;
+      }
       setSelectedFile(file);
     }
   };
@@ -59,6 +68,10 @@ export default function EmailSequenceCard() {
     // setIsDragOver(false); // This line was removed as per the edit hint
     const file = e.dataTransfer.files[0];
     if (file) {
+      if (!isAllowedFile(file)) {
+        toast.error("Only .pdf, .doc, .txt files are allowed");
+        return;
+      }
       setSelectedFile(file);
     }
   };
@@ -142,6 +155,7 @@ export default function EmailSequenceCard() {
               type="file"
               multiple
               className="hidden"
+              accept=".pdf,.doc,.txt"
               onChange={handleFileUpload}
             />
             <span className="bg-transparent border border-gray-400 text-white px-4 py-2 rounded text-sm cursor-pointer hover:bg-gray-700 transition">
@@ -149,7 +163,7 @@ export default function EmailSequenceCard() {
             </span>
           </label>
         </div>
-        <p className="text-gray-500 text-xs">Accepts all file formats</p>
+        <p className="text-gray-500 text-xs">Accept: pdf, doc, txt</p>
         {/* Show selected file name (truncated within card width) */}
         {selectedFile && (
           <div className="text-gray-300 text-xs mt-2 flex items-center gap-1">

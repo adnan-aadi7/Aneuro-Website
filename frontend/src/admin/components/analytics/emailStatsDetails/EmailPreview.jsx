@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { ChevronRight, ChevronDown, List } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { fetchEmailSequenceById } from "../../../../store/Slice/EmailSequenceSLice";
 
 const emails = [
   {
@@ -13,11 +15,11 @@ const emails = [
         <div className="text-xs text-white/80 mb-4 mt-2">
           Hi [First Name],
           <br />
-          You’ve Been Granted Access To The Aneuro Enterprise Training Hub — A
+          You've Been Granted Access To The Aneuro Enterprise Training Hub — A
           Dedicated Space Designed To Help Your Team Stay Informed, Aligned, And
           Productive.
           <br />
-          Here’s What You Can Do Within Your Dashboard:
+          Here's What You Can Do Within Your Dashboard:
         </div>
         <div className="grid grid-cols-2 gap-4 text-xs text-white/80 mt-5">
           <div className="flex flex-col gap-2">
@@ -70,7 +72,15 @@ const emails = [
   },
 ];
 
-const EmailPreview = () => {
+const EmailPreview = ({ sequenceId }) => {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (sequenceId) {
+      dispatch(fetchEmailSequenceById(sequenceId));
+    }
+  }, [dispatch, sequenceId]);
+
   return (
     <div className="w-full bg-[#303041] mx-auto p-4 mt-5">
       <div className="text-lg text-white mb-3">Email Preview</div>

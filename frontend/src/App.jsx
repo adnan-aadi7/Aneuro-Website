@@ -59,6 +59,8 @@ import AboutUs from "./landingpage/pages/AboutUs";
 //Audience
 import Audience from "./Audience/audience";
 import Policy from "./termsConditions/Policy";
+import AddAdmin from "./admin/components/settings/AddAdmin";
+import AdminPermission from "./admin/components/settings/AdminPermission";
 
 
 
@@ -269,7 +271,23 @@ function App() {
           }
         />
         <Route
+          path="/admin/analytics/email-details/:sequenceId"
+          element={
+            <AdminLayout>
+              <EmailStatsDetails />
+            </AdminLayout>
+          }
+        />
+        <Route
           path="/admin/analytics/prompts-details"
+          element={
+            <AdminLayout>
+              <PromptStatsDetails />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/analytics/prompts-details/:packId"
           element={
             <AdminLayout>
               <PromptStatsDetails />
@@ -353,6 +371,22 @@ function App() {
           element={
             <AdminLayout>
               <Settingtabs />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/settings/add-admin"
+          element={
+            <AdminLayout>
+              <AddAdmin />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/settings/admin-permission"
+          element={
+            <AdminLayout>
+              <AdminPermission />
             </AdminLayout>
           }
         />

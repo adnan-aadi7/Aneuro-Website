@@ -225,7 +225,7 @@ const PromptPacks = () => {
                         <button 
                           className="text-gray-400 hover:text-white transition-colors"
                           title="View"
-                          onClick={() => navigate('/admin/analytics/prompts-details')}
+                          onClick={() => navigate(`/admin/analytics/prompts-details/${pack._id}`)}
                         >
                           <Eye className="w-4 h-4" />
                         </button>

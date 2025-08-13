@@ -49,6 +49,76 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
     tier: ''
   });
 
+  // Validation state
+  const [validationErrors, setValidationErrors] = useState({
+    scheduledDate: '',
+    scheduledTime: '',
+    combinedDateTime: '',
+    tier: ''
+  });
+
+  // Validation functions
+  const validateDate = (date) => {
+    if (!date) return 'Date is required';
+    
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (isNaN(selectedDate.getTime())) return 'Invalid date format';
+    if (selectedDate < today) return 'Date cannot be in the past';
+    
+    return '';
+  };
+
+  const getMinTimeForDate = (date) => {
+    if (!date) return '';
+    
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // If selected date is today, return current time + 5 minutes
+    if (selectedDate.toDateString() === today.toDateString()) {
+      const now = new Date();
+      const bufferTime = new Date(now.getTime() + 5 * 60 * 1000);
+      return bufferTime.toTimeString().split(' ')[0].substring(0, 5);
+    }
+    
+    return '';
+  };
+
+  const validateTime = (time) => {
+    if (!time) return 'Time is required';
+    
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(time)) return 'Invalid time format';
+    
+    return '';
+  };
+
+  const validateCombinedDateTime = (date, time) => {
+    if (!date || !time) return '';
+    
+    const selectedDateTime = new Date(`${date}T${time}`);
+    const now = new Date();
+    
+    // Add 5 minutes buffer to allow for form submission
+    const bufferTime = new Date(now.getTime() + 5 * 60 * 1000);
+    
+    if (selectedDateTime <= bufferTime) {
+      return 'Scheduled time must be at least 5 minutes in the future';
+    }
+    
+    return '';
+  };
+
+  const validateTier = (tier) => {
+    if (!tier) return 'Tier is required';
+    if (!['basic', 'premium', 'enterprise'].includes(tier)) return 'Invalid tier selection';
+    return '';
+  };
+
   // Pre-fill form when editing
   useEffect(() => {
     if (editingRelease && open) {
@@ -79,6 +149,14 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
           scheduledTime: timeStr,
           tier: editingRelease.tier
         });
+
+        // Clear validation errors when editing
+        setValidationErrors({
+          scheduledDate: '',
+          scheduledTime: '',
+          combinedDateTime: '',
+          tier: ''
+        });
       } catch (error) {
         console.error('Error parsing releaseDateTime:', error);
         // Set default values on error
@@ -97,6 +175,14 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
         modelType: '',
         scheduledDate: '',
         scheduledTime: '',
+        tier: ''
+      });
+      
+      // Clear validation errors
+      setValidationErrors({
+        scheduledDate: '',
+        scheduledTime: '',
+        combinedDateTime: '',
         tier: ''
       });
     }
@@ -152,11 +238,85 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
       ...prev,
       [name]: value
     }));
+
+    // Real-time validation for date and time fields
+    if (name === 'scheduledDate') {
+      const dateError = validateDate(value);
+      setValidationErrors(prev => ({ ...prev, scheduledDate: dateError }));
+      
+      // Re-validate combined date and time if both are present
+      if (formData.scheduledTime) {
+        const combinedError = validateCombinedDateTime(value, formData.scheduledTime);
+        setValidationErrors(prev => ({ ...prev, combinedDateTime: combinedError }));
+      }
+    }
+    
+    if (name === 'scheduledTime') {
+      const timeError = validateTime(value);
+      setValidationErrors(prev => ({ ...prev, scheduledTime: timeError }));
+      
+      // Re-validate combined date and time if both are present
+      if (formData.scheduledDate) {
+        const combinedError = validateCombinedDateTime(formData.scheduledDate, value);
+        setValidationErrors(prev => ({ ...prev, combinedDateTime: combinedError }));
+      }
+    }
+    
+    if (name === 'tier') {
+      const tierError = validateTier(value);
+      setValidationErrors(prev => ({ ...prev, tier: tierError }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    let hasError = false;
+    let errorMessage = '';
+
+    // Validate date
+    const dateError = validateDate(formData.scheduledDate);
+    if (dateError) {
+      setValidationErrors(prev => ({ ...prev, scheduledDate: dateError }));
+      hasError = true;
+    } else {
+      setValidationErrors(prev => ({ ...prev, scheduledDate: '' }));
+    }
+
+    // Validate time
+    const timeError = validateTime(formData.scheduledTime);
+    if (timeError) {
+      setValidationErrors(prev => ({ ...prev, scheduledTime: timeError }));
+      hasError = true;
+    } else {
+      setValidationErrors(prev => ({ ...prev, scheduledTime: '' }));
+    }
+
+    // Validate combined date and time
+    const combinedDateTimeError = validateCombinedDateTime(formData.scheduledDate, formData.scheduledTime);
+    if (combinedDateTimeError) {
+      setValidationErrors(prev => ({ ...prev, combinedDateTime: combinedDateTimeError }));
+      hasError = true;
+    } else {
+      setValidationErrors(prev => ({ ...prev, combinedDateTime: '' }));
+    }
+
+    // Validate tier
+    const tierError = validateTier(formData.tier);
+    if (tierError) {
+      setValidationErrors(prev => ({ ...prev, tier: tierError }));
+      hasError = true;
+    } else {
+      setValidationErrors(prev => ({ ...prev, tier: '' }));
+    }
+
+    if (hasError) {
+      if (onError) {
+        onError('Please correct the errors in the form.');
+      }
+      return;
+    }
+
     if (!formData.contentId || !formData.modelType || !formData.scheduledDate || !formData.scheduledTime || !formData.tier) {
       if (onError) {
         onError('Please fill in all required fields');
@@ -176,6 +336,15 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
     try {
       await dispatch(scheduleContent(formData)).unwrap();
       const successMessage = editingRelease ? 'Release updated successfully!' : 'Content scheduled successfully!';
+      
+      // Clear validation errors on success
+      setValidationErrors({
+        scheduledDate: '',
+        scheduledTime: '',
+        combinedDateTime: '',
+        tier: ''
+      });
+      
       if (onSuccess) {
         onSuccess(successMessage);
       }
@@ -342,6 +511,9 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
                 style={{ colorScheme: "dark", color: "white" }}
                 required
               />
+              {validationErrors.scheduledDate && (
+                <p className="text-red-400 text-xs mt-1">{validationErrors.scheduledDate}</p>
+              )}
             </div>
             <div className="flex-1">
               <label className="block text-sm text-gray-300 mb-2">
@@ -352,11 +524,25 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
                 name="scheduledTime"
                 value={formData.scheduledTime}
                 onChange={handleInputChange}
+                min={getMinTimeForDate(formData.scheduledDate)}
                 className="w-full bg-[#23283A] border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-400"
                 style={{ colorScheme: "dark", color: "white" }}
                 required
               />
+              {validationErrors.scheduledTime && (
+                <p className="text-red-400 text-xs mt-1">{validationErrors.scheduledTime}</p>
+              )}
+              {formData.scheduledDate && getMinTimeForDate(formData.scheduledDate) && (
+                <p className="text-cyan-400 text-xs mt-1">
+                  Minimum time for today: {getMinTimeForDate(formData.scheduledDate)}
+                </p>
+              )}
             </div>
+            
+            {/* Combined Date and Time Validation Error */}
+            {validationErrors.combinedDateTime && (
+              <p className="text-red-400 text-xs mt-1">{validationErrors.combinedDateTime}</p>
+            )}
           </div>
 
           {/* Tier Access */}
@@ -376,6 +562,9 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
               <option value="premium">Premium</option>
               <option value="enterprise">Enterprise</option>
             </select>
+            {validationErrors.tier && (
+              <p className="text-red-400 text-xs mt-1">{validationErrors.tier}</p>
+            )}
           </div>
 
           {/* Submit Button */}
