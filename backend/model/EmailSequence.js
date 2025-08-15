@@ -18,7 +18,10 @@ const EmailSequenceSchema = new mongoose.Schema(
       enum: ['basic', 'premium', 'enterprise'],
       required: true,
     },
-
+category: {
+    type: String, 
+    required: true,
+  },
     releaseDateTime: { type: Date },
 
     status: {

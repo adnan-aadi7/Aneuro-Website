@@ -85,18 +85,22 @@ export async function create(req, res) {
       }));
     }
 
-    // ✅ Create new sequence
-    const newSequence = new EmailSequence({
-      name,
-      tier,
-      releaseDateTime: releaseDateTime || null,
-      status: status || 'scheduled',
-      type,
-      brainType,
-      fileUrl,
-      emails: emailArray,
-      usage: { count: 0, users: [] }
-    });
+   if (!category) {
+  return res.status(400).json({ success: false, message: 'Category is required' });
+}
+
+const newSequence = new EmailSequence({
+  name,
+  tier,
+  category, // ✅ Added here
+  releaseDateTime: releaseDateTime || null,
+  status: status || 'scheduled',
+  type,
+  brainType,
+  fileUrl,
+  emails: emailArray,
+  usage: { count: 0, users: [] }
+});
 
     const savedSequence = await newSequence.save();
 
@@ -214,30 +218,21 @@ export async function getById(req, res) {
 export async function update(req, res) {
   try {
     const { id } = req.params;
-    let {
-      name,
-      emails,
-      tier,
-      status,
-      type,
-      brainType,
-      releaseDateTime
-    } = req.body;
+    let { name, emails, tier, status, type, brainType, releaseDateTime,category } = req.body;
 
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ success: false, message: 'Invalid ID format' });
     }
 
-    // Find existing sequence
     const existingSequence = await EmailSequence.findById(id);
     if (!existingSequence) {
       return res.status(404).json({ success: false, message: 'Email sequence not found' });
     }
 
     let fileUrl = existingSequence.fileUrl;
-    let emailArray = existingSequence.emails;
+    let emailArray = existingSequence.emails; // start with existing emails
 
-    // ✅ Handle file upload
+    // ✅ Handle file type
     if (type === 'file') {
       if (req.file && req.file.buffer) {
         const uploadResult = await uploadToCloudinary(req.file.buffer);
@@ -245,11 +240,11 @@ export async function update(req, res) {
           return res.status(500).json({ success: false, message: 'Failed to upload file to Cloudinary' });
         }
         fileUrl = uploadResult.secure_url;
-        emailArray = [{ content: fileUrl, type: brainType || existingSequence.brainType }];
+        emailArray.push({ content: fileUrl, type: brainType || existingSequence.brainType });
       }
     }
 
-    // ✅ Handle manual emails
+    // ✅ Handle manual type (append instead of overwrite)
     if (type === 'manual') {
       if (typeof emails === 'string') {
         try {
@@ -259,23 +254,23 @@ export async function update(req, res) {
         }
       }
 
-      if (!Array.isArray(emails) || emails.length === 0) {
-        return res.status(400).json({ success: false, message: 'Emails array is required for manual type' });
-      }
+      if (Array.isArray(emails) && emails.length > 0) {
+        const newEmails = emails.map(email => ({
+          content: email.content || '',
+          type: email.type || brainType || existingSequence.brainType
+        }));
 
-      emailArray = emails.map(email => ({
-        content: email.content || '',
-        type: email.type || brainType || existingSequence.brainType
-      }));
+        emailArray = [...emailArray, ...newEmails]; // append new emails
+      }
     }
 
-    // ✅ Update the sequence
     const updatedSequence = await EmailSequence.findByIdAndUpdate(
       id,
       {
         name: name ?? existingSequence.name,
         tier: tier ?? existingSequence.tier,
         status: status ?? existingSequence.status,
+            category: category ?? existingSequence.category, 
         type: type ?? existingSequence.type,
         brainType: brainType ?? existingSequence.brainType,
         releaseDateTime: releaseDateTime ?? existingSequence.releaseDateTime,
@@ -287,10 +282,7 @@ export async function update(req, res) {
 
     await logAction({
       action: "UPDATE",
-      user: {
-        id: req.user?.id,
-        email: req.user?.email
-      },
+      user: { id: req.user?.id, email: req.user?.email },
       affectedAsset: updatedSequence.name,
       contentType: "email-sequence",
       description: `Updated email sequence: ${updatedSequence.name}`,
@@ -311,6 +303,7 @@ export async function update(req, res) {
     });
   }
 }
+
 
 // DELETE
 export async function deleteSequence(req, res) {
