@@ -139,10 +139,39 @@ export default function EmailSequenceCard() {
           onChange={handleManualEmailChange}
         />
       </div>
+      <div className="mb-6">
+        <label className="block text-white text-base mb-2" htmlFor="sequence-name">
+          Name
+        </label>
+        <input
+          id="sequence-name"
+          type="text"
+          placeholder="Input Field"
+          className="w-full px-4 py-3 rounded border border-gray-500  text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
+        />
+      </div>
+      <div className="mb-6">
+        <label className="block text-white text-base mb-2" htmlFor="sequence-category">
+          Select Category
+        </label>
+        <select
+          id="sequence-category"
+          className="w-full px-4 py-3 rounded border border-gray-500  text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
+          defaultValue=""
+        >
+          <option value="" disabled>
+            Drop Down
+          </option>
+          {/* Example options */}
+          <option value="marketing">Marketing</option>
+          <option value="onboarding">Onboarding</option>
+          <option value="retention">Retention</option>
+        </select>
+      </div>
 
       {/* Upload Area */}
       <div
-        className={`border-2 border-dashed border-gray-500 bg-[#11182780] rounded-lg p-12 text-center mb-6`}
+        className={`border-2 border-dashed border-gray-500 bg-[#11182780] p-12 text-center mb-6`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -176,7 +205,7 @@ export default function EmailSequenceCard() {
       </div>
 
       {/* Tier Access Control */}
-      <div className="mb-6">
+      <div className="mb-6 border border-[#374151] p-5">
         <h3 className="text-white text-sm font-medium mb-4">
           Tier Access Control
         </h3>
@@ -185,7 +214,7 @@ export default function EmailSequenceCard() {
           <div className="flex items-center gap-3">
             <input
               type="checkbox"
-              className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+              className="w-4 h-4 rounded border-2 border-gray-400"
               id="basic"
               checked={selectedTiers.includes("basic")}
               onChange={handleTierSelect}
@@ -262,6 +291,14 @@ export default function EmailSequenceCard() {
       >
         Upload Email Sequences
       </button>
+      <button
+        onClick={handleUpload}
+        className="w-full bg-[#FFFFFF] text-black font-medium py-3  hover:bg-cyan-300 transition-colors text-sm mt-5"
+        disabled={loading}
+      >
+        Schedule for later
+      </button>
     </div>
+    
   );
 }

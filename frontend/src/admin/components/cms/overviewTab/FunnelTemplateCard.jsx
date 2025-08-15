@@ -149,10 +149,39 @@ export default function FunnelTemplateCard() {
           </p>
         </div>
       </div>
+      <div className="mb-6 mt-19">
+        <label className="block text-white text-base mb-2" htmlFor="sequence-name">
+          Name
+        </label>
+        <input
+          id="sequence-name"
+          type="text"
+          placeholder="Input Field"
+          className="w-full px-4 py-3 rounded border border-gray-500  text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
+        />
+      </div>
+      <div className="mb-6">
+        <label className="block text-white text-base mb-2" htmlFor="sequence-category">
+          Select Category
+        </label>
+        <select
+          id="sequence-category"
+          className="w-full px-4 py-3 rounded border border-gray-500  text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
+          defaultValue=""
+        >
+          <option value="" disabled>
+            Drop Down
+          </option>
+          {/* Example options */}
+          <option value="marketing">Marketing</option>
+          <option value="onboarding">Onboarding</option>
+          <option value="retention">Retention</option>
+        </select>
+      </div>
 
       {/* Upload Area */}
       <div
-        className={`border-2 border-dashed border-gray-500 bg-[#11182780] rounded-lg p-12 text-center mt-19 ${
+        className={`border-2 border-dashed border-gray-500 bg-[#11182780]  p-12 text-center mt-6 ${
           isDragOver ? "ring-2 ring-cyan-400" : ""
         }`}
         onDragOver={handleDragOver}
@@ -188,8 +217,8 @@ export default function FunnelTemplateCard() {
       </div>
 
       {/* Tier Access Control */}
-      <div className="  p-2 ">
-        <h3 className="text-white text-sm font-medium mt-5">
+      <div className="  mt-7 border border-[#374151]  p-5 ">
+        <h3 className="text-white text-sm font-medium ">
           Tier Access Control
         </h3>
         <div className="space-y-3 mt-3">
@@ -273,10 +302,18 @@ export default function FunnelTemplateCard() {
       {/* Upload Button */}
       <button
         onClick={handleUpload}
-        className="mt-3 w-full bg-cyan-400 text-black font-medium py-3  hover:bg-cyan-300 transition-colors text-sm"
+        className="mt-6 w-full bg-cyan-400 text-black font-medium py-3  hover:bg-cyan-300 transition-colors text-sm"
         disabled={loading}
       >
         Upload Funnel Templates
+      </button>
+
+      <button
+        onClick={handleUpload}
+        className="w-full bg-[#FFFFFF] text-black font-medium py-3  hover:bg-cyan-300 transition-colors text-sm mt-5"
+        disabled={loading}
+      >
+        Schedule for later
       </button>
 
       {/* Toast Notifications */}

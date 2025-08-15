@@ -114,7 +114,7 @@ export default function PromptPacksCard() {
       </div>
 
       {/* Manual Prompt Toggle */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between  mt-8">
         <span className="text-white text-sm">Manual Prompt</span>
         <input
           type="checkbox"
@@ -122,10 +122,39 @@ export default function PromptPacksCard() {
           onChange={handleManualPromptChange}
         />
       </div>
+      <div className="mb-6 mt-6">
+        <label className="block text-white text-base mb-2" htmlFor="sequence-name">
+          Name
+        </label>
+        <input
+          id="sequence-name"
+          type="text"
+          placeholder="Input Field"
+          className="w-full px-4 py-3 rounded border border-gray-500  text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
+        />
+      </div>
+      <div className="">
+        <label className="block text-white text-base " htmlFor="sequence-category">
+          Select Category
+        </label>
+        <select
+          id="sequence-category"
+          className=" mt-3 w-full px-4 py-3 rounded border border-gray-500  text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
+          defaultValue=""
+        >
+          <option value="" disabled>
+            Drop Down
+          </option>
+          {/* Example options */}
+          <option value="marketing">Marketing</option>
+          <option value="onboarding">Onboarding</option>
+          <option value="retention">Retention</option>
+        </select>
+      </div>
 
       {/* Upload Area */}
       <div
-        className={`mt-8 border-2 border-dashed border-gray-500 bg-[#11182780] rounded-lg p-12 text-center mb-6 ${
+        className={`mt-5 border-2 border-dashed border-gray-500 bg-[#11182780]  p-12 text-center mb-6 ${
           isDragOver ? "ring-2 ring-cyan-400" : ""
         }`}
         onDragOver={handleDragOver}
@@ -158,7 +187,7 @@ export default function PromptPacksCard() {
       </div>
 
       {/* Tier Access Control */}
-      <div className="">
+      <div className="border border-[#374151] p-5">
         <h3 className="text-white text-sm font-medium mb-4">
           Tier Access Control
         </h3>
@@ -242,11 +271,18 @@ export default function PromptPacksCard() {
 
       {/* Upload Button */}
       <button
-        className="w-full bg-cyan-400 text-[#232432] font-medium py-3 hover:bg-cyan-300 transition-colors text-sm mt-5"
+        className="w-full bg-cyan-400 text-[#232432] font-medium py-3 hover:bg-cyan-300 transition-colors text-sm mt-6"
         onClick={handleUploadClick}
         disabled={loading}
       >
         Upload Prompt Packs
+      </button>
+      <button
+        onClick={handleUploadClick}
+        className="w-full bg-[#FFFFFF] text-black font-medium py-3  hover:bg-cyan-300 transition-colors text-sm mt-5"
+        disabled={loading}
+      >
+        Schedule for later
       </button>
     </div>
   );

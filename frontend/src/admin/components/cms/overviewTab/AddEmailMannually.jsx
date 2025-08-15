@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Toaster, toast } from "react-hot-toast";
 import { Bold, Italic, Underline, Strikethrough, Link, Paperclip, Image, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, ListOrdered } from 'lucide-react';
+import DiamondIcon from "../../../../../public/icons/diamond.png";
+import KingIcon from "../../../../../public/icons/king.png";
+import StarIcon from "../../../../../public/icons/star.png";
 import {
   createEmailSequence,
   selectEmailSequenceLoading,
@@ -33,6 +36,11 @@ const AddEmailMannually = () => {
     unorderedList: false,
     orderedList: false
   });
+
+  // Local form state
+  const [sequenceName, setSequenceName] = useState("");
+  const [category, setCategory] = useState("");
+  const [selectedTier, setSelectedTier] = useState(""); // basic | premium | enterprise
 
   // Execute formatting commands
   const executeCommand = (command, value = null) => {
@@ -151,8 +159,8 @@ const AddEmailMannually = () => {
     }
 
     const payload = {
-      name: `Manual Email - ${new Date().toLocaleString()}`,
-      tier: "basic",
+      name: sequenceName?.trim() || `Manual Email - ${new Date().toLocaleString()}`,
+      tier: selectedTier || "basic",
       type: "manual",
       manualContent: htmlContent, // Use HTML content for rich formatting
       plainTextContent: plainTextContent
@@ -203,7 +211,7 @@ const AddEmailMannually = () => {
         <img
           src="/Avatar.png"
           alt="Aneuro Admin"
-          className="w-10 h-10 rounded-full border-2 border-cyan-400 bg-white object-cover"
+          className="w-13 h-13 rounded-full border-2 border-cyan-400 bg-white object-cover"
         />
         <div>
           <div className="text-white text-sm font-semibold leading-tight">
@@ -214,7 +222,107 @@ const AddEmailMannually = () => {
           </div>
         </div>
       </div>
-      <div className="mb-4">
+      {/* Basic details and access control */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 ml-6 mr-6 mt-10">
+        <div className="mb-2">
+          <label className="block text-white text-base mb-2" htmlFor="sequence-name">
+            Name
+          </label>
+          <input
+            id="sequence-name"
+            type="text"
+            placeholder="Input Field"
+            value={sequenceName}
+            onChange={(e) => setSequenceName(e.target.value)}
+            className="w-full px-4 py-3 rounded border border-gray-500  text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
+          />
+        </div>
+        <div className="mb-2">
+          <label className="block text-white text-base mb-2" htmlFor="sequence-category">
+            Select Category
+          </label>
+          <select
+            id="sequence-category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="w-full px-4 py-3 rounded border border-gray-500  text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
+          >
+            <option value="" disabled>
+              Drop Down
+            </option>
+            <option value="marketing">Marketing</option>
+            <option value="onboarding">Onboarding</option>
+            <option value="retention">Retention</option>
+          </select>
+        </div>
+      </div>
+      <div className="ml-6 mr-6 mt-3 w-[550px]">
+        <div
+          className="relative p-6 rounded bg-[#2A2A39]"
+          style={{
+            boxShadow:
+              `inset 0 8px 50px -8px #12DCF040, inset 8px 0 24px -8px #12DCF040, inset -8px 0 24px -8px #12DCF040`,
+          }}
+        >
+          <h3 className="text-white text-sm font-medium mb-4">Tier Access Control</h3>
+          <div className="space-y-3">
+            {/* Basic Tier */}
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+                checked={selectedTier === "basic"}
+                onChange={() => setSelectedTier(selectedTier === "basic" ? "" : "basic")}
+              />
+              <img src={StarIcon} alt="Basic" className="w-6 h-6 object-contain" />
+              <div className="flex-1 ml-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-white text-sm">Basic</span>
+                  <span className="bg-[#2A3344] text-gray-200 text-xs px-2 py-0.5 rounded">1250 users</span>
+                </div>
+                <div className="text-gray-500 text-xs mt-1">Free tier users</div>
+              </div>
+            </div>
+
+            {/* Premium Tier */}
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+                checked={selectedTier === "premium"}
+                onChange={() => setSelectedTier(selectedTier === "premium" ? "" : "premium")}
+              />
+              <img src={KingIcon} alt="Premium" className="w-6 h-6 object-contain" />
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-white text-sm">Premium</span>
+                  <span className="text-gray-400 text-sm">330 users</span>
+                </div>
+                <div className="text-gray-400 text-xs mt-1">Paid subscribers</div>
+              </div>
+            </div>
+
+            {/* VIP / Enterprise Tier */}
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+                checked={selectedTier === "enterprise"}
+                onChange={() => setSelectedTier(selectedTier === "enterprise" ? "" : "enterprise")}
+              />
+              <img src={DiamondIcon} alt="VIP" className="w-6 h-6 object-contain" />
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-white text-sm">VIP</span>
+                  <span className="text-gray-400 text-sm">45 users</span>
+                </div>
+                <div className="text-gray-400 text-xs mt-1">Exclusive access</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="mb-4 mt-5">
         <div
           className="relative p-8 ml-6 mr-6 mt-2 rounded bg-[#2A2A39]"
           style={{
