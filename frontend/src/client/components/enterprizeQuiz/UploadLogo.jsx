@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import logo from "../../../assets/auth/logo.png";
 import { UploadCloud } from "lucide-react";
 
@@ -8,23 +8,35 @@ const defaultVariants = [
   { id: 3, src: logo, bg: "bg-[#233136]" },
 ];
 
-const UploadLogo = ({ setLogo }) => {
+export default function UploadLogo({ setLogo }) {
   const [selected, setSelected] = useState(1);
-  const [uploaded, setUploaded] = useState(null);
+  const [uploadedFile, setUploadedFile] = useState(null);   // File
+  const [uploadedPreview, setUploadedPreview] = useState(""); // object URL
+
+  useEffect(() => {
+    return () => {
+      if (uploadedPreview) URL.revokeObjectURL(uploadedPreview);
+    };
+  }, [uploadedPreview]);
 
   const handleUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setUploaded(url);
-      setSelected(4);
-      setLogo(url);
-    }
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // cleanup previous preview
+    if (uploadedPreview) URL.revokeObjectURL(uploadedPreview);
+
+    const url = URL.createObjectURL(file);
+    setUploadedFile(file);
+    setUploadedPreview(url);
+    setSelected(4);
+
+    // IMPORTANT: send the File to parent so it can be appended to FormData
+    setLogo(file);
   };
 
-  // Always show 3 default variants, and uploaded as 4th if present
-  const variants = uploaded
-    ? [...defaultVariants, { id: 4, src: uploaded, bg: "bg-transparent" }]
+  const variants = uploadedPreview
+    ? [...defaultVariants, { id: 4, src: uploadedPreview, bg: "bg-transparent" }]
     : defaultVariants;
 
   const CYAN = "#2de0fb";
@@ -41,7 +53,8 @@ const UploadLogo = ({ setLogo }) => {
         {/* Logo Variants */}
         <div className="flex gap-2 mb-6 md:mb-0 w-full md:w-auto justify-center md:justify-start">
           {variants.map((variant) => (
-            <div
+            <button
+              type="button"
               key={variant.id}
               className={`relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center ${
                 variant.bg
@@ -52,9 +65,13 @@ const UploadLogo = ({ setLogo }) => {
               }`}
               onClick={() => {
                 setSelected(variant.id);
-                setLogo(variant.src);
+                // Picking a preset variant → clear uploaded file and send nothing new
+                if (variant.id !== 4) {
+                  setUploadedFile(null);
+                  // parent will still have last File (if any); if you want to force “no file”, do:
+                  // setLogo(null);
+                }
               }}
-              style={{ cursor: "pointer" }}
             >
               <img
                 src={variant.src}
@@ -64,13 +81,7 @@ const UploadLogo = ({ setLogo }) => {
               {selected === variant.id && (
                 <span className="absolute top-2 right-2 bg-[#23232b] rounded-full p-1">
                   <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
-                    <rect
-                      width="20"
-                      height="20"
-                      rx="6"
-                      fill="#12DCF0"
-                      fillOpacity="0.15"
-                    />
+                    <rect width="20" height="20" rx="6" fill="#12DCF0" fillOpacity="0.15" />
                     <path
                       d="M6 10.5l3 3 5-5"
                       stroke="#12DCF0"
@@ -81,24 +92,18 @@ const UploadLogo = ({ setLogo }) => {
                   </svg>
                 </span>
               )}
-            </div>
+            </button>
           ))}
         </div>
+
         {/* Upload Area */}
         <div className="flex flex-col items-center md:items-end justify-center w-full md:w-auto self-end md:self-end md:ml-auto">
           <label
             htmlFor="logo-upload"
-            className="p-3 flex flex-col items-center justify-center border-2 border-dashed border-[#12DCF0] cursor-pointer transition "
+            className="p-3 flex flex-col items-center justify-center border-2 border-dashed border-[#12DCF0] cursor-pointer transition"
           >
-            <UploadCloud
-              className="mb-2"
-              size={40}
-              color="#12DCF0"
-              strokeWidth={2.5}
-            />
-            <span className="text-white text-sm font-medium">
-              Drop file or browse
-            </span>
+            <UploadCloud className="mb-2" size={40} color="#12DCF0" strokeWidth={2.5} />
+            <span className="text-white text-sm font-medium">Drop file or browse</span>
             <input
               id="logo-upload"
               type="file"
@@ -114,6 +119,4 @@ const UploadLogo = ({ setLogo }) => {
       </div>
     </div>
   );
-};
-
-export default UploadLogo;
+}

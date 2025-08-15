@@ -9,6 +9,8 @@ import logReducer from "./Slice/LogSlice";
 import scheduleReducer from "./Slice/ScheduleSlice";
 import activityReducer from "./Slice/ActivitySlice";
 import quizReducer from "./Slice/QuizSlice";
+import customizationReducer from "./Slice/customizationSlice";
+
 
 
 export const store = configureStore({
@@ -23,5 +25,6 @@ export const store = configureStore({
     schedule: scheduleReducer,
     activities: activityReducer,
     quiz: quizReducer,
+    customization: customizationReducer,
   },
 });
