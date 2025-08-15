@@ -11,7 +11,7 @@ const AddAdmin = () => {
     startDate: "",
   });
   const [showModal, setShowModal] = useState(false);
-  const [setSelectedAdmin] = useState(null);
+  const [, setSelectedAdmin] = useState(null);
   const [toggleStates, setToggleStates] = useState({
     activate: true,
     deactivate: false
@@ -48,10 +48,12 @@ const AddAdmin = () => {
   };
 
   const handleToggle = (toggleType) => {
-    setToggleStates(prev => ({
-      ...prev,
-      [toggleType]: !prev[toggleType]
-    }));
+    // Make toggles mutually exclusive: only one can be ON at a time
+    if (toggleType === 'activate') {
+      setToggleStates({ activate: true, deactivate: false });
+    } else if (toggleType === 'deactivate') {
+      setToggleStates({ activate: false, deactivate: true });
+    }
   };
 
   return (
