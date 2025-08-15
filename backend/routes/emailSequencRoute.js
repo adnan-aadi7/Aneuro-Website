@@ -29,7 +29,7 @@ const router = express.Router();
  *     summary: Create a new email sequence
  *     tags: [EmailSequences]
  *     security:
- *       - bearerAuth: []   # Require JWT token
+ *       - bearerAuth: []
  *     consumes:
  *       - multipart/form-data
  *     requestBody:
@@ -47,7 +47,6 @@ const router = express.Router();
  *               name:
  *                 type: string
  *                 example: "Welcome Campaign"
- *             
  *               tier:
  *                 type: string
  *                 enum: [basic, premium, enterprise]
@@ -61,31 +60,36 @@ const router = express.Router();
  *                 enum: [active, scheduled]
  *                 default: scheduled
  *                 example: "scheduled"
- *               usage.count:
- *                 type: number
- *                 example: 0
- *               usage.users:
- *                 type: array
- *                 items:
- *                   type: string
- *                   description: MongoDB ObjectId of the user
- *                 example: ["64f12c5b8d7a2c1f2a9b4567"]
  *               type:
  *                 type: string
  *                 enum: [manual, file]
- *                 example: "file"
+ *                 example: "manual"
  *               brainType:
  *                 type: string
  *                 enum: [Architect, Challenger, Synthesizer, Reflector, Catalyst]
  *                 example: "Architect"
- *               emailTemplate:
- *                 type: string
- *                 description: HTML or plain text email template
- *                 example: "<html><body>Welcome to our platform!</body></html>"
  *               file:
  *                 type: string
  *                 format: binary
  *                 description: File to upload when type is "file"
+ *               emails:
+ *                 type: array
+ *                 description: Required when type is "manual". Array of email objects with content and type.
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - content
+ *                     - type
+ *                   properties:
+ *                     content:
+ *                       type: string
+ *                       description: Email body text, HTML, or file URL
+ *                       example: "Welcome to our platform!"
+ *                     type:
+ *                       type: string
+ *                       enum: [Architect, Challenger, Synthesizer, Reflector, Catalyst]
+ *                       description: Brain type for this email
+ *                       example: "Architect"
  *     responses:
  *       201:
  *         description: Email sequence created successfully
@@ -95,19 +99,9 @@ const router = express.Router();
  *         description: Unauthorized (missing or invalid token)
  *       500:
  *         description: Server error
- *
- * components:
- *   securitySchemes:
- *     bearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
  */
 
-
-router.post('/', upload.single('file'), authUser, create);
-
-
+router.post("/", upload.single("file"), authUser, create);
 
 
 /**
@@ -207,28 +201,15 @@ router.get('/:id', getById);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
  *               name:
  *                 type: string
- *               emailCount:
- *                 type: number
- *               emails:
- *                 type: number
- *               opens:
- *                 type: number
- *               clicks:
- *                 type: number
- *               rating:
- *                 type: number
  *               tier:
  *                 type: string
  *                 enum: [basic, premium, enterprise]
- *               releaseDateTime:
- *                 type: string
- *                 format: date-time
  *               status:
  *                 type: string
  *                 enum: [active, scheduled]
@@ -238,23 +219,36 @@ router.get('/:id', getById);
  *               brainType:
  *                 type: string
  *                 enum: [Architect, Challenger, Synthesizer, Reflector, Catalyst]
- *               fileUrl:
+ *               releaseDateTime:
  *                 type: string
- *               emailTemplate:
+ *                 format: date-time
+ *               file:
  *                 type: string
- *                 description: Email template content (HTML or plain text)
+ *                 format: binary
+ *                 description: Required if type is "file"
+ *               emails:
+ *                 type: string
+ *                 description: >
+ *                   Required if type is "manual".
+ *                   JSON array string of objects, each with `content` and optional `type`.
+ *                   Example:
+ *                   `[{"content":"Welcome to our platform!","type":"Challenger"}]`
  *     responses:
  *       200:
  *         description: Email sequence updated successfully
  *       400:
- *         description: Invalid input
+ *         description: Invalid input or missing required fields
  *       404:
  *         description: Email sequence not found
  *       500:
  *         description: Server error
  */
-router.put('/:id', authUser, update);
 
+router.put(
+  '/:id',
+  upload.single('file'), 
+  update
+);
 
 /**
  * @swagger

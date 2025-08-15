@@ -1,13 +1,17 @@
 import mongoose from 'mongoose';
 
+// Sub-schema for each email in the sequence
+const EmailSchema = new mongoose.Schema({
+  content: { type: String },
+  type: {
+    type: String,
+    enum: ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst'],
+  },
+});
+
 const EmailSequenceSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    emailCount: { type: Number, default: 0 },
-    emails: { type: Number, default: 0 },
-    opens: { type: Number, default: 0 },
-    clicks: { type: Number, default: 0 },
-    rating: { type: Number, default: 0 },
 
     tier: {
       type: String,
@@ -34,7 +38,6 @@ const EmailSequenceSchema = new mongoose.Schema(
       required: true,
     },
 
-    // Brain type with your given values
     brainType: {
       type: String,
       enum: ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst'],
@@ -43,14 +46,15 @@ const EmailSequenceSchema = new mongoose.Schema(
 
     fileUrl: { type: String },
 
-     emailTemplate: { type: String, default: '' }
+    emails: [EmailSchema],
 
+    createdDate: {
+      type: Date,
+      default: Date.now,
+    },
   },
   { timestamps: true }
 );
 
-const EmailSequence =
-  mongoose.models.EmailSequence ||
+export default mongoose.models.EmailSequence ||
   mongoose.model('EmailSequence', EmailSequenceSchema);
-
-export default EmailSequence;
