@@ -29,13 +29,13 @@ const router = express.Router();
  *   post:
  *     summary: Upload a prompt pack file
  *     description: >
- *       Uploads a `.txt`, `.json`, or `.md` file containing prompts.  
- *       The file will be uploaded to Cloudinary, parsed, and stored in the database  
- *       with the provided tier. Other fields like `name`, `category`, and `status`  
- *       are set automatically by the server.
+ *       Uploads a `.pdf`, `.docx`, `.md`, or `.html` file containing prompts.  
+ *       The file will be uploaded to Cloudinary, stored in the database with  
+ *       the provided `name`, `category`, `tier`, and `status`.  
+ *       Optionally accepts `releaseDateTime` and `type` for prompts.
  *     tags: [PromptPacks]
  *     security:
- *       - bearerAuth: []   # Added authentication requirement
+ *       - bearerAuth: []   # Requires authentication
  *     consumes:
  *       - multipart/form-data
  *     requestBody:
@@ -46,17 +46,43 @@ const router = express.Router();
  *             type: object
  *             required:
  *               - file
+ *               - name
+ *               - category
  *               - tier
+ *               - status
  *             properties:
  *               file:
  *                 type: string
  *                 format: binary
- *                 description: The prompt pack file to upload (.txt, .json, .md)
+ *                 description: The prompt pack file (.pdf, .docx, .md, .html)
+ *               name:
+ *                 type: string
+ *                 description: Name of the prompt pack
+ *                 example: "AI Architect Guide"
+ *               category:
+ *                 type: string
+ *                 description: Category of the prompt pack
+ *                 example: "Technology"
  *               tier:
  *                 type: string
- *                 enum: [basic, premium, enterprise]
+ *                 enum: [starter, growth, enterprise]
  *                 description: Access tier for the prompt pack
- *                 example: basic
+ *                 example: starter
+ *               status:
+ *                 type: string
+ *                 enum: [active, scheduled]
+ *                 description: Status of the prompt pack
+ *                 example: scheduled
+ *               releaseDateTime:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Optional release date and time
+ *                 example: "2025-08-15T10:00:00Z"
+ *               type:
+ *                 type: string
+ *                 enum: [Architect, Challenger, Synthesizer, Reflector, Catalyst]
+ *                 description: Type of the prompt inside the pack
+ *                 example: Architect
  *     responses:
  *       201:
  *         description: Prompt pack uploaded successfully
@@ -72,12 +98,11 @@ const router = express.Router();
  *                   type: string
  *                   example: Prompt pack uploaded successfully
  *                 data:
- *                   type: object
- *                   description: The saved prompt pack object, including Cloudinary file URL
+ *                   $ref: '#/components/schemas/PromptPack'
  *       400:
- *         description: Bad request (e.g., missing file or tier, invalid file format)
+ *         description: Bad request (missing required fields or invalid file format)
  *       401:
- *         description: Unauthorized (user must be authenticated)
+ *         description: Unauthorized (user must be logged in)
  *       500:
  *         description: Server error while uploading prompt pack
  */

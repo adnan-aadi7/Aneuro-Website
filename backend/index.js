@@ -21,7 +21,7 @@ import logRoutes from './routes/logRoutes.js'
 import quizRoutes from './routes/quizRoutes.js'
 import customizationRoutes from './routes/customizationRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js'
-
+import userAnalyticsRoutes from './routes/userAnalyticsRoutes.js'
 const app = express();
 const port = 4000;
 
@@ -72,6 +72,7 @@ const startServer = async () => {
     app.use("/api/quiz", quizRoutes);
     app.use("/api/customization", customizationRoutes);
     app.use("/api/categories", categoryRoutes);
+    app.use("/api/user-analytics", userAnalyticsRoutes);
 
     app.listen(port, () => {
       console.log(`✅ Server running at http://localhost:${port}`);

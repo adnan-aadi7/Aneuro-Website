@@ -1,10 +1,11 @@
 //ticket routes
 
-import { createTicket, getTickets, getTicketById, updateTicket, updateTicketStatus, deleteTicket, addReplyToTicket, assignTicket } from "../controller/Tickets.js";
+import { createTicket, getTickets, getTicketById, updateTicket, updateTicketStatus, deleteTicket, addReplyToTicket, assignTicket, getFeedbackTickets, getLatestTickets } from "../controller/Tickets.js";
 import upload from "../middleware/multer.js";
 import express from 'express';
 
 const router = express.Router();
+
 
 /**
  * @swagger
@@ -103,6 +104,79 @@ router.post('/create', upload.single('file'), createTicket);
  */
 
 router.get('/', getTickets);
+
+
+/**
+ * @swagger
+ * /api/ticket/feedback:
+ *   get:
+ *     summary: Get all tickets with category "feedback"
+ *     description: Retrieves all tickets where the category array contains "feedback".
+ *     tags: [Admin Dashboard ]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of feedback tickets
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 count:
+ *                   type: integer
+ *                   example: 2
+ *                 tickets:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Ticket'
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get('/feedback',  getFeedbackTickets);
+
+/**
+ * @swagger
+ * /api/ticket/latest:
+ *   get:
+ *     summary: Get the latest 5 tickets
+ *     description: Returns the latest 5 tickets with human-readable created time (e.g., "2 hours ago").
+ *     tags: [Admin Dashboard]
+ *     responses:
+ *       200:
+ *         description: A list of latest tickets
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 tickets:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: 66be05a111f0a8a0d1df9823
+ *                       name:
+ *                         type: string
+ *                         example: John Deo
+ *                       message:
+ *                         type: string
+ *                         example: Issue with the latest update
+ *                       timeAgo:
+ *                         type: string
+ *                         example: 2 hours ago
+ */
+router.get("/latest", getLatestTickets);
 
 /**
  * @swagger

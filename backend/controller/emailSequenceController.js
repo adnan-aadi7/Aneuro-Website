@@ -7,12 +7,13 @@ export async function create(req, res) {
   try {
     let {
       name,
-      emails, // may be array or JSON string
+      emails, 
       tier,
       status,
       type,
       brainType,
-      releaseDateTime
+      releaseDateTime,
+      category
     } = req.body;
 
     let fileUrl;
@@ -26,7 +27,7 @@ export async function create(req, res) {
     }
 
     // ✅ Enum validation
-    const allowedTiers = ['basic', 'premium', 'enterprise'];
+    const allowedTiers = ['starter', 'growth', 'enterprise'];
     const allowedTypes = ['manual', 'file'];
     const allowedBrainTypes = ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst'];
 
@@ -92,7 +93,7 @@ export async function create(req, res) {
 const newSequence = new EmailSequence({
   name,
   tier,
-  category, // ✅ Added here
+  category, 
   releaseDateTime: releaseDateTime || null,
   status: status || 'scheduled',
   type,

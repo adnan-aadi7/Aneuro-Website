@@ -49,8 +49,8 @@ const router = express.Router();
  *                 example: "Welcome Campaign"
  *               tier:
  *                 type: string
- *                 enum: [basic, premium, enterprise]
- *                 example: "premium"
+ *                 enum: [starter, growth, enterprise]
+ *                 example: "growth"
  *               releaseDateTime:
  *                 type: string
  *                 format: date-time
@@ -213,7 +213,7 @@ router.get('/:id', getById);
  *                 description: Name of the email sequence
  *               tier:
  *                 type: string
- *                 enum: [basic, premium, enterprise]
+ *                 enum: [starter, growth, enterprise]
  *                 description: Subscription tier for the sequence
  *               status:
  *                 type: string

@@ -57,6 +57,10 @@ const UserSchema = new mongoose.Schema(
         default: null,
       },
     },
+lastLogin: {
+  type: Date,
+  default: null
+},
 
     // ✅ Quiz completion percentage
     quizCompletion: {

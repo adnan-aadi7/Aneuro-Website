@@ -15,7 +15,7 @@ const EmailSequenceSchema = new mongoose.Schema(
 
     tier: {
       type: String,
-      enum: ['basic', 'premium', 'enterprise'],
+      enum: ["starter", "growth", "enterprise"],
       required: true,
     },
 category: {
