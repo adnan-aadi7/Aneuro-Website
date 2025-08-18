@@ -2,6 +2,18 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from '../axiosInstance';
 
 // Async thunks
+export const fetchPromptCategories = createAsyncThunk(
+  'promptPack/fetchPromptCategories',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get('/categories/prompts');
+      return response.data; // { success, data: ["Category1", ...] }
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to fetch prompt categories' });
+    }
+  }
+);
+
 export const uploadPromptPack = createAsyncThunk(
   'promptPack/upload',
   async (uploadData, { rejectWithValue }) => {
@@ -149,6 +161,9 @@ export const fetchPromptPackStats = createAsyncThunk(
 const initialState = {
   packs: [],
   currentPack: null,
+  categories: [],
+  categoriesLoading: false,
+  categoriesError: null,
   stats: {
     overall: {
       totalPacks: 0,
@@ -247,6 +262,24 @@ const promptPackSlice = createSlice({
     }
   },
   extraReducers: (builder) => {
+    // Prompt categories
+    builder
+      .addCase(fetchPromptCategories.pending, (state) => {
+        state.categoriesLoading = true;
+        state.categoriesError = null;
+      })
+      .addCase(fetchPromptCategories.fulfilled, (state, action) => {
+        state.categoriesLoading = false;
+        const payload = action.payload;
+        const raw = Array.isArray(payload?.data) ? payload.data : (Array.isArray(payload) ? payload : []);
+        state.categories = raw.map((item) => typeof item === 'string' ? item : (item?.name || ''))
+                              .filter(Boolean);
+      })
+      .addCase(fetchPromptCategories.rejected, (state, action) => {
+        state.categoriesLoading = false;
+        state.categoriesError = action.payload?.message || 'Failed to fetch prompt categories';
+      });
+
     // Upload
     builder
       .addCase(uploadPromptPack.pending, (state) => {

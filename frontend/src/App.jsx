@@ -46,7 +46,7 @@ import Refunddetail from "./admin/pages/Managesubscription/refunddetailrequest";
 import Admincontrolcenter from "./admin/pages/cms/adminControlCenter/admincontrolcenter";
 import AddEmailManuall from "./admin/pages/cms/addEmailManullay/AddEmailManuall";
 import Settingtabs from "./admin/pages/settings/setting";
-import AddPromptMannual from "./admin/pages/cms/addPromptMannually/AddPromptMannual";
+// import AddPromptMannual from "./admin/pages/cms/addPromptMannually/AddPromptMannual";
 import Analytics from "./admin/pages/analyticsOverview/Analytics";
 import EmailStatsDetails from "./admin/pages/analyticsOverview/EmailStatsDetails";
 import PromptStatsDetails from "./admin/pages/analyticsOverview/PromptStatsDetails";
@@ -61,6 +61,7 @@ import Audience from "./Audience/audience";
 import Policy from "./termsConditions/Policy";
 import AddAdmin from "./admin/components/settings/AddAdmin";
 import AdminPermission from "./admin/components/settings/AdminPermission";
+import MannualPrompt from "./admin/components/cms/overviewTab/MannualPrompt";
 
 
 
@@ -294,8 +295,16 @@ function App() {
             </AdminLayout>
           }
         />
-        <Route
+        {/* <Route
           path="/admin/analytics/funnel-details"
+          element={
+            <AdminLayout>
+              <FunnelStatsDetails />
+            </AdminLayout>
+          }
+        /> */}
+        <Route
+          path="/admin/analytics/funnel-details/:templateId"
           element={
             <AdminLayout>
               <FunnelStatsDetails />
@@ -362,7 +371,7 @@ function App() {
           path="/admin/mannual-prompt"
           element={
             <AdminLayout>
-              <AddPromptMannual />
+              <MannualPrompt/>
             </AdminLayout>
           }
         />

@@ -24,6 +24,7 @@ export default function EmailSequenceCard() {
   const [brainType, setBrainType] = useState("Architect");
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [submittingAction, setSubmittingAction] = useState(null); // 'active' | 'scheduled' | null
 
   // Categories from store
   const categories = useSelector((state) => state.emailSequence.categories || []);
@@ -31,7 +32,7 @@ export default function EmailSequenceCard() {
 
   const isAllowedFile = (file) => {
     const name = file?.name?.toLowerCase() || "";
-    return name.endsWith('.pdf') || name.endsWith('.doc') || name.endsWith('.txt');
+    return name.endsWith('.pdf') || name.endsWith('.doc') || name.endsWith('.docx') || name.endsWith('.txt');
   };
 
   // Toast on success/error
@@ -42,6 +43,7 @@ export default function EmailSequenceCard() {
       setSelectedTiers([]);
       setSequenceName("");
       setSelectedCategory("");
+      setSubmittingAction(null);
       dispatch(clearSuccess());
     }
   }, [success, dispatch]);
@@ -49,6 +51,7 @@ export default function EmailSequenceCard() {
   useEffect(() => {
     if (error) {
       toast.error(typeof error === 'string' ? error : 'Operation failed');
+      setSubmittingAction(null);
       dispatch(clearError());
     }
   }, [error, dispatch]);
@@ -62,7 +65,7 @@ export default function EmailSequenceCard() {
     const file = e.target.files[0];
     if (file) {
       if (!isAllowedFile(file)) {
-        toast.error("Only .pdf, .doc, .txt files are allowed");
+        toast.error("Only .pdf, .doc, .docx, .txt files are allowed");
         return;
       }
       setSelectedFile(file);
@@ -85,7 +88,7 @@ export default function EmailSequenceCard() {
     const file = e.dataTransfer.files[0];
     if (file) {
       if (!isAllowedFile(file)) {
-        toast.error("Only .pdf, .doc, .txt files are allowed");
+        toast.error("Only .pdf, .doc, .docx, .txt files are allowed");
         return;
       }
       setSelectedFile(file);
@@ -101,7 +104,7 @@ export default function EmailSequenceCard() {
     );
   };
 
-  const handleUpload = () => {
+  const handleUpload = (desiredStatus = 'active') => {
     if (!selectedFile) {
       toast.error("Please select a file first");
       return;
@@ -133,7 +136,9 @@ export default function EmailSequenceCard() {
       brainType,
       category: selectedCategory,
       file: selectedFile,
+      status: desiredStatus,
     };
+    setSubmittingAction(desiredStatus);
     dispatch(createEmailSequence(payload));
   };
 
@@ -226,16 +231,16 @@ export default function EmailSequenceCard() {
         </div>
         <select
           id="sequence-category"
-          className="w-full px-4 py-3 rounded border border-gray-500  text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
+          className="w-full px-4 py-3 rounded border border-gray-500 bg-[#1F2937] text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:bg-[#1F2937] transition"
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
           disabled={categoriesLoading}
         >
-          <option value="" disabled>
+          <option value="" disabled style={{ backgroundColor: '#1F2937' }}>
             {categoriesLoading ? 'Loading...' : 'Select a category'}
           </option>
           {categories.map((c) => (
-            <option key={c} value={c}>{c}</option>
+            <option key={c} value={c} style={{ backgroundColor: '#1F2937' }}>{c}</option>
           ))}
         </select>
 
@@ -272,15 +277,15 @@ export default function EmailSequenceCard() {
         </label>
         <select
           id="brain-type"
-          className="w-full px-4 py-3 rounded border border-gray-500  text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
+          className="w-full px-4 py-3 rounded border border-gray-500 bg-[#1F2937] text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:bg-[#1F2937] transition"
           value={brainType}
           onChange={(e) => setBrainType(e.target.value)}
         >
-          <option value="Architect">Architect</option>
-          <option value="Challenger">Challenger</option>
-          <option value="Synthesizer">Synthesizer</option>
-          <option value="Reflector">Reflector</option>
-          <option value="Catalyst">Catalyst</option>
+          <option value="Architect" style={{ backgroundColor: '#1F2937' }}>Architect</option>
+          <option value="Challenger" style={{ backgroundColor: '#1F2937' }}>Challenger</option>
+          <option value="Synthesizer" style={{ backgroundColor: '#1F2937' }}>Synthesizer</option>
+          <option value="Reflector" style={{ backgroundColor: '#1F2937' }}>Reflector</option>
+          <option value="Catalyst" style={{ backgroundColor: '#1F2937' }}>Catalyst</option>
         </select>
       </div>
 
@@ -299,7 +304,7 @@ export default function EmailSequenceCard() {
               type="file"
               multiple
               className="hidden"
-              accept=".pdf,.doc,.txt"
+              accept=".pdf,.doc,.docx,.txt"
               onChange={handleFileUpload}
             />
             <span className="bg-transparent border border-gray-400 text-white px-4 py-2 rounded text-sm cursor-pointer hover:bg-gray-700 transition">
@@ -307,7 +312,7 @@ export default function EmailSequenceCard() {
             </span>
           </label>
         </div>
-        <p className="text-gray-500 text-xs">Accept: pdf, doc, txt</p>
+        <p className="text-gray-500 text-xs">Accept: pdf, doc, docx, txt</p>
         {/* Show selected file name (truncated within card width) */}
         {selectedFile && (
           <div className="text-gray-300 text-xs mt-2 flex items-center gap-1">
@@ -400,18 +405,20 @@ export default function EmailSequenceCard() {
 
       {/* Upload Button */}
       <button
-        onClick={handleUpload}
+        onClick={() => handleUpload('active')}
         className="w-full bg-cyan-400 text-black font-medium py-3  hover:bg-cyan-300 transition-colors text-sm"
         disabled={loading}
+        aria-busy={loading && submittingAction === 'active'}
       >
-        Upload Email Sequences
+        {loading && submittingAction === 'active' ? 'Uploading...' : 'Upload Email Sequences'}
       </button>
       <button
-        onClick={handleUpload}
+        onClick={() => handleUpload('scheduled')}
         className="w-full bg-[#FFFFFF] text-black font-medium py-3  hover:bg-cyan-300 transition-colors text-sm mt-5"
         disabled={loading}
+        aria-busy={loading && submittingAction === 'scheduled'}
       >
-        Schedule for later
+        {loading && submittingAction === 'scheduled' ? 'Scheduling...' : 'Schedule for later'}
       </button>
     </div>
     

@@ -10,6 +10,7 @@ import {
   clearError, 
   clearSuccess 
 } from "../../../../store/Slice/FunnelSequenceSlice";
+import { fetchEmailCategories, createCategory as createEmailCategory } from "../../../../store/Slice/EmailSequenceSLice";
 
 export default function FunnelTemplateCard() {
   const dispatch = useDispatch();
@@ -19,10 +20,18 @@ export default function FunnelTemplateCard() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedTiers, setSelectedTiers] = useState([]); // ["basic", "premium", "enterprise"]
+  const [templateName, setTemplateName] = useState("");
+  const [category, setCategory] = useState("");
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [brainType, setBrainType] = useState("Architect");
+  const [submittingAction, setSubmittingAction] = useState(null); // 'active' | 'scheduled' | null
+  const categories = useSelector((state) => state.emailSequence.categories || []);
+  const categoriesLoading = useSelector((state) => state.emailSequence.categoriesLoading);
 
   const isAllowedFile = (file) => {
     const name = file?.name?.toLowerCase() || "";
-    return name.endsWith('.pdf') || name.endsWith('.doc') || name.endsWith('.txt');
+    return name.endsWith('.pdf') || name.endsWith('.doc') || name.endsWith('.docx') || name.endsWith('.txt');
   };
 
   // Handle file selection from input
@@ -30,7 +39,7 @@ export default function FunnelTemplateCard() {
     const file = e.target.files[0];
     if (file) {
       if (!isAllowedFile(file)) {
-        toast.error("Only .pdf, .doc, .txt files are allowed");
+        toast.error("Only .pdf, .doc, .docx, .txt files are allowed");
         return;
       }
       setSelectedFile(file);
@@ -54,7 +63,7 @@ export default function FunnelTemplateCard() {
     const file = e.dataTransfer.files[0];
     if (file) {
       if (!isAllowedFile(file)) {
-        toast.error("Only .pdf, .doc, .txt files are allowed");
+        toast.error("Only .pdf, .doc, .docx, .txt files are allowed");
         return;
       }
       setSelectedFile(file);
@@ -73,6 +82,7 @@ export default function FunnelTemplateCard() {
 
   // Handle upload submission
   const handleUpload = async () => {
+    const desiredStatus = 'active';
     if (!selectedFile) {
       toast.error("Please select a file first");
       return;
@@ -83,36 +93,35 @@ export default function FunnelTemplateCard() {
       return;
     }
 
+    if (!templateName.trim()) {
+      toast.error("Please enter a name");
+      return;
+    }
+
+    if (!category) {
+      toast.error("Please select a category");
+      return;
+    }
+
     try {
-      const formData = new FormData();
-      
-      // Add single file
-      formData.append('file', selectedFile);
+      const tierMap = { basic: 'starter', premium: 'growth', enterprise: 'enterprise' };
+      const backendTier = tierMap[selectedTiers[0]] || 'starter';
 
-     
-      const selectedTier = selectedTiers[0];
-      console.log(`[${new Date().toISOString()}] Uploading with tier:`, selectedTier, 'All selected tiers:', selectedTiers);
-      
-      // Ensure we never send "vip" - map it to "enterprise" if somehow it exists
-      const finalTier = selectedTier === "vip" ? "enterprise" : selectedTier;
-      console.log(`[${new Date().toISOString()}] Final tier being sent:`, finalTier);
-      
-      formData.append('tier', finalTier);
-      
-      // Debug: Log all FormData entries
-      console.log(`[${new Date().toISOString()}] FormData contents:`);
-      for (let [key, value] of formData.entries()) {
-        console.log(`[${new Date().toISOString()}] ${key}:`, value);
-      }
-
-      // Add metadata
-      formData.append('name', `Funnel Template ${Date.now()}`);
-
-      await dispatch(createFunnelTemplateWithFile(formData)).unwrap();
+      setSubmittingAction(desiredStatus);
+      await dispatch(createFunnelTemplateWithFile({
+        file: selectedFile,
+        name: templateName.trim(),
+        category,
+        tier: backendTier,
+        status: desiredStatus,
+        brainType
+      })).unwrap();
       
       // Reset form on success
       setSelectedFile(null);
       setSelectedTiers([]);
+      setTemplateName("");
+      setCategory("");
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -127,12 +136,47 @@ export default function FunnelTemplateCard() {
     if (success) {
       toast.success(success);
       dispatch(clearSuccess());
+      setSubmittingAction(null);
     }
     if (error) {
       toast.error(error);
       dispatch(clearError());
+      setSubmittingAction(null);
     }
   }, [success, error, dispatch]);
+
+  // Load categories on mount
+  useEffect(() => {
+    dispatch(fetchEmailCategories());
+  }, [dispatch]);
+
+  const handleStartAddCategory = () => {
+    setShowAddCategory(true);
+    setNewCategoryName("");
+  };
+
+  const handleSaveCategory = async () => {
+    const name = newCategoryName.trim();
+    if (!name) {
+      toast.error("Please enter a category name");
+      return;
+    }
+    try {
+      await dispatch(createEmailCategory(name)).unwrap?.();
+      await dispatch(fetchEmailCategories());
+      setCategory(name);
+      setShowAddCategory(false);
+      setNewCategoryName("");
+      toast.success("Category created");
+    } catch (e) {
+      toast.error(typeof e === 'string' ? e : 'Failed to create category');
+    }
+  };
+
+  const handleCancelAddCategory = () => {
+    setShowAddCategory(false);
+    setNewCategoryName("");
+  };
 
   return (
     <div className="bg-[#232B39] p-6 w-full mx-auto">
@@ -158,30 +202,85 @@ export default function FunnelTemplateCard() {
           type="text"
           placeholder="Input Field"
           className="w-full px-4 py-3 rounded border border-gray-500  text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
+          value={templateName}
+          onChange={(e) => setTemplateName(e.target.value)}
         />
       </div>
       <div className="mb-6">
-        <label className="block text-white text-base mb-2" htmlFor="sequence-category">
-          Select Category
-        </label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-white text-base" htmlFor="sequence-category">
+            Select Category
+          </label>
+          <button
+            type="button"
+            onClick={handleStartAddCategory}
+            className="text-xs px-3 py-1 border border-gray-500 text-white hover:bg-gray-700"
+          >
+            Add New
+          </button>
+        </div>
         <select
           id="sequence-category"
-          className="w-full px-4 py-3 rounded border border-gray-500  text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
-          defaultValue=""
+          className="w-full px-4 py-3 rounded border border-gray-500 bg-[#232B39] text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:bg-[#232B39] transition"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          disabled={categoriesLoading}
         >
-          <option value="" disabled>
-            Drop Down
+          <option value="" disabled style={{ backgroundColor: '#232B39' }}>
+            {categoriesLoading ? 'Loading...' : 'Select a category'}
           </option>
-          {/* Example options */}
-          <option value="marketing">Marketing</option>
-          <option value="onboarding">Onboarding</option>
-          <option value="retention">Retention</option>
+          {categories.map((c) => (
+            <option key={c} value={c} style={{ backgroundColor: '#232B39' }}>{c}</option>
+          ))}
+        </select>
+        {showAddCategory && (
+          <div className="mt-3 flex items-center gap-2">
+            <input
+              type="text"
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              placeholder="New category name"
+              className="flex-1 px-3 py-2 rounded border border-gray-500 bg-transparent text-gray-200 focus:outline-none focus:border-blue-500"
+            />
+            <button
+              type="button"
+              onClick={handleSaveCategory}
+              className="px-3 py-2 bg-cyan-400 text-black text-xs hover:bg-cyan-300"
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={handleCancelAddCategory}
+              className="px-3 py-2 border border-gray-500 text-white text-xs hover:bg-gray-700"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="mb-5 mt-8">
+        <label className="block text-white text-base mb-2" htmlFor="brain-type">
+          Brain Type
+        </label>
+        <select
+          id="brain-type"
+          className="w-full px-4 py-3 rounded border border-gray-500 bg-[#232B39] text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:bg-[#232B39] transition"
+          value={brainType}
+          onChange={(e) => setBrainType(e.target.value)}
+        >
+          <option value="Architect" style={{ backgroundColor: '#232B39' }}>Architect</option>
+          <option value="Challenger" style={{ backgroundColor: '#232B39' }}>Challenger</option>
+          <option value="Synthesizer" style={{ backgroundColor: '#232B39' }}>Synthesizer</option>
+          <option value="Reflector" style={{ backgroundColor: '#232B39' }}>Reflector</option>
+          <option value="Catalyst" style={{ backgroundColor: '#232B39' }}>Catalyst</option>
         </select>
       </div>
 
       {/* Upload Area */}
       <div
-        className={`border-2 border-dashed border-gray-500 bg-[#11182780]  p-12 text-center mt-6 ${
+        className={`border-2 border-dashed border-gray-500 bg-[#11182780]  p-12 text-center  ${
           isDragOver ? "ring-2 ring-cyan-400" : ""
         }`}
         onDragOver={handleDragOver}
@@ -196,7 +295,7 @@ export default function FunnelTemplateCard() {
               ref={fileInputRef}
               type="file"
               className="hidden"
-              accept=".pdf,.doc,.txt"
+              accept=".pdf,.doc,.docx,.txt"
               onChange={handleFileUpload}
             />
             <span className="bg-transparent border border-gray-400 text-white px-4 py-2 rounded text-sm cursor-pointer hover:bg-gray-700 transition">
@@ -204,7 +303,7 @@ export default function FunnelTemplateCard() {
             </span>
           </label>
         </div>
-        <p className="text-gray-500 text-xs">Accept: pdf, doc, txt</p>
+        <p className="text-gray-500 text-xs">Accept: pdf, doc, docx, txt</p>
         {/* Show selected file name (truncated within card width) */}
         {selectedFile && (
           <div className="text-gray-300 text-xs mt-2 flex items-center gap-1">
@@ -301,19 +400,43 @@ export default function FunnelTemplateCard() {
 
       {/* Upload Button */}
       <button
-        onClick={handleUpload}
+        onClick={() => { setSubmittingAction('active'); handleUpload(); }}
         className="mt-6 w-full bg-cyan-400 text-black font-medium py-3  hover:bg-cyan-300 transition-colors text-sm"
         disabled={loading}
+        aria-busy={loading && submittingAction === 'active'}
       >
-        Upload Funnel Templates
+        {loading && submittingAction === 'active' ? 'Uploading...' : 'Upload Funnel Templates'}
       </button>
 
       <button
-        onClick={handleUpload}
+        onClick={async () => {
+          // schedule
+          const desiredStatus = 'scheduled';
+          if (!selectedFile || selectedTiers.length === 0 || !templateName.trim() || !category) {
+            handleUpload(); // Will show validations
+            return;
+          }
+          try {
+            const tierMap = { basic: 'starter', premium: 'growth', enterprise: 'enterprise' };
+            const backendTier = tierMap[selectedTiers[0]] || 'starter';
+            setSubmittingAction('scheduled');
+            await dispatch(createFunnelTemplateWithFile({
+              file: selectedFile,
+              name: templateName.trim(),
+              category,
+              tier: backendTier,
+              status: desiredStatus,
+              brainType
+            }));
+          } catch {
+            // no-op, error toast handled globally
+          }
+        }}
         className="w-full bg-[#FFFFFF] text-black font-medium py-3  hover:bg-cyan-300 transition-colors text-sm mt-5"
         disabled={loading}
+        aria-busy={loading && submittingAction === 'scheduled'}
       >
-        Schedule for later
+        {loading && submittingAction === 'scheduled' ? 'Scheduling...' : 'Schedule for later'}
       </button>
 
       {/* Toast Notifications */}

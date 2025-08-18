@@ -96,7 +96,7 @@ const Cards = () => {
             <Clock className="w-4 h-4 text-gray-400" />
           </div>
           <div className="mb-2">
-            <span className="text-3xl font-bold text-white">
+            <span className="text-2xl font-bold text-white">
               {formatNextReleaseDate(stats?.nextRelease)}
             </span>
           </div>

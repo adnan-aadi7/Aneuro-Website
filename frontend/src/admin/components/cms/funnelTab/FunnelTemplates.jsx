@@ -216,7 +216,7 @@ const FunnelTemplates = () => {
                         <button
                           className="text-gray-400 hover:text-white transition-colors"
                           title="View"
-                          onClick={() => navigate('/admin/analytics/funnel-details')}
+                          onClick={() => navigate(`/admin/analytics/funnel-details/${template._id}`)}
                         >
                           <Eye className="w-4 h-4" />
                         </button>

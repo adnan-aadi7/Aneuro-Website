@@ -40,7 +40,7 @@ const Header = ({ packId }) => {
   const subtitle = currentPack?.description || "Manage all content drops and user access";
 
   return (
-    <div className="bg-[#19191F]   pb-6">
+    <div className="   pb-6">
       <div className="text-2xl md:text-3xl font-semibold text-white leading-tight">
         {title}
       </div>
