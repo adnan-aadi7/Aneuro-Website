@@ -1,17 +1,43 @@
 import React, { useEffect, useState } from "react";
 import logo from "../../../assets/auth/logo.png";
+import logo2 from "../../../assets/auth/logo2.png";
+import logo3 from "../../../assets/auth/logo3.png";
 import { UploadCloud } from "lucide-react";
 
+// All tiles are transparent now (no extra bg tint)
 const defaultVariants = [
-  { id: 1, src: logo, bg: "bg-transparent" },
-  { id: 2, src: logo, bg: "bg-[#181820]" },
-  { id: 3, src: logo, bg: "bg-[#233136]" },
+  { id: 1, src: logo,  name: "logo-default" },
+  { id: 2, src: logo2, name: "logo-variant-2" },
+  { id: 3, src: logo3, name: "logo-variant-3" },
 ];
+
+// helper: convert any image URL (including imported assets) into a File
+async function urlToFile(url, fileBaseName = "logo") {
+  const res = await fetch(url, { cache: "no-store" });
+  const blob = await res.blob();
+  const type = blob.type || "image/png";
+  const ext = type.split("/")[1] || "png";
+  return new File([blob], `${fileBaseName}.${ext}`, { type });
+}
 
 export default function UploadLogo({ setLogo }) {
   const [selected, setSelected] = useState(1);
-  const [uploadedFile, setUploadedFile] = useState(null);   // File
   const [uploadedPreview, setUploadedPreview] = useState(""); // object URL
+
+  // on mount: push the initially selected preset as a File to parent
+  useEffect(() => {
+    const initial = defaultVariants.find((v) => v.id === 1);
+    if (!initial) return;
+    (async () => {
+      try {
+        const file = await urlToFile(initial.src, initial.name);
+        setLogo(file);
+      } catch (e) {
+        console.warn("Failed to convert initial preset logo:", e);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -23,20 +49,19 @@ export default function UploadLogo({ setLogo }) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // cleanup previous preview
     if (uploadedPreview) URL.revokeObjectURL(uploadedPreview);
 
     const url = URL.createObjectURL(file);
-    setUploadedFile(file);
     setUploadedPreview(url);
-    setSelected(4);
+    setSelected(4); // uploaded tile
 
-    // IMPORTANT: send the File to parent so it can be appended to FormData
+    // send the File to parent (so backend gets multipart)
     setLogo(file);
   };
 
+  // merge presets + uploaded preview (if any)
   const variants = uploadedPreview
-    ? [...defaultVariants, { id: 4, src: uploadedPreview, bg: "bg-transparent" }]
+    ? [...defaultVariants, { id: 4, src: uploadedPreview, name: "uploaded-logo" }]
     : defaultVariants;
 
   const CYAN = "#2de0fb";
@@ -49,33 +74,39 @@ export default function UploadLogo({ setLogo }) {
       <h2 className="text-white text-2xl font-medium mb-8">
         Selected Logo Type And Variants
       </h2>
+
       <div className="flex flex-col md:flex-row items-center md:items-start">
-        {/* Logo Variants */}
+        {/* Logo Variants (transparent tiles, no extra background) */}
         <div className="flex gap-2 mb-6 md:mb-0 w-full md:w-auto justify-center md:justify-start">
           {variants.map((variant) => (
             <button
               type="button"
               key={variant.id}
-              className={`relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center ${
-                variant.bg
-              } ${
+              className={`relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-transparent ${
                 selected === variant.id
                   ? "border border-[#12DCF0]"
                   : "border border-[#23232b]"
               }`}
-              onClick={() => {
+              onClick={async () => {
                 setSelected(variant.id);
-                // Picking a preset variant → clear uploaded file and send nothing new
-                if (variant.id !== 4) {
-                  setUploadedFile(null);
-                  // parent will still have last File (if any); if you want to force “no file”, do:
-                  // setLogo(null);
+
+                if (variant.id === 4) {
+                  // uploaded preview already set via handleUpload (File already sent)
+                  return;
+                }
+
+                // picking a preset: ensure the backend receives a File
+                try {
+                  const file = await urlToFile(variant.src, variant.name || "preset-logo");
+                  setLogo(file);
+                } catch (e) {
+                  console.warn("Failed to convert preset logo:", e);
                 }
               }}
             >
               <img
                 src={variant.src}
-                alt="Logo variant"
+                alt={`Logo variant ${variant.id}`}
                 className="w-12 h-12 md:w-16 md:h-16 object-contain"
               />
               {selected === variant.id && (
