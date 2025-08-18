@@ -22,10 +22,10 @@ const PromptPackSchema = new mongoose.Schema({
   },
   tier: {
     type: String,
-    enum: ['basic', 'premium', 'enterprise'],
+    enum: ["starter", "growth", "enterprise"],
     required: true,
   },
-    releaseDateTime: { type: Date, required: true },
+    releaseDateTime: { type: Date },
 
   status: {
     type: String,

@@ -5,7 +5,8 @@ import {
   scheduleContent,
   updateSchedule,
   deleteSchedule,
-  getScheduledStats
+  getScheduledStats,
+  getAllScheduledWithoutRelease
 } from "../controller/scheduleController.js";
 
 
@@ -136,5 +137,37 @@ router.get("/", getAllScheduled);
 router.post("/", scheduleContent);
 router.put("/", updateSchedule);
 router.delete("/", deleteSchedule);
+
+/**
+ * @swagger
+ * /api/schedule/no-release-scheduled:
+ *   get:
+ *     summary: Get all scheduled items without a releaseDateTime
+ *     description: Returns FunnelTemplates, EmailSequences, and PromptPacks that have status = "scheduled" but no releaseDateTime defined.
+ *     tags: [Scheduled Releases]
+ *     responses:
+ *       200:
+ *         description: Successfully fetched scheduled items without releaseDateTime
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 funnels:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/FunnelTemplate'
+ *                 emailSequences:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/EmailSequence'
+ *                 promptPacks:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/PromptPack'
+ *       500:
+ *         description: Server error
+ */
+router.get("/no-release-scheduled", getAllScheduledWithoutRelease);
 
 export default router;

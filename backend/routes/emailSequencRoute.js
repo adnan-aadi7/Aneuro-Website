@@ -49,8 +49,8 @@ const router = express.Router();
  *                 example: "Welcome Campaign"
  *               tier:
  *                 type: string
- *                 enum: [basic, premium, enterprise]
- *                 example: "premium"
+ *                 enum: [starter, growth, enterprise]
+ *                 example: "growth"
  *               releaseDateTime:
  *                 type: string
  *                 format: date-time
@@ -60,6 +60,10 @@ const router = express.Router();
  *                 enum: [active, scheduled]
  *                 default: scheduled
  *                 example: "scheduled"
+ *               category:
+ *                 type: string
+ *                 description: Category for grouping email sequences
+ *                 example: "Onboarding"
  *               type:
  *                 type: string
  *                 enum: [manual, file]
@@ -79,7 +83,6 @@ const router = express.Router();
  *                   type: object
  *                   required:
  *                     - content
- *                     - type
  *                   properties:
  *                     content:
  *                       type: string
@@ -187,7 +190,7 @@ router.get('/:id', getById);
  * @swagger
  * /api/email-sequences/{id}:
  *   put:
- *     summary: Update an email sequence by ID
+ *     summary: Update an email sequence by ID (append emails instead of overwrite)
  *     tags: [EmailSequences]
  *     security:
  *       - bearerAuth: []
@@ -197,7 +200,7 @@ router.get('/:id', getById);
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the email sequence
+ *         description: The ID of the email sequence (24-character MongoDB ObjectId)
  *     requestBody:
  *       required: true
  *       content:
@@ -207,37 +210,46 @@ router.get('/:id', getById);
  *             properties:
  *               name:
  *                 type: string
+ *                 description: Name of the email sequence
  *               tier:
  *                 type: string
- *                 enum: [basic, premium, enterprise]
+ *                 enum: [starter, growth, enterprise]
+ *                 description: Subscription tier for the sequence
  *               status:
  *                 type: string
  *                 enum: [active, scheduled]
+ *                 description: Current status of the sequence
  *               type:
  *                 type: string
  *                 enum: [manual, file]
+ *                 description: Upload method — manual entry or file upload
  *               brainType:
  *                 type: string
  *                 enum: [Architect, Challenger, Synthesizer, Reflector, Catalyst]
+ *                 description: Brain type classification for the sequence
+ *               category:
+ *                 type: string
+ *                 description: Category for grouping email sequences
  *               releaseDateTime:
  *                 type: string
  *                 format: date-time
+ *                 description: Scheduled release date/time
  *               file:
  *                 type: string
  *                 format: binary
- *                 description: Required if type is "file"
+ *                 description: File to upload (required if `type` is "file")
  *               emails:
  *                 type: string
  *                 description: >
  *                   Required if type is "manual".
- *                   JSON array string of objects, each with `content` and optional `type`.
+ *                   JSON array string of objects, each with `content` (string) and optional `type` (string).
  *                   Example:
  *                   `[{"content":"Welcome to our platform!","type":"Challenger"}]`
  *     responses:
  *       200:
  *         description: Email sequence updated successfully
  *       400:
- *         description: Invalid input or missing required fields
+ *         description: Invalid ID, invalid JSON, or missing required fields
  *       404:
  *         description: Email sequence not found
  *       500:

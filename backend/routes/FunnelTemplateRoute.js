@@ -19,12 +19,15 @@ const router = express.Router();
  *   name: FunnelTemplates
  *   description: Funnel Template Management
  */
-
 /**
  * @swagger
  * /api/funnel-templates/file:
  *   post:
- *     summary: Create a new funnel template with file upload and tier
+ *     summary: Create a new funnel template with file upload, tier, status, and category
+ *     description: >
+ *       Uploads a file (.pdf, .docx, .md, .html) to Cloudinary and creates a new funnel template.  
+ *       Requires `name`, `tier`, `status`, and `category`.  
+ *       File will be stored in `funnel_templates` folder on Cloudinary.
  *     tags: [FunnelTemplates]
  *     security:
  *       - bearerAuth: []
@@ -37,6 +40,8 @@ const router = express.Router();
  *             required:
  *               - name
  *               - tier
+ *               - status
+ *               - category
  *               - file
  *             properties:
  *               name:
@@ -44,10 +49,19 @@ const router = express.Router();
  *                 example: "My New Funnel"
  *               tier:
  *                 type: string
- *                 example: "Premium"
+ *                 enum: [starter, growth, enterprise]
+ *                 example: "growth"
+ *               status:
+ *                 type: string
+ *                 enum: [ scheduled, active]
+ *                 example: "scheduled"
+ *               category:
+ *                 type: string
+ *                 example: "Marketing Automation"
  *               file:
  *                 type: string
  *                 format: binary
+ *                 description: Upload file (.pdf, .docx, .md, .html)
  *     responses:
  *       201:
  *         description: Funnel template created successfully
@@ -61,10 +75,13 @@ const router = express.Router();
  *                   example: true
  *                 message:
  *                   type: string
+ *                   example: Funnel Template created successfully
  *                 data:
  *                   $ref: '#/components/schemas/FunnelTemplate'
  *       400:
- *         description: Bad request or missing file
+ *         description: Bad request (missing required fields or invalid file)
+ *       401:
+ *         description: Unauthorized (user must be logged in)
  *       500:
  *         description: Server error
  */
@@ -96,7 +113,7 @@ router.post('/file', authUser, upload.single('file'), createFunnelTemplateWithFi
  *                 type: string
  *               tier:
  *                 type: string
- *                 enum: [basic, premium, enterprise]
+ *                 enum: [starter, growth, enterprise]
  *               status:
  *                 type: string
  *                 enum: [active, scheduled, inactive]
@@ -199,7 +216,7 @@ router.get('/:id', getFunnelTemplateById);
  *                 type: string
  *               tier:
  *                 type: string
- *                 enum: [basic, premium, enterprise]
+ *                 enum: [starter, growth, enterprise]
  *               status:
  *                 type: string
  *                 enum: [active, scheduled, inactive]

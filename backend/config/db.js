@@ -1,6 +1,7 @@
-// config/db.js
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import { updateStatuses } from "../controller/scheduleController.js"; 
+
 dotenv.config();
 
 const MONGODB_URI = process.env.MONGODB_URI || "";
@@ -9,13 +10,24 @@ const connectDB = async () => {
     //  const MONGODB_URI = 'mongodb://localhost:27017/aneuro';
 
   try {
-    await mongoose.connect(MONGODB_URI, 
-  { useNewUrlParser: true, useUnifiedTopology: true }
-);
+    await mongoose.connect(MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
 
     console.log("✅ MongoDB connected successfully");
+
+    setInterval(async () => {
+      try {
+        await updateStatuses();
+        //console.log(" Scheduled content statuses checked:", new Date().toISOString());
+      } catch (err) {
+        console.error(" Error running updateStatuses:", err.message);
+      }
+    }, 60 * 1000); 
+
   } catch (error) {
-    console.error("❌ MongoDB connection error:", error);
+    console.error(" MongoDB connection error:", error);
     process.exit(1);
   }
 };

@@ -330,3 +330,69 @@ export const assignTicket = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+export const getFeedbackTickets = async (req, res) => {
+  try {
+    // Pagination parameters (default to page 1, 10 per page)
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    // Query for category "Feedback" (case-insensitive)
+    const query = { category: { $in: [/^feedback$/i] } };
+
+    // Total count
+    const total = await Ticket.countDocuments(query);
+
+    // Paginated data
+    const tickets = await Ticket.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    return res.status(200).json({
+      success: true,
+      count: tickets.length,
+      tickets,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        hasNextPage: page * limit < total,
+        hasPrevPage: page > 1
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching feedback tickets:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch feedback tickets'
+    });
+  }
+};
+
+import { formatDistanceToNow } from "date-fns";
+
+export const getLatestTickets = async (req, res) => {
+  try {
+    const tickets = await Ticket.find()
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    const formattedTickets = tickets.map(ticket => ({
+      ...ticket.toObject(),
+      timeAgo: formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })
+    }));
+
+    res.json({
+      success: true,
+      tickets: formattedTickets
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message
+    });
+  }
+};
+
