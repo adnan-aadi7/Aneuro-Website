@@ -44,11 +44,14 @@ const EmailStatsCards = ({ sequenceId }) => {
 
   // Extract data from the email sequence
   const emailSequence = currentSequence || {};
-  const emailCount = emailSequence.emails ? emailSequence.emails.length : 0;
+  const emailCount = Array.isArray(emailSequence.emails) ? emailSequence.emails.length : 0;
   const tier = emailSequence.tier || '-';
   const status = emailSequence.status || '-';
-  const usage = emailSequence.usage || 0;
-  const downloads = emailSequence.downloads || 0;
+  // usage can be an object { count } or a number or undefined
+  const usageCount = typeof emailSequence.usage === 'number'
+    ? emailSequence.usage
+    : (emailSequence.usage?.count ?? 0);
+  const downloadsCount = typeof emailSequence.downloads === 'number' ? emailSequence.downloads : 0;
 
   return (
     <div className="flex flex-wrap gap-6">
@@ -79,9 +82,9 @@ const EmailStatsCards = ({ sequenceId }) => {
           <Users className="w-5 h-5 text-white" />
           Usage
         </div>
-        <div className="text-white text-2xl font-bold mb-1">{usage.count.toLocaleString()}</div>
+        <div className="text-white text-2xl font-bold mb-1">{usageCount.toLocaleString()}</div>
         <div className="text-xs text-cyan-400 font-medium">
-          Downloads: {downloads.toLocaleString()}
+          Downloads: {downloadsCount.toLocaleString()}
         </div>
       </div>
       {/* Tier */}

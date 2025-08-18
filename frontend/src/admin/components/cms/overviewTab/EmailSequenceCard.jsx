@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Upload, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { createEmailSequence, selectEmailSequenceLoading, selectEmailSequenceError, selectEmailSequenceSuccess, clearError, clearSuccess } from "../../../../store/Slice/EmailSequenceSLice";
+import { createEmailSequence, fetchEmailCategories, createCategory as createEmailCategory, selectEmailSequenceLoading, selectEmailSequenceError, selectEmailSequenceSuccess, clearError, clearSuccess } from "../../../../store/Slice/EmailSequenceSLice";
 import { Toaster, toast } from "react-hot-toast";
 import DiamondIcon from "../../../../../public/icons/diamond.png";
 import KingIcon from "../../../../../public/icons/king.png";
@@ -16,9 +16,18 @@ export default function EmailSequenceCard() {
   const error = useSelector(selectEmailSequenceError);
   const success = useSelector(selectEmailSequenceSuccess);
 
-  // Local state for file, tier, and type
+  // Local state for file, tier, and fields
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedTiers, setSelectedTiers] = useState([]); // ["basic", "premium", "enterprise"]
+  const [sequenceName, setSequenceName] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [brainType, setBrainType] = useState("Architect");
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+
+  // Categories from store
+  const categories = useSelector((state) => state.emailSequence.categories || []);
+  const categoriesLoading = useSelector((state) => state.emailSequence.categoriesLoading);
 
   const isAllowedFile = (file) => {
     const name = file?.name?.toLowerCase() || "";
@@ -31,6 +40,8 @@ export default function EmailSequenceCard() {
       toast.success(success);
       setSelectedFile(null);
       setSelectedTiers([]);
+      setSequenceName("");
+      setSelectedCategory("");
       dispatch(clearSuccess());
     }
   }, [success, dispatch]);
@@ -41,6 +52,11 @@ export default function EmailSequenceCard() {
       dispatch(clearError());
     }
   }, [error, dispatch]);
+
+  // Load categories on mount
+  useEffect(() => {
+    dispatch(fetchEmailCategories());
+  }, [dispatch]);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -95,15 +111,58 @@ export default function EmailSequenceCard() {
       toast.error("Please select at least one tier");
       return;
     }
+
+    if (!selectedCategory) {
+      toast.error("Please select a category");
+      return;
+    }
+
+    if (!brainType) {
+      toast.error("Please select a brain type");
+      return;
+    }
     
     // Only one tier allowed per upload (based on backend model)
+    const tierMap = { basic: 'starter', premium: 'growth', enterprise: 'enterprise' };
+    const backendTier = tierMap[selectedTiers[0]] || 'starter';
+
     const payload = {
-      name: selectedFile.name,
-      tier: selectedTiers[0],
+      name: sequenceName?.trim() || selectedFile.name,
+      tier: backendTier,
       type: "file",
+      brainType,
+      category: selectedCategory,
       file: selectedFile,
     };
     dispatch(createEmailSequence(payload));
+  };
+
+  const handleStartAddCategory = () => {
+    setShowAddCategory(true);
+    setNewCategoryName("");
+  };
+
+  const handleSaveCategory = async () => {
+    const name = newCategoryName.trim();
+    if (!name) {
+      toast.error("Please enter a category name");
+      return;
+    }
+    try {
+      await dispatch(createEmailCategory(name)).unwrap?.();
+      await dispatch(fetchEmailCategories());
+      setSelectedCategory(name);
+      setShowAddCategory(false);
+      setNewCategoryName("");
+      toast.success("Category created");
+    } catch (e) {
+      toast.error(typeof e === 'string' ? e : 'Failed to create category');
+    }
+  };
+
+  const handleCancelAddCategory = () => {
+    setShowAddCategory(false);
+    setNewCategoryName("");
   };
 
   const handleManualEmailChange = (e) => {
@@ -148,24 +207,80 @@ export default function EmailSequenceCard() {
           type="text"
           placeholder="Input Field"
           className="w-full px-4 py-3 rounded border border-gray-500  text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
+          value={sequenceName}
+          onChange={(e) => setSequenceName(e.target.value)}
         />
       </div>
       <div className="mb-6">
-        <label className="block text-white text-base mb-2" htmlFor="sequence-category">
-          Select Category
-        </label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-white text-base" htmlFor="sequence-category">
+            Select Category
+          </label>
+          <button
+            type="button"
+            onClick={handleStartAddCategory}
+            className="text-xs px-3 py-1 border border-gray-500 text-white hover:bg-gray-700"
+          >
+            Add New
+          </button>
+        </div>
         <select
           id="sequence-category"
           className="w-full px-4 py-3 rounded border border-gray-500  text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
-          defaultValue=""
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          disabled={categoriesLoading}
         >
           <option value="" disabled>
-            Drop Down
+            {categoriesLoading ? 'Loading...' : 'Select a category'}
           </option>
-          {/* Example options */}
-          <option value="marketing">Marketing</option>
-          <option value="onboarding">Onboarding</option>
-          <option value="retention">Retention</option>
+          {categories.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+
+        {showAddCategory && (
+          <div className="mt-3 flex items-center gap-2">
+            <input
+              type="text"
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              placeholder="New category name"
+              className="flex-1 px-3 py-2 rounded border border-gray-500 bg-transparent text-gray-200 focus:outline-none focus:border-blue-500"
+            />
+            <button
+              type="button"
+              onClick={handleSaveCategory}
+              className="px-3 py-2 bg-cyan-400 text-black text-xs hover:bg-cyan-300"
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={handleCancelAddCategory}
+              className="px-3 py-2 border border-gray-500 text-white text-xs hover:bg-gray-700"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="mb-6">
+        <label className="block text-white text-base mb-2" htmlFor="brain-type">
+          Brain Type
+        </label>
+        <select
+          id="brain-type"
+          className="w-full px-4 py-3 rounded border border-gray-500  text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
+          value={brainType}
+          onChange={(e) => setBrainType(e.target.value)}
+        >
+          <option value="Architect">Architect</option>
+          <option value="Challenger">Challenger</option>
+          <option value="Synthesizer">Synthesizer</option>
+          <option value="Reflector">Reflector</option>
+          <option value="Catalyst">Catalyst</option>
         </select>
       </div>
 

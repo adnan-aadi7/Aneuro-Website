@@ -7,8 +7,19 @@ export const uploadPromptPack = createAsyncThunk(
   async (uploadData, { rejectWithValue }) => {
     try {
       const formData = new FormData();
+      // Required by backend: file, name, category, tier, status
       formData.append('file', uploadData.file);
+      formData.append('name', uploadData.name);
+      formData.append('category', uploadData.category);
       formData.append('tier', uploadData.tier);
+      formData.append('status', uploadData.status);
+      // Optional fields
+      if (uploadData.releaseDateTime) {
+        formData.append('releaseDateTime', uploadData.releaseDateTime);
+      }
+      if (uploadData.type) {
+        formData.append('type', uploadData.type); // prompt type used when saving first prompt from file
+      }
       
       const response = await axios.post('/prompt-packs/upload', formData, {
         headers: {
@@ -96,31 +107,7 @@ export const deletePromptPack = createAsyncThunk(
   }
 );
 
-export const bulkDeletePromptPacks = createAsyncThunk(
-  'promptPack/bulkDelete',
-  async (ids, { rejectWithValue }) => {
-    try {
-      const response = await axios.delete('/prompt-packs', {
-        data: { ids }
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to bulk delete prompt packs' });
-    }
-  }
-);
-
-export const addPromptToPack = createAsyncThunk(
-  'promptPack/addPrompt',
-  async ({ id, promptData }, { rejectWithValue }) => {
-    try {
-      const response = await axios.post(`/prompt-packs/${id}/prompts`, promptData);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to add prompt to pack' });
-    }
-  }
-);
+// Note: No bulk delete or add-prompt endpoints in backend routes; remove related thunks
 
 export const removePromptFromPack = createAsyncThunk(
   'promptPack/removePrompt',
@@ -369,48 +356,7 @@ const promptPackSlice = createSlice({
         state.error = action.payload?.message || 'Failed to delete prompt pack';
       });
 
-    // Bulk Delete
-    builder
-      .addCase(bulkDeletePromptPacks.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(bulkDeletePromptPacks.fulfilled, (state, action) => {
-        state.loading = false;
-        state.success = action.payload.message;
-        const deletedCount = action.payload.data.deletedCount;
-        state.packs = state.packs.filter(pack => !action.payload.data.deletedIds?.includes(pack._id));
-        state.stats.overall.totalPacks -= deletedCount;
-        if (state.currentPack && action.payload.data.deletedIds?.includes(state.currentPack._id)) {
-          state.currentPack = null;
-        }
-      })
-      .addCase(bulkDeletePromptPacks.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload?.message || 'Failed to bulk delete prompt packs';
-      });
-
-    // Add Prompt
-    builder
-      .addCase(addPromptToPack.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(addPromptToPack.fulfilled, (state, action) => {
-        state.loading = false;
-        state.success = action.payload.message;
-        const index = state.packs.findIndex(pack => pack._id === action.payload.data._id);
-        if (index !== -1) {
-          state.packs[index] = action.payload.data;
-        }
-        if (state.currentPack && state.currentPack._id === action.payload.data._id) {
-          state.currentPack = action.payload.data;
-        }
-      })
-      .addCase(addPromptToPack.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload?.message || 'Failed to add prompt to pack';
-      });
+    // No bulk delete or add prompt cases (not supported by backend)
 
     // Remove Prompt
     builder

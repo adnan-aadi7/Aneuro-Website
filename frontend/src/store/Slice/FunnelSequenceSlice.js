@@ -16,8 +16,24 @@ export const createFunnelTemplate = createAsyncThunk(
 
 export const createFunnelTemplateWithFile = createAsyncThunk(
   'funnelTemplate/createWithFile',
-  async (formData, { rejectWithValue }) => {
+  async (payload, { rejectWithValue }) => {
     try {
+      // Support both: direct FormData or plain object { file, name, category, tier, status, releaseDateTime? }
+      let formData;
+      if (payload instanceof FormData) {
+        formData = payload;
+      } else {
+        formData = new FormData();
+        formData.append('file', payload.file);
+        formData.append('name', payload.name);
+        formData.append('tier', payload.tier);
+        formData.append('status', payload.status);
+        formData.append('category', payload.category || '');
+        if (payload.releaseDateTime) {
+          formData.append('releaseDateTime', payload.releaseDateTime);
+        }
+      }
+
       const response = await axios.post('/funnel-templates/file', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -244,9 +260,12 @@ const funnelTemplateSlice = createSlice({
       .addCase(deleteFunnelTemplate.fulfilled, (state, action) => {
         state.loading = false;
         state.success = action.payload.message;
-        // Remove the deleted template from the list
-        // Note: Backend doesn't return the deleted ID, so we need to handle this differently
-        // The component should refresh the list after successful deletion
+        // Remove the deleted template from the list using id from thunk arg
+        const deletedId = action.meta.arg;
+        state.templates = state.templates.filter(template => template._id !== deletedId);
+        if (state.currentTemplate && state.currentTemplate._id === deletedId) {
+          state.currentTemplate = null;
+        }
       })
       .addCase(deleteFunnelTemplate.rejected, (state, action) => {
         state.loading = false;

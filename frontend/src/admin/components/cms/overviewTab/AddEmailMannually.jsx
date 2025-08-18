@@ -7,6 +7,7 @@ import KingIcon from "../../../../../public/icons/king.png";
 import StarIcon from "../../../../../public/icons/star.png";
 import {
   createEmailSequence,
+  fetchEmailCategories,
   selectEmailSequenceLoading,
   selectEmailSequenceError,
   selectEmailSequenceSuccess,
@@ -19,6 +20,8 @@ const AddEmailMannually = () => {
   const loading = useSelector(selectEmailSequenceLoading);
   const error = useSelector(selectEmailSequenceError);
   const success = useSelector(selectEmailSequenceSuccess);
+  const categories = useSelector((state) => state.emailSequence.categories || []);
+  const categoriesLoading = useSelector((state) => state.emailSequence.categoriesLoading);
 
   const editorRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -41,6 +44,7 @@ const AddEmailMannually = () => {
   const [sequenceName, setSequenceName] = useState("");
   const [category, setCategory] = useState("");
   const [selectedTier, setSelectedTier] = useState(""); // basic | premium | enterprise
+  const [brainType] = useState("Architect"); // default for manual
 
   // Execute formatting commands
   const executeCommand = (command, value = null) => {
@@ -149,6 +153,11 @@ const AddEmailMannually = () => {
     }
   }, [error, dispatch]);
 
+  // Load categories on mount
+  useEffect(() => {
+    dispatch(fetchEmailCategories());
+  }, [dispatch]);
+
   const handleSend = () => {
     const htmlContent = getHtmlContent();
     const plainTextContent = getPlainTextContent();
@@ -158,12 +167,32 @@ const AddEmailMannually = () => {
       return;
     }
 
+    if (!category) {
+      toast.error("Please select a category");
+      return;
+    }
+
+    if (!selectedTier) {
+      toast.error("Please select a tier");
+      return;
+    }
+
+    // Map UI tier to backend tier values
+    const tierMap = { basic: 'starter', premium: 'growth', enterprise: 'enterprise' };
+    const backendTier = tierMap[selectedTier] || 'starter';
+
+    // Build emails array per backend contract
+    const emails = [
+      { content: htmlContent, type: brainType }
+    ];
+
     const payload = {
       name: sequenceName?.trim() || `Manual Email - ${new Date().toLocaleString()}`,
-      tier: selectedTier || "basic",
+      tier: backendTier,
       type: "manual",
-      manualContent: htmlContent, // Use HTML content for rich formatting
-      plainTextContent: plainTextContent
+      brainType,
+      category,
+      emails
     };
 
     dispatch(createEmailSequence(payload));
@@ -248,11 +277,11 @@ const AddEmailMannually = () => {
             className="w-full px-4 py-3 rounded border  border-gray-500 text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition bg-[#2A2A39]"
           >
             <option value="" disabled>
-              Drop Down
+              {categoriesLoading ? 'Loading...' : 'Select a category'}
             </option>
-            <option value="marketing">Marketing</option>
-            <option value="onboarding">Onboarding</option>
-            <option value="retention">Retention</option>
+            {categories.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
           </select>
         </div>
       </div>
