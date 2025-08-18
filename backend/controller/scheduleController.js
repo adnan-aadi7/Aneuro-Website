@@ -1,19 +1,36 @@
 import EmailSequence from '../model/EmailSequence.js';
 import FunnelTemplate from '../model/FunnelTemplate.js';
-import PromptPack from '../model/PromptPack.js';
-// Utility to update expired schedules
+import PromptPack from '../model/Promptpack.js';
+
 export const updateStatuses = async () => {
   const now = new Date();
 
-  const updateQuery = { status: 'scheduled', scheduledDate: { $lte: now } };
-  const updateData = { $set: { status: 'active' } };
+  const models = [EmailSequence, PromptPack, FunnelTemplate];
 
-  await Promise.all([
-    EmailSequence.updateMany(updateQuery, updateData),
-    PromptPack.updateMany(updateQuery, updateData),
-    FunnelTemplate.updateMany(updateQuery, updateData),
-  ]);
+  for (const Model of models) {
+    // Debug: show scheduled docs
+    const docs = await Model.find({ status: "scheduled" });
+    console.log(` ${Model.modelName}: found ${docs.length} scheduled docs at ${now.toISOString()}`);
+
+    docs.forEach(d => {
+      console.log(
+        `-- ${d._id} | release=${d.releaseDateTime?.toISOString()} | status=${d.status}`
+      );
+    });
+
+    const result = await Model.updateMany(
+      { status: "scheduled", releaseDateTime: { $lte: now } },
+      { $set: { status: "active" } }
+    );
+
+    if (result.modifiedCount > 0) {
+      console.log(`✅ Updated ${result.modifiedCount} docs to active in ${Model.modelName}`);
+    }
+  }
 };
+
+
+
 
 export const getAllScheduled = async (req, res) => {
   try {
@@ -104,54 +121,36 @@ export const getAllScheduled = async (req, res) => {
 };
 
 
-
-
 export const scheduleContent = async (req, res) => {
   try {
     const { id, modelType, scheduledDate, scheduledTime, tier } = req.body;
 
-    // Combine into a single Date object
-    const releaseDateTime = new Date(`${scheduledDate}T${scheduledTime}:00Z`);
+    // Parse datetime WITHOUT forcing UTC ("Z")
+    const releaseDateTime = new Date(`${scheduledDate}T${scheduledTime}:00`);
+    const now = new Date();
 
-    // Pick the correct model
-    const models = {
-      EmailSequence,
-      PromptPack,
-      FunnelTemplate,
-    };
+    const status = releaseDateTime <= now ? "active" : "scheduled";
+
+    const models = { EmailSequence, PromptPack, FunnelTemplate };
     const Model = models[modelType];
     if (!Model) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid modelType",
-      });
+      return res.status(400).json({ success: false, message: "Invalid modelType" });
     }
 
-    // Prepare update data
-    const updateData = {
-      releaseDateTime,
-      scheduledDate,
-      scheduledTime,
-      status: "scheduled",
-    };
-
-    // Add tier if provided
-    if (tier) {
-      updateData.tier = tier;
-    }
-
-    // Update the document
     const updatedDoc = await Model.findByIdAndUpdate(
       id,
-      updateData,
+      {
+        releaseDateTime,
+        scheduledDate,
+        scheduledTime,
+        status,
+        ...(tier && { tier })
+      },
       { new: true, runValidators: true }
     );
 
     if (!updatedDoc) {
-      return res.status(404).json({
-        success: false,
-        message: "Content not found",
-      });
+      return res.status(404).json({ success: false, message: "Content not found" });
     }
 
     res.json({
@@ -161,17 +160,13 @@ export const scheduleContent = async (req, res) => {
     });
   } catch (error) {
     console.error("Error scheduling content:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
 
 
 // UPDATE Scheduled Content
-
 export const updateSchedule = async (req, res) => {
   try {
     const { id, modelType, scheduledDate, scheduledTime, status, tier } = req.body;
@@ -190,13 +185,20 @@ export const updateSchedule = async (req, res) => {
     }
 
     let updateData = {};
+
     if (scheduledDate && scheduledTime) {
-      updateData.releaseDateTime = new Date(`${scheduledDate}T${scheduledTime}:00Z`);
+      const releaseDateTime = new Date(`${scheduledDate}T${scheduledTime}:00Z`);
+      const now = new Date();
+      updateData.releaseDateTime = releaseDateTime;
       updateData.scheduledDate = scheduledDate;
       updateData.scheduledTime = scheduledTime;
+
+      // Auto set status if release time is already passed
+      updateData.status = releaseDateTime <= now ? "active" : "scheduled";
     }
+
     if (status) updateData.status = status;
-    if (tier) updateData.tier = tier;
+    if (tier) updateData.tier = tier; // allow tier updates
 
     const updatedDoc = await Model.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
 
@@ -216,6 +218,7 @@ export const updateSchedule = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 // DELETE Scheduled Content
 export const deleteSchedule = async (req, res) => {
@@ -313,3 +316,26 @@ export const getScheduledStats = async (req, res) => {
   }
 };
 
+
+export const getAllScheduledWithoutRelease = async (req, res) => {
+  try {
+    const filter = {
+      $or: [{ releaseDateTime: { $exists: false } }, { releaseDateTime: null }],
+      status: "scheduled",
+    };
+
+    const [funnels, emailSequences, promptPacks] = await Promise.all([
+      FunnelTemplate.find(filter),
+      EmailSequence.find(filter),
+      PromptPack.find(filter),
+    ]);
+
+    res.json({
+      funnels,
+      emailSequences,
+      promptPacks,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

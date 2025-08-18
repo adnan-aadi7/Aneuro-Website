@@ -2,23 +2,23 @@ import EmailSequence from "../model/EmailSequence.js";
 import { uploadToCloudinary } from "../middleware/uploadToCloudinary.js";
 import { logAction } from "../config/logAction.js";
 
+
 export async function create(req, res) {
   try {
-    const {
+    let {
       name,
-      emailCount,
-      emails,
+      emails, 
       tier,
       status,
       type,
       brainType,
-      emailTemplate,
-      releaseDateTime
+      releaseDateTime,
+      category
     } = req.body;
 
-    let fileUrl = req.body.fileUrl;
+    let fileUrl;
 
-    // ✅ Required field validation
+    // ✅ Validate required fields
     if (!name || !tier || !type || !brainType) {
       return res.status(400).json({
         success: false,
@@ -26,8 +26,8 @@ export async function create(req, res) {
       });
     }
 
-    // ✅ Validate enums
-    const allowedTiers = ['basic', 'premium', 'enterprise'];
+    // ✅ Enum validation
+    const allowedTiers = ['starter', 'growth', 'enterprise'];
     const allowedTypes = ['manual', 'file'];
     const allowedBrainTypes = ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst'];
 
@@ -41,10 +41,12 @@ export async function create(req, res) {
       return res.status(400).json({ success: false, message: 'Invalid brainType value' });
     }
 
-    // ✅ Handle file upload for "file" type
+    let emailArray = [];
+
+    // ✅ File type handling
     if (type === 'file') {
       if (!req.file || !req.file.buffer) {
-        return res.status(400).json({ success: false, message: 'File is required' });
+        return res.status(400).json({ success: false, message: 'File is required for file type' });
       }
 
       const uploadResult = await uploadToCloudinary(req.file.buffer);
@@ -56,25 +58,54 @@ export async function create(req, res) {
       }
 
       fileUrl = uploadResult.secure_url;
+      emailArray.push({ content: fileUrl, type: brainType });
+
+    } else if (type === 'manual') {
+      // ✅ Parse emails if it's a JSON string
+      if (typeof emails === 'string') {
+        try {
+          emails = JSON.parse(emails);
+        } catch (err) {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid JSON format for emails'
+          });
+        }
+      }
+
+      if (!Array.isArray(emails) || emails.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Emails array is required for manual type'
+        });
+      }
+
+      emailArray = emails.map(email => ({
+        content: email.content || '',
+        type: email.type || brainType
+      }));
     }
 
-    // ✅ Create new email sequence
-    const newSequence = new EmailSequence({
-      name,
-      emailCount: Number(emailCount) || 0,
-      emails: Number(emails) || 0,
-      tier,
-      releaseDateTime: releaseDateTime || null,
-      status: status || 'scheduled',
-      type,
-      brainType,
-      fileUrl,
-      emailTemplate: emailTemplate || '',
-      usage: { count: 0, users: [] }
-    });
+   if (!category) {
+  return res.status(400).json({ success: false, message: 'Category is required' });
+}
+
+const newSequence = new EmailSequence({
+  name,
+  tier,
+  category, 
+  releaseDateTime: releaseDateTime || null,
+  status: status || 'scheduled',
+  type,
+  brainType,
+  fileUrl,
+  emails: emailArray,
+  usage: { count: 0, users: [] }
+});
 
     const savedSequence = await newSequence.save();
 
+    // ✅ Log action
     await logAction({
       action: "UPLOAD",
       user: {
@@ -101,6 +132,7 @@ export async function create(req, res) {
     });
   }
 }
+
 
 
 
@@ -187,61 +219,92 @@ export async function getById(req, res) {
 export async function update(req, res) {
   try {
     const { id } = req.params;
-    const updateData = req.body;
+    let { name, emails, tier, status, type, brainType, releaseDateTime,category } = req.body;
 
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ success: false, message: 'Invalid ID format' });
     }
 
-    // Remove non-updatable fields
-    delete updateData.usage;
-    delete updateData.createdAt;
-    delete updateData.updatedAt;
-    delete updateData._id;
-
-    // Validation for "file" type sequences
-    if (updateData.type === 'file' && !updateData.fileUrl) {
-      return res.status(400).json({ success: false, message: 'File URL is required' });
-    }
-
-    // Ensure emailTemplate is a string (HTML or plain text)
-    if (typeof updateData.emailTemplate !== 'string') {
-      updateData.emailTemplate = '';
-    }
-
-    // Update the sequence
-    const updatedSequence = await EmailSequence.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    }).populate('usage.users', 'name email');
-
-    if (!updatedSequence) {
+    const existingSequence = await EmailSequence.findById(id);
+    if (!existingSequence) {
       return res.status(404).json({ success: false, message: 'Email sequence not found' });
     }
- await logAction({
-      action: "UPDATE",
-      user: {
-        id: req.user?.id,
-        email: req.user?.email
+
+    let fileUrl = existingSequence.fileUrl;
+    let emailArray = existingSequence.emails; // start with existing emails
+
+    // ✅ Handle file type
+    if (type === 'file') {
+      if (req.file && req.file.buffer) {
+        const uploadResult = await uploadToCloudinary(req.file.buffer);
+        if (!uploadResult?.secure_url) {
+          return res.status(500).json({ success: false, message: 'Failed to upload file to Cloudinary' });
+        }
+        fileUrl = uploadResult.secure_url;
+        emailArray.push({ content: fileUrl, type: brainType || existingSequence.brainType });
+      }
+    }
+
+    // ✅ Handle manual type (append instead of overwrite)
+    if (type === 'manual') {
+      if (typeof emails === 'string') {
+        try {
+          emails = JSON.parse(emails);
+        } catch (err) {
+          return res.status(400).json({ success: false, message: 'Invalid JSON format for emails' });
+        }
+      }
+
+      if (Array.isArray(emails) && emails.length > 0) {
+        const newEmails = emails.map(email => ({
+          content: email.content || '',
+          type: email.type || brainType || existingSequence.brainType
+        }));
+
+        emailArray = [...emailArray, ...newEmails]; // append new emails
+      }
+    }
+
+    const updatedSequence = await EmailSequence.findByIdAndUpdate(
+      id,
+      {
+        name: name ?? existingSequence.name,
+        tier: tier ?? existingSequence.tier,
+        status: status ?? existingSequence.status,
+            category: category ?? existingSequence.category, 
+        type: type ?? existingSequence.type,
+        brainType: brainType ?? existingSequence.brainType,
+        releaseDateTime: releaseDateTime ?? existingSequence.releaseDateTime,
+        fileUrl,
+        emails: emailArray
       },
-      affectedAsset: `${updatedSequence.name}`,
+      { new: true, runValidators: true }
+    ).populate('usage.users', 'name email');
+
+    await logAction({
+      action: "UPDATE",
+      user: { id: req.user?.id, email: req.user?.email },
+      affectedAsset: updatedSequence.name,
       contentType: "email-sequence",
       description: `Updated email sequence: ${updatedSequence.name}`,
       req
     });
+
     res.status(200).json({
       success: true,
       message: 'Email sequence updated successfully',
-      data: updatedSequence,
+      data: updatedSequence
     });
+
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error updating email sequence',
-      error: error.message,
+      error: error.message
     });
   }
 }
+
 
 // DELETE
 export async function deleteSequence(req, res) {

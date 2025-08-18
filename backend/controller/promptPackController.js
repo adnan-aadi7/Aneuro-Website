@@ -6,46 +6,57 @@ import { logAction } from "../config/logAction.js";
 export const uploadPromptPack = async (req, res) => {
   try {
     // 1️⃣ Validate file
-    if (!req.file)
+    if (!req.file) {
       return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
 
-    if (!req.body.tier)
-      return res.status(400).json({ success: false, message: 'Tier is required' });
+    const { name, category, tier, status, type, releaseDateTime } = req.body;
 
-    // 2️⃣ Upload file to Cloudinary
+    // 2️⃣ Validate required fields
+    if (!name || !category || !tier || !status) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name, category, tier, and status are required'
+      });
+    }
+
+    // 3️⃣ Upload file to Cloudinary
     const cloudinaryResult = await uploadToCloudinary(req.file.buffer);
     const fileUrl = cloudinaryResult?.secure_url;
 
-    if (!fileUrl)
+    if (!fileUrl) {
       return res.status(500).json({ success: false, message: 'Failed to upload file' });
+    }
 
     const filename = req.file.originalname.toLowerCase();
 
-    // 3️⃣ Only allow specific file types
+    // 4️⃣ Only allow specific file types
     const allowedExtensions = ['.pdf', '.docx', '.md', '.html'];
     const ext = path.extname(filename);
 
-    if (!allowedExtensions.includes(ext))
+    if (!allowedExtensions.includes(ext)) {
       return res.status(400).json({ success: false, message: 'Unsupported file type' });
+    }
 
-    // 4️⃣ Save PromptPack to MongoDB
+    // 5️⃣ Save PromptPack to MongoDB
     const newPack = new PromptPack({
-      name: path.parse(req.file.originalname).name,
-      category: req.body.category || 'General',
-      tier: req.body.tier,
-      status: req.body.status || 'scheduled',
+      name,
+      category,
+      tier,
+      status,
       fileUrl,
-      releaseDateTime: req.body.releaseDateTime || new Date(),
+  releaseDateTime: releaseDateTime ? new Date(releaseDateTime) : null, 
       prompts: [
         {
           content: fileUrl,
-          type: req.body.type || 'Architect', 
+          type: type || 'Architect',
         },
       ],
     });
 
     const savedPack = await newPack.save();
- await logAction({
+
+    await logAction({
       action: "UPLOAD",
       user: {
         id: req.user?.id,
@@ -53,9 +64,10 @@ export const uploadPromptPack = async (req, res) => {
       },
       affectedAsset: savedPack.name,
       contentType: "prompt-pack",
-      description: "Created new prompt pack",
+      description: "Uploaded new prompt pack",
       req
     });
+
     res.status(201).json({
       success: true,
       message: 'Prompt pack uploaded successfully',
@@ -67,6 +79,7 @@ export const uploadPromptPack = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 
 
@@ -87,7 +100,7 @@ export async function create(req, res) {
       tier,
       status,
       prompts: prompts || [],
-      releaseDateTime: releaseDateTime ? new Date(releaseDateTime) : new Date()
+  releaseDateTime: releaseDateTime ? new Date(releaseDateTime) : null, 
     });
 
     const savedPromptPack = await newPromptPack.save();

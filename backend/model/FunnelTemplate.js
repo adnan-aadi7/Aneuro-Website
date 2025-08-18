@@ -7,7 +7,7 @@ const FunnelTemplateSchema = new mongoose.Schema({
   category: { type: String },
   tier: { 
     type: String, 
-    enum: ['basic', 'premium', 'enterprise'], 
+    enum: ["starter", "growth", "enterprise"], 
     required: true 
   },
   brainType: {
@@ -16,7 +16,7 @@ const FunnelTemplateSchema = new mongoose.Schema({
   },
   status: { 
     type: String, 
-    enum: ['active', 'scheduled', 'inactive']
+    enum: ['active', 'scheduled']
   },
   usage: { type: Number, default: 0 },         
   conversions: { type: Number, default: 0 },

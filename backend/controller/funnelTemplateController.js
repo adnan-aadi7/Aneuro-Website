@@ -3,11 +3,11 @@ import { uploadToCloudinary } from '../middleware/uploadToCloudinary.js';
 import path from 'path';
 import { logAction } from "../config/logAction.js";
 
-// ✅ Create Funnel Template with file upload
 export const createFunnelTemplateWithFile = async (req, res) => {
   try {
-    const { name, tier } = req.body;
+    const { name, tier, status, category } = req.body;
 
+    // Required fields validation
     if (!name || !tier) {
       return res.status(400).json({
         success: false,
@@ -22,43 +22,58 @@ export const createFunnelTemplateWithFile = async (req, res) => {
       });
     }
 
+    // Allowed file types
     const allowedExtensions = ['.pdf', '.docx', '.md', '.html'];
     const ext = path.extname(req.file.originalname.toLowerCase());
-
     if (!allowedExtensions.includes(ext)) {
-      return res.status(400).json({ success: false, message: 'Unsupported file type' });
+      return res.status(400).json({
+        success: false,
+        message: 'Unsupported file type',
+      });
     }
 
+    // Upload file to Cloudinary
     const uploadResult = await uploadToCloudinary(req.file.buffer, 'funnel_templates');
-
     if (!uploadResult?.secure_url) {
-      return res.status(500).json({ success: false, message: 'File upload failed' });
+      return res.status(500).json({
+        success: false,
+        message: 'File upload failed',
+      });
     }
 
+    // Create and save template
     const newTemplate = new FunnelTemplate({
       name,
       tier,
+      category: category || '',
+      status: status || 'scheduled',
       fileUrl: uploadResult.secure_url,
-      content: uploadResult.secure_url, 
-      status: 'scheduled',
+      content: uploadResult.secure_url,
     });
 
     await newTemplate.save();
- await logAction({
-      action: "UPLOAD",
+
+    // Log action
+    await logAction({
+      action: 'UPLOAD',
       user: { id: req.user?.id, email: req.user?.email },
       affectedAsset: newTemplate.name,
-      contentType: "funnel-template",
-      description: "Created new funnel template with file",
-      req
+      contentType: 'funnel-template',
+      description: 'Created new funnel template with file',
+      req,
     });
+
+    // Response
     res.status(201).json({
       success: true,
       message: 'Funnel Template created successfully',
       data: newTemplate,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
@@ -91,7 +106,7 @@ export const createFunnelTemplate = async (req, res) => {
       content: content || fileUrl || '', // prefer content, fallback to fileUrl
       fileUrl: fileUrl || '',
       userRating,
-      releaseDateTime: releaseDateTime ? new Date(releaseDateTime) : new Date(),
+      releaseDateTime: releaseDateTime ? new Date(releaseDateTime) : null, 
     });
 
     await newTemplate.save();
