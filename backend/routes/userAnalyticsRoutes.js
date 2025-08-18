@@ -3,7 +3,10 @@ import {
   getNewSubscribersPerWeek,
   getDelinquentSubscribers,
   getAvgQuizCompletionTime,
-  getUserAudienceStats
+  getUserAudienceStats,
+  getTotalRevenue,
+  getStripeBalance,
+  getLatestInboxMessages
 } from "../controller/userAnalyticsController.js";
 
 const router = express.Router();
@@ -140,5 +143,62 @@ router.get("/avg-completion-time", getAvgQuizCompletionTime);
  *         description: Stats about the user's audience quizzes
  */
 router.get("/user/:userId/audience-stats", getUserAudienceStats);
+
+/**
+ * @swagger
+ * /api/user-analytics/total-revenue:
+ *   get:
+ *     summary: Get total revenue from successful charges (Stripe)
+ *     tags: [Admin Dashboard]
+ *     responses:
+ *       200:
+ *         description: Total revenue
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 totalCents:
+ *                   type: integer
+ *                 totalDollars:
+ *                   type: number
+ *                 formatted:
+ *                   type: string
+ */
+router.get("/total-revenue", getTotalRevenue);
+
+/**
+ * @swagger
+ * /api/user-analytics/stripe-balance:
+ *   get:
+ *     summary: Get Stripe balance (available and pending) to match dashboard
+ *     tags: [Admin Dashboard]
+ *     responses:
+ *       200:
+ *         description: Stripe balance summary
+ */
+router.get("/stripe-balance", getStripeBalance);
+
+/**
+ * @swagger
+ * /api/user-analytics/inbox/latest:
+ *   get:
+ *     summary: Get latest inbox messages (tickets)
+ *     tags: [Admin Dashboard]
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 5
+ *     responses:
+ *       200:
+ *         description: Latest messages
+ */
+router.get('/inbox/latest', getLatestInboxMessages);
 
 export default router;

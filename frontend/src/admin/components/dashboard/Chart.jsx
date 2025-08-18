@@ -1,4 +1,10 @@
-import React from "react";
+import React, { useEffect, useMemo } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchNewSubscribersPerWeek,
+  selectNewSubscribersPerWeek,
+  selectAdminDashboardLoading,
+} from "../../../store/Slice/DashboardSliceAdmin";
 import {
   AreaChart,
   Area,
@@ -8,22 +14,50 @@ import {
   CartesianGrid,
 } from "recharts";
 
-const data = [
-  { month: "Jan", value: 180 },
-  { month: "Feb", value: 220 },
-  { month: "Mar", value: 200 },
-  { month: "Apr", value: 320 },
-  { month: "May", value: 350 },
-  { month: "Jun", value: 480 },
-  { month: "Jul", value: 280 },
-  { month: "Aug", value: 240 },
-  { month: "Sep", value: 350 },
-  { month: "Oct", value: 220 },
-  { month: "Nov", value: 380 },
-  { month: "Dec", value: 420 },
+const MONTH_LABELS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 ];
 
+function getDateOfISOWeek(isoWeek, year) {
+  const simple = new Date(year, 0, 1 + (isoWeek - 1) * 7);
+  const dow = simple.getDay();
+  const ISOweekStart = simple;
+  if (dow <= 4) {
+    ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+  } else {
+    ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+  }
+  return ISOweekStart;
+}
+
 export default function Chart() {
+  const dispatch = useDispatch();
+  const weeklySubs = useSelector(selectNewSubscribersPerWeek);
+  const loading = useSelector(selectAdminDashboardLoading);
+
+  useEffect(() => {
+    dispatch(fetchNewSubscribersPerWeek());
+  }, [dispatch]);
+
+  const data = useMemo(() => {
+    // Initialize months with 0
+    const monthTotals = new Array(12).fill(0);
+    if (Array.isArray(weeklySubs)) {
+      weeklySubs.forEach((item) => {
+        const year = item?._id?.year;
+        const week = item?._id?.week;
+        const count = item?.count || 0;
+        if (year && week) {
+          const d = getDateOfISOWeek(week, year);
+          const m = d.getMonth();
+          monthTotals[m] += count;
+        }
+      });
+    }
+    return MONTH_LABELS.map((label, idx) => ({ month: label, value: monthTotals[idx] }));
+  }, [weeklySubs]);
+
   return (
     <div className="w-full h-96 bg-[#2A2A39] p-6 mt-10 pb-15">
       <h2 className="text-white text-xl font-semibold mb-6">MRR</h2>
@@ -61,8 +95,7 @@ export default function Chart() {
             axisLine={false}
             tickLine={false}
             tick={{ fill: "#94a3b8", fontSize: 12 }}
-            domain={[0, 500]}
-            ticks={[0, 100, 200, 300, 400, 500]}
+            domain={[0, 'dataMax + 10']}
             className="text-slate-400"
           />
           <Area
@@ -72,6 +105,7 @@ export default function Chart() {
             strokeWidth={2}
             fill="url(#chartGradient)"
             fillOpacity={1}
+            isAnimationActive={!loading.newSubscribers}
           />
         </AreaChart>
       </ResponsiveContainer>

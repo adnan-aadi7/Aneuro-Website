@@ -8,6 +8,7 @@ import promptPackReducer from "./Slice/PromptPacksSlice";
 import logReducer from "./Slice/LogSlice";
 import scheduleReducer from "./Slice/ScheduleSlice";
 import activityReducer from "./Slice/ActivitySlice";
+import adminDashboardReducer from "./Slice/DashboardSliceAdmin";
 
 export const store = configureStore({
   reducer: {
@@ -20,5 +21,6 @@ export const store = configureStore({
     systemLogs: logReducer,
     schedule: scheduleReducer,
     activities: activityReducer,
+    adminDashboard: adminDashboardReducer,
   },
 });
