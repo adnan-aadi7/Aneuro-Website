@@ -6,7 +6,12 @@ import {
   getUserAudienceStats,
   getTotalRevenue,
   getStripeBalance,
-  getLatestInboxMessages
+  getLatestInboxMessages,
+  getDashboardAnalytics,
+  getNewSubscribersAnalytics,
+  getDelinquentSubscribersAnalytics,
+  getAvgQuizCompletionTimeAnalytics,
+  getRevenueAnalytics
 } from "../controller/userAnalyticsController.js";
 
 const router = express.Router();
@@ -200,5 +205,129 @@ router.get("/stripe-balance", getStripeBalance);
  *         description: Latest messages
  */
 router.get('/inbox/latest', getLatestInboxMessages);
+
+/**
+ * @swagger
+ * /api/user-analytics/dashboard:
+ *   get:
+ *     summary: Get comprehensive dashboard analytics with dynamic percentages and this week values
+ *     tags: [Admin Dashboard]
+ *     responses:
+ *       200:
+ *         description: Complete dashboard analytics data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     newSubscribers:
+ *                       type: object
+ *                       properties:
+ *                         thisWeek:
+ *                           type: integer
+ *                         percentage:
+ *                           type: number
+ *                         thisWeekFormatted:
+ *                           type: string
+ *                         trend:
+ *                           type: string
+ *                           enum: [up, down]
+ *                     delinquentSubscribers:
+ *                       type: object
+ *                       properties:
+ *                         thisWeek:
+ *                           type: integer
+ *                         percentage:
+ *                           type: number
+ *                         thisWeekFormatted:
+ *                           type: string
+ *                         trend:
+ *                           type: string
+ *                           enum: [up, down]
+ *                     avgQuizCompletionTime:
+ *                       type: object
+ *                       properties:
+ *                         thisWeek:
+ *                           type: number
+ *                         percentage:
+ *                           type: number
+ *                         thisWeekFormatted:
+ *                           type: string
+ *                         trend:
+ *                           type: string
+ *                           enum: [up, down]
+ *                         formatted:
+ *                           type: string
+ *                     revenue:
+ *                       type: object
+ *                       properties:
+ *                         thisWeek:
+ *                           type: integer
+ *                         percentage:
+ *                           type: number
+ *                         thisWeekFormatted:
+ *                           type: string
+ *                         trend:
+ *                           type: string
+ *                           enum: [up, down]
+ *                         formatted:
+ *                           type: string
+ */
+router.get('/dashboard', getDashboardAnalytics);
+
+/**
+ * @swagger
+ * /api/user-analytics/new-subscribers-analytics:
+ *   get:
+ *     summary: Get new subscribers analytics with dynamic percentage and this week value
+ *     tags: [Admin Dashboard]
+ *     responses:
+ *       200:
+ *         description: New subscribers analytics
+ */
+router.get('/new-subscribers-analytics', getNewSubscribersAnalytics);
+
+/**
+ * @swagger
+ * /api/user-analytics/delinquent-subscribers-analytics:
+ *   get:
+ *     summary: Get delinquent subscribers analytics with dynamic percentage and this week value
+ *     tags: [Admin Dashboard]
+ *     responses:
+ *       200:
+ *         description: Delinquent subscribers analytics
+ */
+router.get('/delinquent-subscribers-analytics', getDelinquentSubscribersAnalytics);
+
+/**
+ * @swagger
+ * /api/user-analytics/avg-completion-time-analytics:
+ *   get:
+ *     summary: Get average quiz completion time analytics with dynamic percentage and this week value
+ *     tags: [Admin Dashboard]
+ *     responses:
+ *       200:
+ *         description: Average quiz completion time analytics
+ */
+router.get('/avg-completion-time-analytics', getAvgQuizCompletionTimeAnalytics);
+
+/**
+ * @swagger
+ * /api/user-analytics/revenue-analytics:
+ *   get:
+ *     summary: Get revenue analytics with dynamic percentage and this week value
+ *     tags: [Admin Dashboard]
+ *     responses:
+ *       200:
+ *         description: Revenue analytics
+ */
+router.get('/revenue-analytics', getRevenueAnalytics);
 
 export default router;

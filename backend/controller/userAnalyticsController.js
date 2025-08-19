@@ -330,3 +330,613 @@ export const getLatestInboxMessages = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ✅ 8. Dynamic Percentage Changes and This Week Values
+export const getDashboardAnalytics = async (req, res) => {
+  try {
+    const now = new Date();
+    
+    // Calculate date ranges
+    const startOfThisWeek = new Date(now);
+    startOfThisWeek.setHours(0, 0, 0, 0);
+    startOfThisWeek.setDate(now.getDate() - now.getDay());
+    
+    const startOfLastWeek = new Date(startOfThisWeek);
+    startOfLastWeek.setDate(startOfThisWeek.getDate() - 7);
+    
+    const endOfLastWeek = new Date(startOfThisWeek);
+    endOfLastWeek.setMilliseconds(-1);
+
+    // 1. New Subscribers Analytics
+    const newSubscribersThisWeek = await User.countDocuments({
+      createdAt: { $gte: startOfThisWeek, $lte: now }
+    });
+    
+    const newSubscribersLastWeek = await User.countDocuments({
+      createdAt: { $gte: startOfLastWeek, $lte: endOfLastWeek }
+    });
+    
+    const newSubscribersPercentage = newSubscribersLastWeek > 0 
+      ? parseFloat(((newSubscribersThisWeek - newSubscribersLastWeek) / newSubscribersLastWeek * 100).toFixed(1))
+      : 0; // Show 0% when no previous data
+
+    // Debug logging removed
+
+    // 2. Delinquent Subscribers Analytics
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    
+    const delinquentThisWeek = await User.countDocuments({
+      $and: [
+        {
+          $or: [
+            { "subscription.status": { $in: ["inactive", "canceled"] } },
+            { lastLogin: { $exists: true, $lt: ninetyDaysAgo } }
+          ]
+        },
+        {
+          $or: [
+            { updatedAt: { $gte: startOfThisWeek, $lte: now } },
+            { lastLogin: { $gte: startOfThisWeek, $lte: now } }
+          ]
+        }
+      ]
+    });
+    
+    const delinquentLastWeek = await User.countDocuments({
+      $and: [
+        {
+          $or: [
+            { "subscription.status": { $in: ["inactive", "canceled"] } },
+            { lastLogin: { $exists: true, $lt: ninetyDaysAgo } }
+          ]
+        },
+        {
+          $or: [
+            { updatedAt: { $gte: startOfLastWeek, $lte: endOfLastWeek } },
+            { lastLogin: { $gte: startOfLastWeek, $lte: endOfLastWeek } }
+          ]
+        }
+      ]
+    });
+    
+    const delinquentPercentage = delinquentLastWeek > 0 
+      ? parseFloat(((delinquentThisWeek - delinquentLastWeek) / delinquentLastWeek * 100).toFixed(1))
+      : 0; // Show 0% when no previous data
+
+    // Debug logging removed
+
+    // 3. Average Quiz Completion Time Analytics
+    const avgTimeThisWeek = await QuizSession.aggregate([
+      {
+        $match: { 
+          is_completed: true,
+          createdAt: { $gte: startOfThisWeek, $lte: now }
+        }
+      },
+      {
+        $project: {
+          duration: {
+            $divide: [
+              { $subtract: ["$updatedAt", "$createdAt"] },
+              1000
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          avgCompletionTimeSec: { $avg: "$duration" }
+        }
+      }
+    ]);
+
+    const avgTimeLastWeek = await QuizSession.aggregate([
+      {
+        $match: { 
+          is_completed: true,
+          createdAt: { $gte: startOfLastWeek, $lte: endOfLastWeek }
+        }
+      },
+      {
+        $project: {
+          duration: {
+            $divide: [
+              { $subtract: ["$updatedAt", "$createdAt"] },
+              1000
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          avgCompletionTimeSec: { $avg: "$duration" }
+        }
+      }
+    ]);
+
+    const avgTimeThisWeekSec = avgTimeThisWeek[0]?.avgCompletionTimeSec || 0;
+    const avgTimeLastWeekSec = avgTimeLastWeek[0]?.avgCompletionTimeSec || 0;
+    
+    const avgTimePercentage = avgTimeLastWeekSec > 0 
+      ? parseFloat(((avgTimeThisWeekSec - avgTimeLastWeekSec) / avgTimeLastWeekSec * 100).toFixed(1))
+      : 0; // Show 0% when no previous data
+
+    // Debug logging removed
+
+    // 4. Revenue Analytics
+    const stripeSecret = process.env.STRIPE_SECRET_KEY;
+    let revenueThisWeek = 0;
+    let revenueLastWeek = 0;
+
+    if (stripeSecret) {
+      try {
+        const stripe = new Stripe(stripeSecret);
+        
+        // This week revenue
+        const thisWeekCharges = await stripe.charges.list({
+          created: {
+            gte: Math.floor(startOfThisWeek.getTime() / 1000),
+            lte: Math.floor(now.getTime() / 1000)
+          },
+          limit: 100
+        });
+        
+        // Last week revenue
+        const lastWeekCharges = await stripe.charges.list({
+          created: {
+            gte: Math.floor(startOfLastWeek.getTime() / 1000),
+            lte: Math.floor(endOfLastWeek.getTime() / 1000)
+          },
+          limit: 100
+        });
+
+        revenueThisWeek = thisWeekCharges.data
+          .filter(ch => ch.paid && ch.status === 'succeeded')
+          .reduce((sum, ch) => sum + Math.max((ch.amount || 0) - (ch.amount_refunded || 0), 0), 0);
+
+        revenueLastWeek = lastWeekCharges.data
+          .filter(ch => ch.paid && ch.status === 'succeeded')
+          .reduce((sum, ch) => sum + Math.max((ch.amount || 0) - (ch.amount_refunded || 0), 0), 0);
+      } catch (error) {
+        console.error('Stripe error:', error);
+        // Fallback to DB
+        const thisWeekPayments = await Payment.aggregate([
+          { 
+            $match: { 
+              status: { $in: ["succeeded", "paid"] },
+              createdAt: { $gte: startOfThisWeek, $lte: now }
+            } 
+          },
+          { $group: { _id: null, totalCents: { $sum: "$amount" } } }
+        ]);
+        
+        const lastWeekPayments = await Payment.aggregate([
+          { 
+            $match: { 
+              status: { $in: ["succeeded", "paid"] },
+              createdAt: { $gte: startOfLastWeek, $lte: endOfLastWeek }
+            } 
+          },
+          { $group: { _id: null, totalCents: { $sum: "$amount" } } }
+        ]);
+
+        revenueThisWeek = thisWeekPayments[0]?.totalCents || 0;
+        revenueLastWeek = lastWeekPayments[0]?.totalCents || 0;
+      }
+    } else {
+      // DB fallback
+      const thisWeekPayments = await Payment.aggregate([
+        { 
+          $match: { 
+            status: { $in: ["succeeded", "paid"] },
+            createdAt: { $gte: startOfThisWeek, $lte: now }
+          } 
+        },
+        { $group: { _id: null, totalCents: { $sum: "$amount" } } }
+      ]);
+      
+      const lastWeekPayments = await Payment.aggregate([
+        { 
+          $match: { 
+            status: { $in: ["succeeded", "paid"] },
+            createdAt: { $gte: startOfLastWeek, $lte: endOfLastWeek }
+          } 
+        },
+        { $group: { _id: null, totalCents: { $sum: "$amount" } } }
+      ]);
+
+      revenueThisWeek = thisWeekPayments[0]?.totalCents || 0;
+      revenueLastWeek = lastWeekPayments[0]?.totalCents || 0;
+    }
+
+    const revenuePercentage = revenueLastWeek > 0 
+      ? parseFloat(((revenueThisWeek - revenueLastWeek) / revenueLastWeek * 100).toFixed(1))
+      : 0; // Show 0% when no previous data
+
+    // Debug logging removed
+
+    // Format values for display
+    const formatTime = (seconds) => {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = Math.round(seconds % 60);
+      return `${minutes}m ${remainingSeconds}s`;
+    };
+
+    const formatRevenue = (cents) => {
+      const dollars = cents / 100;
+      return `$${dollars.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+
+    const formatThisWeek = (value, type) => {
+      switch (type) {
+        case 'subscribers':
+          return `+${value} this week`;
+        case 'delinquent':
+          return `+${value} this week`;
+        case 'time':
+          return `+${formatTime(value)} this week`;
+        case 'revenue':
+          return `+${formatRevenue(value)} this week`;
+        default:
+          return `+${value} this week`;
+      }
+    };
+
+    res.json({
+      success: true,
+      message: "Dashboard analytics with dynamic percentages and this week values",
+      data: {
+        newSubscribers: {
+          thisWeek: newSubscribersThisWeek,
+          percentage: parseFloat(newSubscribersPercentage),
+          thisWeekFormatted: formatThisWeek(newSubscribersThisWeek, 'subscribers'),
+          trend: parseFloat(newSubscribersPercentage) >= 0 ? 'up' : 'down'
+        },
+        delinquentSubscribers: {
+          thisWeek: delinquentThisWeek,
+          percentage: parseFloat(delinquentPercentage),
+          thisWeekFormatted: formatThisWeek(delinquentThisWeek, 'delinquent'),
+          trend: parseFloat(delinquentPercentage) >= 0 ? 'up' : 'down'
+        },
+        avgQuizCompletionTime: {
+          thisWeek: avgTimeThisWeekSec,
+          percentage: parseFloat(avgTimePercentage),
+          thisWeekFormatted: formatThisWeek(avgTimeThisWeekSec, 'time'),
+          trend: parseFloat(avgTimePercentage) >= 0 ? 'up' : 'down',
+          formatted: formatTime(avgTimeThisWeekSec)
+        },
+        revenue: {
+          thisWeek: revenueThisWeek,
+          percentage: parseFloat(revenuePercentage),
+          thisWeekFormatted: formatThisWeek(revenueThisWeek, 'revenue'),
+          trend: parseFloat(revenuePercentage) >= 0 ? 'up' : 'down',
+          formatted: formatRevenue(revenueThisWeek)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard analytics:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ✅ 9. Individual Metric Analytics (for specific card updates)
+export const getNewSubscribersAnalytics = async (req, res) => {
+  try {
+    const now = new Date();
+    const startOfThisWeek = new Date(now);
+    startOfThisWeek.setHours(0, 0, 0, 0);
+    startOfThisWeek.setDate(now.getDate() - now.getDay());
+    
+    const startOfLastWeek = new Date(startOfThisWeek);
+    startOfLastWeek.setDate(startOfThisWeek.getDate() - 7);
+    
+    const endOfLastWeek = new Date(startOfThisWeek);
+    endOfLastWeek.setMilliseconds(-1);
+
+    const thisWeek = await User.countDocuments({
+      createdAt: { $gte: startOfThisWeek, $lte: now }
+    });
+    
+    const lastWeek = await User.countDocuments({
+      createdAt: { $gte: startOfLastWeek, $lte: endOfLastWeek }
+    });
+    
+    const percentage = lastWeek > 0 
+      ? ((thisWeek - lastWeek) / lastWeek * 100).toFixed(1)
+      : thisWeek > 0 ? 0 : 0; // Show 0% instead of 100% when no previous data
+
+    res.json({
+      success: true,
+      data: {
+        thisWeek,
+        percentage: parseFloat(percentage),
+        thisWeekFormatted: `+${thisWeek} this week`,
+        trend: parseFloat(percentage) >= 0 ? 'up' : 'down'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getDelinquentSubscribersAnalytics = async (req, res) => {
+  try {
+    const now = new Date();
+    const startOfThisWeek = new Date(now);
+    startOfThisWeek.setHours(0, 0, 0, 0);
+    startOfThisWeek.setDate(now.getDate() - now.getDay());
+    
+    const startOfLastWeek = new Date(startOfThisWeek);
+    startOfLastWeek.setDate(startOfThisWeek.getDate() - 7);
+    
+    const endOfLastWeek = new Date(startOfThisWeek);
+    endOfLastWeek.setMilliseconds(-1);
+
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    
+    const thisWeek = await User.countDocuments({
+      $and: [
+        {
+          $or: [
+            { "subscription.status": { $in: ["inactive", "canceled"] } },
+            { lastLogin: { $exists: true, $lt: ninetyDaysAgo } }
+          ]
+        },
+        {
+          $or: [
+            { updatedAt: { $gte: startOfThisWeek, $lte: now } },
+            { lastLogin: { $gte: startOfThisWeek, $lte: now } }
+          ]
+        }
+      ]
+    });
+    
+    const lastWeek = await User.countDocuments({
+      $and: [
+        {
+          $or: [
+            { "subscription.status": { $in: ["inactive", "canceled"] } },
+            { lastLogin: { $exists: true, $lt: ninetyDaysAgo } }
+          ]
+        },
+        {
+          $or: [
+            { updatedAt: { $gte: startOfLastWeek, $lte: endOfLastWeek } },
+            { lastLogin: { $gte: startOfLastWeek, $lte: endOfLastWeek } }
+          ]
+        }
+      ]
+    });
+    
+    const percentage = lastWeek > 0 
+      ? ((thisWeek - lastWeek) / lastWeek * 100).toFixed(1)
+      : thisWeek > 0 ? 0 : 0; // Show 0% instead of 100% when no previous data
+
+    res.json({
+      success: true,
+      data: {
+        thisWeek,
+        percentage: parseFloat(percentage),
+        thisWeekFormatted: `+${thisWeek} this week`,
+        trend: parseFloat(percentage) >= 0 ? 'up' : 'down'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getAvgQuizCompletionTimeAnalytics = async (req, res) => {
+  try {
+    const now = new Date();
+    const startOfThisWeek = new Date(now);
+    startOfThisWeek.setHours(0, 0, 0, 0);
+    startOfThisWeek.setDate(now.getDate() - now.getDay());
+    
+    const startOfLastWeek = new Date(startOfThisWeek);
+    startOfLastWeek.setDate(startOfThisWeek.getDate() - 7);
+    
+    const endOfLastWeek = new Date(startOfThisWeek);
+    endOfLastWeek.setMilliseconds(-1);
+
+    const thisWeekResult = await QuizSession.aggregate([
+      {
+        $match: { 
+          is_completed: true,
+          createdAt: { $gte: startOfThisWeek, $lte: now }
+        }
+      },
+      {
+        $project: {
+          duration: {
+            $divide: [
+              { $subtract: ["$updatedAt", "$createdAt"] },
+              1000
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          avgCompletionTimeSec: { $avg: "$duration" }
+        }
+      }
+    ]);
+
+    const lastWeekResult = await QuizSession.aggregate([
+      {
+        $match: { 
+          is_completed: true,
+          createdAt: { $gte: startOfLastWeek, $lte: endOfLastWeek }
+        }
+      },
+      {
+        $project: {
+          duration: {
+            $divide: [
+              { $subtract: ["$updatedAt", "$createdAt"] },
+              1000
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          avgCompletionTimeSec: { $avg: "$duration" }
+        }
+      }
+    ]);
+
+    const thisWeekSec = thisWeekResult[0]?.avgCompletionTimeSec || 0;
+    const lastWeekSec = lastWeekResult[0]?.avgCompletionTimeSec || 0;
+    
+    const percentage = lastWeekSec > 0 
+      ? ((thisWeekSec - lastWeekSec) / lastWeekSec * 100).toFixed(1)
+      : thisWeekSec > 0 ? 0 : 0; // Show 0% instead of 100% when no previous data
+
+    const formatTime = (seconds) => {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = Math.round(seconds % 60);
+      return `${minutes}m ${remainingSeconds}s`;
+    };
+
+    res.json({
+      success: true,
+      data: {
+        thisWeek: thisWeekSec,
+        percentage: parseFloat(percentage),
+        thisWeekFormatted: `+${formatTime(thisWeekSec)} this week`,
+        trend: parseFloat(percentage) >= 0 ? 'up' : 'down',
+        formatted: formatTime(thisWeekSec)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getRevenueAnalytics = async (req, res) => {
+  try {
+    const now = new Date();
+    const startOfThisWeek = new Date(now);
+    startOfThisWeek.setHours(0, 0, 0, 0);
+    startOfThisWeek.setDate(now.getDate() - now.getDay());
+    
+    const startOfLastWeek = new Date(startOfThisWeek);
+    startOfLastWeek.setDate(startOfThisWeek.getDate() - 7);
+    
+    const endOfLastWeek = new Date(startOfThisWeek);
+    endOfLastWeek.setMilliseconds(-1);
+
+    const stripeSecret = process.env.STRIPE_SECRET_KEY;
+    let thisWeekRevenue = 0;
+    let lastWeekRevenue = 0;
+
+    if (stripeSecret) {
+      try {
+        const stripe = new Stripe(stripeSecret);
+        
+        const thisWeekCharges = await stripe.charges.list({
+          created: {
+            gte: Math.floor(startOfThisWeek.getTime() / 1000),
+            lte: Math.floor(now.getTime() / 1000)
+          },
+          limit: 100
+        });
+        
+        const lastWeekCharges = await stripe.charges.list({
+          created: {
+            gte: Math.floor(startOfLastWeek.getTime() / 1000),
+            lte: Math.floor(endOfLastWeek.getTime() / 1000)
+          },
+          limit: 100
+        });
+
+        thisWeekRevenue = thisWeekCharges.data
+          .filter(ch => ch.paid && ch.status === 'succeeded')
+          .reduce((sum, ch) => sum + Math.max((ch.amount || 0) - (ch.amount_refunded || 0), 0), 0);
+
+        lastWeekRevenue = lastWeekCharges.data
+          .filter(ch => ch.paid && ch.status === 'succeeded')
+          .reduce((sum, ch) => sum + Math.max((ch.amount || 0) - (ch.amount_refunded || 0), 0), 0);
+      } catch (error) {
+        console.error('Stripe error:', error);
+        // Fallback to DB
+        const thisWeekPayments = await Payment.aggregate([
+          { 
+            $match: { 
+              status: { $in: ["succeeded", "paid"] },
+              createdAt: { $gte: startOfThisWeek, $lte: now }
+            } 
+          },
+          { $group: { _id: null, totalCents: { $sum: "$amount" } } }
+        ]);
+        
+        const lastWeekPayments = await Payment.aggregate([
+          { 
+            $match: { 
+              status: { $in: ["succeeded", "paid"] },
+              createdAt: { $gte: startOfLastWeek, $lte: endOfLastWeek }
+            } 
+          },
+          { $group: { _id: null, totalCents: { $sum: "$amount" } } }
+        ]);
+
+        thisWeekRevenue = thisWeekPayments[0]?.totalCents || 0;
+        lastWeekRevenue = lastWeekPayments[0]?.totalCents || 0;
+      }
+    } else {
+      const thisWeekPayments = await Payment.aggregate([
+        { 
+          $match: { 
+            status: { $in: ["succeeded", "paid"] },
+            createdAt: { $gte: startOfThisWeek, $lte: now }
+          } 
+        },
+        { $group: { _id: null, totalCents: { $sum: "$amount" } } }
+      ]);
+      
+      const lastWeekPayments = await Payment.aggregate([
+        { 
+          $match: { 
+            status: { $in: ["succeeded", "paid"] },
+            createdAt: { $gte: startOfLastWeek, $lte: endOfLastWeek }
+          } 
+        },
+        { $group: { _id: null, totalCents: { $sum: "$amount" } } }
+      ]);
+
+      thisWeekRevenue = thisWeekPayments[0]?.totalCents || 0;
+      lastWeekRevenue = lastWeekPayments[0]?.totalCents || 0;
+    }
+
+    const percentage = lastWeekRevenue > 0 
+      ? ((thisWeekRevenue - lastWeekRevenue) / lastWeekRevenue * 100).toFixed(1)
+      : thisWeekRevenue > 0 ? 0 : 0; // Show 0% instead of 100% when no previous data
+
+    const formatRevenue = (cents) => {
+      const dollars = cents / 100;
+      return `$${dollars.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+
+    res.json({
+      success: true,
+      data: {
+        thisWeek: thisWeekRevenue,
+        percentage: parseFloat(percentage),
+        thisWeekFormatted: `+${formatRevenue(thisWeekRevenue)} this week`,
+        trend: parseFloat(percentage) >= 0 ? 'up' : 'down',
+        formatted: formatRevenue(thisWeekRevenue)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

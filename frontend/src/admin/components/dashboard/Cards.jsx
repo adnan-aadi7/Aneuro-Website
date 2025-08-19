@@ -9,10 +9,14 @@ import {
   selectDelinquentSubscribers,
   selectAvgQuizCompletionTime,
   selectAdminDashboardLoading,
-  fetchTotalRevenue,
-  selectTotalRevenueDollars,
+  // fetchTotalRevenue, // No longer used
+  // selectTotalRevenueDollars, // No longer used
   fetchStripeBalance,
   selectStripeBalance,
+  // New dynamic analytics imports
+  fetchDashboardAnalytics,
+  selectDashboardAnalytics,
+  selectAdminDashboardError,
 } from "../../../store/Slice/DashboardSliceAdmin";
 
 const Cards = () => {
@@ -21,17 +25,65 @@ const Cards = () => {
   const newSubs = useSelector(selectNewSubscribersPerWeek);
   const delinquent = useSelector(selectDelinquentSubscribers);
   const avgTime = useSelector(selectAvgQuizCompletionTime);
-  const totalRevenueDollars = useSelector(selectTotalRevenueDollars);
+  // const totalRevenueDollars = useSelector(selectTotalRevenueDollars); // No longer used
   const stripeBalance = useSelector(selectStripeBalance);
   const loading = useSelector(selectAdminDashboardLoading);
+  
+  // New dynamic analytics selectors
+  const dashboardAnalytics = useSelector(selectDashboardAnalytics);
+  const analyticsError = useSelector(selectAdminDashboardError);
 
   useEffect(() => {
+    // Fetch both old and new analytics
     dispatch(fetchNewSubscribersPerWeek());
     dispatch(fetchDelinquentSubscribers());
     dispatch(fetchAvgQuizCompletionTime());
-    dispatch(fetchTotalRevenue());
+    // dispatch(fetchTotalRevenue()); // No longer used
     dispatch(fetchStripeBalance());
+    
+    // Fetch new dynamic analytics
+    dispatch(fetchDashboardAnalytics());
   }, [dispatch]);
+
+  // Helper function to format percentage with trend arrow
+  const formatPercentage = (percentage, trend) => {
+    // Convert to number and check if it's null, undefined, or exactly 0
+    const numPercentage = parseFloat(percentage);
+    
+    if (percentage === null || percentage === undefined || isNaN(numPercentage)) {
+      return "↑ 0%"; // Show 0% with up arrow when no change or no data
+    }
+    
+    // If percentage is 0 or negative, show 0%
+    if (numPercentage <= 0) {
+      return "↑ 0%";
+    }
+    
+    const arrow = trend === 'up' ? '↑' : '↓';
+    return `${arrow} ${numPercentage.toFixed(1)}%`;
+  };
+
+  // Helper function to get this week value
+  const getThisWeekValue = (analytics, fallback) => {
+    if (analytics?.thisWeekFormatted) {
+      return analytics.thisWeekFormatted;
+    }
+    return fallback || "+0 this week";
+  };
+
+  // Get dynamic analytics data with fallbacks
+  const newSubscribersAnalytics = dashboardAnalytics?.newSubscribers;
+  const delinquentAnalytics = dashboardAnalytics?.delinquentSubscribers;
+  const avgTimeAnalytics = dashboardAnalytics?.avgQuizCompletionTime;
+  const revenueAnalytics = dashboardAnalytics?.revenue;
+
+  // Debug logging to see what values we're getting
+  // console.log('Dashboard Analytics Debug:', {
+  //   avgTimeAnalytics,
+  //   revenueAnalytics,
+  //   avgTimePercentage: avgTimeAnalytics?.percentage,
+  //   revenuePercentage: revenueAnalytics?.percentage
+  // });
 
   const newSubscribersCount = loading.newSubscribers
     ? null
@@ -39,7 +91,7 @@ const Cards = () => {
 
   const delinquentCount = loading.delinquent ? null : (delinquent?.length || 0);
 
-  const avgCompletionDisplay = loading.avgTime ? null : (avgTime || "0 min 0 sec");
+  // Removed avgCompletionDisplay as it's no longer used
 
   const toCompactTime = (s) => {
     if (!s) return "0m 0s";
@@ -48,13 +100,7 @@ const Cards = () => {
     return s;
   };
 
-  const revenueDisplay = loading.revenue
-    ? "Loading..."
-    : (totalRevenueDollars ?? 0).toLocaleString("en-US", { style: "currency", currency: "USD" });
-
-  const availableBalanceDisplay = loading.balance
-    ? "Loading..."
-    : (stripeBalance?.available?.formatted || revenueDisplay);
+  // Removed unused variables as we're now using dynamic analytics data
 
   const cards = [
     {
@@ -70,8 +116,14 @@ const Cards = () => {
       ),
       title: "New Subscribers",
       value: loading.newSubscribers ? "Loading..." : `+${newSubscribersCount}`,
-      stat: "↑ 20.9%",
-      week: loading.newSubscribers ? "" : `+${newSubscribersCount} this week`,
+      stat: loading.dashboardAnalytics ? "Loading..." : formatPercentage(
+        newSubscribersAnalytics?.percentage, 
+        newSubscribersAnalytics?.trend
+      ),
+      week: loading.dashboardAnalytics ? "Loading..." : getThisWeekValue(
+        newSubscribersAnalytics, 
+        `+${newSubscribersCount} this week`
+      ),
       bg: "bg-cyan-400",
       text: "text-[#232432]",
       highlight: true,
@@ -89,8 +141,14 @@ const Cards = () => {
       ),
       title: "Delinquent Subscriber",
       value: loading.delinquent ? "Loading..." : String(delinquentCount),
-      stat: "↑ 20.9%",
-      week: "+18.4K this week",
+      stat: loading.dashboardAnalytics ? "Loading..." : formatPercentage(
+        delinquentAnalytics?.percentage, 
+        delinquentAnalytics?.trend
+      ),
+      week: loading.dashboardAnalytics ? "Loading..." : getThisWeekValue(
+        delinquentAnalytics, 
+        `+${delinquentCount} this week`
+      ),
       bg: "bg-gradient-to-br from-[#232432] to-[#19343B]",
       text: "text-white",
     },
@@ -106,9 +164,15 @@ const Cards = () => {
         </div>
       ),
       title: "Average Quiz Completion Time",
-      value: loading.avgTime ? "Loading..." : toCompactTime(avgCompletionDisplay),
-      stat: "↑ 20.9%",
-      week: "+18.4K this week",
+      value: loading.avgTime ? "Loading..." : toCompactTime(avgTime || "0 min 0 sec"),
+      stat: loading.dashboardAnalytics ? "Loading..." : formatPercentage(
+        avgTimeAnalytics?.percentage, 
+        avgTimeAnalytics?.trend
+      ),
+      week: loading.dashboardAnalytics ? "Loading..." : getThisWeekValue(
+        avgTimeAnalytics, 
+        `+${toCompactTime(avgTimeAnalytics?.formatted || "0m 0s")} this week`
+      ),
       bg: "bg-gradient-to-br from-[#232432] to-[#19343B]",
       text: "text-white",
     },
@@ -117,20 +181,31 @@ const Cards = () => {
         <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFFFFF47' }}>
           <img 
             src="/dashoboardIcons/Group (2).png" 
-            alt="Heading Here" 
+            alt="Revenue" 
             width="15" 
             height="15"
           />
         </div>
       ),
-      title: "Heading Here",
-      value: availableBalanceDisplay,
-      stat: "↑ 20.9%",
-      week: "+18.4K this week",
+      title: "Revenue",
+      value: loading.balance ? "Loading..." : (stripeBalance?.available?.formatted || "$0.00"),
+      stat: loading.dashboardAnalytics ? "Loading..." : formatPercentage(
+        revenueAnalytics?.percentage, 
+        revenueAnalytics?.trend
+      ),
+      week: loading.dashboardAnalytics ? "Loading..." : getThisWeekValue(
+        revenueAnalytics, 
+        `+${revenueAnalytics?.formatted || "$0.00"} this week`
+      ),
       bg: "bg-gradient-to-br from-[#232432] to-[#19343B]",
       text: "text-white",
     },
   ];
+
+  // Show error message if analytics failed to load
+  if (analyticsError?.dashboardAnalytics) {
+    console.error('Dashboard analytics error:', analyticsError.dashboardAnalytics);
+  }
 
   return (
     <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 w-full mt-7 ">

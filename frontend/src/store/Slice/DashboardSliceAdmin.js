@@ -98,6 +98,67 @@ export const fetchRecentFeedback = createAsyncThunk(
   }
 );
 
+// New thunks for dynamic analytics
+export const fetchDashboardAnalytics = createAsyncThunk(
+  'adminDashboard/fetchDashboardAnalytics',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get('/user-analytics/dashboard');
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to fetch dashboard analytics' });
+    }
+  }
+);
+
+export const fetchNewSubscribersAnalytics = createAsyncThunk(
+  'adminDashboard/fetchNewSubscribersAnalytics',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get('/user-analytics/new-subscribers-analytics');
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to fetch new subscribers analytics' });
+    }
+  }
+);
+
+export const fetchDelinquentSubscribersAnalytics = createAsyncThunk(
+  'adminDashboard/fetchDelinquentSubscribersAnalytics',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get('/user-analytics/delinquent-subscribers-analytics');
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to fetch delinquent subscribers analytics' });
+    }
+  }
+);
+
+export const fetchAvgQuizCompletionTimeAnalytics = createAsyncThunk(
+  'adminDashboard/fetchAvgQuizCompletionTimeAnalytics',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get('/user-analytics/avg-completion-time-analytics');
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to fetch average quiz completion time analytics' });
+    }
+  }
+);
+
+export const fetchRevenueAnalytics = createAsyncThunk(
+  'adminDashboard/fetchRevenueAnalytics',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get('/user-analytics/revenue-analytics');
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to fetch revenue analytics' });
+    }
+  }
+);
+
 const initialState = {
   newSubscribersPerWeek: [],
   delinquentSubscribers: [],
@@ -110,6 +171,13 @@ const initialState = {
   },
   inboxMessages: [],
   recentFeedback: [],
+  // New state for dynamic analytics
+  dashboardAnalytics: {
+    newSubscribers: null,
+    delinquentSubscribers: null,
+    avgQuizCompletionTime: null,
+    revenue: null,
+  },
   loading: {
     newSubscribers: false,
     delinquent: false,
@@ -119,6 +187,12 @@ const initialState = {
     balance: false,
     inbox: false,
     feedback: false,
+    // New loading states
+    dashboardAnalytics: false,
+    newSubscribersAnalytics: false,
+    delinquentAnalytics: false,
+    avgTimeAnalytics: false,
+    revenueAnalytics: false,
   },
   error: {
     newSubscribers: null,
@@ -129,6 +203,12 @@ const initialState = {
     balance: null,
     inbox: null,
     feedback: null,
+    // New error states
+    dashboardAnalytics: null,
+    newSubscribersAnalytics: null,
+    delinquentAnalytics: null,
+    avgTimeAnalytics: null,
+    revenueAnalytics: null,
   },
   success: {
     newSubscribers: null,
@@ -139,6 +219,12 @@ const initialState = {
     balance: null,
     inbox: null,
     feedback: null,
+    // New success states
+    dashboardAnalytics: null,
+    newSubscribersAnalytics: null,
+    delinquentAnalytics: null,
+    avgTimeAnalytics: null,
+    revenueAnalytics: null,
   },
 };
 
@@ -283,6 +369,77 @@ const adminDashboardSlice = createSlice({
       .addCase(fetchRecentFeedback.rejected, (state, action) => {
         state.loading.feedback = false;
         state.error.feedback = action.payload?.message || 'Failed to fetch recent feedback';
+      })
+
+      // New dynamic analytics reducers
+      .addCase(fetchDashboardAnalytics.pending, (state) => {
+        state.loading.dashboardAnalytics = true;
+        state.error.dashboardAnalytics = null;
+      })
+      .addCase(fetchDashboardAnalytics.fulfilled, (state, action) => {
+        state.loading.dashboardAnalytics = false;
+        state.dashboardAnalytics = action.payload?.data || {};
+        state.success.dashboardAnalytics = 'Fetched dashboard analytics';
+      })
+      .addCase(fetchDashboardAnalytics.rejected, (state, action) => {
+        state.loading.dashboardAnalytics = false;
+        state.error.dashboardAnalytics = action.payload?.message || 'Failed to fetch dashboard analytics';
+      })
+
+      .addCase(fetchNewSubscribersAnalytics.pending, (state) => {
+        state.loading.newSubscribersAnalytics = true;
+        state.error.newSubscribersAnalytics = null;
+      })
+      .addCase(fetchNewSubscribersAnalytics.fulfilled, (state, action) => {
+        state.loading.newSubscribersAnalytics = false;
+        state.dashboardAnalytics.newSubscribers = action.payload?.data || null;
+        state.success.newSubscribersAnalytics = 'Fetched new subscribers analytics';
+      })
+      .addCase(fetchNewSubscribersAnalytics.rejected, (state, action) => {
+        state.loading.newSubscribersAnalytics = false;
+        state.error.newSubscribersAnalytics = action.payload?.message || 'Failed to fetch new subscribers analytics';
+      })
+
+      .addCase(fetchDelinquentSubscribersAnalytics.pending, (state) => {
+        state.loading.delinquentAnalytics = true;
+        state.error.delinquentAnalytics = null;
+      })
+      .addCase(fetchDelinquentSubscribersAnalytics.fulfilled, (state, action) => {
+        state.loading.delinquentAnalytics = false;
+        state.dashboardAnalytics.delinquentSubscribers = action.payload?.data || null;
+        state.success.delinquentAnalytics = 'Fetched delinquent subscribers analytics';
+      })
+      .addCase(fetchDelinquentSubscribersAnalytics.rejected, (state, action) => {
+        state.loading.delinquentAnalytics = false;
+        state.error.delinquentAnalytics = action.payload?.message || 'Failed to fetch delinquent subscribers analytics';
+      })
+
+      .addCase(fetchAvgQuizCompletionTimeAnalytics.pending, (state) => {
+        state.loading.avgTimeAnalytics = true;
+        state.error.avgTimeAnalytics = null;
+      })
+      .addCase(fetchAvgQuizCompletionTimeAnalytics.fulfilled, (state, action) => {
+        state.loading.avgTimeAnalytics = false;
+        state.dashboardAnalytics.avgQuizCompletionTime = action.payload?.data || null;
+        state.success.avgTimeAnalytics = 'Fetched average quiz completion time analytics';
+      })
+      .addCase(fetchAvgQuizCompletionTimeAnalytics.rejected, (state, action) => {
+        state.loading.avgTimeAnalytics = false;
+        state.error.avgTimeAnalytics = action.payload?.message || 'Failed to fetch average quiz completion time analytics';
+      })
+
+      .addCase(fetchRevenueAnalytics.pending, (state) => {
+        state.loading.revenueAnalytics = true;
+        state.error.revenueAnalytics = null;
+      })
+      .addCase(fetchRevenueAnalytics.fulfilled, (state, action) => {
+        state.loading.revenueAnalytics = false;
+        state.dashboardAnalytics.revenue = action.payload?.data || null;
+        state.success.revenueAnalytics = 'Fetched revenue analytics';
+      })
+      .addCase(fetchRevenueAnalytics.rejected, (state, action) => {
+        state.loading.revenueAnalytics = false;
+        state.error.revenueAnalytics = action.payload?.message || 'Failed to fetch revenue analytics';
       });
   }
 });
@@ -302,5 +459,12 @@ export const selectRecentFeedback = (state) => state.adminDashboard.recentFeedba
 export const selectAdminDashboardLoading = (state) => state.adminDashboard.loading;
 export const selectAdminDashboardError = (state) => state.adminDashboard.error;
 export const selectAdminDashboardSuccess = (state) => state.adminDashboard.success;
+
+// New selectors for dynamic analytics
+export const selectDashboardAnalytics = (state) => state.adminDashboard.dashboardAnalytics;
+export const selectNewSubscribersAnalytics = (state) => state.adminDashboard.dashboardAnalytics.newSubscribers;
+export const selectDelinquentSubscribersAnalytics = (state) => state.adminDashboard.dashboardAnalytics.delinquentSubscribers;
+export const selectAvgQuizCompletionTimeAnalytics = (state) => state.adminDashboard.dashboardAnalytics.avgQuizCompletionTime;
+export const selectRevenueAnalytics = (state) => state.adminDashboard.dashboardAnalytics.revenue;
 
 export default adminDashboardSlice.reducer;
