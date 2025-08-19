@@ -26,6 +26,18 @@ export const fetchScheduledStats = createAsyncThunk(
   }
 );
 
+export const fetchScheduledWithoutRelease = createAsyncThunk(
+  'schedule/fetchWithoutRelease',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get('/schedule/no-release-scheduled');
+      return response.data; // { funnels, emailSequences, promptPacks }
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to fetch items without release date' });
+    }
+  }
+);
+
 export const scheduleContent = createAsyncThunk(
   'schedule/scheduleContent',
   async (payload, { rejectWithValue }) => {
@@ -36,9 +48,8 @@ export const scheduleContent = createAsyncThunk(
         modelType: payload.modelType,
         scheduledDate: payload.scheduledDate,
         scheduledTime: payload.scheduledTime,
-        tier: payload.tier // Include tier if needed by backend
+        ...(payload.tier ? { tier: payload.tier } : {})
       };
-      
       const response = await axios.post('/schedule', backendPayload);
       return response.data;
     } catch (error) {
@@ -74,6 +85,11 @@ export const deleteSchedule = createAsyncThunk(
 // Initial state
 const initialState = {
   scheduled: [],
+  withoutRelease: {
+    funnels: [],
+    emailSequences: [],
+    promptPacks: []
+  },
   stats: {
     // Stats from getAllScheduled endpoint
     totalPending: 0,
@@ -147,6 +163,26 @@ const scheduleSlice = createSlice({
         state.error = action.payload?.message || 'Failed to fetch scheduled stats';
       });
 
+    // Fetch items without releaseDateTime
+    builder
+      .addCase(fetchScheduledWithoutRelease.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchScheduledWithoutRelease.fulfilled, (state, action) => {
+        state.loading = false;
+        state.withoutRelease = {
+          funnels: Array.isArray(action.payload.funnels) ? action.payload.funnels : [],
+          emailSequences: Array.isArray(action.payload.emailSequences) ? action.payload.emailSequences : [],
+          promptPacks: Array.isArray(action.payload.promptPacks) ? action.payload.promptPacks : [],
+        };
+        state.success = 'Fetched items without release date successfully';
+      })
+      .addCase(fetchScheduledWithoutRelease.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || 'Failed to fetch items without release date';
+      });
+
     // Schedule Content
     builder
       .addCase(scheduleContent.pending, (state) => {
@@ -156,8 +192,7 @@ const scheduleSlice = createSlice({
       .addCase(scheduleContent.fulfilled, (state, action) => {
         state.loading = false;
         state.success = action.payload.message;
-        // Note: The component should dispatch fetchAllScheduled after successful scheduling
-        // to refresh the scheduled content list
+        // Components should call fetchAllScheduled to refresh list
       })
       .addCase(scheduleContent.rejected, (state, action) => {
         state.loading = false;
@@ -201,6 +236,7 @@ export const { clearError, clearSuccess } = scheduleSlice.actions;
 
 // Export selectors
 export const selectScheduled = (state) => state.schedule.scheduled;
+export const selectWithoutRelease = (state) => state.schedule.withoutRelease;
 export const selectScheduleStats = (state) => state.schedule.stats;
 export const selectScheduleLoading = (state) => state.schedule.loading;
 export const selectScheduleError = (state) => state.schedule.error;

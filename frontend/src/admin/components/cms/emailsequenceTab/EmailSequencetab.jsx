@@ -12,6 +12,7 @@ import {
   selectEmailSequenceError,
   selectEmailSequenceSuccess
 } from "../../../../store/Slice/EmailSequenceSLice";
+import { setCurrentSequence } from "../../../../store/Slice/EmailSequenceSLice";
 import { useNavigate } from "react-router-dom";
 
 const EmailSequences = () => {
@@ -226,6 +227,11 @@ const EmailSequences = () => {
                         <button 
                           className="text-gray-400 hover:text-white transition-colors"
                           title="Edit"
+                          onClick={() => {
+                            // Prefill store and navigate to add-manually in edit mode
+                            dispatch(setCurrentSequence(sequence));
+                            navigate(`/admin/mannual-email/${sequence._id}`);
+                          }}
                         >
                           <Edit className="w-4 h-4" />
                         </button>

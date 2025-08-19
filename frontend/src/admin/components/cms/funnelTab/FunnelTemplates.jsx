@@ -223,6 +223,7 @@ const FunnelTemplates = () => {
                         <button
                           className="text-gray-400 hover:text-white transition-colors"
                           title="Edit"
+                          onClick={() => navigate(`/admin/edit-funnel/${template._id}`)}
                         >
                           <Edit className="w-4 h-4" />
                         </button>

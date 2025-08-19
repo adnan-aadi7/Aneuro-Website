@@ -1,13 +1,17 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import { useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { Toaster, toast } from "react-hot-toast";
-import { Bold, Italic, Underline, Strikethrough, Link, Paperclip, Image, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, ListOrdered } from 'lucide-react';
+import { Bold, Italic, Underline, Strikethrough, Link, Paperclip, Image, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, ListOrdered, X } from 'lucide-react';
 import DiamondIcon from "../../../../../public/icons/diamond.png";
 import KingIcon from "../../../../../public/icons/king.png";
 import StarIcon from "../../../../../public/icons/star.png";
-import { fetchEmailCategories } from "../../../../store/Slice/EmailSequenceSLice";
+import { fetchEmailCategories, createCategory as createEmailCategory } from "../../../../store/Slice/EmailSequenceSLice";
 import { 
   createPromptPack,
+  fetchPromptPackById,
+  updatePromptPack,
+  selectCurrentPromptPack,
   selectPromptPackLoading,
   selectPromptPackError,
   selectPromptPackSuccess,
@@ -17,14 +21,119 @@ import {
 
 const MannualPrompt = () => {
   const dispatch = useDispatch();
+  const params = useParams();
+  const editPackId = params.packId || null;
   const loading = useSelector(selectPromptPackLoading);
   const error = useSelector(selectPromptPackError);
   const success = useSelector(selectPromptPackSuccess);
+  const currentPack = useSelector(selectCurrentPromptPack);
   const categories = useSelector((state) => state.emailSequence.categories || []);
   const categoriesLoading = useSelector((state) => state.emailSequence.categoriesLoading);
 
   const editorRef = useRef(null);
   const fileInputRef = useRef(null);
+  const imageInputRef = useRef(null);
+  const [attachments, setAttachments] = useState([]); // {id, file?, url, isImage, name?}[]
+
+  const getTruncatedFileName = (fullName = '', maxLength = 24) => {
+    const name = String(fullName);
+    if (name.length <= maxLength) return name;
+    const lastDot = name.lastIndexOf('.');
+    const ext = lastDot > 0 ? name.slice(lastDot) : '';
+    const base = lastDot > 0 ? name.slice(0, lastDot) : name;
+    const keep = Math.max(5, maxLength - ext.length - 3);
+    const head = base.slice(0, Math.ceil(keep * 0.6));
+    const tail = base.slice(-Math.floor(keep * 0.4));
+    return `${head}…${tail}${ext}`;
+  };
+
+  const insertAtCursor = (node) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(node);
+      range.setStartAfter(node);
+      range.setEndAfter(node);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } else {
+      editor.appendChild(node);
+    }
+  };
+
+  const isImageUrl = (url) => /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(url || "");
+
+  const transformContentForEditor = useCallback((rawHtml) => {
+    try {
+      const container = document.createElement('div');
+      container.innerHTML = rawHtml || '';
+      const extracted = [];
+      const anchors = Array.from(container.querySelectorAll('a[href]'));
+      anchors.forEach((a) => {
+        const href = a.getAttribute('href');
+        const name = a.textContent?.trim() || href?.split('/')?.pop() || 'file';
+        const id = `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+        if (isImageUrl(href)) {
+          const img = document.createElement('img');
+          img.src = href;
+          img.alt = name;
+          img.style.maxWidth = '100%';
+          img.style.borderRadius = '6px';
+          img.setAttribute('data-attachment-id', id);
+          a.replaceWith(img);
+        } else {
+          const chip = document.createElement('span');
+          chip.textContent = getTruncatedFileName(name);
+          chip.className = 'inline-block px-2 py-1 text-xs rounded bg-slate-700 text-slate-200';
+          chip.title = name;
+          chip.style.maxWidth = '200px';
+          chip.style.whiteSpace = 'nowrap';
+          chip.style.overflow = 'hidden';
+          chip.style.textOverflow = 'ellipsis';
+          chip.setAttribute('data-attachment-id', id);
+          a.replaceWith(chip);
+        }
+        extracted.push({ id, url: href, isImage: isImageUrl(href), name });
+      });
+
+      const onlyText = container.children.length === 0 && (container.textContent || '').trim();
+      const urlRegex = /^(https?:\/\/[^\s]+)$/i;
+      if (onlyText && urlRegex.test(onlyText)) {
+        const href = onlyText;
+        const name = href.split('/').pop() || 'file';
+        const id = `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+        container.textContent = '';
+        if (isImageUrl(href)) {
+          const img = document.createElement('img');
+          img.src = href;
+          img.alt = name;
+          img.style.maxWidth = '100%';
+          img.style.borderRadius = '6px';
+          img.setAttribute('data-attachment-id', id);
+          container.appendChild(img);
+        } else {
+          const chip = document.createElement('span');
+          chip.textContent = getTruncatedFileName(name);
+          chip.className = 'inline-block px-2 py-1 text-xs rounded bg-slate-700 text-slate-200';
+          chip.title = name;
+          chip.style.maxWidth = '200px';
+          chip.style.whiteSpace = 'nowrap';
+          chip.style.overflow = 'hidden';
+          chip.style.textOverflow = 'ellipsis';
+          chip.setAttribute('data-attachment-id', id);
+          container.appendChild(chip);
+        }
+        extracted.push({ id, url: href, isImage: isImageUrl(href), name });
+      }
+
+      return { html: container.innerHTML, attachments: extracted };
+    } catch {
+      return { html: rawHtml, attachments: [] };
+    }
+  }, []);
 
   // State to track active formatting
   const [activeFormatting, setActiveFormatting] = useState({
@@ -44,7 +153,9 @@ const MannualPrompt = () => {
   const [sequenceName, setSequenceName] = useState("");
   const [category, setCategory] = useState("");
   const [selectedTier, setSelectedTier] = useState(""); // basic | premium | enterprise
-  const [brainType] = useState("Architect"); // default prompt type
+  const [brainType, setBrainType] = useState("Architect");
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
 
   // Execute formatting commands
   const executeCommand = (command, value = null) => {
@@ -71,21 +182,105 @@ const MannualPrompt = () => {
     fileInputRef.current.click();
   };
 
+  const isAllowedDoc = (file) => {
+    const allowedMimes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain'
+    ];
+    const allowedExts = ['.pdf', '.doc', '.docx', '.txt'];
+    const name = (file?.name || '').toLowerCase();
+    return (
+      allowedMimes.includes(file?.type) ||
+      allowedExts.some((ext) => name.endsWith(ext))
+    );
+  };
+
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      console.log('File selected:', file.name);
-      // In a real app, you would upload the file here
+    const files = Array.from(e.target.files || []).filter(isAllowedDoc);
+    if (!files.length) return;
+
+    const newItems = files.map((file) => {
+      const url = URL.createObjectURL(file);
+      const isImage = false;
+      const id = `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+
+      if (editorRef.current) {
+        const chip = document.createElement('span');
+        chip.textContent = getTruncatedFileName(file.name);
+        chip.className = 'inline-block px-2 py-1 text-xs rounded bg-slate-700 text-slate-200';
+        chip.title = file.name;
+        chip.style.maxWidth = '200px';
+        chip.style.whiteSpace = 'nowrap';
+        chip.style.overflow = 'hidden';
+        chip.style.textOverflow = 'ellipsis';
+        chip.setAttribute('data-attachment-id', id);
+        insertAtCursor(chip);
+        const br = document.createElement('br');
+        insertAtCursor(br);
+      }
+
+      return { id, file, url, isImage };
+    });
+
+    setAttachments((prev) => [...prev, ...newItems]);
+    e.target.value = null;
+  };
+
+  const handleImage = () => {
+    imageInputRef.current?.click();
+  };
+
+  const handleImageFileChange = (e) => {
+    const files = Array.from(e.target.files || []).filter((f) => f && f.type.startsWith('image/'));
+    if (!files.length) return;
+
+    const newItems = files.map((file) => {
+      const url = URL.createObjectURL(file);
+      const isImage = true;
+      const id = `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+
+      if (editorRef.current) {
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = file.name;
+        img.style.maxWidth = '100%';
+        img.style.borderRadius = '6px';
+        img.setAttribute('data-attachment-id', id);
+        insertAtCursor(img);
+        const br = document.createElement('br');
+        insertAtCursor(br);
+      }
+
+      return { id, file, url, isImage };
+    });
+
+    setAttachments((prev) => [...prev, ...newItems]);
+    e.target.value = null;
+  };
+
+  const removeAttachment = (id) => {
+    setAttachments((prev) => {
+      const item = prev.find((a) => a.id === id);
+      if (item && item.url && item.url.startsWith('blob:')) URL.revokeObjectURL(item.url);
+      return prev.filter((a) => a.id !== id);
+    });
+    if (editorRef.current) {
+      const node = editorRef.current.querySelector(`[data-attachment-id="${id}"]`);
+      if (node && node.parentNode) {
+        node.parentNode.removeChild(node);
+      }
     }
   };
 
-  // Handle image insertion
-  const handleImage = () => {
-    const url = prompt('Enter image URL:');
-    if (url) {
-      executeCommand('insertImage', url);
-    }
-  };
+  useEffect(() => {
+    return () => {
+      attachments.forEach((a) => {
+        if (a.url && a.url.startsWith('blob:')) URL.revokeObjectURL(a.url);
+      });
+    };
+  }, [attachments]);
 
   // Update active formatting based on current selection
   const updateActiveFormatting = () => {
@@ -125,6 +320,36 @@ const MannualPrompt = () => {
     return editorRef.current ? editorRef.current.innerHTML || '' : '';
   };
 
+  const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  const buildPersistableHtml = async () => {
+    const rawHtml = getHtmlContent();
+    if (!rawHtml) return '';
+    const container = document.createElement('div');
+    container.innerHTML = rawHtml;
+    const nodes = Array.from(container.querySelectorAll('[data-attachment-id]'));
+    const tasks = nodes.map(async (node) => {
+      const id = node.getAttribute('data-attachment-id');
+      const att = attachments.find((a) => a.id === id);
+      if (!att) return;
+      if (att.isImage && att.file) {
+        try {
+          const dataUrl = await readFileAsDataUrl(att.file);
+          node.setAttribute('src', dataUrl);
+        } catch {
+          // ignore read error, keep current src
+        }
+      }
+    });
+    await Promise.all(tasks);
+    return container.innerHTML;
+  };
+
   // Handle content change
   const handleContentChange = () => {
     // Content change is handled directly by the editor
@@ -143,6 +368,7 @@ const MannualPrompt = () => {
         editorRef.current.innerHTML = '';
       }
       dispatch(clearPromptPackSuccess());
+      setAttachments([]);
     }
   }, [success, dispatch]);
 
@@ -158,8 +384,56 @@ const MannualPrompt = () => {
     dispatch(fetchEmailCategories());
   }, [dispatch]);
 
-  const handleSend = () => {
-    const htmlContent = getHtmlContent();
+  // If editing, fetch by id (if not already in store) and prefill form
+  useEffect(() => {
+    if (editPackId && (!currentPack || currentPack._id !== editPackId)) {
+      dispatch(fetchPromptPackById(editPackId));
+    }
+  }, [dispatch, editPackId, currentPack]);
+
+  useEffect(() => {
+    if (editPackId && currentPack && currentPack._id === editPackId) {
+      setSequenceName(currentPack.name || "");
+      setCategory(currentPack.category || "");
+      const reverseTierMap = { starter: "basic", growth: "premium", enterprise: "enterprise" };
+      setSelectedTier(reverseTierMap[currentPack.tier] || "");
+      const firstPrompt = Array.isArray(currentPack.prompts) && currentPack.prompts.length > 0
+        ? currentPack.prompts[0]
+        : null;
+      if (firstPrompt && editorRef.current) {
+        const { html, attachments: extracted } = transformContentForEditor(firstPrompt.content || "");
+        editorRef.current.innerHTML = html;
+        setAttachments(extracted);
+
+        const upgradeToBlob = async (item) => {
+          try {
+            const res = await fetch(item.url, { credentials: 'omit' });
+            if (!res.ok) return;
+            const blob = await res.blob();
+            const fileName = item.name || (item.url && item.url.split('/').pop()) || 'file';
+            const file = new File([blob], fileName, { type: blob.type || undefined });
+            const blobUrl = URL.createObjectURL(blob);
+            const node = editorRef.current?.querySelector(`[data-attachment-id="${item.id}"]`);
+            if (node && item.isImage) {
+              node.setAttribute('src', blobUrl);
+            }
+            setAttachments((prev) => prev.map((a) => (a.id === item.id ? { ...a, url: blobUrl, file } : a)));
+          } catch {
+            // leave original URL
+          }
+        };
+
+        extracted.forEach((it) => {
+          if (it.isImage || (it.url || '').toLowerCase().endsWith('.pdf')) {
+            upgradeToBlob(it);
+          }
+        });
+      }
+    }
+  }, [editPackId, currentPack, transformContentForEditor]);
+
+  const handleSend = async () => {
+    const htmlContent = await buildPersistableHtml();
     const plainTextContent = getPlainTextContent();
     
     if (!plainTextContent.trim()) {
@@ -189,12 +463,15 @@ const MannualPrompt = () => {
     const payload = {
       name: sequenceName?.trim() || `Manual Prompt - ${new Date().toLocaleString()}`,
       tier: backendTier,
-      status: 'active',
       category,
       prompts
     };
 
-    dispatch(createPromptPack(payload));
+    if (editPackId) {
+      dispatch(updatePromptPack({ id: editPackId, updateData: payload }));
+    } else {
+      dispatch(createPromptPack({ ...payload, status: 'active' }));
+    }
   };
 
   const formatButtons = [
@@ -266,9 +543,18 @@ const MannualPrompt = () => {
           />
         </div>
         <div className="mb-2">
-          <label className="block text-white text-base mb-2" htmlFor="sequence-category">
-            Select Category
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-white text-base" htmlFor="sequence-category">
+              Select Category
+            </label>
+            <button
+              type="button"
+              onClick={() => { setShowAddCategory(true); setNewCategoryName(""); }}
+              className="text-xs px-3 py-1 border border-gray-500 text-white hover:bg-gray-700"
+            >
+              Add New
+            </button>
+          </div>
           <select
             id="sequence-category"
             value={category}
@@ -281,6 +567,61 @@ const MannualPrompt = () => {
             {categories.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
+          </select>
+          {showAddCategory && (
+            <div className="mt-3 flex items-center gap-2">
+              <input
+                type="text"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                placeholder="New category name"
+                className="flex-1 px-3 py-2 rounded border border-gray-500 bg-transparent text-gray-200 focus:outline-none focus:border-blue-500"
+              />
+              <button
+                type="button"
+                onClick={async () => {
+                  const name = newCategoryName.trim();
+                  if (!name) { toast.error("Please enter a category name"); return; }
+                  try {
+                    await dispatch(createEmailCategory(name)).unwrap?.();
+                    await dispatch(fetchEmailCategories());
+                    setCategory(name);
+                    setShowAddCategory(false);
+                    setNewCategoryName("");
+                    toast.success("Category created");
+                  } catch (e) {
+                    toast.error(typeof e === 'string' ? e : 'Failed to create category');
+                  }
+                }}
+                className="px-3 py-2 bg-cyan-400 text-black text-xs hover:bg-cyan-300"
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowAddCategory(false); setNewCategoryName(""); }}
+                className="px-3 py-2 border border-gray-500 text-white text-xs hover:bg-gray-700"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
+        <div className="mb-2">
+          <label className="block text-white text-base mb-2" htmlFor="brain-type">
+            Brain Type
+          </label>
+          <select
+            id="brain-type"
+            className="w-full px-4 py-3 rounded border border-gray-500 bg-[#2A2A39] text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
+            value={brainType}
+            onChange={(e) => setBrainType(e.target.value)}
+          >
+            <option value="Architect">Architect</option>
+            <option value="Challenger">Challenger</option>
+            <option value="Synthesizer">Synthesizer</option>
+            <option value="Reflector">Reflector</option>
+            <option value="Catalyst">Catalyst</option>
           </select>
         </div>
       </div>
@@ -448,6 +789,43 @@ const MannualPrompt = () => {
             </div>
           </div>
 
+          {attachments.length > 0 && (
+            <div className="mb-4 flex flex-wrap gap-3 px-2">
+              {attachments.map((item) => {
+                const { id, file, url, isImage } = item;
+                return (
+                  <div key={id} className="relative group border border-slate-600 rounded-md p-2 pr-8 bg-[#1f2937] flex items-center gap-2">
+                    {isImage ? (
+                      <img
+                        src={url}
+                        alt={item.name || file?.name || 'image'}
+                        className="w-12 h-12 object-cover rounded"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded bg-slate-700 flex items-center justify-center text-slate-300 text-xs">
+                        {(item.name || file?.name || 'FILE').split('.').pop()?.toUpperCase() || 'FILE'}
+                      </div>
+                    )}
+                    <div className="flex flex-col">
+                      <span className="text-white text-xs max-w-[180px] truncate" title={item.name || file?.name}>{getTruncatedFileName(item.name || file?.name)}</span>
+                      {file?.size != null && (
+                        <span className="text-slate-400 text-[10px]">{(file.size / 1024).toFixed(1)} KB</span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="absolute top-1 right-1 text-slate-300 hover:text-white"
+                      onClick={() => removeAttachment(id)}
+                      aria-label="Remove file"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           {/* Rich Text Editor */}
           <div
             ref={editorRef}
@@ -475,6 +853,16 @@ const MannualPrompt = () => {
             type="file"
             ref={fileInputRef}
             onChange={handleFileChange}
+            multiple
+            accept=".pdf,.doc,.docx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+            style={{ display: 'none' }}
+          />
+          <input
+            type="file"
+            ref={imageInputRef}
+            onChange={handleImageFileChange}
+            multiple
+            accept="image/*"
             style={{ display: 'none' }}
           />
           
@@ -493,7 +881,7 @@ const MannualPrompt = () => {
             onClick={handleSend}
             disabled={loading}
           >
-            {loading ? "Adding..." : "Add"}
+            {loading ? (editPackId ? "Saving..." : "Adding...") : (editPackId ? "Save" : "Add")}
           </button>
         </div>
       </div>

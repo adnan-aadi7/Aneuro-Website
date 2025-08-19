@@ -62,8 +62,7 @@ import Policy from "./termsConditions/Policy";
 import AddAdmin from "./admin/components/settings/AddAdmin";
 import AdminPermission from "./admin/components/settings/AdminPermission";
 import MannualPrompt from "./admin/components/cms/overviewTab/MannualPrompt";
-
-
+import EditFunnel from "./admin/components/cms/funnelTab/EditFunnel";
 
 
 
@@ -312,6 +311,14 @@ function App() {
           }
         />
         <Route
+          path="/admin/edit-funnel/:templateId"
+          element={
+            <AdminLayout>
+              <EditFunnel />
+            </AdminLayout>
+          }
+        />
+        <Route
           path="/admin/support/feedback"
           element={
             <AdminLayout>
@@ -368,7 +375,23 @@ function App() {
           }
         />
         <Route
+          path="/admin/mannual-email/:sequenceId"
+          element={
+            <AdminLayout>
+              <AddEmailManuall />
+            </AdminLayout>
+          }
+        />
+        <Route
           path="/admin/mannual-prompt"
+          element={
+            <AdminLayout>
+              <MannualPrompt/>
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/mannual-prompt/:packId"
           element={
             <AdminLayout>
               <MannualPrompt/>
