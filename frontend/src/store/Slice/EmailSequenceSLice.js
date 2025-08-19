@@ -54,6 +54,8 @@ export const fetchEmailSequences = createAsyncThunk(
       if (params.search) queryParams.append('search', params.search);
       if (params.sortBy) queryParams.append('sortBy', params.sortBy);
       if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
+      if (params.category) queryParams.append('category', params.category);
+      if (params.brainType) queryParams.append('brainType', params.brainType);
       
       const response = await axios.get(`/email-sequences?${queryParams.toString()}`);
       return response.data;
