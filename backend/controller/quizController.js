@@ -2,22 +2,19 @@ import QuizSession from '../model/quiz.js';
 import nodemailer from 'nodemailer';
 import { incompleteQuizTemplate } from '../config/emailTemplates.js';
 import Reminder from '../model/reminder.js';
-
+import Notification from '../model/Notification.js';
 const TOTAL_QUESTIONS = 10;
 // Confirming from your doc — you mentioned 1, 5, 8 in “Optional Weighting”
 const ANCHOR_QUESTIONS = [1, 5, 8];
 
 // Brain Type Answer Key
 const optionToBrainType = {
-  A: "Architect",   // Logical, structured, detail-oriented
-  B: "Reflector",   // Emotional, intuitive, connection-based
-  C: "Catalyst",    // Fast-paced, instinct-driven
-  D: "Synthesizer"  // Depth-seeking, data-driven
+  A: "Architect",   
+  B: "Reflector",  
+  C: "Catalyst",   
+  D: "Synthesizer"  
 };
 
-/**
- * Save a user's answer to a quiz question
- */
 export const saveAnswer = async (req, res) => {
   try {
     const { user_id, question_number, selected_option } = req.body;
@@ -42,7 +39,6 @@ export const saveAnswer = async (req, res) => {
         is_subscriber_quiz: true // Mark this as subscriber quiz
       });
     } else {
-      // If session exists, ensure this flag is set for subscriber quiz
       session.is_subscriber_quiz = true;
     }
 
@@ -54,15 +50,18 @@ export const saveAnswer = async (req, res) => {
       session.answers.push({ question_number, selected_option, mapped_brain_type });
     }
 
+    // ✅ flag to track if the quiz just got completed
+    let quizCompletedNow = false;
+
     // If quiz is completed, calculate the final result
-    if (session.answers.length === TOTAL_QUESTIONS) {
+    if (session.answers.length === TOTAL_QUESTIONS && !session.is_completed) {
       const result = QuizSession.calculateResult(session.answers);
       session.is_completed = true;
       session.brain_type = result.brainType;
       session.score_breakdown = result.scores;
       session.challenger_detected = result.challenger;
+      quizCompletedNow = true;
 
-      // Push brain type to dashboard analytics (no display to user)
       pushToAnalytics({
         user_id,
         timestamp: new Date(),
@@ -72,6 +71,21 @@ export const saveAnswer = async (req, res) => {
     }
 
     await session.save();
+
+    if (quizCompletedNow) {
+      const notification = new Notification({
+        userId: user_id,
+        title: "Quiz Completed!",
+        message: "You've successfully completed the Aneuro cognitive quiz. Your responses have been recorded.",
+        type: "quiz",
+        isPublic: false,
+        targetTier: "all",
+        read: false
+      });
+      await notification.save();
+      console.log("Quiz completion notification sent:", notification);
+    }
+
     return res.status(200).json({ success: true, data: session });
 
   } catch (error) {
@@ -313,11 +327,12 @@ export const sendIncompleteQuizNotifications = async (req, res) => {
 
     const sendPromises = audienceEmails.map(async (email) => {
       const htmlContent = incompleteQuizTemplate(
-        '', 
+        '',
         quizSession.quiz_title || 'Your Quiz',
         `${process.env.FRONTEND_URL}/quiz/${quizId}`
       );
 
+      // 📧 Send email
       await transporter.sendMail({
         from: `"Quiz Notifications" <${process.env.EMAIL_USER}>`,
         to: email,
@@ -325,17 +340,29 @@ export const sendIncompleteQuizNotifications = async (req, res) => {
         html: htmlContent,
       });
 
-      // Save reminder in DB
       await Reminder.create({
         quizSessionId: quizId,
         sentTo: email,
         sentBy: user_id
       });
+
+      // 🔔 Save notification in DB
+      const notification = new Notification({
+        userId: user_id,
+        title: "Quiz Reminder Sent",
+        message: `A follow-up reminder was sent to  ${email}`,
+        type: "quiz",
+        isPublic: false,
+        targetTier: "all",
+        read: false
+      });
+      await notification.save();
+      console.log("Reminder notification saved:", notification);
     });
 
     await Promise.all(sendPromises);
 
-    return res.status(200).json({ success: true, message: "Emails sent & reminders saved successfully" });
+    return res.status(200).json({ success: true, message: "Emails, reminders & notifications saved successfully" });
   } catch (error) {
     console.error("Error sending emails:", error);
     return res.status(500).json({ success: false, message: error.message });

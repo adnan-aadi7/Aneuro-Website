@@ -4,7 +4,7 @@ const notificationSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: false, 
+    required: false,
   },
   title: {
     type: String,
@@ -16,12 +16,17 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ["reminder", "feedback", "plan", "quiz", "general"],
+    enum: ["reminder", "feedback", "plan", "quiz", "newtool", "general", 'ticket'],
     default: "general",
   },
   isPublic: {
     type: Boolean,
-    default: false, 
+    default: false,
+  },
+  targetTier: {
+    type: String,
+    enum: ["all", "starter", "growth", "enterprise"],
+    default: "all",   
   },
   read: {
     type: Boolean,

@@ -1,35 +1,42 @@
 import EmailSequence from '../model/EmailSequence.js';
 import FunnelTemplate from '../model/FunnelTemplate.js';
 import PromptPack from '../model/Promptpack.js';
+import Notification from '../model/Notification.js';
 
 export const updateStatuses = async () => {
   const now = new Date();
-
   const models = [EmailSequence, PromptPack, FunnelTemplate];
 
   for (const Model of models) {
-    // Debug: show scheduled docs
+    // Find scheduled docs
     const docs = await Model.find({ status: "scheduled" });
     console.log(` ${Model.modelName}: found ${docs.length} scheduled docs at ${now.toISOString()}`);
 
-    docs.forEach(d => {
-      console.log(
-        `-- ${d._id} | release=${d.releaseDateTime?.toISOString()} | status=${d.status}`
-      );
-    });
+    for (const doc of docs) {
+      console.log(`-- ${doc._id} | release=${doc.releaseDateTime?.toISOString()} | status=${doc.status}`);
 
-    const result = await Model.updateMany(
-      { status: "scheduled", releaseDateTime: { $lte: now } },
-      { $set: { status: "active" } }
-    );
+      // Check if it should be activated
+      if (doc.releaseDateTime && doc.releaseDateTime <= now) {
+        doc.status = "active";
+        await doc.save();
 
-    if (result.modifiedCount > 0) {
-      console.log(`✅ Updated ${result.modifiedCount} docs to active in ${Model.modelName}`);
+        console.log(`✅ ${Model.modelName} ${doc._id} is now active`);
+
+        // Create notification
+        const notification = new Notification({
+          title: ` ${doc.name || doc.title || 'Untitled'}`,
+          message: `A new ${doc.tier || 'all'} tier ${Model.modelName} has been activated${doc.category ? ` in category: ${doc.category}` : ''}`,
+          type: 'newtool',
+          isPublic: true,
+          targetTier: doc.tier || 'all',
+        });
+
+        await notification.save();
+        console.log(`🔔 Notification created for ${Model.modelName} ${doc._id}`);
+      }
     }
   }
 };
-
-
 
 
 export const getAllScheduled = async (req, res) => {
@@ -37,9 +44,9 @@ export const getAllScheduled = async (req, res) => {
     await updateStatuses();
 
     const [emails, prompts, funnels] = await Promise.all([
-      EmailSequence.find({ status: 'scheduled' }).lean(),
-      PromptPack.find({ status: 'scheduled' }).lean(),
-      FunnelTemplate.find({ status: 'scheduled' }).lean(),
+      EmailSequence.find({ status: 'scheduled', releaseDateTime: { $ne: null } }).lean(),
+      PromptPack.find({ status: 'scheduled', releaseDateTime: { $ne: null } }).lean(),
+      FunnelTemplate.find({ status: 'scheduled', releaseDateTime: { $ne: null } }).lean(),
     ]);
 
     const combined = [
@@ -49,7 +56,7 @@ export const getAllScheduled = async (req, res) => {
         type: 'Email Sequence',
         scheduledDate: e.scheduledDate,
         time: e.scheduledTime,
-        releaseDateTime: e.releaseDateTime, 
+        releaseDateTime: e.releaseDateTime,
         tier: e.tier,
         status: e.status
       })),
@@ -59,7 +66,7 @@ export const getAllScheduled = async (req, res) => {
         type: 'Prompt Pack',
         scheduledDate: p.scheduledDate,
         time: p.scheduledTime,
-        releaseDateTime: p.releaseDateTime, 
+        releaseDateTime: p.releaseDateTime,
         tier: p.tier,
         status: p.status
       })),
@@ -90,18 +97,14 @@ export const getAllScheduled = async (req, res) => {
     const totalFunnels = funnels.length;
 
     const thisWeekReleases = combined.filter(item =>
-      item.scheduledDate &&
-      new Date(item.scheduledDate) >= startOfWeek &&
-      new Date(item.scheduledDate) <= endOfWeek
+      item.releaseDateTime &&
+      new Date(item.releaseDateTime) >= startOfWeek &&
+      new Date(item.releaseDateTime) <= endOfWeek
     ).length;
 
     const nextRelease = combined
       .filter(item => item.releaseDateTime && new Date(item.releaseDateTime) > now)
-      .sort((a, b) => new Date(a.releaseDateTime) - new Date(b.releaseDateTime))
-      .map(item => ({
-        ...item,
-        scheduledDateTime: item.releaseDateTime
-      }))[0] || null;
+      .sort((a, b) => new Date(a.releaseDateTime) - new Date(b.releaseDateTime))[0] || null;
 
     res.json({
       success: true,
@@ -115,6 +118,7 @@ export const getAllScheduled = async (req, res) => {
       },
       data: combined
     });
+
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

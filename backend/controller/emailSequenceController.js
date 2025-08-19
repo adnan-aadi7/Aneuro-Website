@@ -1,7 +1,7 @@
 import EmailSequence from "../model/EmailSequence.js";
 import { uploadToCloudinary } from "../middleware/uploadToCloudinary.js";
 import { logAction } from "../config/logAction.js";
-
+import Notification from "../model/Notification.js";
 
 export async function create(req, res) {
   try {
@@ -118,12 +118,28 @@ const newSequence = new EmailSequence({
       req
     });
 
-    res.status(201).json({
-      success: true,
-      message: 'Email sequence created successfully',
-      data: savedSequence
-    });
+if (savedSequence.status === "active") {
+  const notification = new Notification({
+    title: ` ${name}`,
+    message: `A new ${tier} tier email sequence has been created in category: ${category}`,
+    type: "newtool", 
+    isPublic: true,
+    targetTier: tier,
+  });
 
+  console.log("Notification that will be created:", notification);
+
+  // Save to DB
+  const savedNotification = await notification.save();
+
+  console.log("Notification saved to DB:", savedNotification);
+}
+
+res.status(201).json({
+  success: true,
+  message: 'Email sequence created successfully (notification logged if active)',
+  data: savedSequence
+});
   } catch (error) {
     res.status(500).json({
       success: false,
