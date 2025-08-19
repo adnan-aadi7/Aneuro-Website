@@ -1,77 +1,82 @@
-import React from "react";
+import React, { useMemo } from "react";
+import { useSelector } from "react-redux";
+import { selectBrainTypeBreakdown } from "../../../../../store/Slice/QuizSlice";
 import {
   PieChart,
   Pie,
   Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Line,
 } from "recharts";
 
-const donutData = [
-  {
-    name: "Analytical",
-    value: 40,
-    color: "#22D3EE",
-    desc: "Thinks logically, values data, and focuses on problem-solving.",
-  },
-  {
-    name: "Creative",
-    value: 30,
-    color: "#A78BFA",
-    desc: "Driven by imagination, innovation, and original ideas.",
-  },
-  {
-    name: "Balanced",
-    value: 60,
-    color: "#2DD4BF",
-    desc: "Blends logic and creativity for well-rounded decision-making.",
-  },
-];
+const COLORS = {
+  Analytical: "#22D3EE",
+  Creative: "#A78BFA",
+  Balanced: "#2DD4BF",
+  Architect: "#22D3EE",
+  Reflector: "#A78BFA",
+  Catalyst: "#2DD4BF",
+  Synthesizer: "#60A5FA",
+  Challenger: "#F59E0B",
+};
+const KNOWN_TYPES = ["Architect", "Reflector", "Catalyst", "Synthesizer", "Challenger"];
 
-// Each bar is a different color per group, and the line overlays all
-const barData = [
-  { date: "12/2025", value: 500, color: "#A78BFA", line: 320 },
-  { date: "13/2025", value: 300, color: "#2DD4BF", line: 340 },
-  { date: "14/2025", value: 670, color: "#22D3EE", line: 400 },
-  { date: "15/2025", value: 430, color: "#A78BFA", line: 280 },
-  { date: "16/2025", value: 90, color: "#22D3EE", line: 260 },
-];
+// Right-side bar chart removed
 
 const RADIAN = Math.PI / 180;
-const renderCustomizedLabel = ({
-  cx,
-  cy,
-  midAngle,
-  innerRadius,
-  outerRadius,
-  index,
-}) => {
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.7;
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
-  return (
-    <text
-      x={x}
-      y={y}
-      fill="#fff"
-      textAnchor="middle"
-      dominantBaseline="middle"
-      fontSize={20}
-      fontWeight="bold"
-      className="drop-shadow-lg"
-    >
-      {`${donutData[index].value}%`}
-    </text>
-  );
-};
 
 const Charts = () => {
+  const breakdownObj = useSelector(selectBrainTypeBreakdown);
+
+  const data = useMemo(() => {
+    const baseNames = breakdownObj ? Object.keys(breakdownObj) : KNOWN_TYPES;
+    const computed = baseNames.map((name) => {
+      const display = Math.round(breakdownObj?.[name]?.percentage ?? 0);
+      return {
+        name,
+        display,
+        // Render value ensures chart is visible even when all zeros
+        value: display,
+        color: COLORS[name] || "#64748B",
+      };
+    });
+    const sum = computed.reduce((s, d) => s + (Number.isFinite(d.display) ? d.display : 0), 0);
+    if (sum === 0) {
+      // Use minimal non-zero values to render the ring, but keep labels at 0%
+      return computed.map((d) => ({ ...d, value: 1 }));
+    }
+    return computed;
+  }, [breakdownObj]);
+
+  // totalValue retained via fallback; no need for separate overlay
+
+  const renderCustomizedLabel = ({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    index,
+  }) => {
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.7;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="#fff"
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fontSize={20}
+        fontWeight="bold"
+        className="drop-shadow-lg"
+      >
+        {`${data[index].display}%`}
+      </text>
+    );
+  };
+
   return (
-    <div className="relative w-full max-w-full mx-auto   bg-[#2A2A39] text-white font-inter overflow-visible flex flex-col md:flex-row gap-8 items-start  overflow-x-auto">
+    <div className="relative w-full max-w-full mx-auto   bg-[#2A2A39] text-white font-inter overflow-visible flex flex-col gap-8 items-start">
       {/* Left: Donut chart and floating labels */}
       <div className="w-[320px] md:flex-1 md:min-w-[340px] flex flex-col items-center relative">
         <div className="text-2xl font-medium mb-2 self-start">
@@ -79,7 +84,7 @@ const Charts = () => {
         </div>
         {/* Legend */}
         <div className="flex gap-8 mb-8 self-start z-20 relative ">
-          {donutData.map((d) => (
+          {data.map((d) => (
             <div key={d.name} className="flex items-center gap-2">
               <span
                 className="inline-block w-3 h-3 rounded-full"
@@ -94,10 +99,11 @@ const Charts = () => {
             </div>
           ))}
         </div>
-        <div className="relative flex items-center justify-center min-h-[340px] mt-10">
+        <div className="relative flex items-center justify-center min-h-[340px] mt-10 pl-24 md:pl-32">
+          {/* Always render chart; fallback data ensures visibility */}
           <PieChart width={315} height={340} className="z-10">
             <Pie
-              data={donutData}
+              data={data}
               cx={170}
               cy={170}
               innerRadius={90}
@@ -109,14 +115,14 @@ const Charts = () => {
               labelLine={false}
               isAnimationActive={false}
             >
-              {donutData.map((entry, i) => (
+              {data.map((entry, i) => (
                 <Cell key={`cell-${i}`} fill={entry.color} />
               ))}
             </Pie>
           </PieChart>
           {/* Analytical label (left) */}
           <div
-            className="hidden md:block absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[60%] w-48 rounded-lg px-4 py-3 shadow-lg z-30"
+            className="hidden md:block absolute left-6 top-1/2 -translate-y-1/2 w-56 rounded-lg px-4 py-3 shadow-lg z-30"
             style={{
               background: "#232432cc",
               
@@ -135,7 +141,7 @@ const Charts = () => {
               
             }}
           >
-            <div className="font-semibold text-white mb-1">Creative</div>
+            <div className="font-semibold text-white mb-1">Balanced</div>
             <div className="text-xs text-gray-200 leading-snug">
               Driven by imagination, innovation, and original ideas.
             </div>
@@ -155,45 +161,7 @@ const Charts = () => {
           </div>
         </div>
       </div>
-      {/* Right: Single bar per group, colored, with cyan line overlay */}
-      <div className="w-[320px] md:flex-1 md:min-w-[340px] flex items-center justify-center mt-8">
-        <BarChart
-          width={370}
-          height={370}
-          data={barData}
-          className="bg-transparent"
-        >
-          <CartesianGrid
-            stroke="#E5E7EB22"
-            strokeDasharray="0"
-            vertical={false}
-          />
-          <XAxis
-            dataKey="date"
-            tick={{ fill: "#fff", fontSize: 15, fontWeight: 700 }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis
-            tick={{ fill: "#fff", fontSize: 15, fontWeight: 700 }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <Bar dataKey="value" barSize={60} isAnimationActive={false}>
-            {barData.map((entry, idx) => (
-              <Cell key={`cell-bar-${idx}`} fill={entry.color} />
-            ))}
-          </Bar>
-          <Line
-            type="monotone"
-            dataKey="line"
-            stroke="#22D3EE"
-            strokeWidth={3}
-            dot={false}
-            isAnimationActive={false}
-          />
-        </BarChart>
-      </div>
+      {/* Right-side chart removed */}
     </div>
   );
 };

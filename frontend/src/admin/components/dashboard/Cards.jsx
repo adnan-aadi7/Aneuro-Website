@@ -77,13 +77,7 @@ const Cards = () => {
   const avgTimeAnalytics = dashboardAnalytics?.avgQuizCompletionTime;
   const revenueAnalytics = dashboardAnalytics?.revenue;
 
-  // Debug logging to see what values we're getting
-  // console.log('Dashboard Analytics Debug:', {
-  //   avgTimeAnalytics,
-  //   revenueAnalytics,
-  //   avgTimePercentage: avgTimeAnalytics?.percentage,
-  //   revenuePercentage: revenueAnalytics?.percentage
-  // });
+
 
   const newSubscribersCount = loading.newSubscribers
     ? null
@@ -187,7 +181,7 @@ const Cards = () => {
           />
         </div>
       ),
-      title: "Revenue",
+      title: "Heading Here",
       value: loading.balance ? "Loading..." : (stripeBalance?.available?.formatted || "$0.00"),
       stat: loading.dashboardAnalytics ? "Loading..." : formatPercentage(
         revenueAnalytics?.percentage, 

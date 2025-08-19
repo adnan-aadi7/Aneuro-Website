@@ -215,7 +215,7 @@ export default function Table() {
                     </span>
                   </td>
                   <td className="py-4">
-                    <CircularProgress percentage={0} />
+                    <CircularProgress percentage={user?.quizProgress?.completionPercentage ?? 0} />
                   </td>
                   <td className="py-4">
                     <button

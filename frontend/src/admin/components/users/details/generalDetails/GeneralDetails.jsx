@@ -79,31 +79,36 @@ export default function GeneralDetails({ user: userProp }) {
   };
 
   const CircularProgress = ({ percentage }) => {
-    const radius = 10;
+    const size = 20;
+    const strokeWidth = 3;
+    const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
-    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+    const progress = Math.max(0, Math.min(percentage, 100));
+    const strokeDashoffset = circumference - (progress / 100) * circumference;
 
     return (
-      <div className="relative w-6 h-6">
-        <svg className="w-6 h-6 transform -rotate-90" viewBox="0 0 24 24">
+      <div className="flex items-center gap-2">
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
           <circle
-            cx="12"
-            // cy="12"
+            cx={size / 2}
+            cy={size / 2}
             r={radius}
-            stroke="#374151"
-            strokeWidth="2"
+            stroke="#D1FADF"
+            strokeWidth={strokeWidth}
             fill="none"
           />
           <circle
-            cx="12"
-            cy="12"
+            cx={size / 2}
+            cy={size / 2}
             r={radius}
-            stroke="#10b981"
-            strokeWidth="2"
+            stroke="#19E05A"
+            strokeWidth={strokeWidth}
             fill="none"
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
+            style={{ transition: "stroke-dashoffset 0.4s" }}
+            transform={`rotate(-90 ${size / 2} ${size / 2})`}
           />
         </svg>
       </div>
@@ -134,9 +139,9 @@ export default function GeneralDetails({ user: userProp }) {
     },
     {
       label: "Quiz Engagement",
-      value: `${user?.quizProgress || 0}%`,
+      value: `${(user?.quizProgress?.completionPercentage ?? 0)}%`,
       type: "progress",
-      percentage: user?.quizProgress || 0,
+      percentage: user?.quizProgress?.completionPercentage ?? 0,
     },
   ];
 
