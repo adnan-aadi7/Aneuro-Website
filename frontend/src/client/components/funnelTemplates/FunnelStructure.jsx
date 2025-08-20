@@ -1,115 +1,108 @@
-import React, { useState } from "react";
+import React from "react";
+import FunnelCategoryFilter from "./FunnelCategoryFilter";
 
-export default function FunnelStructure() {
-  // Tooltip state for Lead Magnet Page
-  const [showTooltip, setShowTooltip] = useState(false);
-  // Tooltip state for Landing Page
-  const [showLandingTooltip, setShowLandingTooltip] = useState(false);
+function getFileMeta(url = "") {
+  try {
+    const u = new URL(url);
+    const name = decodeURIComponent(u.pathname.split("/").pop() || "file");
+    const ext = name.split(".").pop()?.toLowerCase() || "";
+    return { name, ext };
+  } catch {
+    const name = decodeURIComponent(url.split("/").pop() || "file");
+    const ext = name.split(".").pop()?.toLowerCase() || "";
+    return { name, ext };
+  }
+}
+const DOWNLOADABLE = new Set(["txt", "doc", "docx"]);
+
+export default function FunnelStructure({
+  templates,
+  loading,
+  activeTab,
+  category,
+  onCategoryChange,
+}) {
   return (
-    <div>
-      {/* Filter Templates Section */}
-      <div className="bg-[#303041]  p-6 mb-6 mt-10">
-        <h2 className="text-white text-2xl font-semibold mb-6">
-          Filter Templates
+    <div className="bg-[#303041] text-white mt-10">
+      {/* Top heading like emails */}
+      <div className="lg:p-6 p-2">
+        <h2 className="text-xl font-semibold">
+          {activeTab ? `${activeTab} Funnel Templates` : "Funnel Templates"}
         </h2>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="w-full sm:w-64">
-            <label className="block text-[#B0B0B0] text-sm mb-2">
-              Brain Type
-            </label>
-            <select className="w-full bg-[#23232A] text-white px-4 py-3 border border-[#444] focus:outline-none">
-              <option>All Brain Types</option>
-              <option>Analytical</option>
-              <option>Creative</option>
-              <option>Reflective</option>
-            </select>
-          </div>
-          <div className="w-full sm:w-64">
-            <label className="block text-[#B0B0B0] text-sm mb-2">
-              Use Case
-            </label>
-            <select className="w-full bg-[#23232A] text-white px-4 py-3 border border-[#444] focus:outline-none">
-              <option>All Use Cases</option>
-              <option>Lead Generation</option>
-              <option>Sales</option>
-              <option>Onboarding</option>
-            </select>
-          </div>
-        </div>
       </div>
 
-      {/* Funnel Structure Section */}
-      <div className="bg-[#303041]  p-6 mt-10">
-        <h2 className="text-white text-2xl font-semibold mb-6">
-          Funnel Structure
-        </h2>
-        <div className="space-y-4">
-          {/* Landing Page */}
-          <div
-            className="bg-[#23232A]  mb-2 flex items-center justify-between px-6 py-4 relative"
-            onMouseEnter={() => setShowLandingTooltip(true)}
-            onMouseLeave={() => setShowLandingTooltip(false)}
-          >
-            {/* Custom Tooltip for Landing Page */}
-            {showLandingTooltip && (
-              <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-3 py-2 rounded shadow-lg z-20 whitespace-nowrap pointer-events-none">
-                This is the Landing Page block. High-converting landing page
-                with compelling headline and CTA.
-              </div>
-            )}
-            <div>
-              <div className="text-white text-lg font-semibold">
-                Landing Page
-              </div>
-              <div className="text-[#12DCF0] text-sm mt-1">
-                High-converting landing page with compelling headline and CTA
-              </div>
-            </div>
-            <button className="border border-[#12DCF0] text-[#12DCF0] px-3 py-1 text-xs font-medium transition-colors hover:bg-[#23232F] ml-4">
-              Copy
-            </button>
-          </div>
-          {/* Lead Magnet Page */}
-          {/*
-            This block represents the 'Lead Magnet Page' step in the funnel structure.
-            - The left section contains the title and a description of the page's purpose.
-            - The right section is a 'Copy' button for duplicating or using this template.
-            - Styling ensures visual separation and clarity in the funnel steps list.
-          */}
-          <div
-            className="bg-[#23232A]  mb-2 flex items-center justify-between px-6 py-4 mt-5 relative"
-            onMouseEnter={() => setShowTooltip(true)}
-            onMouseLeave={() => setShowTooltip(false)}
-          >
-            {/* Custom Tooltip */}
-            {showTooltip && (
-              <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-3 py-2 rounded shadow-lg z-20 whitespace-nowrap pointer-events-none">
-                This is the Lead Magnet Page block. Value-packed lead magnet to
-                capture visitor information.
-              </div>
-            )}
-            <div>
-              {/* Title of the funnel step */}
-              <div className="text-white text-lg font-semibold">
-                Lead Magnet Page
-              </div>
-              {/* Description of the funnel step */}
-              <div className="text-[#12DCF0] text-sm mt-1">
-                Value-packed lead magnet to capture visitor information
-              </div>
-            </div>
-            {/* Copy button for this funnel step */}
-            <button className="border border-[#12DCF0] text-[#12DCF0] px-3 py-1 text-xs font-medium transition-colors hover:bg-[#23232F] ml-4">
-              Copy
-            </button>
-            {/* End of Lead Magnet Page block */}
-          </div>
-        </div>
+      {/* Category dropdown inside */}
+      <div className="lg:p-6 p-2">
+        <FunnelCategoryFilter value={category} onChange={onCategoryChange} />
       </div>
-      <div className="text-center mt-8">
-        <button className="border border-[#12DCF0] text-[#12DCF0] px-8 py-2  text-sm font-medium transition-colors hover:bg-[#23232F]">
-          View All 5 Pages
-        </button>
+
+      <div className="lg:p-6 p-2">
+        {loading && <div className="text-white mt-2">Loading…</div>}
+        {!loading && (!templates || templates.length === 0) && (
+          <div className="text-white mt-2">No templates found.</div>
+        )}
+
+        {!loading &&
+          templates?.map((tpl) => {
+            // Simple card per template (name + optional file row)
+            const hasFile = !!tpl.fileUrl;
+            const file = hasFile ? getFileMeta(tpl.fileUrl) : null;
+            const canDownload = hasFile && DOWNLOADABLE.has(file.ext);
+
+            return (
+              <div key={tpl._id} className="bg-[#23232A] p-6 mb-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-base font-semibold mb-1">
+                      {tpl.name || "Funnel Template"}
+                    </h3>
+                    {tpl.description ? (
+                      <p className="text-[#12DCF0] text-sm">{tpl.description}</p>
+                    ) : null}
+                  </div>
+                </div>
+
+                {/* If template has file, list row with View / Download (no inline preview) */}
+                {hasFile && (
+                  <div className="flex items-center justify-between bg-[#1c1c22] rounded-lg p-3">
+                    <div className="text-sm text-[#B0B0B0] truncate">
+                      <span className="mr-2 inline-block px-2 py-0.5 rounded bg-[#2b2b35] text-xs uppercase tracking-wide">
+                        {file.ext || "file"}
+                      </span>
+                      <span title={file.name} className="align-middle truncate max-w-[55vw] inline-block">
+                        {file.name}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={tpl.fileUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="border border-[#12DCF080] text-[#B0B0B0] px-3 py-2 text-xs font-medium hover:bg-[#292933]"
+                      >
+                        View
+                      </a>
+                      {canDownload && (
+                        <a
+                          href={tpl.fileUrl}
+                          download={file.name}
+                          className="border border-[#12DCF080] text-[#B0B0B0] px-3 py-2 text-xs font-medium hover:bg-[#292933]"
+                        >
+                          Download
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+        <div className="text-center mt-8">
+          <button className="bg-[#23232A] border border-[#12DCF080] text-[#B0B0B0] px-6 py-3 text-xs font-medium transition-colors hover:bg-[#292933]">
+            View All Templates
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -1,7 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, Pipette } from "lucide-react";
+import { HexColorPicker } from "react-colorful";
 
 const CYAN = "#2de0fb";
+const DEFAULT_POPOVER_WIDTH = 235;
+const VIEWPORT_MARGIN = 8;
 
 const Customizations = ({
   primaryColor,
@@ -13,129 +17,238 @@ const Customizations = ({
   borderColor,
   setBorderColor,
 }) => {
-  const [showCustomPicker, setShowCustomPicker] = useState(null);
+  const [openId, setOpenId] = useState(null);       // "primary" | "secondary" | "text" | "border" | null
+  const [draftColor, setDraftColor] = useState(""); // buffers changes while popover open
 
-  const colorOptions = [
-    "#2DD1D1", // cyan
-    "#FF6B35", // orange
-    "#FFD23F", // yellow
-    "#9B59B6", // purple
-  ];
+  const colorOptions = ["#2DD1D1", "#FF6B35", "#FFD23F", "#9B59B6"];
 
-  const ColorSection = ({ title, selectedColor, onColorChange, sectionId }) => (
-    <div className="mb-1">
-      <h3 className="text-gray-300 text-sm mb-0.5">{title}</h3>
-      <div className="flex flex-col sm:flex-row sm:items-center gap-1 justify-between">
-        <div className="flex gap-3 flex-wrap justify-start">
-          {colorOptions.map((color) => (
+  // ---------- portal + left-biased positioning ----------
+  const usePopoverPosition = (isOpen, triggerRef, desiredWidth) => {
+    const [pos, setPos] = useState({ top: 0, left: 0, width: desiredWidth || DEFAULT_POPOVER_WIDTH });
+
+    useLayoutEffect(() => {
+      const update = () => {
+        const el = triggerRef.current;
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+
+        const width = desiredWidth || DEFAULT_POPOVER_WIDTH;
+
+        // align RIGHT edges so extra width grows to the LEFT
+        let left = r.right + window.scrollX - width;
+
+        // clamp to viewport
+        const minLeft = window.scrollX + VIEWPORT_MARGIN;
+        const maxLeft = window.scrollX + window.innerWidth - VIEWPORT_MARGIN - width;
+        if (left < minLeft) left = minLeft;
+        if (left > maxLeft) left = maxLeft;
+
+        const top = r.bottom + window.scrollY + 6;
+        setPos({ top, left, width });
+      };
+
+      if (isOpen) {
+        update();
+        window.addEventListener("scroll", update, true);
+        window.addEventListener("resize", update);
+        return () => {
+          window.removeEventListener("scroll", update, true);
+          window.removeEventListener("resize", update);
+        };
+      }
+    }, [isOpen, triggerRef, desiredWidth]);
+
+    return pos;
+  };
+
+  const useOnClickOutside = (refs, handler, when = true) => {
+    useEffect(() => {
+      if (!when) return;
+      const onClick = (e) => {
+        const inAny = refs.some((r) => r.current && r.current.contains(e.target));
+        if (!inAny) handler();
+      };
+      document.addEventListener("mousedown", onClick);
+      return () => document.removeEventListener("mousedown", onClick);
+    }, [refs, handler, when]);
+  };
+
+  // commit helper
+  const commitDraft = (sectionId) => {
+    if (!sectionId) return;
+    const value = draftColor || "#000000";
+    switch (sectionId) {
+      case "primary":   setPrimaryColor(value);   break;
+      case "secondary": setSecondaryColor(value); break;
+      case "text":      setTextColor(value);      break;
+      case "border":    setBorderColor(value);    break;
+      default: break;
+    }
+  };
+
+  const Popover = ({ isOpen, anchorRef, onClose, desiredWidth, children }) => {
+    const pos = usePopoverPosition(isOpen, anchorRef, desiredWidth);
+    const popRef = useRef(null);
+    useOnClickOutside([popRef, anchorRef], onClose, isOpen);
+    if (!isOpen) return null;
+
+    return createPortal(
+      <div
+        ref={popRef}
+        style={{ position: "absolute", top: pos.top, left: pos.left, width: pos.width, zIndex: 9999 }}
+        className="rounded-md border border-gray-600 bg-[#2A2A39] shadow-lg"
+      >
+        {children}
+      </div>,
+      document.body
+    );
+  };
+  // ------------------------------------------------------
+
+  const ColorSection = ({ title, selectedColor, onColorChange, sectionId }) => {
+    const triggerRef = useRef(null);
+    const canEyedrop = typeof window !== "undefined" && "EyeDropper" in window;
+
+    // open/close logic that respects draft commit
+    const togglePopover = () => {
+      if (openId === sectionId) {
+        // closing current → commit & close
+        commitDraft(sectionId);
+        setOpenId(null);
+      } else if (openId) {
+        // another popover is open → commit that first, then open this
+        commitDraft(openId);
+        setDraftColor(selectedColor || "#000000");
+        setOpenId(sectionId);
+      } else {
+        // opening fresh → seed draft with current value
+        setDraftColor(selectedColor || "#000000");
+        setOpenId(sectionId);
+      }
+    };
+
+    const handleClose = () => {
+      // outside click close → commit
+      commitDraft(sectionId);
+      setOpenId(null);
+    };
+
+    const pickFromScreen = async () => {
+      if (!canEyedrop) return;
+      try {
+        const eye = new window.EyeDropper();
+        const { sRGBHex } = await eye.open();
+        setDraftColor(sRGBHex); // draft only
+      } catch {
+        // cancelled or not available
+      }
+    };
+
+    return (
+      <div className="mb-1">
+        <h3 className="text-gray-300 text-sm mb-0.5">{title}</h3>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 justify-between">
+          {/* Swatches (commit immediately) */}
+          <div className="flex gap-3 flex-wrap justify-start">
+            {colorOptions.map((color) => (
+              <button
+                key={color}
+                className={`w-8 h-8 relative border ${selectedColor === color ? "border-[#12DCF0]" : "border-transparent"}`}
+                style={{ backgroundColor: color }}
+                onClick={() => onColorChange(color)}
+              >
+                {selectedColor === color && (
+                  <span className="absolute top-0 right-0 mt-0.5 mr-0.5">
+                    <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+                      <path d="M5 10.5L9 14.5L15 7.5" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Trigger */}
+          <div className="relative w-full sm:w-auto mt-2 sm:mt-0">
             <button
-              key={color}
-              className={`w-8 h-8  relative border ${
-                selectedColor === color
-                  ? "border-[#12DCF0]"
-                  : "border-transparent"
-              }`}
-              style={{ backgroundColor: color }}
-              onClick={() => onColorChange(color)}
+              ref={triggerRef}
+              className="border border-[#12DCF0] text-gray-300 px-2 py-1 ml-0 sm:ml-5 text-sm flex items-center gap-2 hover:bg-gray-600 transition-colors whitespace-nowrap w-full sm:w-auto"
+              onClick={togglePopover}
             >
-              {selectedColor === color && (
-                <span className="absolute top-0 right-0 mt-0.5 mr-0.5">
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M5 10.5L9 14.5L15 7.5"
-                      stroke="#fff"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
-              )}
+              Select custom color
+              <ChevronDown className="w-4 h-4" />
             </button>
-          ))}
-        </div>
-        <div className="relative w-full sm:w-auto mt-2 sm:mt-0">
-          <button
-            className="border border-[#12DCF0] text-gray-300 px-2 py-1 ml-0 sm:ml-5 text-sm flex items-center gap-2 hover:bg-gray-600 transition-colors whitespace-nowrap"
-            onClick={() =>
-              setShowCustomPicker(
-                showCustomPicker === sectionId ? null : sectionId
-              )
-            }
-          >
-            Select custom color
-            <ChevronDown className="w-4 h-4" />
-          </button>
-          {showCustomPicker === sectionId && (
-            <div className="absolute top-full mt-1 left-0 z-10 bg-gray-800 border border-gray-600 p-2 shadow-lg w-full max-w-xs sm:w-64 overflow-visible max-w-full">
-              <input
-                type="color"
-                value={selectedColor}
-                onChange={(e) => onColorChange(e.target.value)}
-                className="w-full h-8 rounded border-none cursor-pointer"
-              />
-              <div className="mt-2 text-xs text-gray-400">
-                Click to select a custom color
+
+            {/* Popover */}
+            <Popover
+              isOpen={openId === sectionId}
+              anchorRef={triggerRef}
+              onClose={handleClose}
+              desiredWidth={DEFAULT_POPOVER_WIDTH}
+            >
+              <div className="p-2 pointer-events-auto">
+                {/* preview bar */}
+                <div
+                  className="h-8 mb-2 border border-gray-700 rounded"
+                  style={{ background: openId === sectionId ? (draftColor || "#000000") : (selectedColor || "#000000") }}
+                />
+
+                {/* picker bound to DRAFT */}
+                <div className="bg-[#1F2130] p-2 rounded border border-gray-700">
+                  <HexColorPicker
+                    color={openId === sectionId ? (draftColor || "#000000") : (selectedColor || "#000000")}
+                    onChange={setDraftColor}
+                    className="w-full"
+                  />
+
+                  {/* HEX row */}
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-xs text-gray-400">HEX</span>
+                    <input
+                      value={(openId === sectionId ? (draftColor || "#000000") : (selectedColor || "#000000")).toUpperCase()}
+                      onChange={(e) => setDraftColor(e.target.value)}
+                      className="bg-[#141827] text-gray-200 text-xs px-2 py-1 rounded border border-gray-700 font-mono w-32"
+                    />
+                  </div>
+
+                  {/* Buttons BELOW HEX */}
+                  <div className="flex items-center justify-end gap-2 mt-2">
+                    <button
+                      type="button"
+                      onClick={pickFromScreen}
+                      disabled={!canEyedrop}
+                      className={`text-xs px-2 py-1 rounded border ${
+                        canEyedrop
+                          ? "bg-slate-800 text-gray-200 hover:bg-slate-700 border-gray-700"
+                          : "bg-slate-700 text-gray-500 border-gray-700 cursor-not-allowed"
+                      } flex items-center gap-1`}
+                      title={canEyedrop ? "Pick color from anywhere on screen" : "Eyedropper not supported in this browser"}
+                    >
+                      <Pipette className="w-3 h-3" />
+                      Pick
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        commitDraft(sectionId);
+                        setOpenId(null);
+                      }}
+                      className="text-xs px-2 py-1 rounded bg-slate-800 text-gray-200 hover:bg-slate-700 border border-gray-700"
+                    >
+                      Done
+                    </button>
+                  </div>
+                </div>
+
+                <div className="text-xs text-gray-400 mt-2">Click to select a custom color</div>
               </div>
-            </div>
-          )}
+            </Popover>
+          </div>
         </div>
       </div>
-    </div>
-  );
-
-  const ColorSlider = ({ label, value, onChange, color, isHue = false }) => (
-    <div className="mb-4">
-      <div className="flex justify-between items-center mb-1">
-        <span className="text-gray-300 text-sm">{label}</span>
-        <span className="text-gray-300 text-sm">
-          {isHue ? `${value}°` : `${value}%`}
-        </span>
-      </div>
-      <div className="relative">
-        <div
-          className="w-full h-2 "
-          style={{
-            background: isHue
-              ? "linear-gradient(to right, #ff0000 0%, #ffff00 16.67%, #00ff00 33.33%, #00ffff 50%, #0000ff 66.67%, #ff00ff 83.33%, #ff0000 100%)"
-              : `linear-gradient(to right, ${color} 0%, ${color} ${value}%, #374151 ${value}%, #374151 100%)`,
-          }}
-        />
-        <input
-          type="range"
-          min="0"
-          max={isHue ? "360" : "100"}
-          value={value}
-          onChange={(e) => onChange(parseInt(e.target.value))}
-          className="absolute top-0 w-full h-2  appearance-none cursor-pointer bg-transparent"
-          style={{
-            background: "transparent",
-          }}
-        />
-        <div
-          className="absolute top-0 w-4 h-4 bg-white rounded-full shadow-lg -mt-1 pointer-events-none border border-gray-300 transition-all duration-200"
-          style={{
-            left: `calc(${isHue ? (value / 360) * 100 : value}% - 8px)`,
-          }}
-        />
-      </div>
-    </div>
-  );
-
-  const [hue, setHue] = useState(180);
-  const [saturation, setSaturation] = useState(44);
-
-  // Update primaryColor when hue or saturation changes
-  React.useEffect(() => {
-    const hslColor = `hsl(${hue}, ${saturation}%, 50%)`;
-    setPrimaryColor(hslColor);
-  }, [hue, saturation, setPrimaryColor]);
+    );
+  };
 
   return (
     <div
@@ -143,129 +256,17 @@ const Customizations = ({
       style={{ boxShadow: `inset 0 0 20px 0 ${CYAN}80` }}
     >
       <div className="text-white font-sans">
-        {/* Primary Color Section */}
-        <div className="mb-6 border border-gray-600 rounded p-2">
-          <h3 className="text-gray-300 text-sm mb-1">Primary button color</h3>
-          <div className="flex items-center justify-between mb-2">
-            {/* Swatches left */}
-            <div className="flex gap-3">
-              {colorOptions.map((color) => (
-                <button
-                  key={color}
-                  className={`w-8 h-8 rounded relative border ${
-                    primaryColor === color
-                      ? "border-[#12DCF0]"
-                      : "border-transparent"
-                  }`}
-                  style={{ backgroundColor: color }}
-                  onClick={() => setPrimaryColor(color)}
-                >
-                  {primaryColor === color && (
-                    <span className="absolute top-0 right-0 mt-0.5 mr-0.5">
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M5 10.5L9 14.5L15 7.5"
-                          stroke="#fff"
-                          strokeWidth="2.2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-            {/* Custom color button right */}
-            <div className="relative">
-              <button
-                className="border border-[#12DCF0] text-gray-300 px-2 py-1 text-sm flex items-center gap-2 hover:bg-gray-600 transition-colors"
-                onClick={() =>
-                  setShowCustomPicker(
-                    showCustomPicker === "primary" ? null : "primary"
-                  )
-                }
-              >
-                Select custom color
-                <ChevronDown className="w-4 h-4" />
-              </button>
-              {showCustomPicker === "primary" && (
-                <div className="absolute top-full left-0 bg-gray-800 border border-gray-600 p-2 z-10">
-                  <input
-                    type="color"
-                    value={primaryColor}
-                    onChange={(e) => setPrimaryColor(e.target.value)}
-                    className="w-32 h-8 border-none cursor-pointer"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-          {/* Color Sliders */}
-          <div className="mt-4">
-            <ColorSlider
-              value={hue}
-              onChange={setHue}
-              color={`hsl(${hue}, 100%, 50%)`}
-              isHue={true}
-            />
-            <ColorSlider
-              value={saturation}
-              onChange={setSaturation}
-              color={`hsl(${hue}, 100%, 50%)`}
-            />
-          </div>
-
-          {/* Color Info */}
-          <div className="flex items-center gap-1 border border-gray-600">
-            <div className="flex items-center gap-2">
-              <button className="  border-[#12DCF0] text-gray-300 px-3 py-1 text-sm hover:bg-gray-600 transition-colors ">
-                Hex
-                <ChevronDown className="w-3 h-3 ml-1 inline" />
-              </button>
-              <span className="text-gray-300 text-sm font-mono">#211D1D</span>
-            </div>
-            <div className="flex items-center gap-2 ml-auto">
-              <span className="text-gray-300 text-sm">100%</span>
-              <Pipette className="w-4 h-4 text-gray-400" />
-            </div>
-          </div>
+        <div className="border border-gray-600 p-2 mb-2">
+          <ColorSection title="Primary button color"   selectedColor={primaryColor}   onColorChange={setPrimaryColor}   sectionId="primary" />
         </div>
-
-        {/* Secondary Color Section */}
-        <div className="border border-gray-600  p-2 mb-2">
-          <ColorSection
-            title="Secondary button color"
-            selectedColor={secondaryColor}
-            onColorChange={setSecondaryColor}
-            sectionId="secondary"
-          />
+        <div className="border border-gray-600 p-2 mb-2">
+          <ColorSection title="Secondary button color" selectedColor={secondaryColor} onColorChange={setSecondaryColor} sectionId="secondary" />
         </div>
-
-        {/* Text Color Section */}
-        <div className="border border-gray-600  p-2 mb-2">
-          <ColorSection
-            title="Text Color"
-            selectedColor={textColor}
-            onColorChange={setTextColor}
-            sectionId="text"
-          />
+        <div className="border border-gray-600 p-2 mb-2">
+          <ColorSection title="Text Color"             selectedColor={textColor}     onColorChange={setTextColor}      sectionId="text" />
         </div>
-
-        {/* Border Color Section */}
-        <div className="border border-gray-600  p-2 mb-2">
-          <ColorSection
-            title="Border color"
-            selectedColor={borderColor}
-            onColorChange={setBorderColor}
-            sectionId="border"
-          />
+        <div className="border border-gray-600 p-2 mb-2">
+          <ColorSection title="Border color"           selectedColor={borderColor}   onColorChange={setBorderColor}    sectionId="border" />
         </div>
       </div>
     </div>

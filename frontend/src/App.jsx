@@ -82,7 +82,7 @@ function App() {
         <Route path="/auth/google/callback" element={<GoogleCallback />} />
         <Route path="/auth/facebook/callback" element={<FacebookCallback />} />
 
-         <Route path="/Audience-quiz" element={<Audience/>}/>
+           <Route path="/Audience-quiz/:userId" element={<Audience />} />
         {/* landingpage  */}
         <Route path="/about-us" element={<AboutUs />} />
         <Route path="/privacy-policy" element={<Policy/>} />

@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { ChevronDown, Copy } from "lucide-react";
 
-export default function StrategicPrompt() {
+export default function StrategicPrompt({ categories = [] }) {
   const [showFirstPrompt, setShowFirstPrompt] = useState(true);
   const [showFullPrompt, setShowFullPrompt] = useState(false);
-  const [copiedPrompt, setCopiedPrompt] = useState(0); // 0: none, 1: first, 2: second
-  // Tooltip state for Strategic Social Media Caption Generator section
+  const [copiedPrompt, setCopiedPrompt] = useState(0);
   const [showEmailTooltip, setShowEmailTooltip] = useState(false);
   const [emailTooltipPos, setEmailTooltipPos] = useState({ x: 0, y: 0 });
 
@@ -19,16 +18,14 @@ export default function StrategicPrompt() {
     setTimeout(() => setCopiedPrompt(0), 1500);
   };
 
-  // Only keep the Strategic dropdown unchanged
   const renderDropdown = () => {
     return (
       <div className="relative mb-8">
         <select className="w-full bg-[#16161C] text-white px-4 py-3 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700">
-          <option>Reflector dropdown</option>
-          <option>Planner</option>
-          <option>Organizer</option>
-          <option>Evaluator</option>
-          <option>Coordinator</option>
+          <option>Select Category</option>
+          {categories.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
         </select>
         <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
       </div>
@@ -37,41 +34,25 @@ export default function StrategicPrompt() {
 
   return (
     <div className="bg-[#303041] text-white mt-10">
-      {/* Header */}
       <div className="p-2 lg:p-8">
-        <h1 className="text-xl font-medium mb-6">
-          Reflector Brain Type Prompts
-        </h1>
-        {/* Dropdown (unchanged) */}
+        <h1 className="text-xl font-medium mb-6">Reflector Brain Type Prompts</h1>
         {renderDropdown()}
-        {/* Email Prompts Section */}
-        <h2 className="text-lg font-medium mb-6">
-          Email Prompts for Reflector Types
-        </h2>
-        {/* Strategic Social Media Caption Generator */}
+
+        <h2 className="text-lg font-medium mb-6">Email Prompts for Reflector Types</h2>
+
         <div
           className="bg-[#23232F] p-6 mb-4 relative"
           onMouseEnter={() => setShowEmailTooltip(true)}
           onMouseLeave={() => setShowEmailTooltip(false)}
           onMouseMove={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
-            setEmailTooltipPos({
-              x: e.clientX - rect.left,
-              y: e.clientY - rect.top,
-            });
+            setEmailTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
           }}
         >
-          {/* Custom Tooltip for Strategic Social Media Caption Generator (small, near cursor) */}
           {showEmailTooltip && (
             <div
               className="pointer-events-none bg-black text-white text-[10px] px-2 py-1 rounded shadow-lg z-20 whitespace-nowrap"
-              style={{
-                position: "absolute",
-                left: emailTooltipPos.x + 10,
-                top: emailTooltipPos.y + 10,
-                minWidth: "max-content",
-                maxWidth: 180,
-              }}
+              style={{ position: "absolute", left: emailTooltipPos.x + 10, top: emailTooltipPos.y + 10, minWidth: "max-content", maxWidth: 180 }}
             >
               This section generates a strategic social media caption email
               prompt, including subject, copy button, and example message.
@@ -114,15 +95,11 @@ export default function StrategicPrompt() {
             onClick={() => setShowFirstPrompt(!showFirstPrompt)}
             className="flex items-center gap-2 mt-4 text-sm text-gray-400 hover:text-gray-300"
           >
-            <ChevronDown
-              className={`w-4 h-4 transition-transform ${
-                showFirstPrompt ? "rotate-180" : ""
-              }`}
-            />
+            <ChevronDown className={`w-4 h-4 transition-transform ${showFirstPrompt ? "rotate-180" : ""}`} />
             {showFirstPrompt ? "Show Less" : "Show More"}
           </button>
         </div>
-        {/* Strategic Problem-Solution Framework */}
+
         <div className="bg-[#23232F] p-6">
           <div className="flex justify-between items-start mb-4">
             <div className="flex-1">
@@ -145,28 +122,20 @@ export default function StrategicPrompt() {
             <div className="mt-4 text-sm text-gray-300 space-y-3">
               <p>Hi [Name],</p>
               <p>I've identified a strategic challenge for your team:</p>
-              <p>
-                <strong>Problem:</strong> [Describe the challenge]
-              </p>
-              <p>
-                <strong>Analysis:</strong> [Why this is a strategic issue]
-              </p>
+              <p><strong>Problem:</strong> [Describe the challenge]</p>
+              <p><strong>Analysis:</strong> [Why this is a strategic issue]</p>
               <div className="ml-4 space-y-1">
                 <p>• [Reason 1]</p>
                 <p>• [Reason 2]</p>
                 <p>• [Reason 3]</p>
               </div>
-              <p>
-                <strong>Solution:</strong> [Strategic solution steps]
-              </p>
+              <p><strong>Solution:</strong> [Strategic solution steps]</p>
               <div className="ml-4 space-y-1">
                 <p>1. [Step 1]</p>
                 <p>2. [Step 2]</p>
                 <p>3. [Step 3]</p>
               </div>
-              <p>
-                <strong>Results:</strong> [Expected strategic outcomes]
-              </p>
+              <p><strong>Results:</strong> [Expected strategic outcomes]</p>
               <p>Want to discuss your strategy? Let's connect!</p>
               <div className="mt-4">
                 <p>Best,</p>
@@ -178,11 +147,7 @@ export default function StrategicPrompt() {
             onClick={() => setShowFullPrompt(!showFullPrompt)}
             className="flex items-center gap-2 mt-4 text-sm text-gray-400 hover:text-gray-300"
           >
-            <ChevronDown
-              className={`w-4 h-4 transition-transform ${
-                showFullPrompt ? "rotate-180" : ""
-              }`}
-            />
+            <ChevronDown className={`w-4 h-4 transition-transform ${showFullPrompt ? "rotate-180" : ""}`} />
             {showFullPrompt ? "Show Less" : "View Full Prompt"}
           </button>
         </div>

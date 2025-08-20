@@ -8,7 +8,7 @@ export const saveQuizAnswer = createAsyncThunk(
   'quiz/saveAnswer',
   async ({ user_id, question_number, selected_option }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post('/api/quiz/save', {
+      const response = await axiosInstance.post('/quiz/save', {
         user_id,
         question_number,
         selected_option
@@ -25,7 +25,7 @@ export const getQuizProgress = createAsyncThunk(
   'quiz/getProgress',
   async (user_id, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(`/api/quiz/progress/${user_id}`);
+      const response = await axiosInstance.get(`/quiz/progress/${user_id}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -38,7 +38,7 @@ export const createAudienceQuiz = createAsyncThunk(
   'quiz/createAudience',
   async ({ user_id, name, email, question_number, selected_option }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post('/api/quiz/start', {
+      const response = await axiosInstance.post('/quiz/start', {
         user_id,
         name,
         email,
@@ -61,10 +61,41 @@ export const getAudienceSessions = createAsyncThunk(
       if (is_completed !== undefined) {
         params.append('is_completed', is_completed);
       }
-      const response = await axiosInstance.get(`/api/quiz/sessions?${params}`);
+      const response = await axiosInstance.get(`/quiz/sessions?${params}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+/**
+ * Fetch quiz sessions for the logged-in user
+ * @param {boolean|string} isCompleted - true, false, or any filter value
+ */
+export const fetchQuizSessions = createAsyncThunk(
+  "quiz/fetchQuizSessions",
+  async ({ isCompleted } = {}, { getState, rejectWithValue }) => {
+    try {
+      const state = getState();
+      const userId = state.user?.user?.id;
+      if (!userId) throw new Error("User ID not found. Please log in.");
+
+      const params = { user_id: userId };
+      if (typeof isCompleted === "boolean") {
+        params.is_completed = isCompleted; // only include when filtering
+      }
+
+      const res = await axiosInstance.get(`/quiz/sessions`, { params });
+      console.log(res.data);
+      
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.error ||
+          err.message ||
+          "Failed to fetch quiz sessions"
+      );
     }
   }
 );
@@ -74,7 +105,7 @@ export const sendIncompleteQuizReminders = createAsyncThunk(
   'quiz/sendReminders',
   async ({ user_id, audienceEmails, quizId }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post('/api/quiz/send-incomplete-reminders', {
+      const response = await axiosInstance.post('/quiz/send-incomplete-reminders', {
         user_id,
         audienceEmails,
         quizId
@@ -91,7 +122,7 @@ export const getQuizAnalytics = createAsyncThunk(
   'quiz/getAnalytics',
   async (userId, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(`/api/quiz/analytics/${userId}`);
+      const response = await axiosInstance.get(`/quiz/analytics/${userId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -104,7 +135,7 @@ export const getBrainTypeAnalytics = createAsyncThunk(
   'quiz/getBrainTypeAnalytics',
   async (userId, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(`/api/quiz/analytics/brain-types/${userId}`);
+      const response = await axiosInstance.get(`/quiz/analytics/brain-types/${userId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -117,7 +148,7 @@ export const getWeeklyBrainTypeStats = createAsyncThunk(
   'quiz/getWeeklyBrainTypeStats',
   async (userId, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(`/api/quiz/${userId}/weekly-brain-types`);
+      const response = await axiosInstance.get(`/quiz/${userId}/weekly-brain-types`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
