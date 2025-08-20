@@ -15,7 +15,7 @@ export const fetchSystemLogs = createAsyncThunk(
       if (params.page) queryParams.append('page', params.page);
       if (params.limit) queryParams.append('limit', params.limit);
       
-      const response = await axios.get(`/api/system-logs?${queryParams.toString()}`);
+      const response = await axios.get(`/system-logs?${queryParams.toString()}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to fetch system logs' });

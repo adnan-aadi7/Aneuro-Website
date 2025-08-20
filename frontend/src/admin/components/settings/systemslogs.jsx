@@ -1,8 +1,62 @@
 import { Download } from "lucide-react";
 import Systemslogstable from "./systemslogstable";
-
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useState } from "react";
+import {
+  fetchSystemLogs,
+  selectSystemLogs,
+  selectSystemLogsLoading,
+  selectSystemLogsError,
+  selectSystemLogsFilters,
+  updateFilters,
+} from "../../../store/Slice/LogSlice";
 
 const Systemslogs = () => {
+  const dispatch = useDispatch();
+  const logs = useSelector(selectSystemLogs);
+  const loading = useSelector(selectSystemLogsLoading);
+  const error = useSelector(selectSystemLogsError);
+  const filters = useSelector(selectSystemLogsFilters);
+
+  const [search, setSearch] = useState(filters.search || "");
+  const [action, setAction] = useState(filters.action || "");
+  const [user, setUser] = useState(filters.user || "");
+  const [timeRange, setTimeRange] = useState(filters.timeRange || "all_time");
+
+  useEffect(() => {
+    dispatch(fetchSystemLogs({ ...filters }));
+  }, [dispatch, filters]);
+
+  const applyFilters = () => {
+    dispatch(updateFilters({ action, user, timeRange, search }));
+    dispatch(fetchSystemLogs({ action, user, timeRange, search }));
+  };
+
+  const exportLogs = () => {
+    const csv = [
+      ["timestamp","userEmail","userId","action","contentType","affectedAsset","severity","description"],
+      ...logs.map(l => [
+        new Date(l.timestamp).toISOString(),
+        l.user?.email || "",
+        l.user?.id || "",
+        l.action,
+        l.contentType,
+        l.affectedAsset,
+        l.severity,
+        (l.description || "").replace(/\n|\r/g, " ")
+      ])
+    ].map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(",")).join("\n");
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `system_logs_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <>
     <div className="bg-[#16161C] border border-[#374151] p-4 rounded-md text-white mt-6">
@@ -33,38 +87,49 @@ const Systemslogs = () => {
         <input
           type="text"
           placeholder="Search logs..."
-          className="bg-[#1C1F26] border border-[#2D313A] text-white text-sm px-4 py-2  w-52 focus:outline-none w-full"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="bg-[#1C1F26] border border-[#2D313A] text-white text-sm px-4 py-2 focus:outline-none w-full"
         />
 
         {/* Dropdowns */}
-        <select className="bg-[#1C1F26] border border-[#2D313A] text-white text-sm px-4 py-2 focus:outline-none w-full">
-          <option>All Actions</option>
+        <select value={action} onChange={(e) => setAction(e.target.value)} className="bg-[#1C1F26] border border-[#2D313A] text-white text-sm px-4 py-2 focus:outline-none w-full">
+          <option value="">All Actions</option>
+          <option value="UPLOAD">Upload</option>
+          <option value="EDIT">Edit</option>
+          <option value="DELETE">Delete</option>
+          <option value="CREATE">Create</option>
         </select>
 
-        <select className="bg-[#1C1F26] border border-[#2D313A] text-white text-sm px-4 py-2 focus:outline-none w-full">
-          <option>All Users</option>
+        <input value={user} onChange={(e) => setUser(e.target.value)} placeholder="Filter by user email" className="bg-[#1C1F26] border border-[#2D313A] text-white text-sm px-4 py-2 focus:outline-none w-full" />
+
+        <select value={timeRange} onChange={(e) => setTimeRange(e.target.value)} className="bg-[#1C1F26] border border-[#2D313A] text-white text-sm px-4 py-2 focus:outline-none w-full">
+          <option value="all_time">All Time</option>
+          <option value="last_24h">Last 24h</option>
+          <option value="last_7d">Last 7 days</option>
+          <option value="last_30d">Last 30 days</option>
         </select>
 
-        <select className="bg-[#1C1F26] border border-[#2D313A] text-white text-sm px-4 py-2 focus:outline-none w-full">
-          <option>All Time</option>
-        </select>
-
-        {/* Export Button */}
-        
+        {/* Apply & Export */}
+        <button onClick={applyFilters} className="bg-cyan-500 text-black text-sm px-4 py-2">Apply</button>
       </div>
 
       {/* Log Count */}
-      <div className="flex flex-row items-center justify-between mt-5">
-              <p className="text-sm text-gray-400">Showing 8 of 8 log entries</p>
+      <div className="flex flex-row items-center justify-between ">
+              <p className="text-sm text-gray-400">{loading ? 'Loading...' : `Showing ${logs.length} log entries`}{error ? ` — Error: ${error}` : ''}</p>
 
-        <button className="cursor-pointer ml-auto bg-white border border-[#12DCF0] text-[#12DCF0] text-sm px-4 py-2  flex items-center gap-2">
-         <Download size={14}/>
+      </div>
+      
+      {/* Export Button */}
+      <div className="flex justify-end">
+        <button onClick={exportLogs} className="cursor-pointer bg-white border border-[#12DCF0] text-black text-sm px-4 py-2 flex items-center gap-2">
+          <Download size={14}/>
           Export Logs
         </button>
       </div>
     </div>
 
-<Systemslogstable/>
+<Systemslogstable logs={logs} />
     </>
     
   );

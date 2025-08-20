@@ -1,15 +1,24 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FiCalendar, FiChevronDown, FiSearch, FiShare2 } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import { FiCalendar, FiChevronDown, FiSearch } from "react-icons/fi";
+import { useDispatch } from "react-redux";
+import { fetchQuizSessions } from "../../../../store/Slice/QuizSlice";
 
 const Header = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // Start with NONE selected → load ALL initially
   const [categories, setCategories] = useState({
-    completion: true,
+    completion: false,
     incompletion: false,
   });
+
   const dropdownRef = useRef(null);
-  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  // Load ALL on mount
+  useEffect(() => {
+    dispatch(fetchQuizSessions({})); // no filter → all
+  }, [dispatch]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -29,15 +38,36 @@ const Header = () => {
   }, [dropdownOpen]);
 
   const handleCompletionChange = () => {
-    setCategories((c) => ({ completion: !c.completion, incompletion: false }));
-  };
-  const handleIncompletionChange = () => {
-    setCategories((c) => {
-      if (!c.incompletion) {
-        navigate("/incomplete-quiz");
+    const next = !categories.completion;
+    const newState = { completion: next, incompletion: false };
+    setCategories(newState);
+
+    // Dispatch according to the next state
+    if (next) {
+      // Completion selected
+      dispatch(fetchQuizSessions({ isCompleted: true }));
+    } else {
+      // Completion unselected; if none selected → fetch all
+      if (!categories.incompletion) {
+        dispatch(fetchQuizSessions({})); // all
       }
-      return { completion: false, incompletion: !c.incompletion };
-    });
+    }
+  };
+
+  const handleIncompletionChange = () => {
+    const next = !categories.incompletion;
+    const newState = { completion: false, incompletion: next };
+    setCategories(newState);
+
+    if (next) {
+      // Incompletion selected
+      dispatch(fetchQuizSessions({ isCompleted: false }));
+    } else {
+      // Incompletion unselected; if none selected → fetch all
+      if (!categories.completion) {
+        dispatch(fetchQuizSessions({})); // all
+      }
+    }
   };
 
   return (
@@ -53,6 +83,7 @@ const Header = () => {
             <span>04/09/2025</span>
             <FiChevronDown size={16} />
           </button>
+
           {/* Quiz Completion Dropdown */}
           <div className="relative">
             <button
@@ -83,15 +114,14 @@ const Header = () => {
                     onChange={handleIncompletionChange}
                     className="accent-cyan-400 w-5 h-5 rounded border-2 border-cyan-400 bg-transparent focus:ring-0"
                   />
-                  <span className="text-white text-base">
-                    Quiz In completion
-                  </span>
+                  <span className="text-white text-base">Quiz In completion</span>
                 </label>
               </div>
             )}
           </div>
         </div>
       </div>
+
       {/* Search Input */}
       <div className="flex items-center w-full sm:w-80 mt-10">
         <div className="relative w-full">

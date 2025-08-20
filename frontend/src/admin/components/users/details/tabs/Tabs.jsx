@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { deleteUser } from "../../../../../store/Slice/UserSlice";
@@ -14,6 +14,7 @@ import ResetConfirmation from "../generalDetails/passwordReset/ResetConfirmation
 import Cards from "../quizEngaged/Cards";
 import Charts from "../quizEngaged/Charts";
 import QuizEngagedHeading from "../quizEngaged/QuizEngaedHeading";
+import { getQuizAnalytics, getBrainTypeAnalytics, getWeeklyBrainTypeStats } from "../../../../../store/Slice/QuizSlice";
 
 export default function Tabs({ user: userProp }) {
   const location = useLocation();
@@ -71,6 +72,16 @@ export default function Tabs({ user: userProp }) {
     setShowResetConfirmation(false);
   };
 
+  // Fetch quiz analytics when Quiz Engagement tab is active
+  useEffect(() => {
+    if (activeTab === "Quiz Engagement" && user?._id) {
+      dispatch(getQuizAnalytics(user._id));
+      dispatch(getBrainTypeAnalytics(user._id));
+      dispatch(getWeeklyBrainTypeStats(user._id));
+    }
+  }, [activeTab, user?._id, dispatch]);
+  console.log("QuizAnalytics",user);
+
   return (
     <div className="w-full bg-[#2A2A39] p-4 sm:p-6 md:p-6 lg:p-6 xl:p-6 2xl:p-6 mt-4 sm:mt-8 md:mt-10">
       {/* Header Section */}
@@ -110,26 +121,26 @@ export default function Tabs({ user: userProp }) {
               {user?.email || "user@email.com"}
             </p>
             {/* Account Status Badge */}
-            <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium mt-1 ${
+            {/* <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium mt-1 ${
               user?.accountStatus === "suspended" 
                 ? "bg-red-100 text-red-800" 
                 : "bg-green-100 text-green-800"
             }`}>
               {user?.accountStatus === "suspended" ? "Suspended" : "Active"}
-            </span>
+            </span> */}
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <button
-            className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-transparent border border-slate-600 text-slate-300 rounded-md hover:bg-slate-700 hover:text-white transition-colors text-xs sm:text-sm font-medium"
+            className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-transparent border border-slate-300 text-white  hover:bg-slate-700 hover:text-white transition-colors text-xs sm:text-sm font-medium"
             onClick={() => setShowDeletePopup(true)}
           >
             Delete Account
           </button>
           <button
-            className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-transparent border border-slate-600 text-slate-300 rounded-md hover:bg-slate-700 hover:text-white transition-colors text-xs sm:text-sm font-medium"
+            className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-transparent border border-slate-300 text-white hover:bg-slate-700 hover:text-white transition-colors text-xs sm:text-sm font-medium"
             onClick={() => setShowGetCode(true)}
           >
             Reset Password

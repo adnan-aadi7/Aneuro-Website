@@ -1,10 +1,12 @@
 import React from "react";
+import { useSelector } from "react-redux";
+import { selectQuizAnalytics } from "../../../../../store/Slice/QuizSlice";
 import Looper3 from "../../../../../assets/resultOverView/Looper-3.png";
 import VectorIcon from "../../../../../assets/resultOverView/vector.png";
 import { BsCloudCheck } from "react-icons/bs";
 import { TbGitBranch } from "react-icons/tb";
 
-const cards = [
+const staticCards = [
   {
     type: "highlight",
     icon: (
@@ -17,7 +19,7 @@ const cards = [
       </div>
     ),
     title: "Total Links Generated",
-    value: 84,
+    value: null,
     valueLabel: "Times",
     week: "↑ Week 1",
     bg: "bg-[#12DCF0]",
@@ -36,7 +38,7 @@ const cards = [
       </div>
     ),
     title: "Total Unique Clicks",
-    value: "02",
+    value: null,
     valueLabel: "Times",
     week: "↑ Week 1",
   },
@@ -50,7 +52,7 @@ const cards = [
       </div>
     ),
     title: "Completed Quizzes",
-    value: 78,
+    value: null,
     valueLabel: "Submitted",
     week: "↑ Week 1",
     actions: false,
@@ -67,13 +69,29 @@ const cards = [
       </div>
     ),
     title: "Completion Rate",
-    value: 78,
+    value: null,
     valueLabel: null,
     week: "↑ Week 1",
   },
 ];
 
 const Cards = () => {
+  const analytics = useSelector(selectQuizAnalytics);
+
+  const cardValues = {
+    totalLinks: analytics?.linksGenerated ?? 0,
+    uniqueClicks: analytics?.uniqueClicks ?? 0,
+    completedQuizzes: analytics?.completedQuizzes ?? 0,
+    completionRate: analytics?.completionRate ?? 0,
+  };
+
+  const cards = [
+    { ...staticCards[0], value: cardValues.totalLinks },
+    { ...staticCards[1], value: cardValues.uniqueClicks },
+    { ...staticCards[2], value: cardValues.completedQuizzes },
+    { ...staticCards[3], value: cardValues.completionRate },
+  ];
+
   return (
     <div className="flex flex-col md:flex-row gap-4 w-full mt-3">
       {cards.map((card, i) => (

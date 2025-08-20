@@ -6,6 +6,7 @@ import Cards from "../../components/dashboard/Cards";
 import BrainTypesAnalysis from "../../components/dashboard/BrainTypesAnalysis";
 import QuizPerformance from "../../components/ResultOverview/QuizPerformance";
 
+
 const Dashboard = () => {
   return (
     <>

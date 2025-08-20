@@ -32,25 +32,50 @@ export default function BillingHistoryTable({ user }) {
 
   // Download single bill as CSV in a proper invoice format
   const downloadSingleBill = (payment) => {
+    const csvEscape = (value) => {
+      const str = value == null ? '' : String(value);
+      if (str.includes('"') || str.includes(',') || str.includes('\n')) {
+        return '"' + str.replace(/"/g, '""') + '"';
+      }
+      return str;
+    };
+
     const headers = [
-      'Field', 'Value'
+      'Invoice Number',
+      'Billing Date',
+      'Amount',
+      'Plan',
+      'Status',
+      'Customer Name',
+      'Customer Email',
+      'Users',
+      'Payment ID',
+      'Stripe Payment Intent',
+      'Stripe Subscription ID',
     ];
-    const data = [
-      headers,
-      [],
-      ['Invoice Number', payment.stripePaymentIntentId ? `Invoice #${payment.stripePaymentIntentId.slice(-8)}` : `Payment #${payment._id?.slice(-8)}`],
-      ['Billing Date', formatDate(payment.billingDate || payment.createdAt)],
-      ['Amount', formatAmount(payment.amount, payment.currency)],
-      ['Plan', payment.plan],
-      ['Status', payment.status],
-      ['Customer Name', payment.name || (payment.userId && payment.userId.name) || '-'],
-      ['Customer Email', payment.customerEmail || payment.email || '-'],
-      ['Payment ID', payment._id],
-      ['Stripe Payment Intent', payment.stripePaymentIntentId || 'N/A'],
-      ['Stripe Subscription ID', payment.stripeSubscriptionId || 'N/A'],
+
+    const values = [
+      payment.stripePaymentIntentId
+        ? `Invoice #${payment.stripePaymentIntentId.slice(-8)}`
+        : `Payment #${payment._id?.slice(-8)}`,
+      formatDate(payment.billingDate || payment.createdAt),
+      formatAmount(payment.amount, payment.currency),
+      payment.plan || '-',
+      payment.status || '-',
+      payment.name || (payment.userId && payment.userId.name) || '-',
+      payment.customerEmail || payment.email || '-',
+      payment.users || '-',
+      payment._id || '-',
+      payment.stripePaymentIntentId || 'N/A',
+      payment.stripeSubscriptionId || 'N/A',
     ];
-    const csvContent = data.map(row => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+    const csvContent = [
+      headers.map(csvEscape).join(','),
+      values.map(csvEscape).join(','),
+    ].join('\n');
+
+    const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);

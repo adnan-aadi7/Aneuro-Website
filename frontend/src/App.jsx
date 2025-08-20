@@ -46,7 +46,7 @@ import Refunddetail from "./admin/pages/Managesubscription/refunddetailrequest";
 import Admincontrolcenter from "./admin/pages/cms/adminControlCenter/admincontrolcenter";
 import AddEmailManuall from "./admin/pages/cms/addEmailManullay/AddEmailManuall";
 import Settingtabs from "./admin/pages/settings/setting";
-import AddPromptMannual from "./admin/pages/cms/addPromptMannually/AddPromptMannual";
+// import AddPromptMannual from "./admin/pages/cms/addPromptMannually/AddPromptMannual";
 import Analytics from "./admin/pages/analyticsOverview/Analytics";
 import EmailStatsDetails from "./admin/pages/analyticsOverview/EmailStatsDetails";
 import PromptStatsDetails from "./admin/pages/analyticsOverview/PromptStatsDetails";
@@ -59,8 +59,10 @@ import AboutUs from "./landingpage/pages/AboutUs";
 //Audience
 import Audience from "./Audience/audience";
 import Policy from "./termsConditions/Policy";
-
-
+import AddAdmin from "./admin/components/settings/AddAdmin";
+import AdminPermission from "./admin/components/settings/AdminPermission";
+import MannualPrompt from "./admin/components/cms/overviewTab/MannualPrompt";
+import EditFunnel from "./admin/components/cms/funnelTab/EditFunnel";
 
 
 
@@ -80,7 +82,7 @@ function App() {
         <Route path="/auth/google/callback" element={<GoogleCallback />} />
         <Route path="/auth/facebook/callback" element={<FacebookCallback />} />
 
-         <Route path="/Audience-quiz" element={<Audience/>}/>
+           <Route path="/Audience-quiz/:userId" element={<Audience />} />
         {/* landingpage  */}
         <Route path="/about-us" element={<AboutUs />} />
         <Route path="/privacy-policy" element={<Policy/>} />
@@ -269,6 +271,14 @@ function App() {
           }
         />
         <Route
+          path="/admin/analytics/email-details/:sequenceId"
+          element={
+            <AdminLayout>
+              <EmailStatsDetails />
+            </AdminLayout>
+          }
+        />
+        <Route
           path="/admin/analytics/prompts-details"
           element={
             <AdminLayout>
@@ -277,10 +287,34 @@ function App() {
           }
         />
         <Route
+          path="/admin/analytics/prompts-details/:packId"
+          element={
+            <AdminLayout>
+              <PromptStatsDetails />
+            </AdminLayout>
+          }
+        />
+        {/* <Route
           path="/admin/analytics/funnel-details"
           element={
             <AdminLayout>
               <FunnelStatsDetails />
+            </AdminLayout>
+          }
+        /> */}
+        <Route
+          path="/admin/analytics/funnel-details/:templateId"
+          element={
+            <AdminLayout>
+              <FunnelStatsDetails />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/edit-funnel/:templateId"
+          element={
+            <AdminLayout>
+              <EditFunnel />
             </AdminLayout>
           }
         />
@@ -341,10 +375,26 @@ function App() {
           }
         />
         <Route
+          path="/admin/mannual-email/:sequenceId"
+          element={
+            <AdminLayout>
+              <AddEmailManuall />
+            </AdminLayout>
+          }
+        />
+        <Route
           path="/admin/mannual-prompt"
           element={
             <AdminLayout>
-              <AddPromptMannual />
+              <MannualPrompt/>
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/mannual-prompt/:packId"
+          element={
+            <AdminLayout>
+              <MannualPrompt/>
             </AdminLayout>
           }
         />
@@ -353,6 +403,22 @@ function App() {
           element={
             <AdminLayout>
               <Settingtabs />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/settings/add-admin"
+          element={
+            <AdminLayout>
+              <AddAdmin />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/settings/admin-permission"
+          element={
+            <AdminLayout>
+              <AdminPermission />
             </AdminLayout>
           }
         />

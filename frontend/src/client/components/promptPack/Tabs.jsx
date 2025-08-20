@@ -1,33 +1,43 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import AnalyticalPrompt from "./AnalyticalPrompt";
 import CreativePrompt from "./CreativePrompt";
 import EmpatheticPrompt from "./EmpatheticPrompt";
 import StrategicPrompt from "./StrategicPrompt";
 import PracticalPrompt from "./PracticalPrompt";
+import axios from "../../../store/axiosInstance"; // adjust path if your axiosInstance lives elsewhere
 
 export default function Tabs() {
   const [activeTab, setActiveTab] = useState("Architect");
+  const [categories, setCategories] = useState([]);
 
-  const tabs = [
-    "Architect",
-    "Challenger",
-    "Synthesizer",
-    "Reflector",
-    "Catalyst",
-  ];
+  const tabs = ["Architect", "Challenger", "Synthesizer", "Reflector", "Catalyst"];
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await axios.get("/categories/prompts");
+        setCategories(Array.isArray(res.data?.data) ? res.data.data : []);
+      } catch (e) {
+        // swallow silently per your request (no extra UI)
+        setCategories([]);
+        console.log(e);
+      }
+    })();
+  }, []);
 
   const renderTabContent = () => {
+    const common = { categories }; // pass categories only; keep everything else identical
     switch (activeTab) {
       case "Architect":
-        return <AnalyticalPrompt />;
+        return <AnalyticalPrompt {...common} />;
       case "Challenger":
-        return <CreativePrompt />;
+        return <CreativePrompt {...common} />;
       case "Synthesizer":
-        return <EmpatheticPrompt />;
+        return <EmpatheticPrompt {...common} />;
       case "Reflector":
-        return <StrategicPrompt />;
+        return <StrategicPrompt {...common} />;
       case "Catalyst":
-        return <PracticalPrompt />;
+        return <PracticalPrompt {...common} />;
       default:
         return null;
     }
@@ -37,9 +47,7 @@ export default function Tabs() {
     <div className="text-white w-full ">
       {/* Header */}
       <div className=" px-2 pt-4 pb-2">
-        <h1 className="text-2xl sm:text-4xl font-bold mb-2 sm:mb-4">
-          Prompt Packs
-        </h1>
+        <h1 className="text-2xl sm:text-4xl font-bold mb-2 sm:mb-4">Prompt Packs</h1>
         <p className="text-gray-400 text-base sm:text-lg">
           Select a brain type to view ready-to-use content prompts.
         </p>
@@ -65,7 +73,7 @@ export default function Tabs() {
         </div>
       </div>
 
-      {/* Content Area - show the correct component for the active tab */}
+      {/* Content Area */}
       <div className="px-2 ">{renderTabContent()}</div>
     </div>
   );

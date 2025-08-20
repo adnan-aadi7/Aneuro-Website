@@ -1,8 +1,21 @@
+import { useSelector } from "react-redux";
 import React, { useRef } from "react";
 
 const QuestionnaireLinks = () => {
   const shareRef = useRef(null);
   const redirectRef = useRef(null);
+
+
+
+  // NEW: get the logged-in userId from Redux
+  // Get userId from Redux
+  const userId = useSelector((state) => state.user?.user?.id);
+
+  // Build the dynamic link
+  const shareUrl = userId
+    ? `${window.location.origin}/Audience-quiz/${userId}`
+    : `${window.location.origin}/Audience-quiz`;
+
 
   const handleCopy = (ref) => {
     if (ref.current) {
@@ -36,7 +49,7 @@ const QuestionnaireLinks = () => {
             ref={shareRef}
             type="text"
             readOnly
-            value="https://aneuro-saas.vercel.app/Audience-quiz"
+            value={shareUrl}
             className="flex-1 bg-transparent border border-gray-400 rounded-md px-4 py-2 text-white text-sm md:text-base truncate focus:outline-none"
           />
           <button className="p-2" title="Edit">

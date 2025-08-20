@@ -1,49 +1,27 @@
-import React from "react";
-
-const messages = [
-  {
-    id: 1,
-    name: "John Deo",
-    avatar: "https://randomuser.me/api/portraits/men/1.jpg",
-    subject: "Issue with the latest update",
-    time: "2 hour ago",
-  },
-  {
-    id: 2,
-    name: "John Deo",
-    avatar: "https://randomuser.me/api/portraits/men/2.jpg",
-    subject: "Issue with the latest update",
-    time: "2 hour ago",
-  },
-  {
-    id: 3,
-    name: "John Deo",
-    avatar: "https://randomuser.me/api/portraits/men/3.jpg",
-    subject: "Issue with the latest update",
-    time: "2 hour ago",
-  },
-  {
-    id: 4,
-    name: "John Deo",
-    avatar: "https://randomuser.me/api/portraits/men/4.jpg",
-    subject: "Issue with the latest update",
-    time: "2 hour ago",
-  },
-  {
-    id: 5,
-    name: "John Deo",
-    avatar: "https://randomuser.me/api/portraits/men/5.jpg",
-    subject: "Issue with the latest update",
-    time: "2 hour ago",
-  },
-];
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchInboxLatest, selectInboxMessages, selectAdminDashboardLoading } from "../../../store/Slice/DashboardSliceAdmin";
 
 const Inbox = () => {
+  const dispatch = useDispatch();
+  const messages = useSelector(selectInboxMessages);
+  const loading = useSelector(selectAdminDashboardLoading);
+
+  useEffect(() => {
+    dispatch(fetchInboxLatest(5));
+  }, [dispatch]);
+
   return (
     <div className="bg-[#2B2B38]  p-6 w-full max-w-full mt-10">
       <div className="text-white text-2xl font-normal mb-4">Inbox</div>
       <div className="flex flex-col divide-y divide-[#39394a]">
-        {messages.map((msg) => (
+        {loading.inbox && (
+          <div className="py-6 text-center text-gray-400">Loading...</div>
+        )}
+        {!loading.inbox && messages.length === 0 && (
+          <div className="py-6 text-center text-gray-400">No messages</div>
+        )}
+        {!loading.inbox && messages.map((msg) => (
           <div
             key={msg.id}
             className="flex items-center py-4 px-2 justify-between"

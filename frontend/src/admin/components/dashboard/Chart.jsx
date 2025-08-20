@@ -9,18 +9,18 @@ import {
 } from "recharts";
 
 const data = [
-  { month: "Jan", value: 180 },
-  { month: "Feb", value: 220 },
-  { month: "Mar", value: 200 },
-  { month: "Apr", value: 320 },
-  { month: "May", value: 350 },
-  { month: "Jun", value: 480 },
-  { month: "Jul", value: 280 },
-  { month: "Aug", value: 240 },
-  { month: "Sep", value: 350 },
-  { month: "Oct", value: 220 },
-  { month: "Nov", value: 380 },
-  { month: "Dec", value: 420 },
+  { month: "Jan", value: 12 },
+  { month: "Feb", value: 18 },
+  { month: "Mar", value: 25 },
+  { month: "Apr", value: 22 },
+  { month: "May", value: 30 },
+  { month: "Jun", value: 28 },
+  { month: "Jul", value: 35 },
+  { month: "Aug", value: 32 },
+  { month: "Sep", value: 26 },
+  { month: "Oct", value: 29 },
+  { month: "Nov", value: 34 },
+  { month: "Dec", value: 38 },
 ];
 
 export default function Chart() {
@@ -61,8 +61,7 @@ export default function Chart() {
             axisLine={false}
             tickLine={false}
             tick={{ fill: "#94a3b8", fontSize: 12 }}
-            domain={[0, 500]}
-            ticks={[0, 100, 200, 300, 400, 500]}
+            domain={[0, 'dataMax + 10']}
             className="text-slate-400"
           />
           <Area
@@ -72,6 +71,7 @@ export default function Chart() {
             strokeWidth={2}
             fill="url(#chartGradient)"
             fillOpacity={1}
+            isAnimationActive={true}
           />
         </AreaChart>
       </ResponsiveContainer>

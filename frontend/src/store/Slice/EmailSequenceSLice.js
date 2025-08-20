@@ -2,32 +2,59 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from '../axiosInstance';
 
 // Async thunks
+export const fetchEmailCategories = createAsyncThunk(
+  'emailSequence/fetchEmailCategories',
+  async (_, { rejectWithValue }) => {
+    try {
+      // Use master categories list so dropdown isn't empty when there are no sequences yet
+      const response = await axios.get('/categories');
+      return response.data; // { success, data: ["Marketing", ...] }
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to fetch categories' });
+    }
+  }
+);
+
+export const createCategory = createAsyncThunk(
+  'emailSequence/createCategory',
+  async (name, { rejectWithValue }) => {
+    try {
+      const response = await axios.post('/categories', { name });
+      return response.data; // { success, data: { _id, name } }
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to create category' });
+    }
+  }
+);
+
 export const createEmailSequence = createAsyncThunk(
   'emailSequence/create',
   async (sequenceData, { rejectWithValue }) => {
     try {
       const formData = new FormData();
-      
-      // Add basic fields
+      // Required/primary fields per backend controller
       formData.append('name', sequenceData.name);
-      formData.append('emailCount', sequenceData.emailCount || 0);
-      formData.append('emails', sequenceData.emails || 0);
       formData.append('tier', sequenceData.tier);
       formData.append('status', sequenceData.status || 'scheduled');
       formData.append('type', sequenceData.type);
-      
-      // Add content based on type
+      formData.append('brainType', sequenceData.brainType);
+      formData.append('category', sequenceData.category);
+
+      if (sequenceData.releaseDateTime) {
+        formData.append('releaseDateTime', sequenceData.releaseDateTime);
+      }
+
+      // Content based on type expected by backend
       if (sequenceData.type === 'manual') {
-        formData.append('manualContent', sequenceData.manualContent);
+        // Backend expects `emails` to be an array or a JSON string of array
+        const emailsPayload = Array.isArray(sequenceData.emails)
+          ? JSON.stringify(sequenceData.emails)
+          : sequenceData.emails || '[]';
+        formData.append('emails', emailsPayload);
       } else if (sequenceData.type === 'file' && sequenceData.file) {
         formData.append('file', sequenceData.file);
       }
-      
-      // Add email template if provided
-      if (sequenceData.emailTemplate) {
-        formData.append('emailTemplate', JSON.stringify(sequenceData.emailTemplate));
-      }
-      
+
       const response = await axios.post('/email-sequences', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -54,6 +81,8 @@ export const fetchEmailSequences = createAsyncThunk(
       if (params.search) queryParams.append('search', params.search);
       if (params.sortBy) queryParams.append('sortBy', params.sortBy);
       if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
+      if (params.category) queryParams.append('category', params.category);
+      if (params.brainType) queryParams.append('brainType', params.brainType);
       
       const response = await axios.get(`/email-sequences?${queryParams.toString()}`);
       return response.data;
@@ -79,7 +108,34 @@ export const updateEmailSequence = createAsyncThunk(
   'emailSequence/update',
   async ({ id, updateData }, { rejectWithValue }) => {
     try {
-      const response = await axios.put(`/email-sequences/${id}`, updateData);
+      // Always use FormData to support optional file upload and align with multer backend
+      const formData = new FormData();
+
+      // Append fields only if provided to avoid overwriting unintentionally
+      if (updateData.name !== undefined) formData.append('name', updateData.name);
+      if (updateData.tier !== undefined) formData.append('tier', updateData.tier);
+      if (updateData.status !== undefined) formData.append('status', updateData.status);
+      if (updateData.type !== undefined) formData.append('type', updateData.type);
+      if (updateData.brainType !== undefined) formData.append('brainType', updateData.brainType);
+      if (updateData.category !== undefined) formData.append('category', updateData.category);
+      if (updateData.releaseDateTime !== undefined) formData.append('releaseDateTime', updateData.releaseDateTime);
+
+      if (updateData.type === 'manual' && updateData.emails !== undefined) {
+        const emailsPayload = Array.isArray(updateData.emails)
+          ? JSON.stringify(updateData.emails)
+          : updateData.emails;
+        formData.append('emails', emailsPayload);
+      }
+
+      if (updateData.file) {
+        formData.append('file', updateData.file);
+      }
+
+      const response = await axios.put(`/email-sequences/${id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to update email sequence' });
@@ -140,6 +196,9 @@ const initialState = {
     averageRating: 0,
     categoryCounts: {}
   },
+  categories: [],
+  categoriesLoading: false,
+  categoriesError: null,
   pagination: {
     currentPage: 1,
     totalPages: 1,
@@ -198,6 +257,42 @@ const emailSequenceSlice = createSlice({
     }
   },
   extraReducers: (builder) => {
+    // Categories: fetch
+    builder
+      .addCase(fetchEmailCategories.pending, (state) => {
+        state.categoriesLoading = true;
+        state.categoriesError = null;
+      })
+      .addCase(fetchEmailCategories.fulfilled, (state, action) => {
+        state.categoriesLoading = false;
+        // Support either {data: []} or plain []
+        const payload = action.payload;
+        const raw = Array.isArray(payload?.data) ? payload.data : (Array.isArray(payload) ? payload : []);
+        // If objects (from /categories), map to names; if strings, use directly
+        state.categories = raw.map((item) => typeof item === 'string' ? item : (item?.name || ''))
+                              .filter(Boolean);
+      })
+      .addCase(fetchEmailCategories.rejected, (state, action) => {
+        state.categoriesLoading = false;
+        state.categoriesError = action.payload?.message || 'Failed to fetch categories';
+      });
+
+    // Categories: create
+    builder
+      .addCase(createCategory.pending, (state) => {
+        state.categoriesError = null;
+      })
+      .addCase(createCategory.fulfilled, (state, action) => {
+        const categoryDoc = action.payload?.data;
+        const newName = categoryDoc?.name || '';
+        if (newName && !state.categories.includes(newName)) {
+          state.categories.unshift(newName);
+        }
+      })
+      .addCase(createCategory.rejected, (state, action) => {
+        state.categoriesError = action.payload?.message || 'Failed to create category';
+      });
+
     // Create
     builder
       .addCase(createEmailSequence.pending, (state) => {
@@ -299,10 +394,10 @@ const emailSequenceSlice = createSlice({
       .addCase(bulkDeleteEmailSequences.fulfilled, (state, action) => {
         state.loading = false;
         state.success = action.payload.message;
-        const deletedIds = action.payload.data.deletedCount;
-        state.sequences = state.sequences.filter(seq => !action.payload.data.deletedIds?.includes(seq._id));
-        state.stats.totalSequences -= deletedIds;
-        if (state.currentSequence && action.payload.data.deletedIds?.includes(state.currentSequence._id)) {
+        const requestedIds = action.meta.arg || [];
+        state.sequences = state.sequences.filter(seq => !requestedIds.includes(seq._id));
+        state.stats.totalSequences = Math.max(0, state.stats.totalSequences - (action.payload.data?.deletedCount || 0));
+        if (state.currentSequence && requestedIds.includes(state.currentSequence._id)) {
           state.currentSequence = null;
         }
       })

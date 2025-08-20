@@ -2,20 +2,43 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from '../axiosInstance';
 
 // Async thunks
+export const fetchPromptCategories = createAsyncThunk(
+  'promptPack/fetchPromptCategories',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get('/categories/prompts');
+      return response.data; // { success, data: ["Category1", ...] }
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to fetch prompt categories' });
+    }
+  }
+);
+
 export const uploadPromptPack = createAsyncThunk(
   'promptPack/upload',
   async (uploadData, { rejectWithValue }) => {
     try {
       const formData = new FormData();
+      // Required by backend: file, name, category, tier, status
       formData.append('file', uploadData.file);
+      formData.append('name', uploadData.name);
+      formData.append('category', uploadData.category);
       formData.append('tier', uploadData.tier);
-      
+      formData.append('status', uploadData.status);
+      // Optional fields
+      if (uploadData.releaseDateTime) {
+        formData.append('releaseDateTime', uploadData.releaseDateTime);
+      }
+      if (uploadData.type) {
+        formData.append('type', uploadData.type); // prompt type used when saving first prompt from file
+      }
+
       const response = await axios.post('/prompt-packs/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      
+
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to upload prompt pack' });
@@ -40,7 +63,7 @@ export const fetchPromptPacks = createAsyncThunk(
   async (params = {}, { rejectWithValue }) => {
     try {
       const queryParams = new URLSearchParams();
-      
+
       if (params.page) queryParams.append('page', params.page);
       if (params.limit) queryParams.append('limit', params.limit);
       if (params.category) queryParams.append('category', params.category);
@@ -51,7 +74,7 @@ export const fetchPromptPacks = createAsyncThunk(
       if (params.maxUsage) queryParams.append('maxUsage', params.maxUsage);
       if (params.sortBy) queryParams.append('sortBy', params.sortBy);
       if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
-      
+
       const response = await axios.get(`/prompt-packs?${queryParams.toString()}`);
       return response.data;
     } catch (error) {
@@ -96,31 +119,7 @@ export const deletePromptPack = createAsyncThunk(
   }
 );
 
-export const bulkDeletePromptPacks = createAsyncThunk(
-  'promptPack/bulkDelete',
-  async (ids, { rejectWithValue }) => {
-    try {
-      const response = await axios.delete('/prompt-packs', {
-        data: { ids }
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to bulk delete prompt packs' });
-    }
-  }
-);
-
-export const addPromptToPack = createAsyncThunk(
-  'promptPack/addPrompt',
-  async ({ id, promptData }, { rejectWithValue }) => {
-    try {
-      const response = await axios.post(`/prompt-packs/${id}/prompts`, promptData);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to add prompt to pack' });
-    }
-  }
-);
+// Note: No bulk delete or add-prompt endpoints in backend routes; remove related thunks
 
 export const removePromptFromPack = createAsyncThunk(
   'promptPack/removePrompt',
@@ -162,6 +161,9 @@ export const fetchPromptPackStats = createAsyncThunk(
 const initialState = {
   packs: [],
   currentPack: null,
+  categories: [],
+  categoriesLoading: false,
+  categoriesError: null,
   stats: {
     overall: {
       totalPacks: 0,
@@ -260,6 +262,24 @@ const promptPackSlice = createSlice({
     }
   },
   extraReducers: (builder) => {
+    // Prompt categories
+    builder
+      .addCase(fetchPromptCategories.pending, (state) => {
+        state.categoriesLoading = true;
+        state.categoriesError = null;
+      })
+      .addCase(fetchPromptCategories.fulfilled, (state, action) => {
+        state.categoriesLoading = false;
+        const payload = action.payload;
+        const raw = Array.isArray(payload?.data) ? payload.data : (Array.isArray(payload) ? payload : []);
+        state.categories = raw.map((item) => typeof item === 'string' ? item : (item?.name || ''))
+                              .filter(Boolean);
+      })
+      .addCase(fetchPromptCategories.rejected, (state, action) => {
+        state.categoriesLoading = false;
+        state.categoriesError = action.payload?.message || 'Failed to fetch prompt categories';
+      });
+
     // Upload
     builder
       .addCase(uploadPromptPack.pending, (state) => {
@@ -369,48 +389,7 @@ const promptPackSlice = createSlice({
         state.error = action.payload?.message || 'Failed to delete prompt pack';
       });
 
-    // Bulk Delete
-    builder
-      .addCase(bulkDeletePromptPacks.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(bulkDeletePromptPacks.fulfilled, (state, action) => {
-        state.loading = false;
-        state.success = action.payload.message;
-        const deletedCount = action.payload.data.deletedCount;
-        state.packs = state.packs.filter(pack => !action.payload.data.deletedIds?.includes(pack._id));
-        state.stats.overall.totalPacks -= deletedCount;
-        if (state.currentPack && action.payload.data.deletedIds?.includes(state.currentPack._id)) {
-          state.currentPack = null;
-        }
-      })
-      .addCase(bulkDeletePromptPacks.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload?.message || 'Failed to bulk delete prompt packs';
-      });
-
-    // Add Prompt
-    builder
-      .addCase(addPromptToPack.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(addPromptToPack.fulfilled, (state, action) => {
-        state.loading = false;
-        state.success = action.payload.message;
-        const index = state.packs.findIndex(pack => pack._id === action.payload.data._id);
-        if (index !== -1) {
-          state.packs[index] = action.payload.data;
-        }
-        if (state.currentPack && state.currentPack._id === action.payload.data._id) {
-          state.currentPack = action.payload.data;
-        }
-      })
-      .addCase(addPromptToPack.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload?.message || 'Failed to add prompt to pack';
-      });
+    // No bulk delete or add prompt cases (not supported by backend)
 
     // Remove Prompt
     builder
@@ -470,6 +449,7 @@ const promptPackSlice = createSlice({
         state.loading = false;
         state.error = action.payload?.message || 'Failed to fetch prompt pack stats';
       });
+
   }
 });
 
@@ -495,36 +475,38 @@ export const selectPromptPackSorting = (state) => state.promptPack.sorting;
 export const selectPromptPackLoading = (state) => state.promptPack.loading;
 export const selectPromptPackError = (state) => state.promptPack.error;
 export const selectPromptPackSuccess = (state) => state.promptPack.success;
+export const selectPromptCategories = (state) => state.promptPack.categories;
+
 
 // Additional selectors for filtering and analysis
-export const selectActivePromptPacks = (state) => 
+export const selectActivePromptPacks = (state) =>
   state.promptPack.packs.filter(pack => pack.status === 'active');
 
-export const selectScheduledPromptPacks = (state) => 
+export const selectScheduledPromptPacks = (state) =>
   state.promptPack.packs.filter(pack => pack.status === 'scheduled');
 
-export const selectPromptPacksByTier = (state, tier) => 
+export const selectPromptPacksByTier = (state, tier) =>
   state.promptPack.packs.filter(pack => pack.tier === tier);
 
-export const selectPromptPacksByCategory = (state, category) => 
+export const selectPromptPacksByCategory = (state, category) =>
   state.promptPack.packs.filter(pack => pack.category === category);
 
-export const selectPromptPacksByType = (state, type) => 
-  state.promptPack.packs.filter(pack => 
+export const selectPromptPacksByType = (state, type) =>
+  state.promptPack.packs.filter(pack =>
     pack.prompts.some(prompt => prompt.type === type)
   );
 
-export const selectMostUsedPromptPacks = (state, limit = 5) => 
+export const selectMostUsedPromptPacks = (state, limit = 5) =>
   [...state.promptPack.packs]
     .sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0))
     .slice(0, limit);
 
-export const selectPromptPacksWithMostPrompts = (state, limit = 5) => 
+export const selectPromptPacksWithMostPrompts = (state, limit = 5) =>
   [...state.promptPack.packs]
     .sort((a, b) => (b.prompts?.length || 0) - (a.prompts?.length || 0))
     .slice(0, limit);
 
-export const selectPromptPacksByUsageRange = (state, minUsage, maxUsage) => 
+export const selectPromptPacksByUsageRange = (state, minUsage, maxUsage) =>
   state.promptPack.packs.filter(pack => {
     const usage = pack.usageCount || 0;
     return usage >= minUsage && usage <= maxUsage;

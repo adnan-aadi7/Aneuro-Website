@@ -350,10 +350,21 @@ export const getFeedbackTickets = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
+    // Attach profileImage from User collection
+    const ticketsWithProfile = await Promise.all(
+      tickets.map(async (ticket) => {
+        const user = await User.findOne({ email: ticket.email });
+        return {
+          ...ticket.toObject(),
+          profileImage: user?.profileImage || null,
+        };
+      })
+    );
+
     return res.status(200).json({
       success: true,
-      count: tickets.length,
-      tickets,
+      count: ticketsWithProfile.length,
+      tickets: ticketsWithProfile,
       pagination: {
         currentPage: page,
         totalPages: Math.ceil(total / limit),
