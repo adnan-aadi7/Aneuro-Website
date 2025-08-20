@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Clock, Calendar } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllScheduled, selectScheduleStats, selectScheduleLoading } from "../../../../store/Slice/ScheduleSlice";
+import { fetchAllScheduled, fetchScheduledStats, selectScheduleStats, selectScheduleLoading } from "../../../../store/Slice/ScheduleSlice";
 
 const Cards = () => {
   const dispatch = useDispatch();
@@ -11,8 +11,10 @@ const Cards = () => {
   // Fetch schedule stats on component mount
   useEffect(() => {
     dispatch(fetchAllScheduled());
+    dispatch(fetchScheduledStats());
   }, [dispatch]);
-  console.log("stats", stats);
+  console.log("stats Cards", stats);
+
 
   const formatNextReleaseDate = (nextRelease) => {
     if (!nextRelease || !nextRelease.releaseDateTime) return "No upcoming releases";
@@ -83,7 +85,7 @@ const Cards = () => {
           </div>
           <div className="mb-2">
             <span className="text-3xl font-bold text-white">
-              {stats?.thisWeekReleases || 0}
+              {stats?.thisWeek ?? stats?.thisWeekReleases ?? 0}
             </span>
           </div>
           <p className="text-gray-400 text-sm">Releases this week</p>
