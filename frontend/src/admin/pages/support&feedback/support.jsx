@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { MoreVertical, ArrowDown, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { getTickets } from '../../../store/Slice/TicketSlice';
+import { getTickets, updateTicketStatus } from '../../../store/Slice/TicketSlice';
 
 export default function Support() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { tickets = [], count = 0, pagination } = useSelector((state) => state.ticket);
   const [page, setPage] = useState(1);
+  const [rowLoading, setRowLoading] = useState({}); // { [ticketId]: boolean }
   const [filters, setFilters] = useState({
     status: '',
     email: ''
@@ -25,6 +26,20 @@ export default function Support() {
     setPage(1); // Reset to first page when filters change
   };
 
+  const handleToggleStatus = async (e, ticket) => {
+    e.stopPropagation();
+    if (!ticket?._id) return;
+    const newStatus = ticket.status === 'CLOSED' ? 'OPEN' : 'CLOSED';
+    setRowLoading(prev => ({ ...prev, [ticket._id]: true }));
+    try {
+      await dispatch(updateTicketStatus({ ticketId: ticket._id, status: newStatus })).unwrap();
+    } catch {
+      // Optional: could show a toast here; slice stores error
+    } finally {
+      setRowLoading(prev => ({ ...prev, [ticket._id]: false }));
+    }
+  };
+
   return (
     <div className='text-white'>
       <h1 className="text-[32px] font-medium">All Tickets</h1>
@@ -39,14 +54,14 @@ export default function Support() {
             placeholder="Search by email..."
             value={filters.email}
             onChange={(e) => handleFilterChange('email', e.target.value)}
-            className="bg-[#1B1D29] border border-white/20 rounded-lg px-10 py-2 text-white placeholder-white/50 focus:outline-none focus:border-[#00D1FF]"
+            className="bg-[#1B1D29] border border-white/20  px-10 py-2 text-white placeholder-white/50 focus:outline-none focus:border-[#00D1FF]"
           />
         </div>
         
         <select
           value={filters.status}
           onChange={(e) => handleFilterChange('status', e.target.value)}
-          className="bg-[#1B1D29] border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#00D1FF]"
+          className="bg-[#1B1D29] border border-white/20  px-4 py-2 text-white focus:outline-none focus:border-[#00D1FF]"
         >
           <option value="">All Status</option>
           <option value="OPEN">Open</option>
@@ -79,7 +94,7 @@ export default function Support() {
             <tbody>
   {tickets.map((ticket, idx) => (
     <tr
-      onClick={() => navigate(`/admin/support/feedback/user-detail/${ticket._id}`, { state: { ticket } })}
+      onClick={() => navigate(`/admin/support/feedback/user-detail/${ticket._id}`, { state: { ticketId: ticket._id } })}
       key={ticket._id || idx}
       className="text-sm hover:bg-[#222431] transition-colors rounded-lg cursor-pointer"
     >
@@ -104,14 +119,16 @@ export default function Support() {
         {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : "-"}
       </td>
       <td className="py-4 px-6 border-b border-slate-300">
-        <span
-          className={`px-3 py-1 text-xs font-semibold rounded-full 
+        <button
+          onClick={(e) => handleToggleStatus(e, ticket)}
+          disabled={!!rowLoading[ticket._id]}
+          className={`px-3 py-1 text-xs font-semibold rounded-full cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed 
             ${ticket.status === 'CLOSED'
               ? 'bg-[#C2FFE3] text-[#1A7759]'
               : 'bg-[#D2FFF8] text-[#007872]'}`}
         >
-          {ticket.status}
-        </span>
+          {rowLoading[ticket._id] ? (ticket.status === 'CLOSED' ? 'Reopening...' : 'Closing...') : ticket.status}
+        </button>
       </td>
       <td className="text-center py-4 px-6 border-b border-slate-300">
         <MoreVertical size={16} className="cursor-pointer text-white/70" />
