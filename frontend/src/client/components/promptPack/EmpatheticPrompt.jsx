@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { ChevronDown, Copy } from "lucide-react";
 
-export default function EmpatheticPrompt() {
+export default function EmpatheticPrompt({ categories = [] }) {
   const [showFirstPrompt, setShowFirstPrompt] = useState(true);
   const [showFullPrompt, setShowFullPrompt] = useState(false);
-  const [copiedPrompt, setCopiedPrompt] = useState(0); // 0: none, 1: first, 2: second
-  // Tooltip state for Empathetic Social Media Caption Generator section
+  const [copiedPrompt, setCopiedPrompt] = useState(0);
   const [showEmailTooltip, setShowEmailTooltip] = useState(false);
   const [emailTooltipPos, setEmailTooltipPos] = useState({ x: 0, y: 0 });
 
@@ -19,16 +18,14 @@ export default function EmpatheticPrompt() {
     setTimeout(() => setCopiedPrompt(0), 1500);
   };
 
-  // Only keep the Empathetic dropdown unchanged
   const renderDropdown = () => {
     return (
       <div className="relative mb-8">
         <select className="w-full bg-[#16161C] text-white px-4 py-3 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700">
           <option>Synthesizer dropdown</option>
-          <option>Connector</option>
-          <option>Supporter</option>
-          <option>Listener</option>
-          <option>Motivator</option>
+          {categories.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
         </select>
         <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
       </div>
@@ -37,41 +34,25 @@ export default function EmpatheticPrompt() {
 
   return (
     <div className="bg-[#303041] text-white mt-10">
-      {/* Header */}
       <div className="p-2 lg:p-8">
-        <h1 className="text-xl font-medium mb-6">
-          Synthesizer Brain Type Prompts
-        </h1>
-        {/* Dropdown (unchanged) */}
+        <h1 className="text-xl font-medium mb-6">Synthesizer Brain Type Prompts</h1>
         {renderDropdown()}
-        {/* Email Prompts Section */}
-        <h2 className="text-lg font-medium mb-6">
-          Email Prompts for Synthesizer Types
-        </h2>
-        {/* Empathetic Social Media Caption Generator */}
+
+        <h2 className="text-lg font-medium mb-6">Email Prompts for Synthesizer Types</h2>
+
         <div
           className="bg-[#23232F] p-6 mb-4 relative"
           onMouseEnter={() => setShowEmailTooltip(true)}
           onMouseLeave={() => setShowEmailTooltip(false)}
           onMouseMove={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
-            setEmailTooltipPos({
-              x: e.clientX - rect.left,
-              y: e.clientY - rect.top,
-            });
+            setEmailTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
           }}
         >
-          {/* Custom Tooltip for Empathetic Social Media Caption Generator (small, near cursor) */}
           {showEmailTooltip && (
             <div
               className="pointer-events-none bg-black text-white text-[10px] px-2 py-1 rounded shadow-lg z-20 whitespace-nowrap"
-              style={{
-                position: "absolute",
-                left: emailTooltipPos.x + 10,
-                top: emailTooltipPos.y + 10,
-                minWidth: "max-content",
-                maxWidth: 180,
-              }}
+              style={{ position: "absolute", left: emailTooltipPos.x + 10, top: emailTooltipPos.y + 10, minWidth: "max-content", maxWidth: 180 }}
             >
               This section generates an empathetic social media caption email
               prompt, including subject, copy button, and example message.
@@ -82,7 +63,7 @@ export default function EmpatheticPrompt() {
               <h3 className="text-base font-medium mb-2">
                 Empathetic Social Media Caption Generator
               </h3>
-              <p className="text-cyan-400 text-sm mb-4">
+            <p className="text-cyan-400 text-sm mb-4">
                 Subject: A message of support and encouragement
               </p>
             </div>
@@ -125,7 +106,7 @@ export default function EmpatheticPrompt() {
             {showFirstPrompt ? "Show Less" : "Show More"}
           </button>
         </div>
-        {/* Empathetic Problem-Solution Framework */}
+
         <div className="bg-[#23232F] p-6">
           <div className="flex justify-between items-start mb-4">
             <div className="flex-1">
