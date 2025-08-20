@@ -40,7 +40,7 @@ export const fetchScheduledWithoutRelease = createAsyncThunk(
 
 export const scheduleContent = createAsyncThunk(
   'schedule/scheduleContent',
-  async (payload, { rejectWithValue }) => {
+  async (payload, { rejectWithValue, dispatch }) => {
     try {
       // Map frontend payload to backend expectations
       const backendPayload = {
@@ -51,6 +51,12 @@ export const scheduleContent = createAsyncThunk(
         ...(payload.tier ? { tier: payload.tier } : {})
       };
       const response = await axios.post('/schedule', backendPayload);
+      
+      // Refresh the content list after successful scheduling
+      if (response.data.success) {
+        dispatch(fetchScheduledWithoutRelease());
+      }
+      
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to schedule content' });
@@ -130,13 +136,20 @@ const scheduleSlice = createSlice({
       })
       .addCase(fetchAllScheduled.fulfilled, (state, action) => {
         state.loading = false;
-        state.scheduled = action.payload.data;
-        // Update stats from getAllScheduled response
-        state.stats = {
-          ...state.stats,
-          ...action.payload.stats
-        };
-        state.success = 'Fetched scheduled content successfully';
+        // Handle the API response structure: { success, stats, data }
+        if (action.payload && action.payload.success) {
+          state.scheduled = action.payload.data || [];
+          // Update stats from getAllScheduled response
+          state.stats = {
+            ...state.stats,
+            ...action.payload.stats
+          };
+          // Don't set success message for data fetching operations
+          // state.success = 'Fetched scheduled content successfully';
+        } else {
+          state.scheduled = [];
+          state.error = action.payload?.message || 'Failed to fetch scheduled content';
+        }
       })
       .addCase(fetchAllScheduled.rejected, (state, action) => {
         state.loading = false;
@@ -191,12 +204,14 @@ const scheduleSlice = createSlice({
       })
       .addCase(scheduleContent.fulfilled, (state, action) => {
         state.loading = false;
-        state.success = action.payload.message;
-        // Components should call fetchAllScheduled to refresh list
+        state.success = action.payload.message || 'Content scheduled successfully';
+        // Clear any previous errors
+        state.error = null;
       })
       .addCase(scheduleContent.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || 'Failed to schedule content';
+        state.success = null;
       });
 
     // Update Schedule

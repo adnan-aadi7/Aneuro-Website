@@ -1,7 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Edit, Trash2, Mail, Zap, Filter } from "lucide-react";
+import { Edit, Trash2, Mail, Zap, Filter, RefreshCw } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllScheduled, selectScheduled, selectScheduleLoading, selectScheduleError, deleteSchedule } from "../../../../store/Slice/ScheduleSlice";
+import { 
+  fetchAllScheduled, 
+  selectScheduled, 
+  selectScheduleLoading, 
+  selectScheduleError, 
+  selectScheduleSuccess,
+  deleteSchedule,
+  clearError,
+  clearSuccess
+} from "../../../../store/Slice/ScheduleSlice";
 import AddShedulePopup from "./AddShedulePopup";
 
 const ScheduledReleasesTable = ({ onSuccess, onError }) => {
@@ -9,6 +18,7 @@ const ScheduledReleasesTable = ({ onSuccess, onError }) => {
   const scheduledReleases = useSelector(selectScheduled);
   const loading = useSelector(selectScheduleLoading);
   const error = useSelector(selectScheduleError);
+  const success = useSelector(selectScheduleSuccess);
   
   // State for edit popup
   const [editPopupOpen, setEditPopupOpen] = useState(false);
@@ -23,12 +33,45 @@ const ScheduledReleasesTable = ({ onSuccess, onError }) => {
     dispatch(fetchAllScheduled());
   }, [dispatch]);
 
+  // Handle success and error messages
+  useEffect(() => {
+    if (success) {
+      // Only show success messages for actual operations (not data fetching)
+      // Success messages for operations like scheduling, updating, deleting
+      if (onSuccess && (
+        success.includes('scheduled successfully') ||
+        success.includes('updated successfully') ||
+        success.includes('deleted successfully')
+      )) {
+        onSuccess(success);
+      }
+      dispatch(clearSuccess());
+    }
+  }, [success, dispatch, onSuccess]);
+
+  useEffect(() => {
+    if (error) {
+      if (onError) {
+        onError(error);
+      }
+      dispatch(clearError());
+    }
+  }, [error, dispatch, onError]);
+
+  // Refresh function
+  const handleRefresh = () => {
+    dispatch(fetchAllScheduled());
+  };
+
   console.log("scheduledReleases", scheduledReleases);
+  
   const getTierBadge = (tier) => {
     const styles = {
       premium: "bg-blue-100 text-blue-800",
       basic: "bg-green-100 text-green-800",
       enterprise: "bg-purple-100 text-purple-800",
+      starter: "bg-green-100 text-green-800",
+      growth: "bg-blue-100 text-blue-800",
     };
     return styles[tier] || "bg-gray-100 text-gray-800";
   };
@@ -157,9 +200,11 @@ const ScheduledReleasesTable = ({ onSuccess, onError }) => {
           id: deletingRelease.id, 
           modelType: modelType 
         })).unwrap();
+        
         // Refresh the table after successful deletion
         dispatch(fetchAllScheduled());
         handleDeleteClose();
+        
         // Show success message through parent's toast system
         if (onSuccess) {
           onSuccess("Scheduled release deleted successfully!");
@@ -191,7 +236,17 @@ const ScheduledReleasesTable = ({ onSuccess, onError }) => {
   if (loading) {
     return (
       <div className="bg- text-white w-full mt-3 border border-slate-800 p-5">
-        <h1 className="text-3xl font-medium mb-6">All Scheduled Releases</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-medium">All Scheduled Releases</h1>
+          <button
+            onClick={handleRefresh}
+            disabled={loading}
+            className="flex items-center gap-2 px-3 py-2 bg-slate-700 text-white rounded hover:bg-slate-600 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mr-3"></div>
           <span className="text-gray-400">Loading scheduled releases...</span>
@@ -200,34 +255,38 @@ const ScheduledReleasesTable = ({ onSuccess, onError }) => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="bg- text-white w-full mt-3 border border-slate-800 p-5">
-        <h1 className="text-3xl font-medium mb-6">All Scheduled Releases</h1>
-        <div className="text-center py-8">
-          <p className="text-red-400 mb-4">Error loading scheduled releases</p>
+  return (
+    <div className="bg- text-white w-full mt-3 border border-slate-800 p-5">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-medium">
+          All Scheduled Releases
+          {scheduledReleases && scheduledReleases.length > 0 && (
+            <span className="text-gray-400 text-lg ml-3">({scheduledReleases.length})</span>
+          )}
+        </h1>
+        <button
+          onClick={handleRefresh}
+          disabled={loading}
+          className="flex items-center gap-2 px-3 py-2 bg-slate-700 text-white rounded hover:bg-slate-600 disabled:opacity-50"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </button>
+      </div>
+
+      {/* Error State */}
+      {error && (
+        <div className="mb-4 p-4 bg-red-900/20 border border-red-500 rounded">
+          <p className="text-red-400 mb-2">Error loading scheduled releases</p>
           <button 
-            onClick={() => dispatch(fetchAllScheduled())}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            onClick={handleRefresh}
+            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
           >
             Try Again
           </button>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg- text-white w-full mt-3 border border-slate-800 p-5">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-medium">
-          All Scheduled Releases
-          {scheduledReleases.length > 0 && (
-            <span className="text-gray-400 text-lg ml-3">({scheduledReleases.length})</span>
-          )}
-        </h1>
-      </div>
+      )}
 
       {/* Table */}
       <div className="overflow-x-auto">
@@ -258,10 +317,10 @@ const ScheduledReleasesTable = ({ onSuccess, onError }) => {
             </tr>
           </thead>
           <tbody>
-            {scheduledReleases.length === 0 ? (
+            {!scheduledReleases || scheduledReleases.length === 0 ? (
               <tr>
                 <td colSpan="7" className="py-8 text-center text-gray-400">
-                  No scheduled releases found
+                  {loading ? 'Loading...' : 'No scheduled releases found'}
                 </td>
               </tr>
             ) : (
@@ -310,12 +369,14 @@ const ScheduledReleasesTable = ({ onSuccess, onError }) => {
                       <button 
                         onClick={() => handleEdit(release)}
                         className="text-gray-400 hover:text-white transition-colors"
+                        title="Edit"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleDelete(release)}
                         className="text-gray-400 hover:text-white transition-colors"
+                        title="Delete"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -335,6 +396,7 @@ const ScheduledReleasesTable = ({ onSuccess, onError }) => {
           onClose={handleEditClose}
           editingRelease={editingRelease}
           onSuccess={handleEditSuccess}
+          onError={onError}
         />
       )}
 

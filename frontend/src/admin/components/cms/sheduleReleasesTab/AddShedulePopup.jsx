@@ -1,44 +1,33 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { 
-  fetchEmailSequences, 
-  selectEmailSequences, 
-  selectEmailSequenceLoading 
-} from "../../../../store/Slice/EmailSequenceSLice";
-import { 
-  fetchFunnelTemplates, 
-  selectFunnelTemplates, 
-  selectFunnelTemplateLoading 
-} from "../../../../store/Slice/FunnelSequenceSlice";
-import { 
-  fetchPromptPacks, 
-  selectPromptPacks, 
-  selectPromptPackLoading 
-} from "../../../../store/Slice/PromptPacksSlice";
-import { 
-  scheduleContent, 
+  fetchScheduledWithoutRelease, 
+  scheduleContent,
   clearError, 
   selectScheduleLoading, 
-  selectScheduleError
+  selectScheduleError,
+  selectWithoutRelease,
+  clearSuccess
 } from "../../../../store/Slice/ScheduleSlice";
+import {
+  fetchStripeProducts,
+  selectStripeProducts,
+  selectStripeProductsLoading,
+  selectStripeProductsError
+} from "../../../../store/Slice/PaymentSlice";
 
 const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = null, onError = null }) => {
   const dispatch = useDispatch();
   
-  // Redux selectors
-  const emailSequences = useSelector(selectEmailSequences);
-  const funnelTemplates = useSelector(selectFunnelTemplates);
-  const promptPacks = useSelector(selectPromptPacks);
-  const emailLoading = useSelector(selectEmailSequenceLoading);
-  const funnelLoading = useSelector(selectFunnelTemplateLoading);
-  const promptLoading = useSelector(selectPromptPackLoading);
+  // Redux selectors - using the new unified approach
+  const { funnels, emailSequences, promptPacks } = useSelector(selectWithoutRelease);
   const scheduleLoading = useSelector(selectScheduleLoading);
   const scheduleError = useSelector(selectScheduleError);
 
-  // Get error states from content slices
-  const emailError = useSelector((state) => state.emailSequence.error);
-  const funnelError = useSelector((state) => state.promptPack.error);
-  const promptError = useSelector((state) => state.funnelTemplate.error);
+  // Stripe products selectors
+  const stripeProducts = useSelector(selectStripeProducts);
+  const stripeProductsLoading = useSelector(selectStripeProductsLoading);
+  const stripeProductsError = useSelector(selectStripeProductsError);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -90,10 +79,6 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
 
   const validateTime = (time) => {
     if (!time) return 'Time is required';
-    
-    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    if (!timeRegex.test(time)) return 'Invalid time format';
-    
     return '';
   };
 
@@ -115,8 +100,23 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
 
   const validateTier = (tier) => {
     if (!tier) return 'Tier is required';
-    if (!['basic', 'premium', 'enterprise'].includes(tier)) return 'Invalid tier selection';
+    // Allow any non-empty Stripe product name
     return '';
+  };
+
+  // Map Stripe product names to backend tier names
+  const mapStripeProductToBackendTier = (stripeProductName) => {
+    const productName = (stripeProductName || '').toLowerCase();
+    const tierMapping = {
+      'basic': 'starter',
+      'starter': 'starter',
+      'premium': 'growth',
+      'growth': 'growth',
+      'pro': 'growth',
+      'enterprise': 'enterprise',
+      'business': 'enterprise'
+    };
+    return tierMapping[productName] || 'starter';
   };
 
   // Pre-fill form when editing
@@ -202,14 +202,19 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
     }
   };
 
-  // Fetch all content on component mount
+  // Fetch content without release dates and Stripe products on open
   useEffect(() => {
     if (open) {
-      dispatch(fetchEmailSequences());
-      dispatch(fetchFunnelTemplates());
-      dispatch(fetchPromptPacks());
+      dispatch(fetchScheduledWithoutRelease());
+      dispatch(fetchStripeProducts());
     }
   }, [dispatch, open]);
+
+  // Helper function to refresh content list
+  const refreshContentList = () => {
+    dispatch(fetchScheduledWithoutRelease());
+  };
+  
 
   // Handle success and error messages
   useEffect(() => {
@@ -220,6 +225,19 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
       dispatch(clearError());
     }
   }, [scheduleError, dispatch, onError]);
+
+  // Handle success messages
+  const scheduleSuccess = useSelector((state) => state.schedule.success);
+  useEffect(() => {
+    if (scheduleSuccess) {
+      // Clear the success message after a short delay
+      const timer = setTimeout(() => {
+        dispatch(clearSuccess());
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [scheduleSuccess, dispatch]);
 
   const handleClose = () => {
     setFormData({
@@ -252,8 +270,8 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
     }
     
     if (name === 'scheduledTime') {
-      const timeError = validateTime(value);
-      setValidationErrors(prev => ({ ...prev, scheduledTime: timeError }));
+      // Remove validation from input change - only validate on form submission
+      setValidationErrors(prev => ({ ...prev, scheduledTime: '' }));
       
       // Re-validate combined date and time if both are present
       if (formData.scheduledDate) {
@@ -283,7 +301,7 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
       setValidationErrors(prev => ({ ...prev, scheduledDate: '' }));
     }
 
-    // Validate time
+    // Validate time (only empty check)
     const timeError = validateTime(formData.scheduledTime);
     if (timeError) {
       setValidationErrors(prev => ({ ...prev, scheduledTime: timeError }));
@@ -301,7 +319,7 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
       setValidationErrors(prev => ({ ...prev, combinedDateTime: '' }));
     }
 
-    // Validate tier
+    // Validate tier (only non-empty)
     const tierError = validateTier(formData.tier);
     if (tierError) {
       setValidationErrors(prev => ({ ...prev, tier: tierError }));
@@ -334,28 +352,63 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
     }
 
     try {
-      await dispatch(scheduleContent(formData)).unwrap();
-      const successMessage = editingRelease ? 'Release updated successfully!' : 'Content scheduled successfully!';
+      // Map the selected Stripe product name to backend tier
+      const backendTier = mapStripeProductToBackendTier(formData.tier);
+
+      const result = await dispatch(scheduleContent({
+        ...formData,
+        tier: backendTier
+      })).unwrap();
       
-      // Clear validation errors on success
-      setValidationErrors({
-        scheduledDate: '',
-        scheduledTime: '',
-        combinedDateTime: '',
-        tier: ''
-      });
-      
-      if (onSuccess) {
-        onSuccess(successMessage);
+      // Check if the API call was successful
+      if (result && result.success) {
+        const successMessage = editingRelease ? 'Release updated successfully!' : 'Content scheduled successfully!';
+        
+        // Clear validation errors on success
+        setValidationErrors({
+          scheduledDate: '',
+          scheduledTime: '',
+          combinedDateTime: '',
+          tier: ''
+        });
+        
+        // Refresh the content list to update the dropdown
+        refreshContentList();
+        
+        if (onSuccess) {
+          onSuccess(successMessage);
+        }
+        
+        // Reset form and close popup
+        setFormData({
+          contentId: '',
+          modelType: '',
+          scheduledDate: '',
+          scheduledTime: '',
+          tier: ''
+        });
+        handleClose();
+      } else {
+        // Handle case where API returns success: false
+        const errorMessage = result?.message || 'Failed to schedule content. Please try again.';
+        if (onError) {
+          onError(errorMessage);
+        }
       }
-      handleClose();
     } catch (error) {
-      // Show more specific error message
+      // Handle different types of errors
       let errorMessage = 'Failed to schedule content. Please try again.';
-      if (error.message === 'Invalid modelType') {
-        errorMessage = `Invalid model type: ${formData.modelType}. Please try again.`;
-      } else if (error.message) {
-        errorMessage = error.message;
+      
+      if (error && typeof error === 'object') {
+        if (error.message === 'Invalid modelType') {
+          errorMessage = `Invalid model type: ${formData.modelType}. Please try again.`;
+        } else if (error.message) {
+          errorMessage = error.message;
+        } else if (error.error) {
+          errorMessage = error.error;
+        }
+      } else if (typeof error === 'string') {
+        errorMessage = error;
       }
       
       if (onError) {
@@ -384,8 +437,8 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
     }
     
     // Add funnel templates
-    if (funnelTemplates && funnelTemplates.length > 0) {
-      funnelTemplates.forEach(template => {
+    if (funnels && funnels.length > 0) {
+      funnels.forEach(template => {
         if (template && template._id && template.name) {
           const displayName = template.name.length > 25 ? `${template.name.substring(0, 25)}...` : template.name;
           options.push({
@@ -432,10 +485,10 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
   const hasContent = generateContentOptions().length > 0;
 
   // Check if content is still loading
-  const isContentLoading = emailLoading || funnelLoading || promptLoading;
+  const isContentLoading = scheduleLoading;
 
   // Check if there was an error loading content
-  const hasContentError = emailError || funnelError || promptError;
+  const hasContentError = scheduleError;
 
   // Check if we should show the no content message
   const shouldShowNoContent = !isContentLoading && !hasContentError && !hasContent;
@@ -556,14 +609,24 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
               onChange={handleInputChange}
               className="w-full bg-[#23283A] border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-400"
               required
+              disabled={stripeProductsLoading}
             >
-              <option value="">Select Tier</option>
-              <option value="basic">Basic</option>
-              <option value="premium">Premium</option>
-              <option value="enterprise">Enterprise</option>
+              <option value="">
+                {stripeProductsLoading ? 'Loading tiers...' : stripeProductsError ? 'Error loading tiers' : 'Select Tier'}
+              </option>
+              {!stripeProductsLoading && !stripeProductsError && stripeProducts && stripeProducts.map((product) => (
+                <option key={product.id || product.name} value={product.name}>
+                  {product.name}
+                </option>
+              ))}
             </select>
             {validationErrors.tier && (
               <p className="text-red-400 text-xs mt-1">{validationErrors.tier}</p>
+            )}
+            {stripeProductsError && (
+              <p className="text-red-400 text-xs mt-1">
+                Error loading tiers. Please try refreshing the page.
+              </p>
             )}
           </div>
 
