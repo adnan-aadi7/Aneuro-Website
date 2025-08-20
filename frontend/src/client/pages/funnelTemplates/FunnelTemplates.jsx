@@ -18,6 +18,9 @@ const FunnelTemplates = () => {
 
   useEffect(() => {
     dispatch(fetchFunnelTemplates({ brainType: activeTab, category }));
+    console.log('====================================');
+    console.log(templates);
+    console.log('====================================');
   }, [dispatch, activeTab, category]);
 
   // client-side fallback
