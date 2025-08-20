@@ -176,3 +176,30 @@ export const updateNotificationPreferences = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+
+export const getPreferences = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // find user by _id or userId depending on schema
+    const prefs = await User.findOne({ _id: userId }).select("notificationPreferences");
+
+    if (!prefs || !prefs.notificationPreferences) {
+      return res.status(404).json({
+        success: false,
+        message: "Notification preferences not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        newtool: prefs.notificationPreferences.newtool ?? false,
+        quiz: prefs.notificationPreferences.quiz ?? false,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

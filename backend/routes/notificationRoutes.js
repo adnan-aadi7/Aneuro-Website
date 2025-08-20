@@ -3,7 +3,8 @@ import {
   createNotification,
   getUserNotifications,
   updateNotificationPreferences,
-  markNotificationAsRead
+  markNotificationAsRead,
+  getPreferences
 } from "../controller/notificationController.js";
 
 const router = express.Router();
@@ -122,5 +123,45 @@ router.put("/:userId/preferences", updateNotificationPreferences);
  */
 router.put("/:notificationId/read", markNotificationAsRead);
 
+/**
+ * @swagger
+ * /api/notifications/{userId}/preferences:
+ *   get:
+ *     summary: Get a user's notification preferences
+ *     tags: [Notifications]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the user
+ *     responses:
+ *       200:
+ *         description: User preferences fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     newtool:
+ *                       type: boolean
+ *                       example: true
+ *                     quiz:
+ *                       type: boolean
+ *                       example: false
+ *       404:
+ *         description: Preferences not found
+ *       500:
+ *         description: Internal server error
+ */
+
+router.get("/:userId/preferences", getPreferences);
 
 export default router;
