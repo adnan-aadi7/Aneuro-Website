@@ -283,9 +283,7 @@ const ticketSlice = createSlice({
         state.loading = false;
         // Update the ticket in the list
         const index = state.tickets.findIndex(ticket => ticket._id === action.payload.ticket._id);
-        if (index !== -1) {
-          state.tickets[index] = action.payload.ticket;
-        }
+        if (index !== -1) state.tickets[index] = action.payload.ticket;
         // Update current ticket if it's the same one
         if (state.currentTicket && state.currentTicket._id === action.payload.ticket._id) {
           state.currentTicket = action.payload.ticket;
