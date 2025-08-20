@@ -19,15 +19,17 @@ const router = express.Router();
  *   name: FunnelTemplates
  *   description: Funnel Template Management
  */
+
+
 /**
  * @swagger
  * /api/funnel-templates/file:
  *   post:
- *     summary: Create a new funnel template with file upload, tier, status, and category
+ *     summary: Create a new funnel template with file upload, tier, status, category, and brainType
  *     description: >
- *       Uploads a file (.pdf, .docx, .md, .html) to Cloudinary and creates a new funnel template.  
- *       Requires `name`, `tier`, `status`, and `category`.  
- *       File will be stored in `funnel_templates` folder on Cloudinary.
+ *       Uploads a file (.pdf, .docx, .md, .html, .txt) to Cloudinary and creates a new funnel template.  
+ *       Requires `name` and `tier`.  
+ *       Optionally accepts `status`, `category`, and `brainType`.
  *     tags: [FunnelTemplates]
  *     security:
  *       - bearerAuth: []
@@ -40,8 +42,6 @@ const router = express.Router();
  *             required:
  *               - name
  *               - tier
- *               - status
- *               - category
  *               - file
  *             properties:
  *               name:
@@ -53,15 +53,19 @@ const router = express.Router();
  *                 example: "growth"
  *               status:
  *                 type: string
- *                 enum: [ scheduled, active]
+ *                 enum: [scheduled, active]
  *                 example: "scheduled"
  *               category:
  *                 type: string
  *                 example: "Marketing Automation"
+ *               brainType:
+ *                 type: string
+ *                 example: "Reflector"
+ *                 description: Brain type for which this funnel template is intended
  *               file:
  *                 type: string
  *                 format: binary
- *                 description: Upload file (.pdf, .docx, .md, .html)
+ *                 description: Upload file (.pdf, .docx, .md, .html, .txt)
  *     responses:
  *       201:
  *         description: Funnel template created successfully

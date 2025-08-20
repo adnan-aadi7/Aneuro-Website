@@ -6,7 +6,7 @@ import Notification from "../model/Notification.js";
 
 export const createFunnelTemplateWithFile = async (req, res) => {
   try {
-    const { name, tier, status, category } = req.body;
+    const { name, tier, status, category, brainType } = req.body;
 
     // Required fields validation
     if (!name || !tier) {
@@ -48,11 +48,12 @@ export const createFunnelTemplateWithFile = async (req, res) => {
       tier,
       category: category || '',
       status: status || 'scheduled',
+      brainType: brainType || '',   // ✅ added brainType
       fileUrl: uploadResult.secure_url,
       content: uploadResult.secure_url,
     });
 
-const savedTemplate = await newTemplate.save();
+    const savedTemplate = await newTemplate.save();
 
     // Log action
     await logAction({
@@ -64,10 +65,11 @@ const savedTemplate = await newTemplate.save();
       req,
     });
 
- if (savedTemplate.status === 'active') {
+    // Send notification if active
+    if (savedTemplate.status === 'active') {
       const notification = new Notification({
-        title: ` ${name}`,
-        message: `A new ${tier} tier funnel template has been created in category: ${category || 'general'}`,
+        title: `${name}`,
+        message: `A new ${tier} tier funnel template has been created in category: ${category || 'general'} ${brainType ? `for brain type: ${brainType}` : ''}`, // ✅ include brainType in message
         type: 'newtool',
         isPublic: true,
         targetTier: tier,
