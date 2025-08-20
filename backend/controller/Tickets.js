@@ -1,7 +1,7 @@
 import { uploadToCloudinary } from '../middleware/uploadToCloudinary.js';
 import Ticket from '../model/Ticket.js';
 import User from '../model/User.js';
-
+import Notification from '../model/Notification.js';
 export const createTicket = async (req, res) => {
   try {
     console.log('Incoming request');
