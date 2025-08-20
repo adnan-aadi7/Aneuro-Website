@@ -218,7 +218,7 @@ const PromptPacks = () => {
                       </div>
                     </td>
                     <td className="py-4 px-4 text-gray-300 text-sm">
-                      {formatDate(pack.createdAt)}
+                      {formatDate(pack.createdDate)}
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex items-center space-x-2">

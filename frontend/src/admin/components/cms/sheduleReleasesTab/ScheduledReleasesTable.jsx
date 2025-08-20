@@ -35,18 +35,11 @@ const ScheduledReleasesTable = ({ onSuccess, onError }) => {
 
   // Handle success and error messages
   useEffect(() => {
-    if (success) {
-      // Only show success messages for actual operations (not data fetching)
-      // Success messages for operations like scheduling, updating, deleting
-      if (onSuccess && (
-        success.includes('scheduled successfully') ||
-        success.includes('updated successfully') ||
-        success.includes('deleted successfully')
-      )) {
-        onSuccess(success);
-      }
-      dispatch(clearSuccess());
-    }
+    if (!success) return;
+    // Avoid duplicate toasts for create/update which are handled in popups
+    const isDelete = success.toLowerCase().includes('deleted successfully');
+    if (isDelete && onSuccess) onSuccess(success);
+    dispatch(clearSuccess());
   }, [success, dispatch, onSuccess]);
 
   useEffect(() => {
@@ -233,7 +226,7 @@ const ScheduledReleasesTable = ({ onSuccess, onError }) => {
     }
   };
 
-  if (loading) {
+  if (loading && (!scheduledReleases || scheduledReleases.length === 0)) {
     return (
       <div className="bg- text-white w-full mt-3 border border-slate-800 p-5">
         <div className="flex items-center justify-between mb-6">
