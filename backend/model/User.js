@@ -61,10 +61,7 @@ lastLogin: {
   type: Date,
   default: null
 },
-    quizCompletion: {
-      type: Number, 
-      default: 0,
-    },
+   
     notificationPreferences: {
     newtool: { type: Boolean, default: true },
     quiz: { type: Boolean, default: true },
