@@ -22,6 +22,9 @@ export default function FunnelStructure({
   category,
   onCategoryChange,
 }) {
+  console.log('====================================');
+  console.log(templates);
+  console.log('====================================');
   return (
     <div className="bg-[#303041] text-white mt-10">
       {/* Top heading like emails */}
