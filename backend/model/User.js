@@ -61,12 +61,14 @@ lastLogin: {
   type: Date,
   default: null
 },
-
-    // ✅ Quiz completion percentage
     quizCompletion: {
-      type: Number, // value between 0 - 100
+      type: Number, 
       default: 0,
-    }
+    },
+    notificationPreferences: {
+    newtool: { type: Boolean, default: true },
+    quiz: { type: Boolean, default: true },
+  }
   },
   { timestamps: true }
 );

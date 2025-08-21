@@ -104,7 +104,7 @@ const router = express.Router();
  *         description: Server error
  */
 
-router.post("/", upload.single("file"), authUser, create);
+router.post("/", authUser, upload.single("file"), create);
 
 
 /**

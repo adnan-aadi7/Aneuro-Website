@@ -2,10 +2,11 @@ import FunnelTemplate from '../model/FunnelTemplate.js';
 import { uploadToCloudinary } from '../middleware/uploadToCloudinary.js';
 import path from 'path';
 import { logAction } from "../config/logAction.js";
+import Notification from "../model/Notification.js";
 
 export const createFunnelTemplateWithFile = async (req, res) => {
   try {
-    const { name, tier, status, category } = req.body;
+    const { name, tier, status, category, brainType } = req.body;
 
     // Required fields validation
     if (!name || !tier) {
@@ -23,7 +24,7 @@ export const createFunnelTemplateWithFile = async (req, res) => {
     }
 
     // Allowed file types
-    const allowedExtensions = ['.pdf', '.docx', '.md', '.html'];
+    const allowedExtensions = ['.pdf', '.docx', '.md', '.html', '.txt'];
     const ext = path.extname(req.file.originalname.toLowerCase());
     if (!allowedExtensions.includes(ext)) {
       return res.status(400).json({
@@ -47,27 +48,41 @@ export const createFunnelTemplateWithFile = async (req, res) => {
       tier,
       category: category || '',
       status: status || 'scheduled',
+      brainType: brainType || '',   // ✅ added brainType
       fileUrl: uploadResult.secure_url,
       content: uploadResult.secure_url,
     });
 
-    await newTemplate.save();
+    const savedTemplate = await newTemplate.save();
 
     // Log action
     await logAction({
       action: 'UPLOAD',
       user: { id: req.user?.id, email: req.user?.email },
-      affectedAsset: newTemplate.name,
+      affectedAsset: savedTemplate.name,
       contentType: 'funnel-template',
       description: 'Created new funnel template with file',
       req,
     });
 
+    // Send notification if active
+    if (savedTemplate.status === 'active') {
+      const notification = new Notification({
+        title: `${name}`,
+        message: `A new ${tier} tier funnel template has been created in category: ${category || 'general'} ${brainType ? `for brain type: ${brainType}` : ''}`, // ✅ include brainType in message
+        type: 'newtool',
+        isPublic: true,
+        targetTier: tier,
+      });
+      await notification.save();
+      console.log('Funnel Template notification saved:', notification);
+    }
+
     // Response
     res.status(201).json({
       success: true,
       message: 'Funnel Template created successfully',
-      data: newTemplate,
+      data: savedTemplate,
     });
   } catch (error) {
     res.status(500).json({
@@ -103,27 +118,37 @@ export const createFunnelTemplate = async (req, res) => {
       brainType,
       usage,
       conversions,
-      content: content || fileUrl || '', // prefer content, fallback to fileUrl
+      content: content || fileUrl || '', 
       fileUrl: fileUrl || '',
       userRating,
       releaseDateTime: releaseDateTime ? new Date(releaseDateTime) : null, 
     });
 
-    await newTemplate.save();
+const savedTemplate = await newTemplate.save();
     
     await logAction({
       action: "CREATE",
       user: { id: req.user?.id, email: req.user?.email },
-      affectedAsset: newTemplate.name,
+      affectedAsset: savedTemplate.name,
       contentType: "funnel-template",
       description: "Created new funnel template",
       req
     });
-    
+    if (savedTemplate.status === 'active') {
+      const notification = new Notification({
+        title: ` ${savedTemplate.name}`,
+        message: `A new ${tier} tier funnel template has been created in category: ${category || 'general'}`,
+        type: 'newtool',
+        isPublic: true,
+        targetTier: tier,
+      });
+      await notification.save();
+      console.log('Funnel Template notification saved:', notification);
+    }
     res.status(201).json({
       success: true,
       message: 'Funnel Template created successfully',
-      data: newTemplate,
+      data: savedTemplate,
     });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });

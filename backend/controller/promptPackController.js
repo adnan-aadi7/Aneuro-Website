@@ -2,6 +2,7 @@ import PromptPack from '../model/Promptpack.js';
 import { uploadToCloudinary } from '../middleware/uploadToCloudinary.js';
 import path from 'path';
 import { logAction } from "../config/logAction.js";
+import Notification from "../model/Notification.js";
 
 export const uploadPromptPack = async (req, res) => {
   try {
@@ -68,6 +69,19 @@ export const uploadPromptPack = async (req, res) => {
       req
     });
 
+     if (savedPack.status === "active") {
+      const notification = new Notification({
+        title: ` ${name}`,
+        message: `A new ${tier} tier prompt pack has been uploaded in category: ${category}`,
+        type: "newtool",
+        isPublic: true,
+        targetTier: tier,
+      });
+      await notification.save();
+      console.log("Prompt Pack notification saved:", notification);
+    }
+
+
     res.status(201).json({
       success: true,
       message: 'Prompt pack uploaded successfully',
@@ -116,6 +130,19 @@ export async function create(req, res) {
       description: "Created new prompt pack",
       req
     });
+
+     if (savedPromptPack.status === "active") {
+      const notification = new Notification({
+        title: ` ${name}`,
+        message: `A new ${tier} tier prompt pack has been uploaded in category: ${category}`,
+        type: "newtool",
+        isPublic: true,
+        targetTier: tier,
+      });
+      await notification.save();
+      console.log("Prompt Pack notification saved:", notification);
+    }
+
 
     res.status(201).json({
       success: true,
