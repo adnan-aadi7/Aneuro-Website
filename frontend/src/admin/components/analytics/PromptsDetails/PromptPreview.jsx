@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Edit, Trash2 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import {
@@ -73,8 +73,24 @@ const PromptPreview = () => {
           {prompts.map((item, idx) => (
             <div
               key={idx}
-              className={`bg-[#232334] border border-[#353545] rounded mb-6 pb-10`}
+              className={`bg-[#232334] border border-[#353545] rounded mb-6 pb-10 relative`}
             >
+              <div className="absolute top-3 right-3 flex items-center space-x-2">
+                <button
+                  className="text-gray-400 hover:text-white transition-colors"
+                  title="Edit Prompt"
+                  onClick={() => {}}
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+                <button
+                  className="text-gray-400 hover:text-white transition-colors"
+                  title="Delete Prompt"
+                  onClick={() => {}}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
               <div className="flex items-center justify-between px-6 pt-6">
                 <div>
                   <div className="text-base text-white font-semibold">
@@ -84,7 +100,7 @@ const PromptPreview = () => {
                     {item?.content ? "Preview below" : ""}
                   </div>
                 </div>
-                <button className="border border-cyan-400 text-white text-xs px-5 py-1 rounded hover:bg-cyan-900 transition ml-4">
+                <button className=" mt-5 border border-cyan-400 text-white text-xs px-5 py-1 rounded hover:bg-cyan-900 transition ml-4">
                   View Full Prompt
                 </button>
               </div>

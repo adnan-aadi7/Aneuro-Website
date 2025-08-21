@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllUsers } from "../../../../store/Slice/UserSlice";
 import { fetchUserCardInfo } from "../../../../store/Slice/PaymentSlice";
+import { getQuizAnalytics, getBrainTypeAnalytics, getWeeklyBrainTypeStats } from "../../../../store/Slice/QuizSlice";
 
 export default function Table() {
   const dispatch = useDispatch();
@@ -75,9 +76,13 @@ export default function Table() {
   const handleViewUser = (user) => {
     // Fetch user card information before navigating
     dispatch(fetchUserCardInfo(user._id));
+    // Prefetch quiz analytics for a snappier Quiz Engagement view
+    dispatch(getQuizAnalytics(user._id));
+    dispatch(getBrainTypeAnalytics(user._id));
+    dispatch(getWeeklyBrainTypeStats(user._id));
     
     // Navigate to user details page
-    navigate("/admin/user/details", { state: { user } });
+    navigate(`/admin/user/details/${user._id}`, { state: { user, activeTab: "Quiz Engagement" } });
   };
 
   // Show all users instead of just paid users

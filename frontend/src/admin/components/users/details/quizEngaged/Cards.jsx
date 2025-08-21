@@ -1,6 +1,6 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import { selectQuizAnalytics } from "../../../../../store/Slice/QuizSlice";
+import { selectQuizAnalytics, selectAudienceSessions } from "../../../../../store/Slice/QuizSlice";
 import Looper3 from "../../../../../assets/resultOverView/Looper-3.png";
 import VectorIcon from "../../../../../assets/resultOverView/vector.png";
 import { BsCloudCheck } from "react-icons/bs";
@@ -77,13 +77,30 @@ const staticCards = [
 
 const Cards = () => {
   const analytics = useSelector(selectQuizAnalytics);
+  const audienceSessions = useSelector(selectAudienceSessions);
 
-  const cardValues = {
-    totalLinks: analytics?.linksGenerated ?? 0,
-    uniqueClicks: analytics?.uniqueClicks ?? 0,
-    completedQuizzes: analytics?.completedQuizzes ?? 0,
-    completionRate: analytics?.completionRate ?? 0,
-  };
+  // Derive values safely from analytics and sessions
+  const totalLinks = Number(analytics?.linksGenerated) || 0;
+  const uniqueClicks = Number(analytics?.uniqueClicks) || 0;
+  const completedQuizzes = Number(analytics?.completedQuizzes) || 0;
+  const completionRate = typeof analytics?.completionRate === 'number' ? analytics.completionRate : 0;
+
+  const completedFromSessions = Array.isArray(audienceSessions)
+    ? audienceSessions.filter(s => s?.is_completed).length
+    : 0;
+
+  const cardValues = React.useMemo(() => ({
+    totalLinks,
+    uniqueClicks,
+    completedQuizzes: completedQuizzes || completedFromSessions,
+    completionRate,
+  }), [totalLinks, uniqueClicks, completedQuizzes, completedFromSessions, completionRate]);
+
+  // Debug logs to inspect incoming data and computed values
+  React.useEffect(() => {
+  
+    console.log('CardValues:', cardValues);
+  }, [analytics, audienceSessions, cardValues]);
 
   const cards = [
     { ...staticCards[0], value: cardValues.totalLinks },

@@ -5,6 +5,18 @@ import User from '../model/User.js';
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
+// Map Stripe Price IDs via environment variables
+const STARTER_PRICE_ID = process.env.STRIPE_PRICE_ID_STARTER;
+const GROWTH_PRICE_ID = process.env.STRIPE_PRICE_ID_GROWTH;
+const ENTERPRISE_PRICE_ID = process.env.STRIPE_PRICE_ID_ENTERPRISE;
+
+const getPlanFromPriceId = (priceId) => {
+  if (priceId === STARTER_PRICE_ID) return 'starter';
+  if (priceId === GROWTH_PRICE_ID) return 'growth';
+  if (priceId === ENTERPRISE_PRICE_ID) return 'enterprise';
+  return 'starter';
+};
+
 export const handleStripeWebhook = async (req, res) => {
   const sig = req.headers['stripe-signature'];
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -57,12 +69,9 @@ export const handleStripeWebhook = async (req, res) => {
     if (!finalPlan && subscriptionId) {
       try {
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-        // Map price IDs to plan names
+        // Map price ID to plan name using env-configured IDs
         const priceId = subscription.items.data[0]?.price?.id;
-        if (priceId === 'price_1RqBDNHHuap1a33PXASQqDj4') finalPlan = 'starter';
-        else if (priceId === 'price_1RqBDcHHuap1a33PvAJEFgPE') finalPlan = 'growth';
-        else if (priceId === 'price_1RqBDwHHuap1a33PwVa9QS7D') finalPlan = 'enterprise';
-        else finalPlan = 'starter'; // fallback
+        finalPlan = getPlanFromPriceId(priceId);
       } catch (e) {
         console.warn('Could not retrieve subscription to determine plan. Using starter as fallback.');
         finalPlan = 'starter';
@@ -178,8 +187,15 @@ export const handleStripeWebhook = async (req, res) => {
       const user = await User.findById(userId);
       if (user && user.subscription) {
         user.subscription.status = subscription.status;
+        // If price changed this period (upgrade) update plan immediately
+        const priceId = subscription.items?.data?.[0]?.price?.id;
+        user.subscription.plan = getPlanFromPriceId(priceId);
+        // Keep start/end dates aligned with Stripe period
+        user.subscription.startDate = new Date(subscription.current_period_start * 1000);
+        user.subscription.endDate = new Date(subscription.current_period_end * 1000);
+        user.subscription.stripeSubscriptionId = subscription.id;
         await user.save();
-        console.log('User subscription status updated:', user.email, subscription.status);
+        console.log('User subscription status/plan reconciled from Stripe:', user.email, subscription.status, user.subscription.plan);
       }
     }
     break;

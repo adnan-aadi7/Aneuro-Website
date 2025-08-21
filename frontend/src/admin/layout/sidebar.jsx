@@ -131,11 +131,10 @@ const ClientViewToggle = () => {
   const [on, setOn] = useState(false);
   const navigate = useNavigate();
 
-  // Initialize from persisted preference
+  // Force default OFF on mount
   React.useEffect(() => {
-    const persisted = localStorage.getItem('actAsClient') === '1';
-    if (persisted !== on) setOn(persisted);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setOn(false);
+    localStorage.setItem('actAsClient', '0');
   }, []);
 
   return (

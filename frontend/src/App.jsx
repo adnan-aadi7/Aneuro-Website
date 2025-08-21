@@ -247,7 +247,7 @@ function App() {
           }
         />
         <Route
-          path="/admin/user/details"
+          path="/admin/user/details/:userId"
           element={
             <AdminLayout>
               <Details />

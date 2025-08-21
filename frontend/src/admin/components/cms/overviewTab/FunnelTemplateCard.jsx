@@ -193,6 +193,7 @@ export default function FunnelTemplateCard() {
           </p>
         </div>
       </div>
+      
       <div className="mb-6 mt-19">
         <label className="block text-white text-base mb-2" htmlFor="sequence-name">
           Name

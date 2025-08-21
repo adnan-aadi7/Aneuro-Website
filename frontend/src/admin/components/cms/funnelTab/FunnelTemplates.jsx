@@ -29,6 +29,7 @@ const FunnelTemplates = () => {
   useEffect(() => {
     dispatch(fetchFunnelTemplates());
   }, [dispatch]);
+  console.log("funnelTemplates",funnelTemplates);
  
 
   useEffect(() => {
@@ -106,6 +107,26 @@ const FunnelTemplates = () => {
     return String(value);
   };
 
+  // Get count of pages from various possible shapes
+  const getPageCount = (template) => {
+    if (!template) return 0;
+    const count = template.pageCount;
+    if (typeof count === 'number' && !isNaN(count)) return count;
+
+    const pages = template.pages;
+    if (Array.isArray(pages)) return pages.length;
+    if (typeof pages === 'number' && !isNaN(pages)) return pages;
+    if (pages && typeof pages === 'object') {
+      if (Array.isArray(pages.items)) return pages.items.length;
+      try {
+        return Object.keys(pages).length;
+      } catch {
+        return 0;
+      }
+    }
+    return 0;
+  };
+
   // Ensure funnelTemplates is an array
   const safeTemplates = Array.isArray(funnelTemplates) ? funnelTemplates : [];
 
@@ -179,7 +200,7 @@ const FunnelTemplates = () => {
                       </div>
                     </td>
                     <td className="py-4 px-4 text-gray-300 text-sm">
-                      {safeRender(template.pages, 0)} pages
+                      {getPageCount(template)} pages
                     </td>
                     <td className="py-4 px-4 text-gray-300 text-sm">
                       {safeRender(template.category)}
