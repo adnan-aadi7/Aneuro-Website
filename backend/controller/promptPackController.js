@@ -582,3 +582,73 @@ export async function getStatistics(req, res) {
     });
   }
 }
+
+
+export const editPromptInPromptPack = async (req, res) => {
+  try {
+    const { packId, promptId } = req.params;
+    const { content, type } = req.body;
+
+    if (!content && !type) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one field (content or type) must be provided to update.",
+      });
+    }
+
+    const updatedPromptPack = await PromptPack.findOneAndUpdate(
+      { _id: packId, "prompts._id": promptId },
+      {
+        $set: {
+          ...(content && { "prompts.$.content": content }),
+          ...(type && { "prompts.$.type": type }),
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedPromptPack) {
+      return res.status(404).json({
+        success: false,
+        message: "Prompt pack or prompt not found",
+      });
+    }
+
+    // ✅ Log success
+    await logAction({
+      action: "EDIT_PROMPT",
+      user: {
+        id: req.user?.id,
+        email: req.user?.email,
+      },
+      affectedAsset: updatedPromptPack?.name || "Unknown PromptPack",
+      contentType: "prompt-pack",
+      description: `Prompt (ID: ${promptId}) updated in pack: ${updatedPromptPack?.name}`,
+      req,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Prompt updated successfully",
+      data: updatedPromptPack,
+    });
+  } catch (error) {
+    // ✅ Log error
+    await logAction({
+      action: "EDIT_PROMPT_FAILED",
+      user: {
+        id: req.user?.id,
+        email: req.user?.email,
+      },
+      affectedAsset: req.params.packId || "Unknown PromptPack",
+      contentType: "prompt-pack",
+      description: `Failed to update prompt: ${error.message}`,
+      req,
+    });
+
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update prompt",
+    });
+  }
+};

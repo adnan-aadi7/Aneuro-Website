@@ -9,7 +9,8 @@ import {
   removePrompt,
   incrementUsage,
   getStatistics,
-  uploadPromptPack
+  uploadPromptPack,
+  editPromptInPromptPack
 } from '../controller/promptPackController.js';
 import upload from '../middleware/multer.js';
 import { authUser } from "../middleware/userTracker.js";
@@ -375,5 +376,67 @@ router.delete('/:id/prompts/:promptId', removePrompt);
  *         description: Usage count incremented
  */
 router.put('/:id/usage', incrementUsage);
+
+/**
+ * @swagger
+ * /api/prompt-packs/{packId}/prompts/{promptId}:
+ *   put:
+ *     summary: Edit a specific prompt inside a prompt pack
+ *     description: Update the content or type of a prompt inside a given prompt pack.
+ *     tags:
+ *       - PromptPacks
+ *     parameters:
+ *       - in: path
+ *         name: packId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the prompt pack
+ *       - in: path
+ *         name: promptId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the prompt to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               content:
+ *                 type: string
+ *                 example: "Updated content for the prompt"
+ *               type:
+ *                 type: string
+ *                 enum: [Architect, Challenger, Synthesizer, Reflector, Catalyst]
+ *                 example: "Challenger"
+ *     responses:
+ *       200:
+ *         description: Prompt updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Prompt updated successfully
+ *                 data:
+ *                   type: object
+ *                   description: The updated prompt pack
+ *       400:
+ *         description: Invalid input (no fields provided)
+ *       404:
+ *         description: Prompt pack or prompt not found
+ *       500:
+ *         description: Failed to update prompt
+ */
+router.put("/:packId/prompts/:promptId", editPromptInPromptPack);
+
 
 export default router;
