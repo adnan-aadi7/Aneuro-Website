@@ -306,7 +306,7 @@ export async function update(req, res) {
     }
 
     await logAction({
-      action: "UPDATE",
+      action: "EDIT",
       user: {
         id: req.user?.id,
         email: req.user?.email
@@ -614,17 +614,17 @@ export const editPromptInPromptPack = async (req, res) => {
       });
     }
 
-    // ✅ Log success
-    await logAction({
-      action: "EDIT_PROMPT",
+   await logAction({
+      action: "EDIT",
       user: {
         id: req.user?.id,
-        email: req.user?.email,
+        email: req.user?.email
       },
-      affectedAsset: updatedPromptPack?.name || "Unknown PromptPack",
+     affectedAsset: updatedPromptPack?.name || "Unknown PromptPack",
       contentType: "prompt-pack",
-      description: `Prompt (ID: ${promptId}) updated in pack: ${updatedPromptPack?.name}`,
+      description: `Prompt (ID: ${promptId}) updated in PromptPack: ${updatedPromptPack?.name}`,
       req,
+
     });
 
     res.status(200).json({
@@ -633,19 +633,7 @@ export const editPromptInPromptPack = async (req, res) => {
       data: updatedPromptPack,
     });
   } catch (error) {
-    // ✅ Log error
-    await logAction({
-      action: "EDIT_PROMPT_FAILED",
-      user: {
-        id: req.user?.id,
-        email: req.user?.email,
-      },
-      affectedAsset: req.params.packId || "Unknown PromptPack",
-      contentType: "prompt-pack",
-      description: `Failed to update prompt: ${error.message}`,
-      req,
-    });
-
+ 
     res.status(500).json({
       success: false,
       message: error.message || "Failed to update prompt",
