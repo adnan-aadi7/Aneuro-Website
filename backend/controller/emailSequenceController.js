@@ -366,36 +366,6 @@ export async function deleteSequence(req, res) {
   }
 }
 
-// BULK DELETE
-export async function bulkDelete(req, res) {
-  try {
-    const { ids } = req.body;
-
-    if (!Array.isArray(ids) || ids.length === 0) {
-      return res.status(400).json({ success: false, message: 'IDs array is required' });
-    }
-
-    const invalidIds = ids.filter(id => !id.match(/^[0-9a-fA-F]{24}$/));
-    if (invalidIds.length > 0) {
-      return res.status(400).json({ success: false, message: `Invalid IDs: ${invalidIds.join(', ')}` });
-    }
-
-    const result = await EmailSequence.deleteMany({ _id: { $in: ids } });
-
-    res.status(200).json({
-      success: true,
-      message: `${result.deletedCount} email sequences deleted successfully`,
-      data: { deletedCount: result.deletedCount, requestedCount: ids.length }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error deleting email sequences',
-      error: error.message
-    });
-  }
-}
-
 
 export async function getStats(req, res) {
   try {
@@ -452,3 +422,130 @@ export async function getStats(req, res) {
   }
 }
 
+
+export const editEmailInSequence = async (req, res) => {
+  try {
+    const { sequenceId, emailId } = req.params;
+    const { content, type } = req.body;
+
+    const sequence = await EmailSequence.findOne({
+      _id: sequenceId,
+      "emails._id": emailId,
+    });
+
+    if (!sequence) {
+      return res.status(404).json({
+        success: false,
+        message: "Email sequence or email not found",
+      });
+    }
+
+    // Locate the email inside array
+    const email = sequence.emails.id(emailId);
+
+    if (!email) {
+      return res.status(404).json({
+        success: false,
+        message: "Email not found in the sequence",
+      });
+    }
+
+    // Store old values for logging
+    const oldContent = email.content;
+    const oldType = email.type;
+
+    // Update fields
+    if (content) email.content = content;
+    if (type) {
+      const allowedTypes = ["Architect", "Challenger", "Synthesizer", "Reflector", "Catalyst"];
+      if (!allowedTypes.includes(type)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid brain type",
+        });
+      }
+      email.type = type;
+    }
+
+    await sequence.save();
+
+    // ✅ Log EDIT action
+    await logAction({
+      action: "EDIT",
+      user: {
+        id: req.user?.id,
+        email: req.user?.email,
+      },
+      affectedAsset: `${sequence.name}`,
+      contentType: "email-sequence",
+      description: `Edited email (${emailId}) in sequence: ${sequence.name}`,
+      details: {
+        oldContent,
+        newContent: email.content,
+        oldType,
+        newType: email.type,
+      },
+      req,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Email updated successfully",
+      data: email,
+    });
+  } catch (error) {
+    console.error("Error editing email:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+
+export const deleteEmailInSequence = async (req, res) => {
+  try {
+    const { sequenceId, emailId } = req.params;
+
+    // Try to pull the email from the array
+    const updatedSequence = await EmailSequence.findOneAndUpdate(
+      { _id: sequenceId },
+      { $pull: { emails: { _id: emailId } } },
+      { new: true }
+    );
+
+    if (!updatedSequence) {
+      return res.status(404).json({
+        success: false,
+        message: "Email sequence or email not found",
+      });
+    }
+
+    // Log the deletion
+    await logAction({
+      action: "DELETE",
+      user: {
+        id: req.user?.id,
+        email: req.user?.email,
+      },
+      affectedAsset: `${updatedSequence.name}`,
+      contentType: "email-sequence",
+      description: `Deleted email with ID: ${emailId} from sequence: ${updatedSequence.name}`,
+      req,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Email deleted successfully",
+      data: { emailId },
+    });
+  } catch (error) {
+    console.error("Error deleting email:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};

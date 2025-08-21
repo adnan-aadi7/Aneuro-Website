@@ -7,8 +7,9 @@ import {
   getById,
   update,
   deleteSequence,
-  bulkDelete,
-  getStats
+  getStats,
+  editEmailInSequence,
+  deleteEmailInSequence
 } from '../controller/emailSequenceController.js';
 import upload from '../middleware/multer.js';
 import { authUser } from "../middleware/userTracker.js";
@@ -303,33 +304,129 @@ router.delete('/:id', authUser, deleteSequence);
 
 /**
  * @swagger
- * /api/email-sequences/bulk/delete:
- *   delete:
- *     summary: Bulk delete email sequences by IDs
+ * /api/email-sequences/{sequenceId}/emails/{emailId}:
+ *   put:
+ *     summary: Edit a specific email in a sequence by emailId
+ *     description: Update the content or brain type of an email inside an email sequence.  
+ *                  Requires authentication.
  *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []   # 🔐 Require JWT
+ *     parameters:
+ *       - in: path
+ *         name: sequenceId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the email sequence
+ *       - in: path
+ *         name: emailId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the email inside the sequence
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - ids
  *             properties:
- *               ids:
- *                 type: array
- *                 items:
- *                   type: string
+ *               content:
+ *                 type: string
+ *                 example: "Welcome to our updated platform!"
+ *               type:
+ *                 type: string
+ *                 enum: [Architect, Challenger, Synthesizer, Reflector, Catalyst]
+ *                 example: "Challenger"
  *     responses:
  *       200:
- *         description: Sequences deleted
+ *         description: Email updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Email updated successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: 64f2c13eb89f1a222c33de46
+ *                     type:
+ *                       type: string
+ *                       example: Challenger
+ *                     content:
+ *                       type: string
+ *                       example: Welcome to our updated platform!
  *       400:
- *         description: Invalid IDs
+ *         description: Invalid brain type
+ *       401:
+ *         description: Unauthorized - Missing or invalid token
+ *       404:
+ *         description: Email or sequence not found
  *       500:
  *         description: Server error
  */
-router.delete('/bulk/delete', bulkDelete);
 
+router.put("/:sequenceId/emails/:emailId", authUser, editEmailInSequence);
+
+/**
+ * @swagger
+ * /api/email-sequences/{sequenceId}/emails/{emailId}:
+ *   delete:
+ *     summary: Delete a specific email in a sequence by emailId
+ *     description: Removes an email from the given email sequence. Requires authentication.
+ *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: sequenceId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the email sequence
+ *       - in: path
+ *         name: emailId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the email inside the sequence
+ *     responses:
+ *       200:
+ *         description: Email deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Email deleted successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     emailId:
+ *                       type: string
+ *                       example: 64f2c13eb89f1a222c33de46
+ *       401:
+ *         description: Unauthorized - Missing or invalid token
+ *       404:
+ *         description: Email or sequence not found
+ *       500:
+ *         description: Server error
+ */
+router.delete("/:sequenceId/emails/:emailId", authUser, deleteEmailInSequence);
 
 
 export default router;
