@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useParams } from "react-router-dom";
+import axios from "../../../../store/axiosInstance";
 import { Toaster, toast } from "react-hot-toast";
 import { Bold, Italic, Underline, Strikethrough, Link, Paperclip, Image, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, ListOrdered, X } from 'lucide-react';
 import DiamondIcon from "../../../../../public/icons/diamond.png";
@@ -18,6 +19,7 @@ import {
   clearError,
   clearSuccess,
 } from "../../../../store/Slice/EmailSequenceSLice";
+// axios already imported from store/axiosInstance
 
 const AddEmailMannually = () => {
   const dispatch = useDispatch();
@@ -30,6 +32,8 @@ const AddEmailMannually = () => {
   const success = useSelector(selectEmailSequenceSuccess);
   const categories = useSelector((state) => state.emailSequence.categories || []);
   const categoriesLoading = useSelector((state) => state.emailSequence.categoriesLoading);
+  const editSingleEmail = Boolean(location.state?.editSingleEmail);
+  const editingEmailId = location.state?.emailId || null;
 
   const editorRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -362,12 +366,13 @@ const AddEmailMannually = () => {
       // Map backend tier to UI tier
       const reverseTierMap = { starter: "basic", growth: "premium", enterprise: "enterprise" };
       setSelectedTier(reverseTierMap[currentSequence.tier] || "");
-      // Prefill editor content if manual emails exist
-      const firstEmail = Array.isArray(currentSequence.emails) && currentSequence.emails.length > 0
-        ? currentSequence.emails[0]
-        : null;
-      if (firstEmail && editorRef.current) {
-        const { html, attachments: extracted } = transformContentForEditor(firstEmail.content || "");
+      // Prefill: specific email if provided, else first
+      const emailsArr = Array.isArray(currentSequence.emails) ? currentSequence.emails : [];
+      const targetEmail = editSingleEmail && editingEmailId
+        ? emailsArr.find((e) => e._id === editingEmailId)
+        : (emailsArr[0] || null);
+      if (targetEmail && editorRef.current) {
+        const { html, attachments: extracted } = transformContentForEditor(targetEmail.content || "");
         editorRef.current.innerHTML = html;
         // Seed attachments list from content (placeholders; we will upgrade to blobs)
         setAttachments(extracted);
@@ -399,7 +404,7 @@ const AddEmailMannually = () => {
         });
       }
     }
-  }, [editSequenceId, currentSequence, transformContentForEditor]);
+  }, [editSequenceId, currentSequence, transformContentForEditor, editSingleEmail, editingEmailId]);
 
   const handleSend = () => {
     const htmlContent = getHtmlContent();
@@ -439,10 +444,24 @@ const AddEmailMannually = () => {
       emails
     };
 
-    if (editSequenceId) {
+    if (editSingleEmail && editSequenceId && editingEmailId) {
+      // Update only the specific email via API
+      (async () => {
+        try {
+          await axios.put(`/email-sequences/${editSequenceId}/emails/${editingEmailId}`, {
+            content: htmlContent,
+            type: brainType,
+          });
+          toast.success('Email updated');
+          dispatch(fetchEmailSequenceById(editSequenceId));
+        } catch (e) {
+          toast.error(e?.response?.data?.message || 'Failed to update email');
+        }
+      })();
+    } else if (editSequenceId) {
       dispatch(updateEmailSequence({ id: editSequenceId, updateData: payload }));
     } else {
-    dispatch(createEmailSequence(payload));
+      dispatch(createEmailSequence(payload));
     }
   };
 

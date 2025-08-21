@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { ChevronRight, Edit, Trash2 } from "lucide-react";
+import { ChevronRight, Edit, Trash2, X } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
-import { fetchEmailSequenceById, selectCurrentSequence, selectEmailSequenceLoading } from "../../../../store/Slice/EmailSequenceSLice";
+import { useLocation, useNavigate } from "react-router-dom";
+import { fetchEmailSequenceById, selectCurrentSequence, selectEmailSequenceLoading, deleteEmailInSequence } from "../../../../store/Slice/EmailSequenceSLice";
 import axios from "../../../../store/axiosInstance";
 
 const EmailPreview = ({ sequenceId }) => {
   const dispatch = useDispatch();
   const location = useLocation();
+  const navigate = useNavigate();
   const sequence = useSelector(selectCurrentSequence);
   const loading = useSelector(selectEmailSequenceLoading);
   
@@ -15,6 +16,9 @@ const EmailPreview = ({ sequenceId }) => {
   const [categoryEmails, setCategoryEmails] = useState([]);
   const [categoryLoading, setCategoryLoading] = useState(false);
   const [isCategoryView, setIsCategoryView] = useState(false);
+
+  // Confirm modal state
+  const [confirmModal, setConfirmModal] = useState({ open: false, sequenceId: null, emailId: null, isCategory: false });
 
   useEffect(() => {
     // Check if we're viewing from category (grouped view)
@@ -53,7 +57,9 @@ const EmailPreview = ({ sequenceId }) => {
             } else if (seq.emails && Array.isArray(seq.emails)) {
               seq.emails.forEach((email, index) => {
                 allEmails.push({
-                  id: `${seq._id}-${index}`,
+                  id: `${seq._id}-${email._id || index}`,
+                  sequenceId: seq._id,
+                  emailId: email._id,
                   sequenceName: seq.name,
                   type: 'manual',
                   content: email.content,
@@ -77,8 +83,32 @@ const EmailPreview = ({ sequenceId }) => {
     }
   };
 
+  const openConfirmDelete = (sequenceId, emailId, isCategory = false) => {
+    setConfirmModal({ open: true, sequenceId, emailId, isCategory });
+  };
+
+  const closeConfirmDelete = () => setConfirmModal({ open: false, sequenceId: null, emailId: null, isCategory: false });
+
+  const confirmDeleteEmail = async () => {
+    const { sequenceId, emailId, isCategory } = confirmModal;
+    if (!sequenceId || !emailId) return;
+    try {
+      await dispatch(deleteEmailInSequence({ sequenceId, emailId })).unwrap();
+      if (isCategory) {
+        setCategoryEmails((prev) => prev.filter((e) => !(e.sequenceId === sequenceId && e.emailId === emailId)));
+      } else {
+        dispatch(fetchEmailSequenceById(sequenceId));
+      }
+    } catch (err) {
+      console.error('Failed to delete email:', err);
+    } finally {
+      closeConfirmDelete();
+    }
+  };
+
   const documentUrl = sequence?.type === 'file' ? sequence?.fileUrl : null;
   const manualEmails = Array.isArray(sequence?.emails) ? sequence.emails : [];
+  const fileEmailId = Array.isArray(sequence?.emails) && sequence.emails.length > 0 ? sequence.emails[0]?._id : null;
 
   const getFileExtension = (url) => {
     try {
@@ -90,31 +120,7 @@ const EmailPreview = ({ sequenceId }) => {
     }
   };
 
-  const renderFilePreview = (url) => {
-    const ext = getFileExtension(url);
-
-    // Uniform card with only the "View Uploaded Document" button, no inline preview
-    const titleByExt = ext === 'pdf' ? 'Uploaded PDF' : ["png","jpg","jpeg","gif","webp","svg"].includes(ext) ? 'Uploaded Image' : 'Uploaded Document';
-
-    return (
-      <div className="bg-[#232334] border border-[#353545] rounded mb-6">
-        <div className="px-6 pt-6 pb-2">
-          <div className="text-sm text-white font-semibold">{titleByExt}</div>
-        </div>
-        <div className="px-6 pb-6">
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm px-3 py-2  border border-cyan-400 text-white hover:bg-cyan-900 transition"
-          >
-            View Uploaded Document
-            <ChevronRight className="w-4 h-4 text-cyan-400" />
-          </a>
-        </div>
-      </div>
-    );
-  };
+  // removed legacy renderFilePreview (inlined custom card used instead)
 
   const renderCategoryEmails = () => {
     if (categoryLoading) {
@@ -145,14 +151,14 @@ const EmailPreview = ({ sequenceId }) => {
                 <button
                   className="text-gray-400 hover:text-white transition-colors"
                   title="Edit Email"
-                  onClick={() => {}}
+                  onClick={() => navigate(`/admin/mannual-email/${emailItem.sequenceId}`, { state: { sequenceId: emailItem.sequenceId, emailId: emailItem.emailId, editSingleEmail: true } })}
                 >
                   <Edit className="w-4 h-4" />
                 </button>
                 <button
                   className="text-gray-400 hover:text-white transition-colors"
                   title="Delete Email"
-                  onClick={() => {}}
+                  onClick={() => openConfirmDelete(emailItem.sequenceId, emailItem.emailId, true)}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -228,7 +234,42 @@ const EmailPreview = ({ sequenceId }) => {
         <>
           {/* If sequence is file-based, show only the button; otherwise render manual emails */}
           {!loading && sequence?.type === 'file' && documentUrl ? (
-            renderFilePreview(documentUrl)
+            // File-based sequence preview with action icons
+            <div className="bg-[#232334] border border-[#353545] rounded mb-6 relative">
+              <div className="absolute top-3 right-3 flex items-center space-x-2">
+                <button
+                  className="text-gray-400 hover:text-white transition-colors"
+                  title="Edit Email"
+                  onClick={() => {}}
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+                <button
+                  className={`text-gray-400 hover:text-white transition-colors ${!fileEmailId ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title="Delete Email"
+                  onClick={() => fileEmailId && openConfirmDelete(sequenceId, fileEmailId, false)}
+                  disabled={!fileEmailId}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="px-6 pt-10 pb-2">
+                <div className="text-sm text-white font-semibold">
+                  {(() => { const ext = getFileExtension(documentUrl); return ext === 'pdf' ? 'Uploaded PDF' : (["png","jpg","jpeg","gif","webp","svg"].includes(ext) ? 'Uploaded Image' : 'Uploaded Document'); })()}
+                </div>
+              </div>
+              <div className="px-6 pb-6">
+                <a
+                  href={documentUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm px-3 py-2  border border-cyan-400 text-white hover:bg-cyan-900 transition"
+                >
+                  View Uploaded Document
+                  <ChevronRight className="w-4 h-4 text-cyan-400" />
+                </a>
+              </div>
+            </div>
           ) : (
             <>
               {manualEmails.length === 0 ? (
@@ -245,14 +286,14 @@ const EmailPreview = ({ sequenceId }) => {
                       <button
                         className="text-gray-400 hover:text-white transition-colors"
                         title="Edit Email"
-                        onClick={() => {}}
+                        onClick={() => navigate(`/admin/mannual-email/${sequenceId}`, { state: { sequenceId, emailId: emailItem._id, editSingleEmail: true } })}
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
                         className="text-gray-400 hover:text-white transition-colors"
                         title="Delete Email"
-                        onClick={() => {}}
+                        onClick={() => openConfirmDelete(sequenceId, emailItem._id, false)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -288,6 +329,25 @@ const EmailPreview = ({ sequenceId }) => {
             </>
           )}
         </>
+      )}
+
+      {/* Confirm Delete Modal */}
+      {confirmModal.open && (
+        <div className="fixed inset-0  backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[#1F2937]  p-6 w-full max-w-md mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-white">Delete Email</h3>
+              <button onClick={closeConfirmDelete} className="text-gray-400 hover:text-white">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <p className="text-gray-300 mb-6">Are you sure you want to delete this email? This action cannot be undone.</p>
+            <div className="flex justify-end space-x-3">
+              <button onClick={closeConfirmDelete} className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500">Cancel</button>
+              <button onClick={confirmDeleteEmail} className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500">Delete</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
