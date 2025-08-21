@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { MdOutlineDashboard } from "react-icons/md";
 import {
   TbUsers,
@@ -55,7 +55,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
         {/* Close button for mobile */}
         <button
           onClick={onSidebarClose}
-          className="absolute top-4 right-4 z-[100] size-10 lg:hidden flex items-center justify-center text-white bg-gray-800 rounded-lg border-r-1 border-r border-[#FFFFFF14]"
+          className="absolute top-4 right-4 z-[100] size-10 lg:hidden flex items-center justify-center text-white bg-gray-800 rounded-lg border-r border-[#FFFFFF14]"
         >
          <img src="/logo.png" alt="logo"/>
         </button>
@@ -128,12 +128,30 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
 
 // Interactive Client View Toggle
 const ClientViewToggle = () => {
-  const [on, setOn] = useState(true);
+  const [on, setOn] = useState(false);
+  const navigate = useNavigate();
+
+  // Initialize from persisted preference
+  React.useEffect(() => {
+    const persisted = localStorage.getItem('actAsClient') === '1';
+    if (persisted !== on) setOn(persisted);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <button
       type="button cursor-pointer"
       className="flex items-center gap-3 px-6 py-3 font-medium text-[17px] text-gray-400 focus:outline-none"
-      onClick={() => setOn((v) => !v)}
+      onClick={() => {
+        const next = !on;
+        setOn(next);
+        localStorage.setItem('actAsClient', next ? '1' : '0');
+        if (next) {
+          navigate('/client/dashboard');
+        } else {
+          navigate('/admin/dashboard');
+        }
+      }}
       aria-pressed={on}
     >
       <span

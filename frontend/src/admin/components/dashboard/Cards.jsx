@@ -12,7 +12,6 @@ import {
   // fetchTotalRevenue, // No longer used
   // selectTotalRevenueDollars, // No longer used
   fetchStripeBalance,
-  selectStripeBalance,
   // New dynamic analytics imports
   fetchDashboardAnalytics,
   selectDashboardAnalytics,
@@ -26,7 +25,7 @@ const Cards = () => {
   const delinquent = useSelector(selectDelinquentSubscribers);
   const avgTime = useSelector(selectAvgQuizCompletionTime);
   // const totalRevenueDollars = useSelector(selectTotalRevenueDollars); // No longer used
-  const stripeBalance = useSelector(selectStripeBalance);
+  // const stripeBalance = useSelector(selectStripeBalance);
   const loading = useSelector(selectAdminDashboardLoading);
   
   // New dynamic analytics selectors
@@ -75,7 +74,7 @@ const Cards = () => {
   const newSubscribersAnalytics = dashboardAnalytics?.newSubscribers;
   const delinquentAnalytics = dashboardAnalytics?.delinquentSubscribers;
   const avgTimeAnalytics = dashboardAnalytics?.avgQuizCompletionTime;
-  const revenueAnalytics = dashboardAnalytics?.revenue;
+  // const revenueAnalytics = dashboardAnalytics?.revenue;
 
 
 
@@ -170,7 +169,7 @@ const Cards = () => {
       bg: "bg-gradient-to-br from-[#232432] to-[#19343B]",
       text: "text-white",
     },
-    {
+    /* {
       icon: (
         <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFFFFF47' }}>
           <img 
@@ -193,7 +192,7 @@ const Cards = () => {
       ),
       bg: "bg-gradient-to-br from-[#232432] to-[#19343B]",
       text: "text-white",
-    },
+    }, */
   ];
 
   // Show error message if analytics failed to load

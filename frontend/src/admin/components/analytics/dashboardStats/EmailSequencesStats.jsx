@@ -9,6 +9,7 @@ const EmailSequencesStats = () => {
   const dispatch = useDispatch();
   const stats = useSelector(selectEmailSequenceStats);
   const loading = useSelector(selectEmailSequenceLoading);
+  
 
   // Fetch stats on component mount
   useEffect(() => {
@@ -29,7 +30,7 @@ const EmailSequencesStats = () => {
           </div>
           <button
             className="bg-cyan-400 text-black font-medium px-3 sm:px-6 py-2 rounded hover:bg-cyan-300 transition-all text-sm whitespace-nowrap"
-            onClick={() => navigate("")}
+            onClick={() => navigate(`/admin/CMS?tab=${encodeURIComponent('Email Sequences')}`)}
           >
             View Details
           </button>
@@ -58,7 +59,7 @@ const EmailSequencesStats = () => {
         </div>
         <button
           className="bg-cyan-400 text-black font-medium px-3 sm:px-6 py-2 rounded hover:bg-cyan-300 transition-all text-sm whitespace-nowrap"
-          onClick={() => navigate("")}
+          onClick={() => navigate(`/admin/CMS?tab=${encodeURIComponent('Email Sequences')}`)}
         >
           View Details
         </button>

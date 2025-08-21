@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { toast, Toaster } from "react-hot-toast";
 import EmailSequencesTab from "../../../components/cms/emailsequenceTab/EmailSequencetab";
 import FunnelTemplatesTab from "../../../components/cms/funnelTab/FunnelTemplates";
@@ -13,16 +14,25 @@ import Cards from "../../../components/cms/sheduleReleasesTab/Cards";
 import AddShedulePopup from "../../../components/cms/sheduleReleasesTab/AddShedulePopup";
 
 const AdminControlCenter = () => {
-  const [activeTab, setActiveTab] = useState("Overview");
-  const [showSchedulePopup, setShowSchedulePopup] = useState(false);
-
-  const tabs = [
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabs = useMemo(() => [
     { name: "Overview" },
     { name: "Email Sequences" },
     { name: "Prompt Packs" },
     { name: "Funnel Templates" },
     { name: "Scheduled Releases" },
-  ];
+  ], []);
+
+  const [activeTab, setActiveTab] = useState("Overview");
+  const [showSchedulePopup, setShowSchedulePopup] = useState(false);
+
+  // Sync tab from URL on mount and when URL changes
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab");
+    if (tabFromUrl && tabs.some(t => t.name === tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams, tabs]);
 
   const Title = {
     Overview: "Admin Control Center",
@@ -56,6 +66,14 @@ const AdminControlCenter = () => {
     toast.error(message);
   };
 
+  // Route update on tab change without remounting component
+  const handleTabClick = (name) => {
+    setActiveTab(name);
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", name);
+    setSearchParams(next, { replace: false });
+  };
+
   return (
     <div className="w-full text-white">
       {/* Page Header + Upload Button */}
@@ -67,7 +85,9 @@ const AdminControlCenter = () => {
           </p>
         </div>
         {activeTab === "Email Sequences" && (
-          <button className="flex items-center gap-3 bg-cyan-400 text-black px-5 py-2 font-medium text-sm shadow hover:bg-cyan-300 transition-all ">
+          <button className="flex items-center gap-3 bg-cyan-400 text-black px-5 py-2 font-medium text-sm shadow hover:bg-cyan-300 transition-all "
+            onClick={() => handleTabClick("Overview")}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-4 w-4"
@@ -86,7 +106,7 @@ const AdminControlCenter = () => {
           </button>
         )}
         {activeTab === "Prompt Packs" && (
-          <button className="flex items-center gap-4 bg-cyan-400 text-black px-5 py-2 font-medium text-sm shadow hover:bg-cyan-300 transition-all">
+          <button className="flex items-center gap-4 bg-cyan-400 text-black px-5 py-2 font-medium text-sm shadow hover:bg-cyan-300 transition-all" onClick={() => handleTabClick("Overview")}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-4 w-4"
@@ -105,7 +125,7 @@ const AdminControlCenter = () => {
           </button>
         )}
         {activeTab === "Funnel Templates" && (
-          <button className="flex items-center gap-4 bg-cyan-400 text-black px-5 py-2 font-medium text-sm shadow hover:bg-cyan-300 transition-all">
+          <button className="flex items-center gap-4 bg-cyan-400 text-black px-5 py-2 font-medium text-sm shadow hover:bg-cyan-300 transition-all" onClick={() => handleTabClick("Overview")}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-4 w-4"
@@ -152,7 +172,7 @@ const AdminControlCenter = () => {
         {tabs.map(({ name }) => (
           <button
             key={name}
-            onClick={() => setActiveTab(name)}
+            onClick={() => handleTabClick(name)}
             className={`flex-1 min-w-max cursor-pointer flex items-center justify-center gap-2 py-2 px-4 text-[14px] font-medium transition-all 
               ${activeTab === name ? "bg-white text-black" : "text-[#AEAEAE]"}`}
           >
@@ -187,6 +207,7 @@ const AdminControlCenter = () => {
           </>
         )}
       </div>
+     
       {/* AddShedulePopup Modal */}
       <AddShedulePopup
         open={showSchedulePopup}

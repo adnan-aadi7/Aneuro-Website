@@ -2,17 +2,19 @@ import React, { useEffect } from "react";
 import { Calendar } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchScheduledStats, selectScheduleStats, selectScheduleLoading } from "../../../../store/Slice/ScheduleSlice";
+import { useNavigate } from "react-router-dom";
 
 const SehduleStats = () => {
   const dispatch = useDispatch();
   const stats = useSelector(selectScheduleStats);
   const loading = useSelector(selectScheduleLoading);
+  const navigate = useNavigate();
 
   // Fetch stats on component mount
   useEffect(() => {
     dispatch(fetchScheduledStats());
   }, [dispatch]);
-  console.log("schedule stats", stats);
+  console.log("schedule stats cards", stats);
 
 
 
@@ -28,7 +30,9 @@ const SehduleStats = () => {
               Scheduled Releases Summary
             </h2>
           </div>
-          <button className="bg-cyan-400 text-black font-medium px-3 sm:px-6 py-2 rounded hover:bg-cyan-300 transition-all text-sm whitespace-nowrap">
+          <button className="bg-cyan-400 text-black font-medium px-3 sm:px-6 py-2 rounded hover:bg-cyan-300 transition-all text-sm whitespace-nowrap"
+          onClick={() => navigate(`/admin/CMS?tab=${encodeURIComponent('Scheduled Releases')}`)}
+          >
             View Details
           </button>
         </div>
@@ -56,7 +60,8 @@ const SehduleStats = () => {
             Scheduled Releases Summary
           </h2>
         </div>
-        <button className="bg-cyan-400 text-black font-medium px-3 sm:px-6 py-2 rounded hover:bg-cyan-300 transition-all text-sm whitespace-nowrap">
+        <button className="bg-cyan-400 text-black font-medium px-3 sm:px-6 py-2 rounded hover:bg-cyan-300 transition-all text-sm whitespace-nowrap"
+        onClick={() => navigate(`/admin/CMS?tab=${encodeURIComponent('Scheduled Releases')}`)}>
           View Details
         </button>
       </div>
