@@ -59,11 +59,15 @@ const AddAdmin = () => {
   return (
     <div className=" text-white">
       {/* Admin Profile Cards */}
-      <div className="flex gap-4 mb-8">
+      <div className="flex flex-wrap gap-4 mb-8">
         {[1, 2, 3].map((index) => (
-          <div key={index} className="bg-[#2A2A39] border border-[#374151]  p-4 flex items-center gap-3 min-w-[280px]">
-            <div className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">AS</span>
+          <div key={index} className="bg-[#2A2A39] border border-[#374151]  p-4 flex items-center gap-3 min-w-[240px] md:min-w-[280px] flex-1">
+            <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-gray-700 shrink-0">
+              <img
+                src={`https://i.pravatar.cc/80?img=${index + 10}`}
+                alt="Admin avatar"
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="flex-1">
               <h3 className="text-white font-medium">Aden Smith</h3>
@@ -85,7 +89,7 @@ const AddAdmin = () => {
         
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* First Name and Last Name Row */}
-          <div className="flex gap-4">
+          <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <label className="block text-gray-300 text-sm mb-2">First Name</label>
               <input
@@ -149,7 +153,7 @@ const AddAdmin = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4 pt-4">
+          <div className="flex flex-col sm:flex-row gap-4 pt-4">
             <button
               type="submit"
               className="bg-[#12DCF0] text-black font-medium px-10 py-2  hover:bg-[#0FB8CC] transition-colors"

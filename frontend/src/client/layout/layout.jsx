@@ -15,7 +15,7 @@ const AdminLayout = ({ children, headerChildren }) => {
         {/* Optional Header */}
          <Header onHamburgerClick={() => setSidebarOpen(true)}>{headerChildren}</Header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 2xl:p-10 w-full mx-auto max-w-screen-2xl 2xl:max-w-[2000px]">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 2xl:p-10 w-full mx-auto max-w-screen-2xl 2xl:max-w-full">
           {children}
         </main>
       </div>

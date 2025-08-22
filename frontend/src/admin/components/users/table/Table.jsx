@@ -82,7 +82,7 @@ export default function Table() {
     dispatch(getWeeklyBrainTypeStats(user._id));
     
     // Navigate to user details page
-    navigate(`/admin/user/details/${user._id}`, { state: { user, activeTab: "Quiz Engagement" } });
+    navigate(`/admin/user/details/${user._id}`, { state: { user, activeTab: "General Details" } });
   };
 
   // Show all users instead of just paid users

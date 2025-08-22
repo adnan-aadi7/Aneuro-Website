@@ -140,7 +140,7 @@ const ClientViewToggle = () => {
   return (
     <button
       type="button cursor-pointer"
-      className="flex items-center gap-3 px-6 py-3 font-medium text-[17px] text-gray-400 focus:outline-none"
+      className="flex items-center gap-3 px-6 py-3 font-medium text-[17px] text-gray-400 focus:outline-none cursor-pointer"
       onClick={() => {
         const next = !on;
         setOn(next);
