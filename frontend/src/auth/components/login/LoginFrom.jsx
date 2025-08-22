@@ -1,149 +1,141 @@
+// src/pages/Auth/LoginForm.jsx
 import { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import logo from "../../../assets/auth/logo.png";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser, resetUserStatus, googleLogin, facebookLogin } from "../../../store/Slice/UserSlice";
-import { toastError, toastInfo, toastPromise, toastSuccess } from "../../../toast";
+import {
+  loginUser,
+  resetUserStatus,
+  googleLogin,
+  facebookLogin,
+} from "../../../store/Slice/UserSlice";
+import { toastPromise } from "../../../toast";
+import axios from "../../../store/axiosInstance";
 
 export default function LoginForm() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const { status, googleLoading, facebookLoading } = useSelector((state) => state.user);
+  const { status, googleLoading, facebookLoading } = useSelector(
+    (state) => state.user
+  );
   const [searchParams] = useSearchParams();
 
-  // Reset status to idle on mount (fix stuck loading button)
   useEffect(() => {
     dispatch(resetUserStatus());
   }, [dispatch]);
 
-  // Handle error messages from URL parameters (Google OAuth redirects)
   useEffect(() => {
-    const errorParam = searchParams.get('error');
+    const errorParam = searchParams.get("error");
     if (errorParam) {
       switch (errorParam) {
-        case 'google_auth_failed':
-          setError('Google authentication failed. Please try again.');
+        case "google_auth_failed":
+          setError("Google authentication failed. Please try again.");
           break;
-        case 'no_auth_code':
-          setError('Authentication was cancelled or failed.');
+        case "no_auth_code":
+          setError("Authentication was cancelled or failed.");
           break;
         default:
-          setError('An error occurred during authentication.');
+          setError("An error occurred during authentication.");
       }
     }
   }, [searchParams]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
+    e.preventDefault();
+    setError("");
 
-  // turn the thunk into a reject/resolve promise
-  const op = dispatch(loginUser(formData)).unwrap();
+    const op = dispatch(loginUser(formData)).unwrap();
 
-  try {
-    const payload = await toastPromise(
-      op,
-      {
-        loading: "Signing you in…",
-        success: "Welcome back!",
-        error: (err) =>
-          typeof err === "string" ? err : err?.message || "Login failed",
-      },
-      { duration: 3000 }
-    );
+    try {
+      const payload = await toastPromise(
+        op,
+        {
+          loading: "Signing you in…",
+          success: "Welcome back!",
+          error: (err) =>
+            typeof err === "string" ? err : err?.message || "Login failed",
+        },
+        { duration: 3000 }
+      );
 
-    const user = payload.user;
-    const hasActiveSubscription =
-      user.subscription &&
-      user.subscription.plan &&
-      user.subscription.status === "active";
+      const user = payload?.user || {};
+      const token = payload?.token;
+      const userId = user?._id || user?.id;
 
-    if (user.userType === "admin") {
-      navigate("/admin/dashboard");
-    } else if (hasActiveSubscription) {
-      navigate("/client/dashboard");
-    } else {
-      navigate("/plan");
+      // --- QUIZ GATE ---
+      let completion = user?.quizProgress?.completionPercentage;
+
+      if (completion == null) {
+        try {
+          // Ensure the auth header is set for immediate call
+          const res = await axios.get(`/api/quiz/progress/${userId}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          });
+          completion = res?.data?.completionPercentage;
+        } catch (err) {
+          // If 404 => no progress / not complete => go to /quiz
+          if (err?.response?.status === 404) {
+            navigate("/quiz");
+            return;
+          }
+          // On any other error, be safe and send to /quiz
+          navigate("/quiz");
+          return;
+        }
+      }
+
+      if (Number(completion) < 100) {
+        navigate("/quiz");
+        return;
+      }
+      // --- END QUIZ GATE ---
+
+      // Continue with your existing routing
+      const hasActiveSubscription =
+        user?.subscription &&
+        user.subscription.plan &&
+        user.subscription.status === "active";
+
+      if (user?.userType === "admin") {
+        navigate("/admin/dashboard");
+      } else if (hasActiveSubscription) {
+        navigate("/client/dashboard");
+      } else {
+        navigate("/plan");
+      }
+    } catch (err) {
+      setError(typeof err === "string" ? err : err?.message || "Login failed");
     }
-  } catch (err) {
-    setError(typeof err === "string" ? err : err?.message || "Login failed");
-  }
-};
-
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setError("");
-  //   try {
-  //     const resultAction = await dispatch(loginUser(formData));
-  //     if (loginUser.fulfilled.match(resultAction)) {
-  //       const user = resultAction.payload.user;
-        
-  //       // Check if user has active subscription
-  //       const hasActiveSubscription = user.subscription && 
-  //                                  user.subscription.plan && 
-  //                                  user.subscription.status === 'active';
-        
-  //       // Navigate based on user type and subscription status
-  //       if (user.userType === "admin") {
-  //         navigate("/admin/dashboard");
-  //       } else if (hasActiveSubscription) {
-  //         // User has active subscription, go to dashboard
-  //         navigate("/client/dashboard");
-  //       } else {
-  //         // User has no subscription or inactive subscription, go to plan selection
-  //         navigate("/plan");
-  //       }
-  //     } else {
-  //       setError(resultAction.payload || "Login failed");
-  //     }
-  //   } catch {
-  //     setError("Login failed");
-  //   }
-  // };
+  };
 
   const handleGoogleLogin = async () => {
-  setError("");
-  try {
-    const op = dispatch(googleLogin()).unwrap();
-    await toastPromise(
-      op,
-      {
-        loading: "Connecting to Google…",
-        success: "Authenticated with Google",
-        error: "Google authentication failed",
-      },
-      { duration: 3000 }
-    );
-  } catch (e) {
-    setError(typeof e === "string" ? e : e?.message || "Google authentication failed");
-  }
-};
-
-
-  // const handleGoogleLogin = async () => {
-  //   setError("");
-  //   try {
-  //     await dispatch(googleLogin());
-  //   } catch {
-  //     setError("Google authentication failed");
-  //   }
-  // };
+    setError("");
+    try {
+      const op = dispatch(googleLogin()).unwrap();
+      await toastPromise(
+        op,
+        {
+          loading: "Connecting to Google…",
+          success: "Authenticated with Google",
+          error: "Google authentication failed",
+        },
+        { duration: 3000 }
+      );
+    } catch (e) {
+      setError(
+        typeof e === "string" ? e : e?.message || "Google authentication failed"
+      );
+    }
+  };
 
   const handleFacebookLogin = async () => {
     setError("");
@@ -156,12 +148,11 @@ export default function LoginForm() {
 
   return (
     <div className="flex justify-center items-center w-full ">
-      <div className="w-full max-w-sm sm:max-w-md mx-auto   bg-opacity-90">
-        {/* Logo */}
+      <div className="w-full max-w-sm sm:max-w-md mx-auto bg-opacity-90">
         <div className="flex justify-center">
           <img src={logo} alt="Logo" className="w-[163px] h-[150px]" />
         </div>
-        {/* Form Container */}
+
         <div className="rounded-lg p-4 sm:-8 bg-opacity-90 w-full">
           <h2 className="text-white text-2xl font-semibold text-center mb-2">
             Sign in Your Account!
@@ -171,8 +162,6 @@ export default function LoginForm() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-
-            {/* Email Field */}
             <div>
               <label className="block text-white text-xs sm:text-sm font-medium mb-2">
                 E-mail or Phone Number
@@ -187,7 +176,6 @@ export default function LoginForm() {
               />
             </div>
 
-            {/* Password Field */}
             <div>
               <label className="block text-white text-xs sm:text-sm font-medium mb-2">
                 Password
@@ -218,14 +206,13 @@ export default function LoginForm() {
                 </Link>
               </div>
             </div>
-                        {/* Error Message */}
+
             {error && (
               <div className="text-red-400 text-xs sm:text-sm text-center mb-2">
                 {error}
               </div>
             )}
 
-            {/* Sign In Button */}
             <button
               type="submit"
               className="w-full bg-cyan-400 text-gray-900 py-3 rounded-md font-semibold hover:bg-cyan-300 transition-colors text-xs sm:text-sm"
@@ -235,21 +222,18 @@ export default function LoginForm() {
             </button>
           </form>
 
-          {/* Divider */}
           <div className="flex items-center my-6">
             <div className="flex-1 border-t border-gray-600"></div>
             <span className="px-4 text-gray-400 text-xs sm:text-sm">Or</span>
             <div className="flex-1 border-t border-gray-600"></div>
           </div>
 
-          {/* Social Login Buttons */}
           <div className="grid grid-cols-2 gap-3">
-            <button 
+            <button
               onClick={handleGoogleLogin}
               disabled={googleLoading}
               className="w-full flex items-center px-2 bg-black border border-gray-600 rounded-md text-white font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap py-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {/* Colored Google SVG */}
               <svg className="w-5 h-5 mr-3" viewBox="0 0 48 48">
                 <g>
                   <path
@@ -273,12 +257,12 @@ export default function LoginForm() {
               </svg>
               {googleLoading ? "Loading..." : "Sign in with Google"}
             </button>
-            <button 
+
+            <button
               onClick={handleFacebookLogin}
               disabled={facebookLoading}
               className="w-full flex items-center px-2 bg-black border border-gray-600 rounded-md text-white font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap py-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {/* Colored Facebook SVG */}
               <span style={{ transform: "scale(.7)", display: "inline-block" }}>
                 <svg className="w-5 h-5 " viewBox="0 0 24 24">
                   <path
@@ -287,7 +271,7 @@ export default function LoginForm() {
                   />
                   <path
                     fill="#FFF"
-                    d="M16.671 15.543l.532-3.47h-3.328v-2.25c0-.949.465-1.874 1.956-1.874h1.436V5.996S15.312 5.761 14 5.761c-2.741 0-4.533 1.662-4.533 4.669v2.143H6.42v3.47h3.047v8.385A12.07 12.07 0 0 0 12 24c.414 0 .822-.024 1.225-.062v-8.395h2.446z"
+                    d="M16.671 15.543l.532-3.47h-3.328v-2.25c0-.949.465-1.874 1.956-1.874h1.436V5.996S15.312 5.761 14 5.761c-2.741 0-4.533 1.662-4.533 4.669v2.143H6.42v3.47h3.047v8.385A12.07 12.07 0 0 0 12 24c.414 0 .822-.024.1"
                   />
                 </svg>
               </span>
@@ -295,15 +279,11 @@ export default function LoginForm() {
             </button>
           </div>
 
-          {/* Sign up link */}
           <div className="mt-8 text-center">
             <span className="text-gray-400 text-xs sm:text-sm">
               Don't have an account?{" "}
             </span>
-            <Link
-              to="/signup"
-              className="text-cyan-400 hover:underline text-xs sm:text-sm"
-            >
+            <Link to="/signup" className="text-cyan-400 hover:underline text-xs sm:text-sm">
               Sign up
             </Link>
           </div>
