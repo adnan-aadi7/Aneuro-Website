@@ -30,60 +30,129 @@ export default function BillingHistoryTable({ user }) {
     return `${currency.toUpperCase()} $${Number(amount).toFixed(2)}`;
   };
 
-  // Download single bill as CSV in a proper invoice format
-  const downloadSingleBill = (payment) => {
-    const csvEscape = (value) => {
-      const str = value == null ? '' : String(value);
-      if (str.includes('"') || str.includes(',') || str.includes('\n')) {
-        return '"' + str.replace(/"/g, '""') + '"';
-      }
-      return str;
-    };
+  // Helpers matching client BillingHistory template
+  const getAmountNumber = (amount) => {
+    const num = Number(amount || 0);
+    return num.toFixed(2);
+  };
+  const getCurrency = (currency) => (currency || 'usd').toUpperCase();
+  const getInvoiceId = (payment) => {
+    return (payment && payment.metadata && payment.metadata.invoiceId)
+      || payment?.stripePaymentIntentId
+      || payment?._id
+      || 'N/A';
+  };
+  const getInvoiceShort = (payment) => {
+    const full = getInvoiceId(payment);
+    if (!full || full === 'N/A') return 'N/A';
+    const str = String(full);
+    const head = str.slice(0, 6);
+    const tail = str.slice(-6);
+    return `${head}...${tail}`;
+  };
+  const getInvoiceSlug = (payment) => {
+    const full = getInvoiceId(payment);
+    if (!full || full === 'N/A') return 'payment';
+    const str = String(full);
+    return `${str.slice(0, 6)}_${str.slice(-6)}`;
+  };
+
+  // Excel-compatible HTML export with auto-sized columns
+  const exportAsExcelHtml = (headers, rows, filename) => {
+    const colWidthsPx = headers.map((h, colIdx) => {
+      const headerLen = String(h).length;
+      const maxDataLen = rows.reduce((max, r) => {
+        const cell = r[colIdx] == null ? '' : String(r[colIdx]);
+        return Math.max(max, cell.length);
+      }, 0);
+      const chars = Math.max(headerLen, maxDataLen) + 2;
+      const px = Math.min(500, Math.max(60, Math.round(chars * 8)));
+      return px;
+    });
+
+    const colgroup = colWidthsPx.map((w) => `<col style="width:${w}px;">`).join('');
+    const thead = `<thead><tr>${headers.map((h) => `<th style="text-align:left;border:1px solid #ddd;padding:6px;background:#f3f4f6;">${h}</th>`).join('')}</tr></thead>`;
+    const tbody = `<tbody>${rows.map((r) => `<tr>${r.map((c) => `<td style="text-align:left;border:1px solid #ddd;padding:6px;">${c == null ? '' : String(c)}</td>`).join('')}</tr>`).join('')}</tbody>`;
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><table style="border-collapse:collapse;font-family:Segoe UI,Arial,sans-serif;font-size:12px;"><colgroup>${colgroup}</colgroup>${thead}${tbody}</table></body></html>`;
+
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename.endsWith('.xls') ? filename : `${filename}.xls`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Download all bills as Excel (match table columns)
+  const downloadAllBills = () => {
+    if (!userPayments || userPayments.length === 0) {
+      alert('No billing data available to download');
+      return;
+    }
 
     const headers = [
-      'Invoice Number',
-      'Billing Date',
+      'Invoice',
+      'Billing date',
       'Amount',
+      'Currency',
       'Plan',
-      'Status',
-      'Customer Name',
-      'Customer Email',
       'Users',
+      'Status',
+      'Customer Email',
       'Payment ID',
-      'Stripe Payment Intent',
+      'Stripe Payment Intent ID',
       'Stripe Subscription ID',
     ];
 
-    const values = [
-      payment.stripePaymentIntentId
-        ? `Invoice #${payment.stripePaymentIntentId.slice(-8)}`
-        : `Payment #${payment._id?.slice(-8)}`,
+    const rows = userPayments.map((p) => [
+      getInvoiceId(p),
+      p.billingDate ? formatDate(p.billingDate) : (p.createdAt ? formatDate(p.createdAt) : ''),
+      getAmountNumber(p.amount),
+      getCurrency(p.currency),
+      p.plan || '-',
+      p.users || '-',
+      p.status || '-',
+      p.customerEmail || p.email || '-',
+      p._id || '-',
+      p.stripePaymentIntentId || 'N/A',
+      p.stripeSubscriptionId || 'N/A',
+    ]);
+
+    exportAsExcelHtml(headers, rows, `billing_history_${new Date().toISOString().split('T')[0]}`);
+  };
+
+  // Download single bill as Excel (match client template)
+  const downloadSingleBill = (payment) => {
+    const headers = [
+      'Invoice',
+      'Billing date',
+      'Amount',
+      'Currency',
+      'Plan',
+      'Status',
+      'Customer Email',
+      'Payment ID',
+      'Stripe Payment Intent ID',
+      'Stripe Subscription ID',
+    ];
+
+    const row = [
+      getInvoiceId(payment),
       formatDate(payment.billingDate || payment.createdAt),
-      formatAmount(payment.amount, payment.currency),
+      getAmountNumber(payment.amount),
+      getCurrency(payment.currency),
       payment.plan || '-',
       payment.status || '-',
-      payment.name || (payment.userId && payment.userId.name) || '-',
       payment.customerEmail || payment.email || '-',
-      payment.users || '-',
       payment._id || '-',
       payment.stripePaymentIntentId || 'N/A',
       payment.stripeSubscriptionId || 'N/A',
     ];
 
-    const csvContent = [
-      headers.map(csvEscape).join(','),
-      values.map(csvEscape).join(','),
-    ].join('\n');
-
-    const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `invoice_${payment._id?.slice(-8) || 'payment'}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    exportAsExcelHtml(headers, [row], `invoice_${getInvoiceSlug(payment)}`);
   };
 
   return (
@@ -122,7 +191,9 @@ export default function BillingHistoryTable({ user }) {
                 Users
               </th>
               <th className="text-left py-4 px-6 text-slate-300 font-medium text-sm">
-                <Download size={16} className="text-teal-400" />
+                <button onClick={downloadAllBills} title="Download all" className="text-teal-400 hover:text-teal-300">
+                  <Download size={16} />
+                </button>
               </th>
             </tr>
           </thead>
@@ -142,7 +213,7 @@ export default function BillingHistoryTable({ user }) {
             ) : userPayments && userPayments.length > 0 ? (
               userPayments.map((row, index) => (
                 <tr key={row._id || index} className="border-b border-slate-700">
-                  <td className="py-4 px-0 text-white text-sm">{row.invoiceNumber || row.stripeSubscriptionId || row._id || "-"}</td>
+                  <td className="py-4 px-0 text-white text-sm" title={getInvoiceId(row)}>{getInvoiceShort(row)}</td>
                   <td className="py-4 px-6 text-slate-300 text-sm">
                     {row.billingDate ? formatDate(row.billingDate) : "-"}
                   </td>

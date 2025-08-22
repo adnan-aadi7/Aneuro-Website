@@ -114,6 +114,8 @@ router.post("/", authUser, upload.single("file"), create);
  *   get:
  *     summary: Get all email sequences with filters
  *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: page
@@ -147,10 +149,12 @@ router.post("/", authUser, upload.single("file"), create);
  *     responses:
  *       200:
  *         description: List of email sequences
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
  *       500:
  *         description: Server error
  */
-router.get('/', getAll);
+router.get('/', authUser, getAll);
 
 /**
  * @swagger
@@ -158,19 +162,26 @@ router.get('/', getAll);
  *   get:
  *     summary: Get email sequence statistics
  *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Statistics retrieved successfully
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
  *       500:
  *         description: Server error
  */
-router.get('/stats', getStats);
+router.get('/stats', authUser, getStats);
+
 /**
  * @swagger
  * /api/email-sequences/{id}:
  *   get:
  *     summary: Get a single email sequence by ID
  *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -180,12 +191,14 @@ router.get('/stats', getStats);
  *     responses:
  *       200:
  *         description: Email sequence found
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
  *       404:
  *         description: Not found
  *       500:
  *         description: Server error
  */
-router.get('/:id', getById);
+router.get('/:id', authUser, getById);
 
 /**
  * @swagger

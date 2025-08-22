@@ -73,7 +73,7 @@ export const fetchEmailSequences = createAsyncThunk(
   async (params = {}, { rejectWithValue }) => {
     try {
       const queryParams = new URLSearchParams();
-      
+      // Align with backend controller supported filters
       if (params.page) queryParams.append('page', params.page);
       if (params.limit) queryParams.append('limit', params.limit);
       if (params.tier) queryParams.append('tier', params.tier);
@@ -81,9 +81,7 @@ export const fetchEmailSequences = createAsyncThunk(
       if (params.search) queryParams.append('search', params.search);
       if (params.sortBy) queryParams.append('sortBy', params.sortBy);
       if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
-      if (params.category) queryParams.append('category', params.category);
-      if (params.brainType) queryParams.append('brainType', params.brainType);
-      
+
       const response = await axios.get(`/email-sequences?${queryParams.toString()}`);
       return response.data;
     } catch (error) {
@@ -155,16 +153,31 @@ export const deleteEmailSequence = createAsyncThunk(
   }
 );
 
-export const bulkDeleteEmailSequences = createAsyncThunk(
-  'emailSequence/bulkDelete',
-  async (ids, { rejectWithValue }) => {
+// Edit a specific email in a sequence
+export const editEmailInSequence = createAsyncThunk(
+  'emailSequence/editEmail',
+  async ({ sequenceId, emailId, content, type }, { rejectWithValue }) => {
     try {
-      const response = await axios.delete('/email-sequences/bulk/delete', {
-        data: { ids }
+      const response = await axios.put(`/email-sequences/${sequenceId}/emails/${emailId}`, {
+        content,
+        type,
       });
-      return response.data;
+      return { sequenceId, email: response.data.data };
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to bulk delete email sequences' });
+      return rejectWithValue(error.response?.data || { message: 'Failed to edit email' });
+    }
+  }
+);
+
+// Delete a specific email in a sequence
+export const deleteEmailInSequence = createAsyncThunk(
+  'emailSequence/deleteEmail',
+  async ({ sequenceId, emailId }, { rejectWithValue }) => {
+    try {
+      const response = await axios.delete(`/email-sequences/${sequenceId}/emails/${emailId}`);
+      return { sequenceId, emailId: response.data.data?.emailId || emailId };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to delete email' });
     }
   }
 );
@@ -385,25 +398,48 @@ const emailSequenceSlice = createSlice({
         state.error = action.payload?.message || 'Failed to delete email sequence';
       });
 
-    // Bulk Delete
+    // Edit email in sequence
     builder
-      .addCase(bulkDeleteEmailSequences.pending, (state) => {
-        state.loading = true;
+      .addCase(editEmailInSequence.pending, (state) => {
         state.error = null;
       })
-      .addCase(bulkDeleteEmailSequences.fulfilled, (state, action) => {
-        state.loading = false;
-        state.success = action.payload.message;
-        const requestedIds = action.meta.arg || [];
-        state.sequences = state.sequences.filter(seq => !requestedIds.includes(seq._id));
-        state.stats.totalSequences = Math.max(0, state.stats.totalSequences - (action.payload.data?.deletedCount || 0));
-        if (state.currentSequence && requestedIds.includes(state.currentSequence._id)) {
-          state.currentSequence = null;
+      .addCase(editEmailInSequence.fulfilled, (state, action) => {
+        const { sequenceId, email } = action.payload;
+        // Update currentSequence if matches
+        if (state.currentSequence && state.currentSequence._id === sequenceId) {
+          const idx = (state.currentSequence.emails || []).findIndex((e) => e._id === email._id);
+          if (idx !== -1) {
+            state.currentSequence.emails[idx] = email;
+          }
+        }
+        // Update in list view if present
+        const listIdx = state.sequences.findIndex((s) => s._id === sequenceId);
+        if (listIdx !== -1 && Array.isArray(state.sequences[listIdx].emails)) {
+          const eIdx = state.sequences[listIdx].emails.findIndex((e) => e._id === email._id);
+          if (eIdx !== -1) state.sequences[listIdx].emails[eIdx] = email;
         }
       })
-      .addCase(bulkDeleteEmailSequences.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload?.message || 'Failed to bulk delete email sequences';
+      .addCase(editEmailInSequence.rejected, (state, action) => {
+        state.error = action.payload?.message || 'Failed to edit email';
+      });
+
+    // Delete email in sequence
+    builder
+      .addCase(deleteEmailInSequence.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(deleteEmailInSequence.fulfilled, (state, action) => {
+        const { sequenceId, emailId } = action.payload;
+        if (state.currentSequence && state.currentSequence._id === sequenceId) {
+          state.currentSequence.emails = (state.currentSequence.emails || []).filter((e) => e._id !== emailId);
+        }
+        const listIdx = state.sequences.findIndex((s) => s._id === sequenceId);
+        if (listIdx !== -1 && Array.isArray(state.sequences[listIdx].emails)) {
+          state.sequences[listIdx].emails = state.sequences[listIdx].emails.filter((e) => e._id !== emailId);
+        }
+      })
+      .addCase(deleteEmailInSequence.rejected, (state, action) => {
+        state.error = action.payload?.message || 'Failed to delete email';
       });
 
     // Fetch Stats

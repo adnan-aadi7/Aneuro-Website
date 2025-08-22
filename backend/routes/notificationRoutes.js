@@ -6,6 +6,7 @@ import {
   markNotificationAsRead,
   getPreferences
 } from "../controller/notificationController.js";
+import { authUser } from "../middleware/userTracker.js";
 
 const router = express.Router();
 
@@ -16,8 +17,27 @@ const router = express.Router();
  *   description: API endpoints for managing notifications
  */
 
-
-router.post("/", createNotification);
+/**
+ * @swagger
+ * /api/notifications:
+ *   post:
+ *     summary: Create a new notification
+ *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Notification'
+ *     responses:
+ *       201:
+ *         description: Notification created successfully
+ *       500:
+ *         description: Server error
+ */
+router.post("/", authUser, createNotification);
 
 /**
  * @swagger
@@ -25,6 +45,8 @@ router.post("/", createNotification);
  *   get:
  *     summary: Get notifications for a user (includes public + user-specific)
  *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: userId
@@ -35,21 +57,10 @@ router.post("/", createNotification);
  *     responses:
  *       200:
  *         description: List of notifications
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Notification'
  *       500:
  *         description: Server error
  */
-router.get("/:userId", getUserNotifications);
+router.get("/:userId", authUser, getUserNotifications);
 
 /**
  * @swagger
@@ -57,6 +68,8 @@ router.get("/:userId", getUserNotifications);
  *   put:
  *     summary: Update a user's notification preferences
  *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: userId
@@ -73,10 +86,8 @@ router.get("/:userId", getUserNotifications);
  *             properties:
  *               newtool:
  *                 type: boolean
- *                 example: false
  *               quiz:
  *                 type: boolean
- *                 example: true
  *     responses:
  *       200:
  *         description: Preferences updated successfully
@@ -85,7 +96,7 @@ router.get("/:userId", getUserNotifications);
  *       500:
  *         description: Server error
  */
-router.put("/:userId/preferences", updateNotificationPreferences);
+router.put("/:userId/preferences", authUser, updateNotificationPreferences);
 
 /**
  * @swagger
@@ -93,6 +104,8 @@ router.put("/:userId/preferences", updateNotificationPreferences);
  *   put:
  *     summary: Mark a notification as read
  *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: notificationId
@@ -103,25 +116,12 @@ router.put("/:userId/preferences", updateNotificationPreferences);
  *     responses:
  *       200:
  *         description: Notification marked as read successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Notification marked as read
- *                 data:
- *                   $ref: '#/components/schemas/Notification'
  *       404:
  *         description: Notification not found
  *       500:
  *         description: Internal server error
  */
-router.put("/:notificationId/read", markNotificationAsRead);
+router.put("/:notificationId/read", authUser, markNotificationAsRead);
 
 /**
  * @swagger
@@ -129,6 +129,8 @@ router.put("/:notificationId/read", markNotificationAsRead);
  *   get:
  *     summary: Get a user's notification preferences
  *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: userId
@@ -139,29 +141,11 @@ router.put("/:notificationId/read", markNotificationAsRead);
  *     responses:
  *       200:
  *         description: User preferences fetched successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: object
- *                   properties:
- *                     newtool:
- *                       type: boolean
- *                       example: true
- *                     quiz:
- *                       type: boolean
- *                       example: false
  *       404:
  *         description: Preferences not found
  *       500:
  *         description: Internal server error
  */
-
-router.get("/:userId/preferences", getPreferences);
+router.get("/:userId/preferences", authUser, getPreferences);
 
 export default router;

@@ -114,6 +114,26 @@ const EmailSequences = () => {
     return String(value);
   };
 
+  // Get count of emails from various possible shapes
+  const getEmailCount = (sequence) => {
+    if (!sequence) return 0;
+    const count = sequence.emailCount;
+    if (typeof count === 'number' && !isNaN(count)) return count;
+
+    const emails = sequence.emails;
+    if (Array.isArray(emails)) return emails.length;
+    if (typeof emails === 'number' && !isNaN(emails)) return emails;
+    if (emails && typeof emails === 'object') {
+      if (Array.isArray(emails.items)) return emails.items.length;
+      try {
+        return Object.keys(emails).length;
+      } catch {
+        return 0;
+      }
+    }
+    return 0;
+  };
+
   // Ensure sequences is an array
   const safeSequences = Array.isArray(sequences) ? sequences : [];
 
@@ -187,7 +207,7 @@ const EmailSequences = () => {
                       </div>
                     </td>
                     <td className="py-4 px-4 text-gray-300 text-sm">
-                      {safeRender(sequence.emailCount || sequence.emails || 0)} emails
+                      {getEmailCount(sequence)} emails
                     </td>
                     <td className="py-4 px-4">
                       <span
