@@ -17,12 +17,14 @@ import {
   selectPromptPackSuccess,
   clearError as clearPromptPackError,
   clearSuccess as clearPromptPackSuccess,
+  editPromptInPack,
 } from "../../../../store/Slice/PromptPacksSlice";
 
 const MannualPrompt = () => {
   const dispatch = useDispatch();
   const params = useParams();
   const editPackId = params.packId || null;
+  const editingPromptId = params.promptId || null;
   const loading = useSelector(selectPromptPackLoading);
   const error = useSelector(selectPromptPackError);
   const success = useSelector(selectPromptPackSuccess);
@@ -85,16 +87,8 @@ const MannualPrompt = () => {
           img.setAttribute('data-attachment-id', id);
           a.replaceWith(img);
         } else {
-          const chip = document.createElement('span');
-          chip.textContent = getTruncatedFileName(name);
-          chip.className = 'inline-block px-2 py-1 text-xs rounded bg-slate-700 text-slate-200';
-          chip.title = name;
-          chip.style.maxWidth = '200px';
-          chip.style.whiteSpace = 'nowrap';
-          chip.style.overflow = 'hidden';
-          chip.style.textOverflow = 'ellipsis';
-          chip.setAttribute('data-attachment-id', id);
-          a.replaceWith(chip);
+          // Remove inline filename chip; keep attachment only
+          a.replaceWith(document.createTextNode(''));
         }
         extracted.push({ id, url: href, isImage: isImageUrl(href), name });
       });
@@ -115,16 +109,7 @@ const MannualPrompt = () => {
           img.setAttribute('data-attachment-id', id);
           container.appendChild(img);
         } else {
-          const chip = document.createElement('span');
-          chip.textContent = getTruncatedFileName(name);
-          chip.className = 'inline-block px-2 py-1 text-xs rounded bg-slate-700 text-slate-200';
-          chip.title = name;
-          chip.style.maxWidth = '200px';
-          chip.style.whiteSpace = 'nowrap';
-          chip.style.overflow = 'hidden';
-          chip.style.textOverflow = 'ellipsis';
-          chip.setAttribute('data-attachment-id', id);
-          container.appendChild(chip);
+          // Do not insert filename chip for non-image URL-only content
         }
         extracted.push({ id, url: href, isImage: isImageUrl(href), name });
       }
@@ -206,20 +191,7 @@ const MannualPrompt = () => {
       const isImage = false;
       const id = `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
-      if (editorRef.current) {
-        const chip = document.createElement('span');
-        chip.textContent = getTruncatedFileName(file.name);
-        chip.className = 'inline-block px-2 py-1 text-xs rounded bg-slate-700 text-slate-200';
-        chip.title = file.name;
-        chip.style.maxWidth = '200px';
-        chip.style.whiteSpace = 'nowrap';
-        chip.style.overflow = 'hidden';
-        chip.style.textOverflow = 'ellipsis';
-        chip.setAttribute('data-attachment-id', id);
-        insertAtCursor(chip);
-        const br = document.createElement('br');
-        insertAtCursor(br);
-      }
+      // Do not insert filename chip in the editor; keep editor clean
 
       return { id, file, url, isImage };
     });
@@ -435,9 +407,10 @@ const MannualPrompt = () => {
   const handleSend = async () => {
     const htmlContent = await buildPersistableHtml();
     const plainTextContent = getPlainTextContent();
-    
-    if (!plainTextContent.trim()) {
-      toast.error("Please write your prompt content first");
+    const hasAttachments = attachments.length > 0;
+
+    if (!plainTextContent.trim() && !hasAttachments) {
+      toast.error("Please add content or attach at least one file");
       return;
     }
 
@@ -467,7 +440,10 @@ const MannualPrompt = () => {
       prompts
     };
 
-    if (editPackId) {
+    if (editPackId && editingPromptId) {
+      // Update only specific prompt
+      dispatch(editPromptInPack({ packId: editPackId, promptId: editingPromptId, update: { content: htmlContent, type: brainType } }));
+    } else if (editPackId) {
       dispatch(updatePromptPack({ id: editPackId, updateData: payload }));
     } else {
       dispatch(createPromptPack({ ...payload, status: 'active' }));

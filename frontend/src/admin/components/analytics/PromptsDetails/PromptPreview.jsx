@@ -1,12 +1,14 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { Toaster, toast } from "react-hot-toast";
 import { Sparkles, Edit, Trash2 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   fetchPromptPackById,
   selectCurrentPromptPack,
   selectPromptPackLoading,
 } from "../../../../store/Slice/PromptPacksSlice";
+import { removePromptFromPack } from "../../../../store/Slice/PromptPacksSlice";
 
 // const prompts = [
 //   {
@@ -32,6 +34,26 @@ const PromptPreview = () => {
   const { packId } = useParams();
   const pack = useSelector(selectCurrentPromptPack);
   const loading = useSelector(selectPromptPackLoading);
+  const navigate = useNavigate();
+  
+  const [confirmState, setConfirmState] = useState({ open: false, promptId: null });
+
+  const openConfirm = (promptId) => setConfirmState({ open: true, promptId });
+  const closeConfirm = () => setConfirmState({ open: false, promptId: null });
+
+  const confirmDelete = async () => {
+    if (!confirmState.promptId) return;
+    try {
+      await dispatch(removePromptFromPack({ id: packId, promptId: confirmState.promptId })).unwrap?.();
+      toast.success('Prompt deleted');
+      // Refresh current pack details
+      dispatch(fetchPromptPackById(packId));
+    } catch {
+      // best-effort; errors are handled via slice/toasts elsewhere if any
+    } finally {
+      closeConfirm();
+    }
+  };
 
   useEffect(() => {
     if (packId) {
@@ -41,6 +63,7 @@ const PromptPreview = () => {
 
   const documentUrl = pack?.fileUrl || null;
   const prompts = Array.isArray(pack?.prompts) ? pack.prompts : [];
+  const firstPromptId = Array.isArray(pack?.prompts) && pack.prompts.length > 0 ? pack.prompts[0]?._id : null;
 
   const getTitleByPack = () => {
     return "Uploaded Document";
@@ -48,11 +71,30 @@ const PromptPreview = () => {
 
   return (
     <div className="w-full bg-[#303041] mx-auto p-6 mt-5">
+      <Toaster position="top-right" />
       <div className="text-lg text-white mb-3">Prompt Preview</div>
 
       {/* File-based pack: show only the link button, no inline preview */}
       {!loading && documentUrl ? (
-        <div className="bg-[#232334] border border-[#353545] rounded mb-6 pb-6">
+        <div className="bg-[#232334] border border-[#353545] rounded mb-6 pb-6 relative">
+          <div className="absolute top-3 right-3 flex items-center space-x-2">
+            <button
+              className={`text-gray-400 hover:text-white transition-colors ${!firstPromptId ? 'opacity-50 cursor-not-allowed' : ''}`}
+              title="Edit Prompt"
+              disabled={!firstPromptId}
+              onClick={() => firstPromptId && navigate(`/admin/mannual-prompt/${packId}/${firstPromptId}`, { state: { prompt: prompts[0] } })}
+            >
+              <Edit className="w-4 h-4" />
+            </button>
+            <button
+              className={`text-gray-400 hover:text-white transition-colors ${!firstPromptId ? 'opacity-50 cursor-not-allowed' : ''}`}
+              title="Delete Prompt"
+              disabled={!firstPromptId}
+              onClick={() => firstPromptId && openConfirm(firstPromptId)}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
           <div className="px-6 pt-6 pb-2">
             <div className="text-base text-white font-semibold">{getTitleByPack()}</div>
           </div>
@@ -79,14 +121,18 @@ const PromptPreview = () => {
                 <button
                   className="text-gray-400 hover:text-white transition-colors"
                   title="Edit Prompt"
-                  onClick={() => {}}
+                  onClick={() =>
+                    navigate(`/admin/mannual-prompt/${packId}/${item._id}`, {
+                      state: { prompt: item }
+                    })
+                  }
                 >
                   <Edit className="w-4 h-4" />
                 </button>
                 <button
                   className="text-gray-400 hover:text-white transition-colors"
                   title="Delete Prompt"
-                  onClick={() => {}}
+                  onClick={() => openConfirm(item._id)}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -133,6 +179,19 @@ const PromptPreview = () => {
             </div>
           )}
         </>
+      )}
+
+      {confirmState.open && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[#1F2937] p-6 w-full max-w-md mx-4">
+            <div className="text-white text-lg font-semibold mb-4">Delete Prompt</div>
+            <p className="text-gray-300 mb-6">Are you sure you want to delete this prompt? This action cannot be undone.</p>
+            <div className="flex justify-end gap-3">
+              <button className="px-4 py-2 bg-gray-600 text-white hover:bg-gray-500" onClick={closeConfirm}>Cancel</button>
+              <button className="px-4 py-2 bg-red-600 text-white hover:bg-red-500" onClick={confirmDelete}>Delete</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -399,6 +399,14 @@ function App() {
           }
         />
         <Route
+          path="/admin/mannual-prompt/:packId/:promptId"
+          element={
+            <AdminLayout>
+              <MannualPrompt/>
+            </AdminLayout>
+          }
+        />
+        <Route
           path="/admin/Settings"
           element={
             <AdminLayout>
