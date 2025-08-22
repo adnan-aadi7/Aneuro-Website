@@ -133,6 +133,18 @@ export const removePromptFromPack = createAsyncThunk(
   }
 );
 
+export const editPromptInPack = createAsyncThunk(
+  'promptPack/editPrompt',
+  async ({ packId, promptId, update }, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(`/prompt-packs/${packId}/prompts/${promptId}`, update);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to edit prompt' });
+    }
+  }
+);
+
 export const incrementPromptPackUsage = createAsyncThunk(
   'promptPack/incrementUsage',
   async (id, { rejectWithValue }) => {
@@ -411,6 +423,28 @@ const promptPackSlice = createSlice({
       .addCase(removePromptFromPack.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || 'Failed to remove prompt from pack';
+      });
+
+    // Edit Prompt
+    builder
+      .addCase(editPromptInPack.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editPromptInPack.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = action.payload.message;
+        const index = state.packs.findIndex(pack => pack._id === action.payload.data._id);
+        if (index !== -1) {
+          state.packs[index] = action.payload.data;
+        }
+        if (state.currentPack && state.currentPack._id === action.payload.data._id) {
+          state.currentPack = action.payload.data;
+        }
+      })
+      .addCase(editPromptInPack.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || 'Failed to edit prompt';
       });
 
     // Increment Usage

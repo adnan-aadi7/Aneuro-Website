@@ -247,7 +247,7 @@ function App() {
           }
         />
         <Route
-          path="/admin/user/details"
+          path="/admin/user/details/:userId"
           element={
             <AdminLayout>
               <Details />
@@ -392,6 +392,14 @@ function App() {
         />
         <Route
           path="/admin/mannual-prompt/:packId"
+          element={
+            <AdminLayout>
+              <MannualPrompt/>
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/mannual-prompt/:packId/:promptId"
           element={
             <AdminLayout>
               <MannualPrompt/>

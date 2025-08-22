@@ -1,21 +1,17 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import { selectQuizAnalytics } from "../../../../../store/Slice/QuizSlice";
+import { selectQuizAnalytics, selectAudienceSessions } from "../../../../../store/Slice/QuizSlice";
 import Looper3 from "../../../../../assets/resultOverView/Looper-3.png";
 import VectorIcon from "../../../../../assets/resultOverView/vector.png";
 import { BsCloudCheck } from "react-icons/bs";
-import { TbGitBranch } from "react-icons/tb";
+import { TbLink, TbRadar, TbUserStar } from "react-icons/tb";
 
 const staticCards = [
   {
     type: "highlight",
     icon: (
       <div className="w-10 h-10 rounded-full bg-blue-200 flex items-center justify-center">
-        <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
-          <path d="M8 12h8" stroke="#232432" strokeWidth="2" strokeLinecap="round" />
-          <path d="M12 8v8" stroke="#232432" strokeWidth="2" strokeLinecap="round" />
-          <rect x="3" y="3" width="18" height="18" rx="4" stroke="#232432" strokeWidth="2" />
-        </svg>
+        <TbLink size={20} color="#232432" />
       </div>
     ),
     title: "Total Links Generated",
@@ -30,11 +26,7 @@ const staticCards = [
   {
     icon: (
       <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
-        <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" stroke="#fff" strokeWidth="2" />
-          <path d="M12 6v6l4 2" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
-          <path d="M8 12h8" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
-        </svg>
+        <TbRadar size={20} color="#fff" />
       </div>
     ),
     title: "Total Unique Clicks",
@@ -45,10 +37,7 @@ const staticCards = [
   {
     icon: (
       <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
-        <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
-          <path d="M9 12l2 2 4-4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="#fff" strokeWidth="2" />
-        </svg>
+        <BsCloudCheck size={20} color="#fff" />
       </div>
     ),
     title: "Completed Quizzes",
@@ -61,11 +50,7 @@ const staticCards = [
   {
     icon: (
       <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
-        <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
-          <circle cx="12" cy="8" r="5" stroke="#fff" strokeWidth="2" />
-          <path d="M20 21c0-4.41-3.59-8-8-8s-8 3.59-8 8" stroke="#fff" strokeWidth="2" />
-          <path d="M15 5l1 1 1-1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <TbUserStar size={20} color="#fff" />
       </div>
     ),
     title: "Completion Rate",
@@ -77,13 +62,30 @@ const staticCards = [
 
 const Cards = () => {
   const analytics = useSelector(selectQuizAnalytics);
+  const audienceSessions = useSelector(selectAudienceSessions);
 
-  const cardValues = {
-    totalLinks: analytics?.linksGenerated ?? 0,
-    uniqueClicks: analytics?.uniqueClicks ?? 0,
-    completedQuizzes: analytics?.completedQuizzes ?? 0,
-    completionRate: analytics?.completionRate ?? 0,
-  };
+  // Derive values safely from analytics and sessions
+  const totalLinks = Number(analytics?.linksGenerated) || 0;
+  const uniqueClicks = Number(analytics?.uniqueClicks) || 0;
+  const completedQuizzes = Number(analytics?.completedQuizzes) || 0;
+  const completionRate = typeof analytics?.completionRate === 'number' ? analytics.completionRate : 0;
+
+  const completedFromSessions = Array.isArray(audienceSessions)
+    ? audienceSessions.filter(s => s?.is_completed).length
+    : 0;
+
+  const cardValues = React.useMemo(() => ({
+    totalLinks,
+    uniqueClicks,
+    completedQuizzes: completedQuizzes || completedFromSessions,
+    completionRate,
+  }), [totalLinks, uniqueClicks, completedQuizzes, completedFromSessions, completionRate]);
+
+  // Debug logs to inspect incoming data and computed values
+  React.useEffect(() => {
+  
+    console.log('CardValues:', cardValues);
+  }, [analytics, audienceSessions, cardValues]);
 
   const cards = [
     { ...staticCards[0], value: cardValues.totalLinks },

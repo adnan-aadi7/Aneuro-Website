@@ -5,10 +5,11 @@ import User from '../model/User.js';
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_YOUR_SECRET_KEY');
 
+// Resolve Stripe Price IDs from environment variables
 const PLAN_PRICE_IDS = {
-  starter: 'price_1RqBDNHHuap1a33PXASQqDj4',
-  growth: 'price_1RqBDcHHuap1a33PvAJEFgPE',
-  enterprise: 'price_1RqBDwHHuap1a33PwVa9QS7D',
+  starter: process.env.STRIPE_PRICE_ID_STARTER,
+  growth: process.env.STRIPE_PRICE_ID_GROWTH,
+  enterprise: process.env.STRIPE_PRICE_ID_ENTERPRISE,
 };
 
 // ✅ 1. Create Subscription
@@ -42,7 +43,7 @@ export const createSubscription = async (req, res) => {
     customer = existing.data.length > 0
       ? existing.data[0]
       : await stripe.customers.create({ 
-          email, 
+          email: email || user.email, 
           metadata: { userId } 
         });
 
@@ -82,9 +83,119 @@ export const createSubscription = async (req, res) => {
       },
       collection_method: 'charge_automatically',
       // automatic_tax: { enabled: true },
+      expand: ['latest_invoice.payment_intent'],
     });
 
     console.log('Stripe subscription created:', subscription.id);
+
+    // Attempt to create initial payment record immediately (for immediate UI display)
+    let initialPaymentRecord = null;
+    try {
+      const customerEmailForPayment = email || user.email;
+      const latestInvoice = subscription.latest_invoice;
+      const invoiceObject = typeof latestInvoice === 'string' ? null : latestInvoice;
+      const isPaid = invoiceObject?.status === 'paid' || invoiceObject?.paid === true;
+      const paymentIntentObj = invoiceObject?.payment_intent;
+      const paymentIntentId = typeof paymentIntentObj === 'string' ? paymentIntentObj : paymentIntentObj?.id;
+
+      if (invoiceObject && isPaid && paymentIntentId) {
+        // Check if a payment record already exists
+        let existing = await Payment.findOne({
+          $or: [
+            { stripePaymentIntentId: paymentIntentId },
+            { stripeSubscriptionId: subscription.id, amount: (invoiceObject.amount_paid || 0) / 100 }
+          ]
+        });
+
+        if (!existing) {
+          const receiptUrl = invoiceObject.hosted_invoice_url || '';
+          const paymentDoc = new Payment({
+            userId,
+            stripePaymentIntentId: paymentIntentId,
+            stripeSubscriptionId: subscription.id,
+            amount: (invoiceObject.amount_paid || 0) / 100,
+            currency: (invoiceObject.currency || 'usd'),
+            plan: plan,
+            status: 'succeeded',
+            customerEmail: customerEmailForPayment,
+            receiptUrl,
+            metadata: { invoiceId: invoiceObject.id, createdFrom: 'createSubscription' },
+          });
+          await paymentDoc.save();
+          console.log('Initial payment record created from subscription latest invoice:', paymentDoc._id);
+          initialPaymentRecord = paymentDoc;
+        } else {
+          initialPaymentRecord = existing;
+        }
+      } else if (invoiceObject) {
+        // Create a pending payment record so Billing History shows immediately
+        const amountCents = invoiceObject.amount_due ?? invoiceObject.total ?? 0;
+        const amountDollars = amountCents / 100;
+        const currency = invoiceObject.currency || 'usd';
+        const customerEmailForPayment = email || user.email;
+
+        // Try to find an existing pending record for this subscription and amount
+        let existingPending = await Payment.findOne({
+          stripeSubscriptionId: subscription.id,
+          amount: amountDollars,
+        });
+
+        if (!existingPending) {
+          const pendingDoc = new Payment({
+            userId,
+            stripePaymentIntentId: paymentIntentId || undefined,
+            stripeSubscriptionId: subscription.id,
+            amount: amountDollars,
+            currency,
+            plan: plan,
+            status: 'pending',
+            customerEmail: customerEmailForPayment,
+            receiptUrl: invoiceObject.hosted_invoice_url || '',
+            metadata: { invoiceId: invoiceObject.id, createdFrom: 'createSubscription', state: 'pending' },
+          });
+          await pendingDoc.save();
+          console.log('Pending payment record created for subscription initial invoice:', pendingDoc._id);
+          initialPaymentRecord = pendingDoc;
+        } else {
+          initialPaymentRecord = existingPending;
+        }
+      } else if (!invoiceObject) {
+        // Final fallback: create a pending record using the price amount
+        try {
+          const price = await stripe.prices.retrieve(priceId);
+          const amountDollars = (price.unit_amount || 0) / 100;
+          const customerEmailForPayment = email || user.email;
+
+          let existingPendingByPrice = await Payment.findOne({
+            stripeSubscriptionId: subscription.id,
+            amount: amountDollars,
+          });
+
+          if (!existingPendingByPrice) {
+            const pendingByPrice = new Payment({
+              userId,
+              stripeSubscriptionId: subscription.id,
+              amount: amountDollars,
+              currency: price.currency || 'usd',
+              plan: plan,
+              status: 'pending',
+              customerEmail: customerEmailForPayment,
+              metadata: { createdFrom: 'createSubscription', source: 'price_fallback', priceId },
+            });
+            await pendingByPrice.save();
+            console.log('Pending payment record created using price fallback:', pendingByPrice._id);
+            initialPaymentRecord = pendingByPrice;
+          } else {
+            initialPaymentRecord = existingPendingByPrice;
+          }
+        } catch (priceFallbackErr) {
+          console.warn('Price fallback failed to create pending record:', priceFallbackErr?.message || priceFallbackErr);
+        }
+      }
+    } catch (createPaymentError) {
+      console.warn('Could not create initial payment record immediately:', createPaymentError?.message || createPaymentError);
+      // Webhook will reconcile payments as a fallback
+    }
 
     // Update user subscription in database
     user.subscription = {
@@ -96,9 +207,25 @@ export const createSubscription = async (req, res) => {
     };
     await user.save();
 
+    const paymentPayload = initialPaymentRecord
+      ? {
+          _id: initialPaymentRecord._id,
+          amount: initialPaymentRecord.amount,
+          currency: initialPaymentRecord.currency,
+          plan: initialPaymentRecord.plan,
+          status: initialPaymentRecord.status,
+          customerEmail: initialPaymentRecord.customerEmail,
+          stripePaymentIntentId: initialPaymentRecord.stripePaymentIntentId,
+          stripeSubscriptionId: initialPaymentRecord.stripeSubscriptionId,
+          createdAt: initialPaymentRecord.createdAt,
+          receiptUrl: initialPaymentRecord.receiptUrl,
+        }
+      : null;
+
     res.json({ 
       subscriptionId: subscription.id,
-      message: 'Subscription created successfully. Payment will be processed automatically.'
+      message: 'Subscription created successfully. Payment will be processed automatically.',
+      initialPayment: paymentPayload,
     });
   } catch (error) {
     console.error('Stripe Error:', error);
@@ -144,6 +271,59 @@ export const getUserPayments = async (req, res) => {
     const payments = await Payment.find({ userId: req.params.userId })
       .sort({ createdAt: -1 })
       .populate('userId', 'name email');
+    // Reconcile statuses with Stripe before returning (only for pending/unpaid)
+    const reconcilePromises = payments.map(async (payment) => {
+      try {
+        if (payment.status === 'pending' || payment.status === 'unpaid') {
+          // If we have a payment intent, prefer that
+          if (payment.stripePaymentIntentId) {
+            const pi = await stripe.paymentIntents.retrieve(payment.stripePaymentIntentId);
+            const statusMap = {
+              succeeded: 'succeeded',
+              processing: 'pending',
+              canceled: 'canceled',
+              requires_payment_method: 'failed',
+              requires_confirmation: 'pending',
+              requires_action: 'pending',
+            };
+            const mapped = statusMap[pi.status] || payment.status;
+            if (mapped !== payment.status) {
+              payment.status = mapped;
+              if (mapped === 'succeeded') {
+                const amountCents = pi.amount_received || pi.amount || 0;
+                payment.amount = amountCents / 100;
+                payment.currency = pi.currency || payment.currency;
+                payment.receiptUrl = pi.charges?.data?.[0]?.receipt_url || payment.receiptUrl;
+              }
+              await payment.save();
+            }
+          } else if (payment.stripeSubscriptionId) {
+            // Fetch latest invoice for the subscription
+            const invoices = await stripe.invoices.list({ subscription: payment.stripeSubscriptionId, limit: 1 });
+            const inv = invoices?.data?.[0];
+            if (inv) {
+              let mapped = payment.status;
+              if (inv.status === 'paid' || inv.paid) mapped = 'succeeded';
+              else if (inv.status === 'void') mapped = 'canceled';
+              else if (inv.status === 'uncollectible') mapped = 'failed';
+              else if (inv.status === 'open' || inv.status === 'draft') mapped = 'pending';
+              if (mapped !== payment.status) {
+                payment.status = mapped;
+                if (mapped === 'succeeded') {
+                  payment.amount = (inv.amount_paid || 0) / 100;
+                  payment.currency = inv.currency || payment.currency;
+                  payment.receiptUrl = inv.hosted_invoice_url || payment.receiptUrl;
+                }
+                await payment.save();
+              }
+            }
+          }
+        }
+      } catch (reconcileErr) {
+        console.warn('Payment reconcile skipped:', reconcileErr?.message || reconcileErr);
+      }
+    });
+    await Promise.allSettled(reconcilePromises);
     // Map createdAt to billingDate for each payment
     const paymentsWithBillingDate = payments.map(payment => {
       const obj = payment.toObject();

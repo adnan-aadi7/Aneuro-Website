@@ -5,6 +5,18 @@ import User from '../model/User.js';
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
+// Map Stripe Price IDs via environment variables
+const STARTER_PRICE_ID = process.env.STRIPE_PRICE_ID_STARTER;
+const GROWTH_PRICE_ID = process.env.STRIPE_PRICE_ID_GROWTH;
+const ENTERPRISE_PRICE_ID = process.env.STRIPE_PRICE_ID_ENTERPRISE;
+
+const getPlanFromPriceId = (priceId) => {
+  if (priceId === STARTER_PRICE_ID) return 'starter';
+  if (priceId === GROWTH_PRICE_ID) return 'growth';
+  if (priceId === ENTERPRISE_PRICE_ID) return 'enterprise';
+  return 'starter';
+};
+
 export const handleStripeWebhook = async (req, res) => {
   const sig = req.headers['stripe-signature'];
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -27,7 +39,7 @@ export const handleStripeWebhook = async (req, res) => {
     const subscriptionId = invoice.subscription;
     const paymentIntentId = invoice.payment_intent;
     const customerEmail = invoice.customer_email || (invoice.customer && invoice.customer.email);
-    const userId = invoice.metadata && invoice.metadata.userId;
+    let userId = invoice.metadata && invoice.metadata.userId;
     const plan = invoice.metadata && invoice.metadata.plan;
     
     console.log('Processing invoice.payment_succeeded:', {
@@ -38,12 +50,25 @@ export const handleStripeWebhook = async (req, res) => {
       plan
     });
     
-    // Skip payment creation if required data is missing
+    // Try to resolve missing userId from subscription metadata
+    let subscription;
+    if (!userId && subscriptionId) {
+      try {
+        subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        if (subscription?.metadata?.userId) {
+          userId = subscription.metadata.userId;
+        }
+      } catch (e) {
+        console.warn('Could not retrieve subscription to resolve userId.');
+      }
+    }
+
+    // If still missing critical data, skip payment creation
     if (!userId) {
-      console.warn('Missing userId in invoice metadata. Skipping payment creation.');
+      console.warn('Missing userId after attempts to resolve. Skipping payment creation.');
       break;
     }
-    
+
     // Find payment intent details
     let paymentIntent;
     try {
@@ -54,15 +79,12 @@ export const handleStripeWebhook = async (req, res) => {
     
     // Determine plan from subscription if not in metadata
     let finalPlan = plan;
-    if (!finalPlan && subscriptionId) {
+    if (!finalPlan && (subscriptionId || subscription)) {
       try {
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-        // Map price IDs to plan names
-        const priceId = subscription.items.data[0]?.price?.id;
-        if (priceId === 'price_1RqBDNHHuap1a33PXASQqDj4') finalPlan = 'starter';
-        else if (priceId === 'price_1RqBDcHHuap1a33PvAJEFgPE') finalPlan = 'growth';
-        else if (priceId === 'price_1RqBDwHHuap1a33PwVa9QS7D') finalPlan = 'enterprise';
-        else finalPlan = 'starter'; // fallback
+        const sub = subscription || await stripe.subscriptions.retrieve(subscriptionId);
+        // Map price ID to plan name using env-configured IDs
+        const priceId = sub.items.data[0]?.price?.id;
+        finalPlan = getPlanFromPriceId(priceId);
       } catch (e) {
         console.warn('Could not retrieve subscription to determine plan. Using starter as fallback.');
         finalPlan = 'starter';
@@ -73,9 +95,14 @@ export const handleStripeWebhook = async (req, res) => {
     let payment = await Payment.findOne({ 
       $or: [
         { stripePaymentIntentId: paymentIntentId },
-        { stripeSubscriptionId: subscriptionId, amount: invoice.amount_paid }
+        { stripeSubscriptionId: subscriptionId, amount: (invoice.amount_paid || 0) / 100 }
       ]
     });
+    // Fallback: find latest pending for this subscription and upgrade it
+    if (!payment) {
+      payment = await Payment.findOne({ stripeSubscriptionId: subscriptionId, status: 'pending' })
+        .sort({ createdAt: -1 });
+    }
     
     if (!payment) {
       // Create new payment record only if it doesn't exist
@@ -83,10 +110,10 @@ export const handleStripeWebhook = async (req, res) => {
         userId: userId,
         stripePaymentIntentId: paymentIntentId,
         stripeSubscriptionId: subscriptionId,
-        amount: invoice.amount_paid,
+        amount: (invoice.amount_paid || 0) / 100,
         currency: invoice.currency,
         plan: finalPlan,
-        status: 'paid',
+        status: 'succeeded',
         customerEmail: customerEmail || '',
         receiptUrl: paymentIntent && paymentIntent.charges && paymentIntent.charges.data[0] ? paymentIntent.charges.data[0].receipt_url : '',
         metadata: invoice.metadata,
@@ -95,8 +122,13 @@ export const handleStripeWebhook = async (req, res) => {
       console.log('New payment record created:', payment._id);
     } else {
       // Update existing payment record
-      payment.status = 'paid';
+      payment.status = 'succeeded';
+      payment.amount = (invoice.amount_paid || 0) / 100;
+      payment.currency = invoice.currency;
+      payment.plan = finalPlan;
+      payment.customerEmail = customerEmail || payment.customerEmail || '';
       payment.stripeSubscriptionId = subscriptionId;
+      if (paymentIntentId) payment.stripePaymentIntentId = paymentIntentId;
       payment.receiptUrl = paymentIntent && paymentIntent.charges && paymentIntent.charges.data[0] ? paymentIntent.charges.data[0].receipt_url : '';
       await payment.save();
       console.log('Existing payment record updated:', payment._id);
@@ -178,8 +210,15 @@ export const handleStripeWebhook = async (req, res) => {
       const user = await User.findById(userId);
       if (user && user.subscription) {
         user.subscription.status = subscription.status;
+        // If price changed this period (upgrade) update plan immediately
+        const priceId = subscription.items?.data?.[0]?.price?.id;
+        user.subscription.plan = getPlanFromPriceId(priceId);
+        // Keep start/end dates aligned with Stripe period
+        user.subscription.startDate = new Date(subscription.current_period_start * 1000);
+        user.subscription.endDate = new Date(subscription.current_period_end * 1000);
+        user.subscription.stripeSubscriptionId = subscription.id;
         await user.save();
-        console.log('User subscription status updated:', user.email, subscription.status);
+        console.log('User subscription status/plan reconciled from Stripe:', user.email, subscription.status, user.subscription.plan);
       }
     }
     break;

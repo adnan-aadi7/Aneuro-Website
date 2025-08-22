@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { deleteUser } from "../../../../../store/Slice/UserSlice";
 import GeneralDetails from "../generalDetails/GeneralDetails";
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import SubscriptionTierExact from "../subscriptionTier/SubscriptionTierExact";
 import BillingHistoryTable from "../subscriptionTier/BillingHistoryTable";
 import DeletePopup from "../generalDetails/DeletePopup";
@@ -14,16 +14,18 @@ import ResetConfirmation from "../generalDetails/passwordReset/ResetConfirmation
 import Cards from "../quizEngaged/Cards";
 import Charts from "../quizEngaged/Charts";
 import QuizEngagedHeading from "../quizEngaged/QuizEngaedHeading";
-import { getQuizAnalytics, getBrainTypeAnalytics, getWeeklyBrainTypeStats } from "../../../../../store/Slice/QuizSlice";
+import { getQuizAnalytics, getBrainTypeAnalytics, getWeeklyBrainTypeStats, getAudienceSessions } from "../../../../../store/Slice/QuizSlice";
 
-export default function Tabs({ user: userProp }) {
+export default function Tabs({ user: userProp, userId: userIdProp }) {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const params = useParams();
   
   // Prefer prop, fallback to location.state.user
   const user = userProp || location.state?.user || {};
-  const [activeTab, setActiveTab] = useState("General Details");
+  const resolvedUserId = user?._id || userIdProp || params.userId;
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || "General Details");
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [showGetCode, setShowGetCode] = useState(false);
   const [showEnterCode, setShowEnterCode] = useState(false);
@@ -74,12 +76,13 @@ export default function Tabs({ user: userProp }) {
 
   // Fetch quiz analytics when Quiz Engagement tab is active
   useEffect(() => {
-    if (activeTab === "Quiz Engagement" && user?._id) {
-      dispatch(getQuizAnalytics(user._id));
-      dispatch(getBrainTypeAnalytics(user._id));
-      dispatch(getWeeklyBrainTypeStats(user._id));
+    if (activeTab === "Quiz Engagement" && resolvedUserId) {
+      dispatch(getQuizAnalytics(resolvedUserId));
+      dispatch(getBrainTypeAnalytics(resolvedUserId));
+      dispatch(getWeeklyBrainTypeStats(resolvedUserId));
+      dispatch(getAudienceSessions({ user_id: resolvedUserId }));
     }
-  }, [activeTab, user?._id, dispatch]);
+  }, [activeTab, resolvedUserId, dispatch]);
   console.log("QuizAnalytics",user);
 
   return (
