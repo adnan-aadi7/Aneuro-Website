@@ -12,10 +12,15 @@ const EmailPreview = ({ sequenceId }) => {
   const sequence = useSelector(selectCurrentSequence);
   const loading = useSelector(selectEmailSequenceLoading);
   
+  
   // State for category view
   const [categoryEmails, setCategoryEmails] = useState([]);
   const [categoryLoading, setCategoryLoading] = useState(false);
   const [isCategoryView, setIsCategoryView] = useState(false);
+  
+  // State for controlling email display
+  const [showAllEmails, setShowAllEmails] = useState(false);
+  const [showAllCategoryEmails, setShowAllCategoryEmails] = useState(false);
 
   // Confirm modal state
   const [confirmModal, setConfirmModal] = useState({ open: false, sequenceId: null, emailId: null, isCategory: false });
@@ -120,6 +125,7 @@ const EmailPreview = ({ sequenceId }) => {
     }
   };
 
+  
   // removed legacy renderFilePreview (inlined custom card used instead)
 
   const renderCategoryEmails = () => {
@@ -139,9 +145,12 @@ const EmailPreview = ({ sequenceId }) => {
       );
     }
 
+    // Show only first 2 emails initially, or all if showAllCategoryEmails is true
+    const emailsToShow = showAllCategoryEmails ? categoryEmails : categoryEmails.slice(0, 2);
+
     return (
       <>
-                 {categoryEmails.map((emailItem) => (
+                 {emailsToShow.map((emailItem) => (
           <div
             key={emailItem.id}
             className="bg-[#232334] border border-[#353545] rounded mb-6 pb-6 relative"
@@ -212,6 +221,18 @@ const EmailPreview = ({ sequenceId }) => {
             Total: {categoryEmails.length} emails in this category
           </div>
         </div>
+        
+        {/* Show View All Emails button if there are more than 2 emails */}
+        {categoryEmails.length > 2 && (
+          <div className="flex justify-center mt-4">
+            <button 
+              onClick={() => setShowAllCategoryEmails(!showAllCategoryEmails)}
+              className="border border-cyan-400 text-white text-xs px-12 py-3 rounded hover:bg-cyan-900 transition"
+            >
+              {showAllCategoryEmails ? 'Show Less' : `View All ${categoryEmails.length} Emails`}
+            </button>
+          </div>
+        )}
       </>
     );
   };
@@ -283,7 +304,8 @@ const EmailPreview = ({ sequenceId }) => {
                   No emails found for this sequence.
                 </div>
               ) : (
-                manualEmails.map((emailItem, index) => (
+                // Show only first 2 emails initially, or all if showAllEmails is true
+                (showAllEmails ? manualEmails : manualEmails.slice(0, 2)).map((emailItem, index) => (
                   <div
                     key={index}
                     className={`bg-[#232334] border border-[#353545] rounded mb-14 pb-8 relative`}
@@ -327,11 +349,17 @@ const EmailPreview = ({ sequenceId }) => {
                   </div>
                 ))
               )}
-              <div className="flex justify-center mt-16">
-                <button className="border border-cyan-400 text-white text-xs px-12 py-3 rounded hover:bg-cyan-900 transition">
-                  {`View All ${manualEmails.length || 0} Emails`}
-                </button>
-              </div>
+              {/* Show View All Emails button only if there are more than 2 emails */}
+              {manualEmails.length > 2 && (
+                <div className="flex justify-center mt-16">
+                  <button 
+                    onClick={() => setShowAllEmails(!showAllEmails)}
+                    className="border border-cyan-400 text-white text-xs px-12 py-3 rounded hover:bg-cyan-900 transition"
+                  >
+                    {showAllEmails ? 'Show Less' : `View All ${manualEmails.length || 0} Emails`}
+                  </button>
+                </div>
+              )}
             </>
           )}
         </>
