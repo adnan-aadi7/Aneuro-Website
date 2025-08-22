@@ -11,7 +11,7 @@ import {
   facebookLogin,
 } from "../../../store/Slice/UserSlice";
 import { toastPromise } from "../../../toast";
-import axios from "../../../store/axiosInstance";
+import axiosInstance from "../../../store/axiosInstance";
 
 export default function LoginForm() {
   const navigate = useNavigate();
@@ -72,22 +72,29 @@ export default function LoginForm() {
       const userId = user?._id || user?.id;
 
       // --- QUIZ GATE ---
-      let completion = user?.quizProgress?.completionPercentage;
+      // Prefer values returned on login if present
+      let completion =
+        user?.quizProgress?.completionPercentage ??
+        (user?.quizProgress?.isCompleted ? 100 : undefined);
 
-      if (completion == null) {
+      // If not provided by login response, fetch progress
+      if (completion == null && userId) {
         try {
-          // Ensure the auth header is set for immediate call
-          const res = await axios.get(`/api/quiz/progress/${userId}`, {
+          // NOTE: axiosInstance has baseURL '/api', so do NOT prefix with '/api'
+          const res = await axiosInstance.get(`/quiz/progress/${userId}`, {
             headers: token ? { Authorization: `Bearer ${token}` } : undefined,
           });
-          completion = res?.data?.completionPercentage;
+
+          // Accept either {completionPercentage} or {data:{completionPercentage}}
+          const body = res?.data ?? {};
+          const dataNode =
+            body && typeof body === "object" && "data" in body ? body.data : body;
+
+          completion =
+            dataNode?.completionPercentage ??
+            (dataNode?.isCompleted ? 100 : undefined);
         } catch (err) {
-          // If 404 => no progress / not complete => go to /quiz
-          if (err?.response?.status === 404) {
-            navigate("/quiz");
-            return;
-          }
-          // On any other error, be safe and send to /quiz
+          // On any error (including 404), be safe and send to /quiz
           navigate("/quiz");
           return;
         }
@@ -99,7 +106,7 @@ export default function LoginForm() {
       }
       // --- END QUIZ GATE ---
 
-      // Continue with your existing routing
+      // Continue with existing routing
       const hasActiveSubscription =
         user?.subscription &&
         user.subscription.plan &&
@@ -107,11 +114,13 @@ export default function LoginForm() {
 
       if (user?.userType === "admin") {
         navigate("/admin/dashboard");
-      } else if (hasActiveSubscription) {
-        navigate("/client/dashboard");
-      } else {
-        navigate("/plan");
+        return;
       }
+      if (hasActiveSubscription) {
+        navigate("/client/dashboard");
+        return;
+      }
+      navigate("/plan");
     } catch (err) {
       setError(typeof err === "string" ? err : err?.message || "Login failed");
     }
