@@ -240,7 +240,13 @@ const EmailPreview = ({ sequenceId }) => {
                 <button
                   className="text-gray-400 hover:text-white transition-colors"
                   title="Edit Email"
-                  onClick={() => {}}
+                  onClick={() =>
+                    navigate(`/admin/mannual-email/${sequenceId}`, {
+                      state: fileEmailId
+                        ? { sequenceId, emailId: fileEmailId, editSingleEmail: true }
+                        : { sequenceId, editSingleEmail: true },
+                    })
+                  }
                 >
                   <Edit className="w-4 h-4" />
                 </button>
@@ -265,7 +271,7 @@ const EmailPreview = ({ sequenceId }) => {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-sm px-3 py-2  border border-cyan-400 text-white hover:bg-cyan-900 transition"
                 >
-                  View Uploaded Document
+                  View Email Document
                   <ChevronRight className="w-4 h-4 text-cyan-400" />
                 </a>
               </div>

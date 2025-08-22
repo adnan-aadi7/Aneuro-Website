@@ -98,30 +98,15 @@ const AddEmailMannually = () => {
     fileInputRef.current.click();
   };
 
-  const insertAtCursor = (node) => {
-    const editor = editorRef.current;
-    if (!editor) return;
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      range.deleteContents();
-      range.insertNode(node);
-      // Move caret after inserted node
-      range.setStartAfter(node);
-      range.setEndAfter(node);
-      selection.removeAllRanges();
-      selection.addRange(range);
-    } else {
-      editor.appendChild(node);
-    }
-  };
+  // removed: insertAtCursor helper (no longer inserting inline chips/images into editor)
 
   const isAllowedDoc = (file) => {
     const allowedMimes = [
       'application/pdf',
       'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'text/plain'
+      'text/plain',
+     
     ];
     const allowedExts = ['.pdf', '.doc', '.docx', '.txt'];
     const name = (file?.name || '').toLowerCase();
@@ -137,36 +122,11 @@ const AddEmailMannually = () => {
 
     const newItems = files.map((file) => {
       const url = URL.createObjectURL(file);
-      const isImage = false;
+      const isImage = /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(file.name || '');
       const id = `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
-      // Insert into editor
-      if (editorRef.current) {
-        if (isImage) {
-          const img = document.createElement('img');
-          img.src = url;
-          img.alt = file.name;
-          img.style.maxWidth = '100%';
-          img.style.borderRadius = '6px';
-          img.setAttribute('data-attachment-id', id);
-          insertAtCursor(img);
-          const br = document.createElement('br');
-          insertAtCursor(br);
-        } else {
-          const chip = document.createElement('span');
-          chip.textContent = getTruncatedFileName(file.name);
-          chip.className = 'inline-block px-2 py-1 text-xs rounded bg-slate-700 text-slate-200';
-          chip.title = file.name;
-          chip.style.maxWidth = '200px';
-          chip.style.whiteSpace = 'nowrap';
-          chip.style.overflow = 'hidden';
-          chip.style.textOverflow = 'ellipsis';
-          chip.setAttribute('data-attachment-id', id);
-          insertAtCursor(chip);
-          const br = document.createElement('br');
-          insertAtCursor(br);
-        }
-      }
+      // Do not insert file name text into editor; keep editor clean.
+      // For images, we also avoid inline insertion to prevent duplication with attachment preview.
 
       return { id, file, url, isImage };
     });
@@ -366,42 +326,53 @@ const AddEmailMannually = () => {
       // Map backend tier to UI tier
       const reverseTierMap = { starter: "basic", growth: "premium", enterprise: "enterprise" };
       setSelectedTier(reverseTierMap[currentSequence.tier] || "");
-      // Prefill: specific email if provided, else first
-      const emailsArr = Array.isArray(currentSequence.emails) ? currentSequence.emails : [];
-      const targetEmail = editSingleEmail && editingEmailId
-        ? emailsArr.find((e) => e._id === editingEmailId)
-        : (emailsArr[0] || null);
-      if (targetEmail && editorRef.current) {
-        const { html, attachments: extracted } = transformContentForEditor(targetEmail.content || "");
-        editorRef.current.innerHTML = html;
-        // Seed attachments list from content (placeholders; we will upgrade to blobs)
-        setAttachments(extracted);
+      // Prefill: file-based sequence or manual emails
+      if (currentSequence.type === 'file' && currentSequence.fileUrl) {
+        const fileUrl = currentSequence.fileUrl;
+        const fileName = fileUrl.split('/').pop() || 'file';
+        const id = `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+        const isImg = isImageUrl(fileUrl);
+        // Keep editor body empty for file-based sequences; show only attachment preview above.
+        if (editorRef.current) editorRef.current.innerHTML = '';
+        setAttachments([{ id, url: fileUrl, isImage: isImg, name: fileName }]);
+      } else {
+        // Manual emails
+        const emailsArr = Array.isArray(currentSequence.emails) ? currentSequence.emails : [];
+        const targetEmail = editSingleEmail && editingEmailId
+          ? emailsArr.find((e) => e._id === editingEmailId)
+          : (emailsArr[0] || null);
+        if (targetEmail && editorRef.current) {
+          const { html, attachments: extracted } = transformContentForEditor(targetEmail.content || "");
+          editorRef.current.innerHTML = html;
+          // Seed attachments list from content (placeholders; we will upgrade to blobs)
+          setAttachments(extracted);
 
-        // Upgrade remote URLs to Blob URLs for inline display
-        const upgradeToBlob = async (item) => {
-          try {
-            const res = await fetch(item.url, { credentials: 'omit' });
-            if (!res.ok) return;
-            const blob = await res.blob();
-            const fileName = item.name || (item.url && item.url.split('/').pop()) || 'file';
-            const file = new File([blob], fileName, { type: blob.type || undefined });
-            const blobUrl = URL.createObjectURL(blob);
-            const node = editorRef.current?.querySelector(`[data-attachment-id="${item.id}"]`);
-            if (node && item.isImage) {
-              node.setAttribute('src', blobUrl);
+          // Upgrade remote URLs to Blob URLs for inline display
+          const upgradeToBlob = async (item) => {
+            try {
+              const res = await fetch(item.url, { credentials: 'omit' });
+              if (!res.ok) return;
+              const blob = await res.blob();
+              const fileName = item.name || (item.url && item.url.split('/').pop()) || 'file';
+              const file = new File([blob], fileName, { type: blob.type || undefined });
+              const blobUrl = URL.createObjectURL(blob);
+              const node = editorRef.current?.querySelector(`[data-attachment-id="${item.id}"]`);
+              if (node && item.isImage) {
+                node.setAttribute('src', blobUrl);
+              }
+              setAttachments((prev) => prev.map((a) => (a.id === item.id ? { ...a, url: blobUrl, file } : a)));
+            } catch {
+              // Ignore fetch errors; leave as original URL chip/image
             }
-            setAttachments((prev) => prev.map((a) => (a.id === item.id ? { ...a, url: blobUrl, file } : a)));
-          } catch {
-            // Ignore fetch errors; leave as original URL chip/image
-          }
-        };
+          };
 
-        extracted.forEach((it) => {
-          // Only attempt upgrade for images and PDFs
-          if (it.isImage || (it.url || '').toLowerCase().endsWith('.pdf')) {
-            upgradeToBlob(it);
-          }
-        });
+          extracted.forEach((it) => {
+            // Only attempt upgrade for images and PDFs
+            if (it.isImage || (it.url || '').toLowerCase().endsWith('.pdf')) {
+              upgradeToBlob(it);
+            }
+          });
+        }
       }
     }
   }, [editSequenceId, currentSequence, transformContentForEditor, editSingleEmail, editingEmailId]);
