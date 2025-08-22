@@ -157,6 +157,8 @@ router.post('/', authUser, create);
  *   get:
  *     summary: Get all prompt packs with filters
  *     tags: [PromptPacks]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: page
@@ -194,7 +196,7 @@ router.post('/', authUser, create);
  *       200:
  *         description: List of prompt packs
  */
-router.get('/', getAll);
+router.get('/', authUser, getAll);
 
 /**
  * @swagger
@@ -202,11 +204,13 @@ router.get('/', getAll);
  *   get:
  *     summary: Get prompt pack usage statistics
  *     tags: [PromptPacks]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Statistics fetched successfully
  */
-router.get('/statistics', getStatistics);
+router.get('/statistics', authUser, getStatistics);
 
 /**
  * @swagger
@@ -214,17 +218,23 @@ router.get('/statistics', getStatistics);
  *   get:
  *     summary: Get prompt pack by ID
  *     tags: [PromptPacks]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
+ *         description: ID of the prompt pack
  *     responses:
  *       200:
  *         description: Prompt pack details
+ *       404:
+ *         description: Prompt pack not found
  */
-router.get('/:id', getById);
+router.get('/:id', authUser, getById);
+
 
 /**
  * @swagger
@@ -335,29 +345,36 @@ router.delete('/:id', authUser, deletePromptPack);
 
 
 
-
 /**
  * @swagger
  * /api/prompt-packs/{id}/prompts/{promptId}:
  *   delete:
  *     summary: Remove a prompt from a prompt pack
  *     tags: [PromptPacks]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
+ *         description: ID of the prompt pack
  *       - in: path
  *         name: promptId
  *         required: true
  *         schema:
  *           type: string
+ *         description: ID of the prompt to remove
  *     responses:
  *       200:
  *         description: Prompt removed successfully
+ *       404:
+ *         description: Prompt pack or prompt not found
+ *       500:
+ *         description: Failed to remove prompt
  */
-router.delete('/:id/prompts/:promptId', removePrompt);
+router.delete('/:id/prompts/:promptId', authUser, removePrompt);
 
 /**
  * @swagger
@@ -365,6 +382,8 @@ router.delete('/:id/prompts/:promptId', removePrompt);
  *   put:
  *     summary: Increment usage count of a prompt pack
  *     tags: [PromptPacks]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -375,7 +394,7 @@ router.delete('/:id/prompts/:promptId', removePrompt);
  *       200:
  *         description: Usage count incremented
  */
-router.put('/:id/usage', incrementUsage);
+router.put('/:id/usage', authUser, incrementUsage);
 
 /**
  * @swagger
@@ -385,6 +404,8 @@ router.put('/:id/usage', incrementUsage);
  *     description: Update the content or type of a prompt inside a given prompt pack.
  *     tags:
  *       - PromptPacks
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: packId
@@ -436,7 +457,7 @@ router.put('/:id/usage', incrementUsage);
  *       500:
  *         description: Failed to update prompt
  */
-router.put("/:packId/prompts/:promptId", editPromptInPromptPack);
+router.put("/:packId/prompts/:promptId", authUser, editPromptInPromptPack);
 
 
 export default router;

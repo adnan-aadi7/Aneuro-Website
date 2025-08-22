@@ -7,7 +7,7 @@ import {
   getUniquePromptCategories,
   getUniqueFunnelCategories
 } from "../controller/categoryController.js";
-
+import { authUser } from "../middleware/userTracker.js";
 const router = express.Router();
 
 /**
@@ -23,6 +23,8 @@ const router = express.Router();
  *   post:
  *     summary: Create a new category
  *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -38,20 +40,12 @@ const router = express.Router();
  *     responses:
  *       201:
  *         description: Category created successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   $ref: '#/components/schemas/Category'
  *       400:
  *         description: Missing category name
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
  */
-router.post("/", createCategory);
+router.post("/", authUser, createCategory);
 
 /**
  * @swagger
@@ -59,6 +53,8 @@ router.post("/", createCategory);
  *   put:
  *     summary: Update an existing category
  *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -81,20 +77,12 @@ router.post("/", createCategory);
  *     responses:
  *       200:
  *         description: Category updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   $ref: '#/components/schemas/Category'
  *       404:
  *         description: Category not found
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
  */
-router.put("/:id", updateCategory);
+router.put("/:id", authUser, updateCategory);
 
 /**
  * @swagger
@@ -102,23 +90,15 @@ router.put("/:id", updateCategory);
  *   get:
  *     summary: Get all categories
  *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of categories
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Category'
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
  */
-router.get("/", getCategories);
+router.get("/", authUser, getCategories);
 
 /**
  * @swagger
@@ -126,44 +106,31 @@ router.get("/", getCategories);
  *   get:
  *     summary: Get all unique categories from EmailSequence
  *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of unique categories
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   example: ["Marketing", "Sales", "Education"]
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
  */
-router.get("/email-sequences", getUniqueEmailCategories);
+router.get("/email-sequences", authUser, getUniqueEmailCategories);
+
 /**
  * @swagger
  * /api/categories/prompts:
  *   get:
  *     summary: Get all unique categories from Prompts
  *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of unique categories
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   example: ["Marketing", "Sales", "Education"]
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
  */
-router.get("/prompts", getUniquePromptCategories);
+router.get("/prompts", authUser, getUniquePromptCategories);
 
 /**
  * @swagger
@@ -171,21 +138,14 @@ router.get("/prompts", getUniquePromptCategories);
  *   get:
  *     summary: Get all unique categories from Funnel Templates
  *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of unique categories
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   example: ["Marketing", "Sales", "Education"]
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
  */
-router.get("/funnel-templates", getUniquePromptCategories);
+router.get("/funnel-templates", authUser, getUniqueFunnelCategories);
 
 export default router;
