@@ -13,8 +13,8 @@ import GoogleCallback from "./auth/components/login/GoogleCallback";
 import FacebookCallback from "./auth/components/login/FacebookCallback";
 
 // guards
-import RequireAuth from "./auth/components/RequireAuth";
-import RequireRole from "./auth/components/RequireRole";
+import RequireAuth from "./components/auth/RequireAuth";
+import RequireRole from "./components/auth/RequireRole";
 
 // client
 import Dashboard from "./client/pages/dashboard/Dashboard";
