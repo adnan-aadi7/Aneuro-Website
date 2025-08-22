@@ -1,8 +1,7 @@
-//activity routes
-
+// activity routes
 import express from "express";
 import { getRecentActivities } from "../controller/activityController.js";
-
+import { authUser } from "../middleware/userTracker.js";
 
 const router = express.Router();
 
@@ -19,6 +18,8 @@ const router = express.Router();
  *   get:
  *     summary: Get recent activities from PromptPack, EmailSequence, and FunnelTemplate
  *     tags: [Activities]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Recent activities list
@@ -54,6 +55,6 @@ const router = express.Router();
  *       500:
  *         description: Server error
  */
-router.get("/recent", getRecentActivities);
+router.get("/recent", authUser, getRecentActivities);
 
 export default router;

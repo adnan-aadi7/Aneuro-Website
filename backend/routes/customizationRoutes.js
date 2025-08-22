@@ -1,6 +1,8 @@
 import express from 'express';
 import { createOrUpdateCustomization, getMyCustomization } from '../controller/customizationController.js';
 import upload from '../middleware/multer.js';
+import { authUser } from '../middleware/userTracker.js';
+
 const router = express.Router();
 
 /**
@@ -16,6 +18,8 @@ const router = express.Router();
  *   post:
  *     summary: Create or update customization for a user
  *     tags: [Customization]
+ *     security:
+ *       - bearerAuth: []
  *     consumes:
  *       - multipart/form-data
  *     requestBody:
@@ -58,7 +62,7 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
-router.post('/', upload.single('logo'), createOrUpdateCustomization);
+router.post('/', upload.single('logo'), authUser, createOrUpdateCustomization);
 
 /**
  * @swagger
@@ -66,6 +70,8 @@ router.post('/', upload.single('logo'), createOrUpdateCustomization);
  *   get:
  *     summary: Get customization for a specific user
  *     tags: [Customization]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: userId
@@ -90,6 +96,6 @@ router.post('/', upload.single('logo'), createOrUpdateCustomization);
  *       500:
  *         description: Server error
  */
-router.get('/:userId', getMyCustomization);
+router.get('/:userId', authUser, getMyCustomization);
 
 export default router;

@@ -147,13 +147,17 @@ router.post('/', authUser, createFunnelTemplate);
  *   get:
  *     summary: Get all funnel templates
  *     tags: [FunnelTemplates]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of funnel templates
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
  *       500:
  *         description: Server error
  */
-router.get('/', getAllFunnelTemplates);
+router.get('/', authUser, getAllFunnelTemplates);
 
 /**
  * @swagger
@@ -161,13 +165,17 @@ router.get('/', getAllFunnelTemplates);
  *   get:
  *     summary: Get funnel template statistics
  *     tags: [FunnelTemplates]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Statistics retrieved successfully
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
  *       500:
  *         description: Server error
  */
-router.get('/stats', getFunnelTemplateStats);
+router.get('/stats', authUser, getFunnelTemplateStats);
 
 /**
  * @swagger
@@ -175,6 +183,8 @@ router.get('/stats', getFunnelTemplateStats);
  *   get:
  *     summary: Get a funnel template by ID
  *     tags: [FunnelTemplates]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -185,10 +195,14 @@ router.get('/stats', getFunnelTemplateStats);
  *     responses:
  *       200:
  *         description: Funnel template found
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
  *       404:
  *         description: Template not found
+ *       500:
+ *         description: Server error
  */
-router.get('/:id', getFunnelTemplateById);
+router.get('/:id', authUser, getFunnelTemplateById);
 
 /**
  * @swagger
