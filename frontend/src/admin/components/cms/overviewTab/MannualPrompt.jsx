@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { Toaster, toast } from "react-hot-toast";
-import { Bold, Italic, Underline, Strikethrough, Link, Paperclip, Image, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, ListOrdered, X } from 'lucide-react';
+import { Bold, Italic, Underline, Strikethrough, Link, Paperclip, Image, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, ListOrdered, X, Plus, Trash2 } from 'lucide-react';
 import DiamondIcon from "../../../../../public/icons/diamond.png";
 import KingIcon from "../../../../../public/icons/king.png";
 import StarIcon from "../../../../../public/icons/star.png";
@@ -36,6 +36,12 @@ const MannualPrompt = () => {
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
   const [attachments, setAttachments] = useState([]); // {id, file?, url, isImage, name?}[]
+
+  // New state for multiple prompts
+  const [prompts, setPrompts] = useState([
+    { id: 1, brainType: "Architect", content: "", attachments: [] }
+  ]);
+  const [currentPromptIndex, setCurrentPromptIndex] = useState(0);
 
   const getTruncatedFileName = (fullName = '', maxLength = 24) => {
     const name = String(fullName);
@@ -141,6 +147,68 @@ const MannualPrompt = () => {
   const [brainType, setBrainType] = useState("Architect");
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+
+  // Add new prompt function
+  const addNewPrompt = () => {
+    const newId = Math.max(...prompts.map(p => p.id)) + 1;
+    const newPrompt = {
+      id: newId,
+      brainType: "Architect",
+      content: "",
+      attachments: []
+    };
+    setPrompts([...prompts, newPrompt]);
+    setCurrentPromptIndex(prompts.length); // Switch to the new prompt
+  };
+
+  // Remove prompt function
+  const removePrompt = (promptId) => {
+    if (prompts.length === 1) {
+      toast.error("At least one prompt is required");
+      return;
+    }
+    
+    const newPrompts = prompts.filter(p => p.id !== promptId);
+    setPrompts(newPrompts);
+    
+    // Adjust current index if needed
+    if (currentPromptIndex >= newPrompts.length) {
+      setCurrentPromptIndex(newPrompts.length - 1);
+    }
+  };
+
+  // Switch between prompts
+  const switchToPrompt = (index) => {
+    // Save current prompt content and attachments
+    if (editorRef.current) {
+      const currentContent = editorRef.current.innerHTML;
+      setPrompts(prev => prev.map((prompt, i) => 
+        i === currentPromptIndex 
+          ? { ...prompt, content: currentContent, attachments: [...attachments] }
+          : prompt
+      ));
+    }
+    
+    setCurrentPromptIndex(index);
+    
+    // Load the selected prompt content and attachments
+    const selectedPrompt = prompts[index];
+    if (editorRef.current) {
+      editorRef.current.innerHTML = selectedPrompt.content || "";
+    }
+    setAttachments(selectedPrompt.attachments || []);
+    setBrainType(selectedPrompt.brainType);
+  };
+
+  // Update current prompt's brain type
+  const updateCurrentPromptBrainType = (newBrainType) => {
+    setBrainType(newBrainType);
+    setPrompts(prev => prev.map((prompt, i) => 
+      i === currentPromptIndex 
+        ? { ...prompt, brainType: newBrainType }
+        : prompt
+    ));
+  };
 
   // Execute formatting commands
   const executeCommand = (command, value = null) => {
@@ -282,50 +350,19 @@ const MannualPrompt = () => {
     });
   };
 
-  // Get plain text content
-  const getPlainTextContent = () => {
-    return editorRef.current ? editorRef.current.textContent || '' : '';
-  };
 
-  // Get HTML content
-  const getHtmlContent = () => {
-    return editorRef.current ? editorRef.current.innerHTML || '' : '';
-  };
-
-  const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-
-  const buildPersistableHtml = async () => {
-    const rawHtml = getHtmlContent();
-    if (!rawHtml) return '';
-    const container = document.createElement('div');
-    container.innerHTML = rawHtml;
-    const nodes = Array.from(container.querySelectorAll('[data-attachment-id]'));
-    const tasks = nodes.map(async (node) => {
-      const id = node.getAttribute('data-attachment-id');
-      const att = attachments.find((a) => a.id === id);
-      if (!att) return;
-      if (att.isImage && att.file) {
-        try {
-          const dataUrl = await readFileAsDataUrl(att.file);
-          node.setAttribute('src', dataUrl);
-        } catch {
-          // ignore read error, keep current src
-        }
-      }
-    });
-    await Promise.all(tasks);
-    return container.innerHTML;
-  };
 
   // Handle content change
   const handleContentChange = () => {
-    // Content change is handled directly by the editor
-    // No need to store in state since we get content on demand
+    // Update current prompt content in prompts array
+    if (editorRef.current) {
+      const content = editorRef.current.innerHTML;
+      setPrompts(prev => prev.map((prompt, i) => 
+        i === currentPromptIndex 
+          ? { ...prompt, content }
+          : prompt
+      ));
+    }
   };
 
   // Handle selection change
@@ -369,48 +406,107 @@ const MannualPrompt = () => {
       setCategory(currentPack.category || "");
       const reverseTierMap = { starter: "basic", growth: "premium", enterprise: "enterprise" };
       setSelectedTier(reverseTierMap[currentPack.tier] || "");
-      const firstPrompt = Array.isArray(currentPack.prompts) && currentPack.prompts.length > 0
-        ? currentPack.prompts[0]
-        : null;
-      if (firstPrompt && editorRef.current) {
-        const { html, attachments: extracted } = transformContentForEditor(firstPrompt.content || "");
-        editorRef.current.innerHTML = html;
-        setAttachments(extracted);
-
-        const upgradeToBlob = async (item) => {
-          try {
-            const res = await fetch(item.url, { credentials: 'omit' });
-            if (!res.ok) return;
-            const blob = await res.blob();
-            const fileName = item.name || (item.url && item.url.split('/').pop()) || 'file';
-            const file = new File([blob], fileName, { type: blob.type || undefined });
-            const blobUrl = URL.createObjectURL(blob);
-            const node = editorRef.current?.querySelector(`[data-attachment-id="${item.id}"]`);
-            if (node && item.isImage) {
-              node.setAttribute('src', blobUrl);
-            }
-            setAttachments((prev) => prev.map((a) => (a.id === item.id ? { ...a, url: blobUrl, file } : a)));
-          } catch {
-            // leave original URL
+      
+      if (editingPromptId) {
+        // Editing single prompt
+        const targetPrompt = currentPack.prompts?.find((p) => p._id === editingPromptId);
+        if (targetPrompt && editorRef.current) {
+          const { html, attachments: extracted } = transformContentForEditor(targetPrompt.content || "");
+          editorRef.current.innerHTML = html;
+          setAttachments(extracted);
+          setBrainType(targetPrompt.type || "Architect");
+          
+          // Update prompts array with single prompt
+          setPrompts([{
+            id: 1,
+            brainType: targetPrompt.type || "Architect",
+            content: html,
+            attachments: extracted
+          }]);
+          setCurrentPromptIndex(0);
+        }
+      } else {
+        // Editing entire pack - load all prompts
+        const promptsArr = Array.isArray(currentPack.prompts) ? currentPack.prompts : [];
+        const transformedPrompts = promptsArr.map((prompt, index) => {
+          const { html, attachments: extracted } = transformContentForEditor(prompt.content || "");
+          return {
+            id: index + 1,
+            brainType: prompt.type || "Architect",
+            content: html,
+            attachments: extracted
+          };
+        });
+        
+        if (transformedPrompts.length > 0) {
+          setPrompts(transformedPrompts);
+          setCurrentPromptIndex(0);
+          
+          // Load first prompt
+          const firstPrompt = transformedPrompts[0];
+          if (editorRef.current) {
+            editorRef.current.innerHTML = firstPrompt.content || "";
           }
-        };
+          setAttachments(firstPrompt.attachments || []);
+          setBrainType(firstPrompt.brainType);
+        }
+      }
 
-        extracted.forEach((it) => {
+      // Upgrade remote URLs to Blob URLs for inline display
+      const upgradeToBlob = async (item) => {
+        try {
+          const res = await fetch(item.url, { credentials: 'omit' });
+          if (!res.ok) return;
+          const blob = await res.blob();
+          const fileName = item.name || (item.url && item.url.split('/').pop()) || 'file';
+          const file = new File([blob], fileName, { type: blob.type || undefined });
+          const blobUrl = URL.createObjectURL(blob);
+          const node = editorRef.current?.querySelector(`[data-attachment-id="${item.id}"]`);
+          if (node && item.isImage) {
+            node.setAttribute('src', blobUrl);
+          }
+          setAttachments((prev) => prev.map((a) => (a.id === item.id ? { ...a, url: blobUrl, file } : a)));
+        } catch {
+          // leave original URL
+        }
+      };
+
+      // Apply to all prompts
+      prompts.forEach((prompt) => {
+        prompt.attachments.forEach((it) => {
           if (it.isImage || (it.url || '').toLowerCase().endsWith('.pdf')) {
             upgradeToBlob(it);
           }
         });
-      }
+      });
     }
-  }, [editPackId, currentPack, transformContentForEditor]);
+  }, [editPackId, currentPack, transformContentForEditor, editingPromptId]);
 
   const handleSend = async () => {
-    const htmlContent = await buildPersistableHtml();
-    const plainTextContent = getPlainTextContent();
-    const hasAttachments = attachments.length > 0;
+    // Save current prompt content before submission
+    if (editorRef.current) {
+      const currentContent = editorRef.current.innerHTML;
+      setPrompts(prev => prev.map((prompt, i) => 
+        i === currentPromptIndex 
+          ? { ...prompt, content: currentContent, attachments: [...attachments] }
+          : prompt
+      ));
+    }
 
-    if (!plainTextContent.trim() && !hasAttachments) {
-      toast.error("Please add content or attach at least one file");
+    // Validate all prompts have content
+    const promptsWithContent = prompts.map((prompt, index) => {
+      if (index === currentPromptIndex) {
+        return { ...prompt, content: editorRef.current?.innerHTML || "", attachments: [...attachments] };
+      }
+      return prompt;
+    });
+
+    const hasValidContent = promptsWithContent.some(prompt => 
+      prompt.content.trim() || prompt.attachments.length > 0
+    );
+
+    if (!hasValidContent) {
+      toast.error("Please add content or attach at least one file to at least one prompt");
       return;
     }
 
@@ -429,20 +525,28 @@ const MannualPrompt = () => {
     const backendTier = tierMap[selectedTier] || 'starter';
 
     // Build prompts array per backend contract
-    const prompts = [
-      { content: htmlContent, type: brainType }
-    ];
+    const backendPrompts = promptsWithContent.map(prompt => ({
+      content: prompt.content,
+      type: prompt.brainType
+    }));
 
     const payload = {
       name: sequenceName?.trim() || `Manual Prompt - ${new Date().toLocaleString()}`,
       tier: backendTier,
       category,
-      prompts
+      prompts: backendPrompts
     };
 
     if (editPackId && editingPromptId) {
       // Update only specific prompt
-      dispatch(editPromptInPack({ packId: editPackId, promptId: editingPromptId, update: { content: htmlContent, type: brainType } }));
+      dispatch(editPromptInPack({ 
+        packId: editPackId, 
+        promptId: editingPromptId, 
+        update: { 
+          content: promptsWithContent[currentPromptIndex].content, 
+          type: promptsWithContent[currentPromptIndex].brainType 
+        } 
+      }));
     } else if (editPackId) {
       dispatch(updatePromptPack({ id: editPackId, updateData: payload }));
     } else {
@@ -515,7 +619,7 @@ const MannualPrompt = () => {
             placeholder="Input Field"
             value={sequenceName}
             onChange={(e) => setSequenceName(e.target.value)}
-            className="w-full px-4 py-3 rounded border border-gray-500  text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
+            className="w-full px-4 py-3  border border-gray-500  text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
           />
         </div>
         <div className="mb-2">
@@ -535,7 +639,7 @@ const MannualPrompt = () => {
             id="sequence-category"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full px-4 py-3 rounded border  border-gray-500 text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition bg-[#2A2A39]"
+            className="w-full px-4 py-3  border  border-gray-500 text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition bg-[#2A2A39]"
           >
             <option value="" disabled>
               {categoriesLoading ? 'Loading...' : 'Select a category'}
@@ -551,7 +655,7 @@ const MannualPrompt = () => {
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
                 placeholder="New category name"
-                className="flex-1 px-3 py-2 rounded border border-gray-500 bg-transparent text-gray-200 focus:outline-none focus:border-blue-500"
+                className="flex-1 px-3 py-2  border border-gray-500 bg-transparent text-gray-200 focus:outline-none focus:border-blue-500"
               />
               <button
                 type="button"
@@ -589,9 +693,9 @@ const MannualPrompt = () => {
           </label>
           <select
             id="brain-type"
-            className="w-full px-4 py-3 rounded border border-gray-500 bg-[#2A2A39] text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
+            className="w-full px-4 py-3  border border-gray-500 bg-[#2A2A39] text-gray-300 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
             value={brainType}
-            onChange={(e) => setBrainType(e.target.value)}
+            onChange={(e) => updateCurrentPromptBrainType(e.target.value)}
           >
             <option value="Architect">Architect</option>
             <option value="Challenger">Challenger</option>
@@ -603,7 +707,7 @@ const MannualPrompt = () => {
       </div>
       <div className="ml-6 mr-6 mt-3 w-[550px]">
         <div
-          className="relative p-6 rounded bg-[#2A2A39]"
+          className="relative p-6  bg-[#2A2A39]"
           style={{
             boxShadow:
               `inset 0 8px 50px -8px #12DCF040, inset 8px 0 24px -8px #12DCF040, inset -8px 0 24px -8px #12DCF040`,
@@ -615,7 +719,7 @@ const MannualPrompt = () => {
             <div className="flex items-center gap-3">
               <input
                 type="checkbox"
-                className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+                className="w-4 h-4  border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
                 checked={selectedTier === "basic"}
                 onChange={() => setSelectedTier(selectedTier === "basic" ? "" : "basic")}
               />
@@ -623,7 +727,7 @@ const MannualPrompt = () => {
               <div className="flex-1 ml-2">
                 <div className="flex items-center gap-2">
                   <span className="text-white text-sm">Basic</span>
-                  <span className="bg-[#2A3344] text-gray-200 text-xs px-2 py-0.5 rounded">1250 users</span>
+                  <span className="bg-[#2A3344] text-gray-200 text-xs px-2 py-0.5 ">1250 users</span>
                 </div>
                 <div className="text-gray-500 text-xs mt-1">Free tier users</div>
               </div>
@@ -633,7 +737,7 @@ const MannualPrompt = () => {
             <div className="flex items-center gap-3">
               <input
                 type="checkbox"
-                className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+                className="w-4 h-4  border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
                 checked={selectedTier === "premium"}
                 onChange={() => setSelectedTier(selectedTier === "premium" ? "" : "premium")}
               />
@@ -651,7 +755,7 @@ const MannualPrompt = () => {
             <div className="flex items-center gap-3">
               <input
                 type="checkbox"
-                className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+                className="w-4 h-4  border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
                 checked={selectedTier === "enterprise"}
                 onChange={() => setSelectedTier(selectedTier === "enterprise" ? "" : "enterprise")}
               />
@@ -667,9 +771,56 @@ const MannualPrompt = () => {
           </div>
         </div>
       </div>
+
+      {/* Prompt Tabs Section */}
+      <div className="ml-6 mr-6 mt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-white text-lg font-semibold">Prompt Pack</h3>
+          <button
+            type="button"
+            onClick={addNewPrompt}
+            className="flex items-center gap-2 px-4 py-2 bg-cyan-400 text-black text-sm font-medium  hover:bg-cyan-300 transition-colors"
+          >
+            <Plus size={16} />
+            Add Another Prompt
+          </button>
+        </div>
+        
+        {/* Prompt Tabs */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {prompts.map((prompt, index) => (
+            <div
+              key={prompt.id}
+              className={`flex items-center gap-2 px-4 py-2  cursor-pointer transition-all ${
+                currentPromptIndex === index
+                  ? 'bg-cyan-400 text-black'
+                  : 'bg-[#2A2A39] text-white border border-gray-600 hover:bg-gray-700'
+              }`}
+              onClick={() => switchToPrompt(index)}
+            >
+              <span className="text-sm font-medium">Prompt {index + 1}</span>
+              <span className="text-xs opacity-75">({prompt.brainType})</span>
+              {prompts.length > 1 && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removePrompt(prompt.id);
+                  }}
+                  className="ml-2 p-1  hover:bg-red-500 hover:text-white transition-colors"
+                  title="Remove prompt"
+                >
+                  <Trash2 size={12} />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="mb-4 mt-5">
         <div
-          className="relative p-8 ml-6 mr-6 mt-2 rounded bg-[#2A2A39]"
+          className="relative p-8 ml-6 mr-6 mt-2  bg-[#2A2A39]"
           style={{
             boxShadow: `inset 0 8px 50px -8px #12DCF040, inset 8px 0 24px -8px #12DCF040, inset -8px 0 24px -8px #12DCF040`,
           }}
@@ -678,7 +829,7 @@ const MannualPrompt = () => {
             className="text-white text-base font-semibold mb-2 block border-b py-10 px-4"
             style={{ borderBottomColor: "#D1D1D180" }}
           >
-            Write Your Prompt
+            Write Your Prompt {prompts.length > 1 ? `(${currentPromptIndex + 1} of ${prompts.length})` : ''}
           </label>
           
           {/* Rich Text Editor Toolbar */}
@@ -688,7 +839,7 @@ const MannualPrompt = () => {
               {formatButtons.map((button, index) => (
                 <button
                   key={index}
-                  className={`p-2 rounded transition-colors ${
+                  className={`p-2  transition-colors ${
                     activeFormatting[button.key]
                       ? 'bg-cyan-400 text-black'
                       : 'hover:bg-slate-700 text-slate-300 hover:text-white'
@@ -706,7 +857,7 @@ const MannualPrompt = () => {
               {alignButtons.map((button, index) => (
                 <button
                   key={index}
-                  className={`p-2 rounded transition-colors ${
+                  className={`p-2  transition-colors ${
                     activeFormatting[button.key]
                       ? 'bg-cyan-400 text-black'
                       : 'hover:bg-slate-700 text-slate-300 hover:text-white'
@@ -724,7 +875,7 @@ const MannualPrompt = () => {
               {listButtons.map((button, index) => (
                 <button
                   key={index}
-                  className={`p-2 rounded transition-colors ${
+                  className={`p-2  transition-colors ${
                     activeFormatting[button.key]
                       ? 'bg-cyan-400 text-black'
                       : 'hover:bg-slate-700 text-slate-300 hover:text-white'
@@ -740,7 +891,7 @@ const MannualPrompt = () => {
               
               {/* Link and Media */}
               <button
-                className="p-2 rounded hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+                className="p-2  hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
                 title="Insert Link"
                 onClick={handleLink}
               >
@@ -748,7 +899,7 @@ const MannualPrompt = () => {
               </button>
               
               <button
-                className="p-2 rounded hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+                className="p-2  hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
                 title="Attach File"
                 onClick={handleFileUpload}
               >
@@ -756,7 +907,7 @@ const MannualPrompt = () => {
               </button>
               
               <button
-                className="p-2 rounded hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+                className="p-2  hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
                 title="Insert Image"
                 onClick={handleImage}
               >
@@ -770,15 +921,15 @@ const MannualPrompt = () => {
               {attachments.map((item) => {
                 const { id, file, url, isImage } = item;
                 return (
-                  <div key={id} className="relative group border border-slate-600 rounded-md p-2 pr-8 bg-[#1f2937] flex items-center gap-2">
+                  <div key={id} className="relative group border border-slate-600 -md p-2 pr-8 bg-[#1f2937] flex items-center gap-2">
                     {isImage ? (
                       <img
                         src={url}
                         alt={item.name || file?.name || 'image'}
-                        className="w-12 h-12 object-cover rounded"
+                        className="w-12 h-12 object-cover "
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded bg-slate-700 flex items-center justify-center text-slate-300 text-xs">
+                      <div className="w-12 h-12  bg-slate-700 flex items-center justify-center text-slate-300 text-xs">
                         {(item.name || file?.name || 'FILE').split('.').pop()?.toUpperCase() || 'FILE'}
                       </div>
                     )}
@@ -821,7 +972,7 @@ const MannualPrompt = () => {
             }}
             onMouseUp={updateActiveFormatting}
             onKeyUp={updateActiveFormatting}
-            data-placeholder="Write your email content here..."
+            data-placeholder="Write your prompt content here..."
           />
           
           {/* Hidden file input */}
