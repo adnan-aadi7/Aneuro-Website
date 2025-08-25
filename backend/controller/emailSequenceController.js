@@ -150,6 +150,70 @@ res.status(201).json({
 }
 
 
+export const getGroupedEmailsByTier = async (req, res) => {
+  try {
+    const { tier, category } = req.query;
+
+    if (!tier) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Tier query parameter is required" });
+    }
+
+    // Build query dynamically (filter by tier and optional category)
+    const query = { tier };
+    if (category) {
+      query.category = category;
+    }
+
+    // Find sequences for that tier (and category if provided)
+    const sequences = await EmailSequence.find(query);
+
+    // Initialize grouped structure
+    const grouped = {
+      Architect: [],
+      Challenger: [],
+      Synthesizer: [],
+      Reflector: [],
+      Catalyst: [],
+    };
+
+    if (sequences && sequences.length > 0) {
+      // Go through each sequence and collect emails into the right array
+      sequences.forEach((seq) => {
+        if (seq.emails && seq.emails.length > 0) {
+          seq.emails.forEach((email) => {
+            if (grouped[email.type]) {
+              grouped[email.type].push({
+                ...email.toObject(),
+                sequenceName: seq.name,
+                category: seq.category,
+              });
+            }
+          });
+        }
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      tier,
+      category: category || "all",
+      message:
+        sequences.length === 0
+          ? "No email sequences found for this tier/category"
+          : "Emails fetched successfully",
+      data: grouped,
+    });
+  } catch (error) {
+    console.error("Error fetching grouped emails:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
 
 
 // GET ALL

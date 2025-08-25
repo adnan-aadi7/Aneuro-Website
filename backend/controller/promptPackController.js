@@ -264,6 +264,73 @@ export async function getById(req, res) {
   }
 }
 
+export const getGroupedPromptsByTier = async (req, res) => {
+  try {
+    const { tier, category } = req.query;
+
+    if (!tier) {
+      return res.status(400).json({
+        success: false,
+        message: "Tier query parameter is required",
+      });
+    }
+
+    // Build filter object
+    const filter = { tier };
+    if (category) {
+      filter.category = category;
+    }
+
+    // Find prompt packs
+    const promptPacks = await PromptPack.find(filter);
+
+    // Initialize grouped structure
+    const grouped = {
+      Architect: [],
+      Challenger: [],
+      Synthesizer: [],
+      Reflector: [],
+      Catalyst: [],
+    };
+
+    if (promptPacks && promptPacks.length > 0) {
+      promptPacks.forEach((pack) => {
+        if (pack.prompts && pack.prompts.length > 0) {
+          pack.prompts.forEach((prompt) => {
+            if (grouped[prompt.type]) {
+              grouped[prompt.type].push({
+                content: prompt.content,
+                type: prompt.type,
+                packName: pack.name,
+                category: pack.category,
+              });
+            }
+          });
+        }
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      tier,
+      category: category || null,
+      message:
+        promptPacks.length === 0
+          ? "No prompt packs found for this filter"
+          : "Prompts fetched successfully",
+      data: grouped,
+    });
+  } catch (error) {
+    console.error("Error fetching grouped prompts:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
+
 // UPDATE - Update prompt pack
 export async function update(req, res) {
   let updatedPromptPack = null; 
