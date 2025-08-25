@@ -306,6 +306,108 @@ export const getAudienceSessions = async (req, res) => {
   }
 };
 
+export const getAudienceQuizReport = async (req, res) => {
+  try {
+    const { user_id, audience_id } = req.query;
+
+    if (!user_id || !audience_id) {
+      return res.status(400).json({
+        success: false,
+        message: "user_id and audience_id query parameters are required",
+      });
+    }
+
+    // audience_id corresponds to the session _id
+    const sessions = await QuizSession.find({
+      user_id,
+      _id: audience_id,
+      is_subscriber_quiz: { $ne: true },
+    });
+
+    if (!sessions || sessions.length === 0) {
+      return res.status(200).json({
+        success: true,
+        user_id,
+        audience_id,
+        report: { total_answers: 0, brain_types: {} },
+        sessions: [],
+        message: "No quiz sessions found yet",
+      });
+    }
+
+    // Collect reminders
+    const sessionIds = sessions.map((s) => s._id);
+    const reminders = await Reminder.find({
+      quizSessionId: { $in: sessionIds },
+    });
+
+    // Aggregate brain type scores
+    let brainTypeScores = {};
+    let totalAnswers = 0;
+
+    sessions.forEach((session) => {
+      if (session.answers && session.answers.length > 0) {
+        session.answers.forEach((answer) => {
+          const { mapped_brain_type } = answer;
+          if (mapped_brain_type) {
+            brainTypeScores[mapped_brain_type] =
+              (brainTypeScores[mapped_brain_type] || 0) + 1;
+            totalAnswers++;
+          }
+        });
+      }
+    });
+
+    // Ensure all 4 brain types exist
+    const allBrainTypes = ["Architect", "Reflector", "Catalyst", "Synthesizer"];
+    allBrainTypes.forEach((type) => {
+      if (!brainTypeScores[type]) {
+        brainTypeScores[type] = 0;
+      }
+    });
+
+    // Convert to percentages
+    let brainTypePercentages = {};
+    if (totalAnswers > 0) {
+      allBrainTypes.forEach((type) => {
+        brainTypePercentages[type] = parseFloat(
+          ((brainTypeScores[type] / totalAnswers) * 100).toFixed(2)
+        );
+      });
+    } else {
+      allBrainTypes.forEach((type) => {
+        brainTypePercentages[type] = 0;
+      });
+    }
+
+    const sessionsWithData = sessions.map((session) => {
+      const sessionObj = session.toObject();
+      sessionObj.questions_completed = session.answers?.length || 0;
+      sessionObj.reminders = reminders.filter(
+        (r) => r.quizSessionId.toString() === session._id.toString()
+      );
+      return sessionObj;
+    });
+
+    return res.status(200).json({
+      success: true,
+      user_id,
+      audience_id,
+      report: {
+        total_answers: totalAnswers,
+        brain_types: brainTypePercentages,
+      },
+      sessions: sessionsWithData,
+    });
+  } catch (error) {
+    console.error("Error fetching audience quiz report:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 
 export const sendIncompleteQuizNotifications = async (req, res) => {
   try {
