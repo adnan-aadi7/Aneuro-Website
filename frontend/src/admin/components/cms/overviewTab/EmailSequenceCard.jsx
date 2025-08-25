@@ -4,6 +4,7 @@ import { Upload, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { createEmailSequence, fetchEmailCategories, createCategory as createEmailCategory, selectEmailSequenceLoading, selectEmailSequenceError, selectEmailSequenceSuccess, clearError, clearSuccess } from "../../../../store/Slice/EmailSequenceSLice";
+import { getAllUsers } from "../../../../store/Slice/UserSlice";
 import { Toaster, toast } from "react-hot-toast";
 import DiamondIcon from "../../../../../public/icons/diamond.png";
 import KingIcon from "../../../../../public/icons/king.png";
@@ -29,6 +30,10 @@ export default function EmailSequenceCard() {
   // Categories from store
   const categories = useSelector((state) => state.emailSequence.categories || []);
   const categoriesLoading = useSelector((state) => state.emailSequence.categoriesLoading);
+
+  // Users data for tier counts
+  const users = useSelector((state) => state.user.users || []);
+  const usersLoading = useSelector((state) => state.user.usersLoading);
 
   const isAllowedFile = (file) => {
     const name = file?.name?.toLowerCase() || "";
@@ -60,6 +65,40 @@ export default function EmailSequenceCard() {
   useEffect(() => {
     dispatch(fetchEmailCategories());
   }, [dispatch]);
+
+  // Load users for tier counts
+  useEffect(() => {
+    dispatch(getAllUsers({ page: 1, limit: 1000 })); // Get all users for accurate counts
+  }, [dispatch]);
+  console.log("users tiers counts",users);
+
+  // Calculate tier user counts
+  const getTierUserCounts = () => {
+    if (usersLoading || !users.length) return { basic: 0, premium: 0, enterprise: 0 };
+    
+    const counts = { basic: 0, premium: 0, enterprise: 0 };
+    
+    users.forEach(user => {
+      if (user.userType === 'admin') return; // Skip admin users
+      
+      const plan = user.subscription?.plan?.toLowerCase();
+      const hasSubscription = user.subscription && user.subscription.status === 'active';
+      
+      // Only count users with active subscriptions
+      if (hasSubscription) {
+        if (plan === 'growth') {
+          counts.premium++;
+        } else if (plan === 'enterprise') {
+          counts.enterprise++;
+        } else if (plan === 'starter') {
+          counts.basic++;
+        }
+      }
+      // Users without subscription or inactive subscription are NOT counted
+    });
+    
+    return counts;
+  };
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -348,7 +387,7 @@ export default function EmailSequenceCard() {
               <div className="flex items-center gap-2">
                 <span className="text-white text-sm">Basic</span>
                 <span className="bg-[#2A3344] text-gray-200 text-xs px-2 py-0.5 rounded">
-                  1250 users
+                  {getTierUserCounts().basic} users
                 </span>
               </div>
               <div className="text-gray-500 text-xs mt-1">Free tier users</div>
@@ -372,7 +411,9 @@ export default function EmailSequenceCard() {
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-white text-sm">Premium</span>
-                <span className="text-gray-400 text-sm">330 users</span>
+                <span className="bg-[#2A3344] text-gray-200 text-xs px-2 py-0.5 rounded">
+                  {getTierUserCounts().premium} users
+                </span>
               </div>
               <div className="text-gray-400 text-xs mt-1">Paid subscribers</div>
             </div>
@@ -395,7 +436,9 @@ export default function EmailSequenceCard() {
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-white text-sm">VIP</span>
-                <span className="text-gray-400 text-sm">45 users</span>
+                <span className="bg-[#2A3344] text-gray-200 text-xs px-2 py-0.5 rounded">
+                  {getTierUserCounts().enterprise} users
+                </span>
               </div>
               <div className="text-gray-400 text-xs mt-1">Exclusive access</div>
             </div>

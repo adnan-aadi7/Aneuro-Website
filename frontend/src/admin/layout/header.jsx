@@ -114,12 +114,12 @@ const Header = ({ onHamburgerClick }) => {
         </button>
 
         {/* Add Admin Button */}
-        <button 
+        {/* <button 
           className="px-2 py-2 lg:px-4 lg:py-3 hover:bg-gray-700 text-white text-xs lg:text-sm font-medium border border-gray-400 transition-colors cursor-pointer"
           onClick={() => navigate("/admin/settings/add-admin")}
         >
           Add Admin
-        </button>
+        </button> */}
       </div>
     </header>
   );
