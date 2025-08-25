@@ -1,5 +1,5 @@
 import express from 'express';
-import { saveAnswer, getProgress, createAudience, getAudienceSessions,sendIncompleteQuizNotifications, getQuizAnalytics, getAudienceBrainTypeAnalyticsByUser, getUserWeeklyBrainTypeStats } from '../controller/quizController.js';
+import { saveAnswer, getProgress, createAudience, getAudienceSessions,sendIncompleteQuizNotifications, getQuizAnalytics, getAudienceBrainTypeAnalyticsByUser, getUserWeeklyBrainTypeStats, getAudienceQuizReport } from '../controller/quizController.js';
 
 const router = express.Router();
 
@@ -169,7 +169,77 @@ router.post('/start', createAudience);
  */
 
 router.get('/sessions', getAudienceSessions);
-
+/**
+ * @swagger
+ * /api/quiz/quiz-report:
+ *   get:
+ *     summary: Get a specific audience's quiz report with brain type percentages and reminders
+ *     tags: [Audience Quiz]
+ *     parameters:
+ *       - in: query
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the user
+ *       - in: query
+ *         name: audience_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the audience
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved audience quiz report
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               user_id: "123"
+ *               audience_id: "456"
+ *               report:
+ *                 total_answers: 40
+ *                 brain_types:
+ *                   Architect: "35.00"
+ *                   Challenger: "25.00"
+ *                   Synthesizer: "20.00"
+ *                   Reflector: "10.00"
+ *                   Catalyst: "10.00"
+ *               sessions:
+ *                 - _id: "64f8a1c2e21..."
+ *                   user_id: "123"
+ *                   audience_id: "456"
+ *                   is_completed: true
+ *                   answers: [...]
+ *                   questions_completed: 10
+ *                   reminders:
+ *                     - _id: "6501b2f3f9..."
+ *                       quizSessionId: "64f8a1c2e21..."
+ *                       message: "Don’t forget to review your results"
+ *                       date: "2023-09-25T12:00:00Z"
+ *       400:
+ *         description: Missing required parameters
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: false
+ *               message: "user_id and audience_id query parameters are required"
+ *       404:
+ *         description: No quiz sessions found for the given user and audience
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: false
+ *               message: "No completed quiz sessions found for this audience/user"
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: false
+ *               message: "Internal server error"
+ */
+router.get("/quiz-report", getAudienceQuizReport);
 
 /**
  * @swagger
