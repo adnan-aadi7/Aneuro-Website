@@ -1,12 +1,12 @@
 import mongoose from 'mongoose';
 
-// Sub-schema for each email in the sequence
 const EmailSchema = new mongoose.Schema({
   content: { type: String },
   type: {
     type: String,
     enum: ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst'],
   },
+    totalOpens: { type: Number, default: 0 },
 });
 
 const EmailSequenceSchema = new mongoose.Schema(

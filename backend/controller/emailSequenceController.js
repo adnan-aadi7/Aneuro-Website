@@ -433,16 +433,24 @@ export async function deleteSequence(req, res) {
 
 export async function getStats(req, res) {
   try {
+    // Aggregate main stats
     const mainStats = await EmailSequence.aggregate([
+      { $unwind: { path: "$emails", preserveNullAndEmptyArrays: true } }, // expand emails array
       {
         $group: {
           _id: null,
-          totalSequences: { $sum: 1 },
-          totalEmails: { $sum: "$emailCount" },
-          totalOpens: { $sum: "$opens" },
-          totalClicks: { $sum: "$clicks" },
+          totalSequences: { $addToSet: "$_id" }, // collect unique sequence IDs
+          totalEmails: { $sum: 1 }, // count emails
+          totalOpens: { $sum: "$emails.totalOpens" }, // sum opens per email
           totalUsage: { $sum: "$usage.count" },
-          averageRating: { $avg: "$rating" }
+        }
+      },
+      {
+        $project: {
+          totalSequences: { $size: "$totalSequences" }, // convert set size
+          totalEmails: 1,
+          totalOpens: 1,
+          totalUsage: 1
         }
       }
     ]);
@@ -450,11 +458,10 @@ export async function getStats(req, res) {
     const totalActive = await EmailSequence.countDocuments({ status: "active" });
     const totalScheduled = await EmailSequence.countDocuments({ status: "scheduled" });
 
-    // 🔹 Count by tier/category
     const categoryStats = await EmailSequence.aggregate([
       {
         $group: {
-          _id: "$tier", // Group by category (tier)
+          _id: "$tier",
           count: { $sum: 1 }
         }
       }
@@ -466,11 +473,9 @@ export async function getStats(req, res) {
         totalSequences: mainStats[0]?.totalSequences || 0,
         totalEmails: mainStats[0]?.totalEmails || 0,
         totalOpens: mainStats[0]?.totalOpens || 0,
-        totalClicks: mainStats[0]?.totalClicks || 0,
         totalUsage: mainStats[0]?.totalUsage || 0,
         totalActive,
         totalScheduled,
-        averageRating: mainStats[0]?.averageRating || 0,
         categoryCounts: categoryStats.reduce((acc, item) => {
           acc[item._id] = item.count;
           return acc;
@@ -486,6 +491,40 @@ export async function getStats(req, res) {
   }
 }
 
+
+export const trackEmailOpen = async (req, res) => {
+  try {
+    const { emailId } = req.params;
+
+    // Find the sequence that contains this email
+    const sequence = await EmailSequence.findOne({ "emails._id": emailId });
+    if (!sequence) return res.status(404).send("Email not found in any sequence");
+
+    const email = sequence.emails.id(emailId);
+    if (!email) return res.status(404).send("Email not found");
+
+    // Increment opens
+    email.totalOpens = (email.totalOpens || 0) + 1;
+    await sequence.save();
+
+    // Return 1x1 transparent gif pixel
+    const pixel = Buffer.from(
+      "R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",
+      "base64"
+    );
+    res.writeHead(200, {
+      "Content-Type": "image/gif",
+      "Content-Length": pixel.length,
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      "Pragma": "no-cache",
+      "Expires": "0",
+    });
+    res.end(pixel, "binary");
+  } catch (error) {
+    console.error("Error tracking email open:", error);
+    res.status(500).send("Error tracking open");
+  }
+};
 
 export const editEmailInSequence = async (req, res) => {
   try {
