@@ -17,6 +17,16 @@ export default function Header({ filters, onChangeFilters }) {
   const dropdownRef = useRef(null);
   const dateRef = useRef(null);
 
+  // Default to showing completed quizzes on initial load
+  useEffect(() => {
+    if (filters.isCompleted == null) {
+      onChangeFilters({ isCompleted: true });
+      setCategories({ completion: true, incompletion: false });
+    }
+    // run only once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // keep local checkboxes in sync when parent isCompleted changes
   useEffect(() => {
     setCategories({

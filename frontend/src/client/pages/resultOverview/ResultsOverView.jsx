@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Header from "../../components/analyticsOverview/individualQuizSubmissions/Header";
 import Table from "../../components/analyticsOverview/individualQuizSubmissions/Table";
+import IncompleteTable from "../../components/analyticsOverview/IncompleteQuiz/Table";
 import axios from "../../../store/axiosInstance"; // <-- adjust path if needed
 
 // Helper to pull the logged-in user id from localStorage
@@ -9,7 +10,9 @@ function getUserId() {
     const u = JSON.parse(localStorage.getItem("user") || "null");
     if (u?.id) return u.id;        // our normalized id (preferred)
     if (u?._id) return u._id;      // sometimes only _id exists
-  } catch {}
+  } catch (err) {
+    // ignore parse error and fallback to legacy key
+  }
   const legacy = localStorage.getItem("userId");
   return legacy || null;
 }
@@ -45,6 +48,7 @@ export default function ResultsOverView() {
           params.is_completed = filters.isCompleted; // omit when ALL
         }
         const res = await axios.get("/quiz/sessions", { params });
+        console.log(res?.data?.data);
         setRows(Array.isArray(res?.data?.data) ? res.data.data : []);
       } catch (e) {
         setError(
@@ -71,12 +75,20 @@ export default function ResultsOverView() {
         filters={filters}
         onChangeFilters={updateFilters}
       />
-      <Table
-        rows={rows}
-        loading={loading}
-        error={error}
-        filters={filters}
-      />
+      {filters.isCompleted === false ? (
+        <IncompleteTable
+          rows={rows}
+          loading={loading}
+          error={error}
+        />
+      ) : (
+        <Table
+          rows={rows}
+          loading={loading}
+          error={error}
+          filters={filters}
+        />
+      )}
     </>
   );
 }
