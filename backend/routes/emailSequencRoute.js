@@ -9,7 +9,8 @@ import {
   deleteSequence,
   getStats,
   editEmailInSequence,
-  deleteEmailInSequence
+  deleteEmailInSequence,
+  getGroupedEmailsByTier
 } from '../controller/emailSequenceController.js';
 import upload from '../middleware/multer.js';
 import { authUser } from "../middleware/userTracker.js";
@@ -106,6 +107,40 @@ const router = express.Router();
  */
 
 router.post("/", authUser, upload.single("file"), create);
+
+/**
+ * @swagger
+ * /api/email-sequences/grouped:
+ *   get:
+ *     summary: Get grouped emails by tier and optional category
+ *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []   # 🔒 Requires JWT token
+ *     parameters:
+ *       - in: query
+ *         name: tier
+ *         schema:
+ *           type: string
+ *           enum: [starter, growth, enterprise]
+ *         required: true
+ *         description: Tier filter
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: (Optional) Filter by category within the given tier
+ *     responses:
+ *       200:
+ *         description: Emails grouped by brain type for the given tier (and category if provided)
+ *       400:
+ *         description: Missing or invalid parameters
+ *       404:
+ *         description: No email sequences found
+ *       500:
+ *         description: Server error
+ */
+router.get("/grouped", authUser, getGroupedEmailsByTier);
 
 
 /**

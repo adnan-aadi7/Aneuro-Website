@@ -10,7 +10,8 @@ import {
   incrementUsage,
   getStatistics,
   uploadPromptPack,
-  editPromptInPromptPack
+  editPromptInPromptPack,
+  getGroupedPromptsByTier
 } from '../controller/promptPackController.js';
 import upload from '../middleware/multer.js';
 import { authUser } from "../middleware/userTracker.js";
@@ -150,6 +151,42 @@ router.post('/upload', authUser, upload.single('file'), uploadPromptPack);
  *         description: Unauthorized (user must be authenticated)
  */
 router.post('/', authUser, create);
+
+
+/**
+ * @swagger
+ * /api/prompt-packs/grouped:
+ *   get:
+ *     summary: Get grouped prompts by tier and optional category
+ *     tags: [PromptPacks]
+ *     security:
+ *       - bearerAuth: []   
+ *     parameters:
+ *       - in: query
+ *         name: tier
+ *         schema:
+ *           type: string
+ *           enum: [starter, growth, enterprise]
+ *         required: true
+ *         description: Tier filter
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: (Optional) Filter by category within the given tier
+ *     responses:
+ *       200:
+ *         description: Prompts grouped by brain type for the given tier (and category if provided)
+ *       400:
+ *         description: Missing or invalid parameters
+ *       404:
+ *         description: No prompt packs found
+ *       500:
+ *         description: Server error
+ */
+router.get("/grouped", authUser, getGroupedPromptsByTier);
+
 
 /**
  * @swagger
