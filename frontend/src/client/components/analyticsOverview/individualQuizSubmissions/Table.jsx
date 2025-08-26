@@ -51,8 +51,8 @@ export default function Table({ rows, loading, error, filters }) {
     });
   }, [rows, filters]);
 
-  const handlePreviewClick = (userId) => {
-    navigate(`/quiz-details/${userId}`);
+  const handlePreviewClick = (userId, audienceId) => {
+    navigate(`/quiz-details/${userId}/${audienceId}`);
   };
 
   const sendReminder = async (row) => {
@@ -182,7 +182,7 @@ export default function Table({ rows, loading, error, filters }) {
                     {isCompleted ? (
                       <button
                         className="bg-green-200 text-green-900 px-4 py-1 rounded-full text-xs font-semibold hover:bg-green-300"
-                        onClick={() => handlePreviewClick(user.user_id)}
+                        onClick={() => handlePreviewClick(user.user_id, user._id)}
                       >
                         View
                       </button>

@@ -130,7 +130,7 @@ function App() {
             }
           />
           <Route
-            path="/quiz-details/:id"
+            path="/quiz-details/:userId/:audienceId"
             element={
               <ClientLayout>
                 <QuizDetials />

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   BarChart,
   Bar,
@@ -9,28 +9,38 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const data = [
-  { name: "Reflector", value: 60, color: "#2DE1C2" },
-  { name: "Architect", value: 30, color: "#A78BFA" },
-  { name: "Catalyst", value: 50, color: "#22D3EE" },
-  { name: "Synthesizer", value: 10, color: "#F59E42" },
-];
+const COLOR_MAP = {
+  Architect: "#A78BFA",
+  Catalyst: "#22D3EE",
+  Reflector: "#2DE1C2",
+  Synthesizer: "#F59E42",
+};
 
-const legend = [
-  { label: "Architect", color: "#A78BFA" },
-  { label: "Catalyst", color: "#22D3EE" },
-  { label: "Reflector", color: "#2DE1C2" },
-  { label: "Synthesizer", color: "#F59E42" },
-];
+const DetailsChart = ({ chartData }) => {
+  const data = useMemo(() => {
+    const types = ["Architect", "Catalyst", "Reflector", "Synthesizer"];
+    return types.map((t) => ({ name: t, value: chartData?.[t] ?? 0, color: COLOR_MAP[t] }));
+  }, [chartData]);
 
-const tableRows = [
-  { type: "Catalyst", percent: 30 },
-  { type: "Synthesizer", percent: 10 },
-  { type: "Reflector", percent: 40 },
-  { type: "Architect", percent: 20 },
-];
+  const tableRows = useMemo(() => {
+    return [
+      { type: "Catalyst", percent: chartData?.Catalyst ?? 0 },
+      { type: "Synthesizer", percent: chartData?.Synthesizer ?? 0 },
+      { type: "Reflector", percent: chartData?.Reflector ?? 0 },
+      { type: "Architect", percent: chartData?.Architect ?? 0 },
+    ];
+  }, [chartData]);
 
-const DetailsChart = () => (
+  const legend = useMemo(() => {
+    return [
+      { label: "Architect", color: COLOR_MAP.Architect },
+      { label: "Catalyst", color: COLOR_MAP.Catalyst },
+      { label: "Reflector", color: COLOR_MAP.Reflector },
+      { label: "Synthesizer", color: COLOR_MAP.Synthesizer },
+    ];
+  }, []);
+
+  return (
   <div className="flex flex-col md:flex-row gap-8 w-full mt-15 bg-[#2A2A39] lg:p-8 p-2">
     {/* Left: Legend and Table */}
     <div className="flex-1 min-w-[0] md:min-w-[320px] md:max-w-lg w-full">
@@ -107,6 +117,7 @@ const DetailsChart = () => (
       </ResponsiveContainer>
     </div>
   </div>
-);
+  );
+};
 
 export default DetailsChart;

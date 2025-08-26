@@ -10,7 +10,7 @@ function getUserId() {
     const u = JSON.parse(localStorage.getItem("user") || "null");
     if (u?.id) return u.id;        // our normalized id (preferred)
     if (u?._id) return u._id;      // sometimes only _id exists
-  } catch (err) {
+  } catch {
     // ignore parse error and fallback to legacy key
   }
   const legacy = localStorage.getItem("userId");
