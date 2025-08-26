@@ -14,11 +14,12 @@ const COLOR_MAP = {
   Catalyst: "#22D3EE",
   Reflector: "#2DE1C2",
   Synthesizer: "#F59E42",
+  Challenger: "#F43F5E",
 };
 
 const DetailsChart = ({ chartData }) => {
   const data = useMemo(() => {
-    const types = ["Architect", "Catalyst", "Reflector", "Synthesizer"];
+    const types = ["Architect", "Catalyst", "Reflector", "Synthesizer", "Challenger"];
     return types.map((t) => ({ name: t, value: chartData?.[t] ?? 0, color: COLOR_MAP[t] }));
   }, [chartData]);
 
@@ -28,6 +29,7 @@ const DetailsChart = ({ chartData }) => {
       { type: "Synthesizer", percent: chartData?.Synthesizer ?? 0 },
       { type: "Reflector", percent: chartData?.Reflector ?? 0 },
       { type: "Architect", percent: chartData?.Architect ?? 0 },
+      { type: "Challenger", percent: chartData?.Challenger ?? 0 },
     ];
   }, [chartData]);
 
@@ -37,6 +39,7 @@ const DetailsChart = ({ chartData }) => {
       { label: "Catalyst", color: COLOR_MAP.Catalyst },
       { label: "Reflector", color: COLOR_MAP.Reflector },
       { label: "Synthesizer", color: COLOR_MAP.Synthesizer },
+      { label: "Challenger", color: COLOR_MAP.Challenger },
     ];
   }, []);
 
@@ -104,8 +107,8 @@ const DetailsChart = ({ chartData }) => {
             tick={{ fill: "#fff", fontSize: 16, fontWeight: 500 }}
             axisLine={false}
             tickLine={false}
-            domain={[0, 60]}
-            ticks={[0, 10, 20, 30, 40, 50, 60]}
+            domain={[0, 100]}
+            ticks={[0, 20, 40, 60, 80, 100]}
             tickFormatter={(v) => `${v}%`}
           />
           <Bar dataKey="value" barSize={60} isAnimationActive={false}>
