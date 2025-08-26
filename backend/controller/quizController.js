@@ -358,8 +358,8 @@ export const getAudienceQuizReport = async (req, res) => {
       }
     });
 
-    // Ensure all 4 brain types exist
-    const allBrainTypes = ["Architect", "Reflector", "Catalyst", "Synthesizer"];
+    // Ensure all 5 brain types exist
+    const allBrainTypes = ["Architect", "Reflector", "Catalyst", "Synthesizer", "Challenger"];
     allBrainTypes.forEach((type) => {
       if (!brainTypeScores[type]) {
         brainTypeScores[type] = 0;

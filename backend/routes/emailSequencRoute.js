@@ -10,7 +10,8 @@ import {
   getStats,
   editEmailInSequence,
   deleteEmailInSequence,
-  getGroupedEmailsByTier
+  getGroupedEmailsByTier,
+  trackEmailOpen
 } from '../controller/emailSequenceController.js';
 import upload from '../middleware/multer.js';
 import { authUser } from "../middleware/userTracker.js";
@@ -208,6 +209,41 @@ router.get('/', authUser, getAll);
  *         description: Server error
  */
 router.get('/stats', authUser, getStats);
+
+/**
+ * @swagger
+ * /api/email-sequences/{emailId}/open:
+ *   get:
+ *     summary: Track email open via tracking pixel
+ *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: emailId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID of the email to track
+ *     responses:
+ *       200:
+ *         description: 1x1 transparent tracking pixel
+ *         content:
+ *           image/gif:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       401:
+ *         description: Unauthorized (no token)
+ *       403:
+ *         description: Forbidden (invalid token)
+ *       404:
+ *         description: Email not found
+ *       500:
+ *         description: Server error
+ */
+
+router.get("/:emailId/open", trackEmailOpen);
 
 /**
  * @swagger
