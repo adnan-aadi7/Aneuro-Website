@@ -13,8 +13,9 @@ import GoogleCallback from "./auth/components/login/GoogleCallback";
 import FacebookCallback from "./auth/components/login/FacebookCallback";
 
 // guards
-import RequireAuth from "./auth/RequireAuth";
+import RequireAuth from "./auth/components/RequireAuth";
 import RequireRole from "./auth/components/RequireRole";
+
 // client
 import Dashboard from "./client/pages/dashboard/Dashboard";
 import Subcription from "./auth/pages/choosingPlan/Subcription";
@@ -129,7 +130,7 @@ function App() {
             }
           />
           <Route
-            path="/quiz-details"
+            path="/quiz-details/:id"
             element={
               <ClientLayout>
                 <QuizDetials />
