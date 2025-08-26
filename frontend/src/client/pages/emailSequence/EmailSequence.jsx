@@ -2,34 +2,34 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Header from "../../components/emailSequences/Header";
 import AnalyticalBrainEmail from "../../components/emailSequences/AnalyticalBrainEmail";
-import CategoryFilter from "../../components/emailSequences/CategoryFilter";
 import {
-  fetchEmailSequences,
-  selectEmailSequences,
+  // fetchEmailSequences,
+  // selectEmailSequences,
   selectEmailSequenceLoading,
+  selectEmailSequenceStats,
+  fetchGroupedEmailsByTier,
 } from "../../../store/Slice/EmailSequenceSLice";
 
 export default function EmailSequencePage() {
   const dispatch = useDispatch();
-  const sequences = useSelector(selectEmailSequences);
+  const { grouped = {} } = useSelector(selectEmailSequenceStats);
   const loading = useSelector(selectEmailSequenceLoading);
 
   const [activeTab, setActiveTab] = useState("Architect");
   const [category, setCategory] = useState("");
 
-  // fetch on mount + whenever tab/category changes (server-side filters if supported)
+  // Fetch grouped emails when tab/category changes (or on mount)
   useEffect(() => {
-    dispatch(fetchEmailSequences({ brainType: activeTab, category }));
+    const tier = "starter"; // default tier for client view
+    dispatch(fetchGroupedEmailsByTier({ tier, category }));
   }, [dispatch, activeTab, category]);
 
-  // If backend doesn't filter by brainType/category, keep this as a safety net
+  // Compute sequences for the active brain type with optional category filter
   const filtered = useMemo(() => {
-    return (sequences || []).filter((s) => {
-      const okBrain = activeTab ? s.brainType === activeTab : true;
-      const okCat = category ? (s.category || "").toLowerCase() === category.toLowerCase() : true;
-      return okBrain && okCat;
-    });
-  }, [sequences, activeTab, category]);
+    const list = grouped?.[activeTab] || [];
+    if (!category) return list;
+    return list.filter((s) => (s.category || "").toLowerCase() === category.toLowerCase());
+  }, [grouped, activeTab, category]);
 
   return (
     <>

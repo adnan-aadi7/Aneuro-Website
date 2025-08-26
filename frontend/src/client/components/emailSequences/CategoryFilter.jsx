@@ -8,11 +8,22 @@ export default function CategoryFilter({ value, onChange }) {
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await axios.get("/categories/email-sequences");
-        setCategories(data?.data ?? []);
+        // Fetch categories from grouped endpoint by aggregating categories across grouped emails
+        // Requires a tier; default to 'starter' if none is chosen elsewhere
+        const tier = 'starter';
+        const { data } = await axios.get(`/email-sequences/grouped?tier=${encodeURIComponent(tier)}`);
+        const grouped = data?.data || {};
+        console.log("grouped", grouped);
+        // Derive unique categories from grouped arrays (each item contains category)
+        const unique = new Set();
+        Object.values(grouped).forEach((arr) => {
+          (arr || []).forEach((item) => {
+            if (item?.category) unique.add(item.category);
+          });
+        });
+        setCategories(Array.from(unique));
       } catch (e) {
         console.log(e);
-
         setCategories([]); // fail soft
       }
     })();
