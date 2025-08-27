@@ -475,6 +475,17 @@ export const handleGoogleCallback = async (req, res) => {
                                user.subscription.plan && 
                                user.subscription.status === 'active';
 
+    // Compute quiz progress
+    const quizSession = await QuizSession.findOne({ user_id: user._id }).lean();
+    let quizProgress = { completionPercentage: 0, isCompleted: false };
+    if (quizSession) {
+      const answeredCount = quizSession.answers.length;
+      quizProgress = {
+        completionPercentage: Math.round((answeredCount / TOTAL_QUESTIONS) * 100),
+        isCompleted: quizSession.is_completed,
+      };
+    }
+
     // Redirect to frontend with user data and token
     const userData = {
       id: user._id,
@@ -485,6 +496,8 @@ export const handleGoogleCallback = async (req, res) => {
       accountStatus: user.accountStatus,
       profileImage: user.profileImage || "",
       subscription: user.subscription || null,
+      notificationPreferences: user.notificationPreferences || {},
+      quizProgress,
     };
 
     // Encode the data to pass via URL
@@ -604,6 +617,17 @@ export const googleAuthWithCode = async (req, res) => {
     // Generate JWT token
     const token = generateGoogleToken(user);
 
+    // Compute quiz progress
+    const quizSession = await QuizSession.findOne({ user_id: user._id }).lean();
+    let quizProgress = { completionPercentage: 0, isCompleted: false };
+    if (quizSession) {
+      const answeredCount = quizSession.answers.length;
+      quizProgress = {
+        completionPercentage: Math.round((answeredCount / TOTAL_QUESTIONS) * 100),
+        isCompleted: quizSession.is_completed,
+      };
+    }
+
     return res.status(200).json({
       message: "Google login successful",
       token,
@@ -616,6 +640,8 @@ export const googleAuthWithCode = async (req, res) => {
         accountStatus: user.accountStatus,
         profileImage: user.profileImage || "",
         subscription: user.subscription || null,
+        notificationPreferences: user.notificationPreferences || {},
+        quizProgress,
       },
     });
   } catch (error) {
@@ -646,6 +672,17 @@ export const handleFacebookCallback = async (req, res) => {
                                user.subscription.plan && 
                                user.subscription.status === 'active';
 
+    // Compute quiz progress
+    const quizSession = await QuizSession.findOne({ user_id: user._id }).lean();
+    let quizProgress = { completionPercentage: 0, isCompleted: false };
+    if (quizSession) {
+      const answeredCount = quizSession.answers.length;
+      quizProgress = {
+        completionPercentage: Math.round((answeredCount / TOTAL_QUESTIONS) * 100),
+        isCompleted: quizSession.is_completed,
+      };
+    }
+
     // Redirect to frontend with user data and token
     const userData = {
       id: user._id,
@@ -656,6 +693,8 @@ export const handleFacebookCallback = async (req, res) => {
       accountStatus: user.accountStatus,
       profileImage: user.profileImage || "",
       subscription: user.subscription || null,
+      notificationPreferences: user.notificationPreferences || {},
+      quizProgress,
     };
 
     // Encode the data to pass via URL
@@ -768,6 +807,17 @@ export const facebookAuthWithCode = async (req, res) => {
     // Generate JWT token
     const token = generateFacebookToken(user);
 
+    // Compute quiz progress
+    const quizSession = await QuizSession.findOne({ user_id: user._id }).lean();
+    let quizProgress = { completionPercentage: 0, isCompleted: false };
+    if (quizSession) {
+      const answeredCount = quizSession.answers.length;
+      quizProgress = {
+        completionPercentage: Math.round((answeredCount / TOTAL_QUESTIONS) * 100),
+        isCompleted: quizSession.is_completed,
+      };
+    }
+
     return res.status(200).json({
       message: "Facebook login successful",
       token,
@@ -780,6 +830,8 @@ export const facebookAuthWithCode = async (req, res) => {
         accountStatus: user.accountStatus,
         profileImage: user.profileImage || "",
         subscription: user.subscription || null,
+        notificationPreferences: user.notificationPreferences || {},
+        quizProgress,
       },
     });
   } catch (error) {

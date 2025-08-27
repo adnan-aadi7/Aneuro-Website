@@ -54,8 +54,8 @@ const Sidebar = ({ sidebarOpen, onSidebarClose, onLogout }) => {
         delete axiosInstance.defaults.headers.common.Authorization;
       }
 
-      // 3) (optional) clear auth cookies if you set any (e.g., "token")
-      // document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+      // 3) Explicitly expire any auth cookie named "token" (if used)
+      document.cookie = "token=; Max-Age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
 
       // 4) Let app-level context know (if provided)
       if (typeof onLogout === "function") onLogout();

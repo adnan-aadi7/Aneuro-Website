@@ -14,13 +14,13 @@ import {
 } from "recharts";
 
 // --- static BAR stays unchanged ---
-const barData = [
-  { date: "12/2025", value: 500, color: "#A78BFA", line: 320 },
-  { date: "13/2025", value: 300, color: "#2DD4BF", line: 340 },
-  { date: "14/2025", value: 670, color: "#22D3EE", line: 400 },
-  { date: "15/2025", value: 430, color: "#A78BFA", line: 280 },
-  { date: "16/2025", value: 90, color: "#22D3EE", line: 260 },
-];
+// const barData = [
+//   { date: "12/2025", value: 500, color: "#A78BFA", line: 320 },
+//   { date: "13/2025", value: 300, color: "#2DD4BF", line: 340 },
+//   { date: "14/2025", value: 670, color: "#22D3EE", line: 400 },
+//   { date: "15/2025", value: 430, color: "#A78BFA", line: 280 },
+//   { date: "16/2025", value: 90, color: "#22D3EE", line: 260 },
+// ];
 
 // Updated brain type meta with the five specified types
 const TYPE_META = {
@@ -116,7 +116,7 @@ const BrainTypesAnalysis = () => {
   // label renderer uses current donut data
   const renderCustomizedLabel = useMemo(() => {
     return ({ cx, cy, midAngle, innerRadius, outerRadius, index }) => {
-      const radius = innerRadius + (outerRadius - innerRadius) * 0.7;
+      const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
       const x = cx + radius * Math.cos(-midAngle * RADIAN);
       const y = cy + radius * Math.sin(-midAngle * RADIAN);
       const pct = donut?.[index]?.value ?? 0;
@@ -127,11 +127,11 @@ const BrainTypesAnalysis = () => {
           fill="#fff"
           textAnchor="middle"
           dominantBaseline="middle"
-          fontSize={20}
+          fontSize={24}
           fontWeight="bold"
           className="drop-shadow-lg"
         >
-          {`${pct}%`}
+          {`${Math.round(pct)}%`}
         </text>
       );
     };
@@ -172,7 +172,7 @@ const BrainTypesAnalysis = () => {
   return (
     <div className="relative w-full max-w-full mx-auto p-4 md:p-8 bg-[#2A2A39] text-white font-inter overflow-visible flex flex-col md:flex-row gap-8 items-start mt-10 overflow-x-auto">
       {/* Left: Donut chart and floating labels */}
-      <div className="w-[320px] md:flex-1 md:min-w-[340px] flex flex-col items-center relative">
+      <div className="w-[320px] md:flex-1 md:min-w-[340px] flex flex-col items-start relative ">
         <div className="text-2xl font-medium mb-2 self-start">
           Brain Types Analytic
         </div>
@@ -195,7 +195,7 @@ const BrainTypesAnalysis = () => {
         </div>
 
         <div
-          className="relative flex items-center justify-center"
+          className="relative flex items-start justify-start ml-20"
           style={{ minHeight: donut.length ? 340 : 120 }}
         >
           {loading ? (
@@ -209,7 +209,7 @@ const BrainTypesAnalysis = () => {
                 cx={170}
                 cy={170}
                 innerRadius={90}
-                outerRadius={140}
+                outerRadius={150}
                 startAngle={180}
                 endAngle={-180}
                 dataKey="value"
@@ -301,7 +301,7 @@ const BrainTypesAnalysis = () => {
       </div>
 
       {/* Right: keep your existing bar + line */}
-      <div className="w-[320px] md:flex-1 md:min-w-[340px] flex items-center justify-center mt-8">
+      {/* <div className="w-[320px] md:flex-1 md:min-w-[340px] flex items-center justify-center mt-8">
         <BarChart width={370} height={370} data={barData} className="bg-transparent">
           <CartesianGrid stroke="#E5E7EB22" strokeDasharray="0" vertical={false} />
           <XAxis
@@ -329,7 +329,7 @@ const BrainTypesAnalysis = () => {
             isAnimationActive={false}
           />
         </BarChart>
-      </div>
+      </div> */}
     </div>
   );
 };
