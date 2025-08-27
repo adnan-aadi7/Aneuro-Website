@@ -41,7 +41,7 @@ const TYPE_META = {
     desc: "Driven by imagination, innovation, and original ideas.",
   },
   Challenger: {
-    color: "#EF4444", // Red
+    color: "#02D193", // Updated Challenger color
     desc: "Direct, bold, and confident—moves things forward fast.",
   },
 };
@@ -231,8 +231,8 @@ const BrainTypesAnalysis = () => {
             <div
               className="hidden md:block absolute left-0 top-[50px] -translate-y-1/2 -translate-x-[60%] w-48 rounded-lg px-4 py-3 shadow-lg z-30"
               style={{
-                background: "#232432cc",
-                boxShadow: "0 0 24px 6px #12DCF088, 0 2px 8px #0008",
+                background: "#2A2A39",
+                boxShadow: "0 0 80px 3px #12DCF055, 0 1px 4px #0006",
               }}
             >
               <div className="font-semibold text-white mb-1">Architect</div>
@@ -245,8 +245,8 @@ const BrainTypesAnalysis = () => {
             <div
               className="hidden md:block absolute right-0 top-0 translate-x-[60%] w-48 rounded-lg px-4 py-3 shadow-lg z-30"
               style={{
-                background: "#232432cc",
-                boxShadow: "0 0 24px 6px #12DCF088, 0 2px 8px #0008",
+                background: "#2A2A39",
+                boxShadow: "0 0 80px 3px #12DCF055, 0 1px 4px #0006",
               }}
             >
               <div className="font-semibold text-white mb-1">Synthesizer</div>
@@ -259,8 +259,8 @@ const BrainTypesAnalysis = () => {
             <div
               className="hidden md:block absolute right-0 bottom-0 translate-x-[60%] w-48 rounded-lg px-4 py-3 shadow-lg z-30"
               style={{
-                background: "#232432cc",
-                boxShadow: "0 0 24px 6px #12DCF088, 0 2px 8px #0008",
+                background: "#2A2A39",
+                boxShadow: "0 0 80px 3px #12DCF055, 0 1px 4px #0006",
               }}
             >
               <div className="font-semibold text-white mb-1">Catalyst</div>
@@ -273,8 +273,8 @@ const BrainTypesAnalysis = () => {
             <div
               className="hidden md:block absolute left-0 top-0 -translate-x-[60%] w-48 rounded-lg px-4 py-3 shadow-lg z-30"
               style={{
-                background: "#232432cc",
-                boxShadow: "0 0 24px 6px #12DCF088, 0 2px 8px #0008",
+                background: "#2A2A39",
+                boxShadow: "0 0 80px 3px #12DCF055, 0 1px 4px #0006",
               }}
             >
               <div className="font-semibold text-white mb-1">Reflector</div>
@@ -287,8 +287,8 @@ const BrainTypesAnalysis = () => {
             <div
               className="hidden md:block absolute left-0 bottom-0 -translate-x-[60%] w-48 rounded-lg px-4 py-3 shadow-lg z-30"
               style={{
-                background: "#232432cc",
-                boxShadow: "0 0 24px 6px #12DCF088, 0 2px 8px #0008",
+                background: "#2A2A39",
+                boxShadow: "0 0 80px 3px #12DCF055, 0 1px 4px #0006",
               }}
             >
               <div className="font-semibold text-white mb-1">Challenger</div>
