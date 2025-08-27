@@ -526,6 +526,40 @@ export const trackEmailOpen = async (req, res) => {
   }
 };
 
+export const trackEmailClick = async (req, res) => {
+  try {
+    const { emailId } = req.params;
+    const userId = req.user.id; 
+
+    // Find sequence that contains this email
+    const sequence = await EmailSequence.findOne({ "emails._id": emailId });
+    if (!sequence) return res.status(404).json({ error: "Email not found" });
+
+    const email = sequence.emails.id(emailId);
+    if (!email) return res.status(404).json({ error: "Email not found" });
+
+    // Initialize fields if missing
+    if (!email.uniqueClicks) email.uniqueClicks = 0;
+    if (!email.clickedUsers) email.clickedUsers = [];
+
+    // Count only unique user click
+    if (!email.clickedUsers.includes(userId)) {
+      email.uniqueClicks += 1;
+      email.clickedUsers.push(userId);
+    }
+
+    await sequence.save();
+
+    res.status(200).json({
+      message: "Click tracked successfully",
+      emailId,
+      uniqueClicks: email.uniqueClicks,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const editEmailInSequence = async (req, res) => {
   try {
     const { sequenceId, emailId } = req.params;

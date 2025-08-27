@@ -8,7 +8,7 @@ import {
   getScheduledStats,
   getAllScheduledWithoutRelease
 } from "../controller/scheduleController.js";
-
+import { authUser } from "../middleware/userTracker.js";
 
 const router = express.Router();
 /**
@@ -19,6 +19,8 @@ const router = express.Router();
  *     description: Returns counts for upcoming, this week, this month, and overdue scheduled releases across Email Sequences, Prompt Packs, and Funnel Templates.
  *     tags:
  *       - Scheduled Releases
+ *     security:
+ *       - bearerAuth: []   # Require Bearer token
  *     responses:
  *       200:
  *         description: Successfully retrieved scheduled releases statistics
@@ -51,8 +53,19 @@ const router = express.Router();
  *                       example: 1
  *       500:
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error"
  */
-router.get('/stats', getScheduledStats);
+router.get('/stats', authUser, getScheduledStats);
 
 
 /**
@@ -61,12 +74,16 @@ router.get('/stats', getScheduledStats);
  *   get:
  *     summary: Get all scheduled content with stats
  *     tags: [Scheduled Releases]
+ *     security:
+ *       - bearerAuth: []   # Require Bearer token
  *     responses:
  *       200:
  *         description: Successful response
  *   post:
  *     summary: Schedule content by ID and type
  *     tags: [Scheduled Releases]
+ *     security:
+ *       - bearerAuth: []   # Require Bearer token
  *     requestBody:
  *       required: true
  *       content:
@@ -91,6 +108,8 @@ router.get('/stats', getScheduledStats);
  *   put:
  *     summary: Update scheduled content
  *     tags: [Scheduled Releases]
+ *     security:
+ *       - bearerAuth: []   # Require Bearer token
  *     requestBody:
  *       required: true
  *       content:
@@ -117,6 +136,8 @@ router.get('/stats', getScheduledStats);
  *   delete:
  *     summary: Delete scheduled content
  *     tags: [Scheduled Releases]
+ *     security:
+ *       - bearerAuth: []   # Require Bearer token
  *     requestBody:
  *       required: true
  *       content:
@@ -133,10 +154,11 @@ router.get('/stats', getScheduledStats);
  *       200:
  *         description: Content deleted successfully
  */
-router.get("/", getAllScheduled);
-router.post("/", scheduleContent);
-router.put("/", updateSchedule);
-router.delete("/", deleteSchedule);
+router.get("/", authUser, getAllScheduled);
+router.post("/", authUser, scheduleContent);
+router.put("/", authUser, updateSchedule);
+router.delete("/", authUser, deleteSchedule);
+
 
 /**
  * @swagger
@@ -145,6 +167,8 @@ router.delete("/", deleteSchedule);
  *     summary: Get all scheduled items without a releaseDateTime
  *     description: Returns FunnelTemplates, EmailSequences, and PromptPacks that have status = "scheduled" but no releaseDateTime defined.
  *     tags: [Scheduled Releases]
+ *     security:
+ *       - bearerAuth: []   # Require Bearer token
  *     responses:
  *       200:
  *         description: Successfully fetched scheduled items without releaseDateTime
@@ -168,6 +192,6 @@ router.delete("/", deleteSchedule);
  *       500:
  *         description: Server error
  */
-router.get("/no-release-scheduled", getAllScheduledWithoutRelease);
+router.get("/no-release-scheduled", authUser, getAllScheduledWithoutRelease);
 
 export default router;

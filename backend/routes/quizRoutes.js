@@ -1,6 +1,16 @@
 import express from 'express';
-import { saveAnswer, getProgress, createAudience, getAudienceSessions,sendIncompleteQuizNotifications, getQuizAnalytics, getAudienceBrainTypeAnalyticsByUser, getUserWeeklyBrainTypeStats, getAudienceQuizReport } from '../controller/quizController.js';
-
+import {
+     saveAnswer, 
+    getProgress, 
+    createAudience, 
+    getAudienceSessions,
+    sendIncompleteQuizNotifications, 
+    getQuizAnalytics, 
+    getAudienceBrainTypeAnalyticsByUser, 
+    getUserWeeklyBrainTypeStats, 
+    getAudienceQuizReport 
+} from '../controller/quizController.js';
+import { authUser } from "../middleware/userTracker.js";
 const router = express.Router();
 
 /**
@@ -12,10 +22,23 @@ const router = express.Router();
 
 /**
  * @swagger
+ * tags:
+ *   name: Audience Quiz
+ *   description: APIs for managing audience quiz sessions
+ *
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:            # Security scheme definition
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *
  * /api/quiz/start:
  *   post:
  *     summary: Start or continue a quiz session by saving audience answer tied to subscriber user ID
  *     tags: [Audience Quiz]
+ *     security:
+ *       - bearerAuth: []     # Apply Bearer token security
  *     requestBody:
  *       required: true
  *       content:
@@ -71,7 +94,7 @@ const router = express.Router();
  *         description: Server error
  */
 
-router.post('/start', createAudience);
+router.post('/start', authUser, createAudience);
 
 
 /**
@@ -84,6 +107,8 @@ router.post('/start', createAudience);
  *       Optionally filter by completion status (`true` or `false`).  
  *       Results are sorted by completion status (completed first).
  *     tags: [Audience Quiz]
+ *     security:
+ *       - bearerAuth: []   # Require Bearer token security
  *     parameters:
  *       - in: query
  *         name: user_id
@@ -168,13 +193,17 @@ router.post('/start', createAudience);
  *         description: Internal server error.
  */
 
-router.get('/sessions', getAudienceSessions);
+router.get('/sessions', authUser, getAudienceSessions);
+
+
 /**
  * @swagger
  * /api/quiz/quiz-report:
  *   get:
  *     summary: Get a specific audience's quiz report with brain type percentages and reminders
  *     tags: [Audience Quiz]
+ *     security:
+ *       - bearerAuth: []   # Require Bearer token security
  *     parameters:
  *       - in: query
  *         name: user_id
@@ -239,7 +268,9 @@ router.get('/sessions', getAudienceSessions);
  *               success: false
  *               message: "Internal server error"
  */
-router.get("/quiz-report", getAudienceQuizReport);
+
+router.get("/quiz-report", authUser, getAudienceQuizReport);
+
 
 /**
  * @swagger
@@ -247,6 +278,8 @@ router.get("/quiz-report", getAudienceQuizReport);
  *   post:
  *     summary: Save or update a quiz answer
  *     tags: [Quiz]
+ *     security:
+ *       - bearerAuth: []   # Require Bearer token security
  *     requestBody:
  *       required: true
  *       content:
@@ -287,7 +320,9 @@ router.get("/quiz-report", getAudienceQuizReport);
  *       500:
  *         description: Server error
  */
-router.post('/save', saveAnswer);
+
+router.post('/save', authUser, saveAnswer);
+
 
 /**
  * @swagger
@@ -295,6 +330,8 @@ router.post('/save', saveAnswer);
  *   get:
  *     summary: Get quiz completion progress for a user
  *     tags: [Quiz]
+ *     security:
+ *       - bearerAuth: []   # Require Bearer token security
  *     parameters:
  *       - in: path
  *         name: user_id
@@ -318,7 +355,8 @@ router.post('/save', saveAnswer);
  *       500:
  *         description: Server error
  */
-router.get('/progress/:user_id', getProgress);
+
+router.get('/progress/:user_id', authUser, getProgress);
 
 
 
@@ -328,6 +366,8 @@ router.get('/progress/:user_id', getProgress);
  *   post:
  *     summary: Send reminder emails for incomplete quizzes and save reminders in DB
  *     tags: [Audience Quiz]
+ *     security:
+ *       - bearerAuth: []   # Require Bearer token security
  *     requestBody:
  *       required: true
  *       content:
@@ -349,7 +389,7 @@ router.get('/progress/:user_id', getProgress);
  *                 type: array
  *                 items:
  *                   type: string
- *                 example: ["test1@example.com", "test2@example.com"]
+ *                 example: ["test1@example.com"]
  *     responses:
  *       200:
  *         description: Emails sent and reminders saved
@@ -361,8 +401,7 @@ router.get('/progress/:user_id', getProgress);
  *         description: Internal server error
  */
 
-router.post('/send-incomplete-reminders', sendIncompleteQuizNotifications);
-
+router.post('/send-incomplete-reminders', authUser, sendIncompleteQuizNotifications);
 
 
 /**
@@ -372,6 +411,8 @@ router.post('/send-incomplete-reminders', sendIncompleteQuizNotifications);
  *     summary: Get quiz completion stats and audience breakdown by brain type for a specific user
  *     tags:
  *       - Quiz Analytics
+ *     security:
+ *       - bearerAuth: []   # Require Bearer token security
  *     parameters:
  *       - in: path
  *         name: userId
@@ -437,7 +478,9 @@ router.post('/send-incomplete-reminders', sendIncompleteQuizNotifications);
  *                   type: string
  *                   example: "Internal server error"
  */
-router.get('/analytics/:userId', getQuizAnalytics);
+
+router.get('/analytics/:userId', authUser, getQuizAnalytics);
+
 
 
 /**
@@ -447,6 +490,8 @@ router.get('/analytics/:userId', getQuizAnalytics);
  *     summary: Get audience brain type analytics (counts and percentages)
  *     tags:
  *       - Quiz Analytics
+ *     security:
+ *       - bearerAuth: []   # Require Bearer token security
  *     parameters:
  *       - in: path
  *         name: userId
@@ -532,7 +577,8 @@ router.get('/analytics/:userId', getQuizAnalytics);
  *                   type: string
  *                   example: Internal server error
  */
-router.get('/analytics/brain-types/:userId', getAudienceBrainTypeAnalyticsByUser);
+
+router.get('/analytics/brain-types/:userId', authUser, getAudienceBrainTypeAnalyticsByUser);
 
 
 /**
@@ -541,6 +587,8 @@ router.get('/analytics/brain-types/:userId', getAudienceBrainTypeAnalyticsByUser
  *   get:
  *     summary: Get weekly brain type stats for a specific user's audience
  *     tags: [Quiz Analytics]
+ *     security:
+ *       - bearerAuth: []   # Require Bearer token security
  *     parameters:
  *       - in: path
  *         name: userId
@@ -582,7 +630,35 @@ router.get('/analytics/brain-types/:userId', getAudienceBrainTypeAnalyticsByUser
  *                       Challenger:
  *                         type: integer
  *                         example: 1
+ *       404:
+ *         description: No stats found for the given user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "No weekly brain type stats found for this user"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error"
  */
-router.get('/:userId/weekly-brain-types', getUserWeeklyBrainTypeStats);
+
+router.get('/:userId/weekly-brain-types', authUser, getUserWeeklyBrainTypeStats);
+
 
 export default router;
