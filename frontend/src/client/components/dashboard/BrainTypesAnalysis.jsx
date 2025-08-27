@@ -22,31 +22,29 @@ const barData = [
   { date: "16/2025", value: 90, color: "#22D3EE", line: 260 },
 ];
 
-// Known meta (optional). Unknown types will get palette colors + generic desc.
-// Known meta (the 5 expected brain types)
+// Updated brain type meta with the five specified types
 const TYPE_META = {
   Architect: {
-    color: "#22D3EE",
-    desc: "Systems thinker who plans, structures, and optimizes.",
-  },
-  Challenger: {
-    color: "#EF4444",
-    desc: "Direct, bold, and confident—moves things forward fast.",
-  },
-  Synthesizer: {
-    color: "#A78BFA",
-    desc: "Connects dots, blends ideas, and creates clarity.",
-  },
-  Reflector: {
-    color: "#60A5FA",
-    desc: "Observes patterns and makes thoughtful, measured decisions.",
+    color: "#22D3EE", // Light blue
+    desc: "Thinks logically, values data, and focuses on problem-solving.",
   },
   Catalyst: {
-    color: "#F59E0B",
+    color: "#F59E0B", // Orange
     desc: "Action‑oriented, energizes teams and drives outcomes.",
   },
+  Reflector: {
+    color: "#60A5FA", // Blue
+    desc: "Observes patterns and makes thoughtful, measured decisions.",
+  },
+  Synthesizer: {
+    color: "#A78BFA", // Purple
+    desc: "Driven by imagination, innovation, and original ideas.",
+  },
+  Challenger: {
+    color: "#EF4444", // Red
+    desc: "Direct, bold, and confident—moves things forward fast.",
+  },
 };
-
 
 // Fallback palette for any additional/unknown brain types
 const PALETTE = [
@@ -224,75 +222,78 @@ const BrainTypesAnalysis = () => {
                 ))}
               </Pie>
 
-              {/* 👇 Custom tooltip on hover */}
-              <Tooltip
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    const d = payload[0].payload;
-                    return (
-                      <div
-                        className="rounded-lg px-4 py-3 shadow-lg"
-                        style={{
-                          background: "#232432cc",
-                          boxShadow: `0 0 20px 4px ${d.color}55, 0 2px 8px #0008`,
-                          color: "#fff",
-                          maxWidth: 200,
-                        }}
-                      >
-                        <div className="font-semibold text-lg" style={{ color: d.color }}>
-                          {d.name}
-                        </div>
-                        <div className="text-sm text-gray-200">{d.desc}</div>
-                        <div className="text-xs mt-1">Value: {d.value}%</div>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
+
             </PieChart>
           )}
 
-          {/* Floating info cards for known types only (others skipped automatically) */}
-          {donut.find((d) => d.name === "Analytical") && (
+          {/* Floating info cards positioned around the chart like in the image */}
+          {donut.find((d) => d.name === "Architect") && (
             <div
-              className="hidden md:block absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[60%] w-48 rounded-lg px-4 py-3 shadow-lg z-30"
+              className="hidden md:block absolute left-0 top-[50px] -translate-y-1/2 -translate-x-[60%] w-48 rounded-lg px-4 py-3 shadow-lg z-30"
               style={{
                 background: "#232432cc",
-                boxShadow: "0 0 24px 6px #22D3EE88, 0 2px 8px #0008",
+                boxShadow: "0 0 24px 6px #12DCF088, 0 2px 8px #0008",
               }}
             >
-              <div className="font-semibold text-white mb-1">Analytical</div>
+              <div className="font-semibold text-white mb-1">Architect</div>
               <div className="text-xs text-gray-200 leading-snug">
-                {TYPE_META.Analytical.desc}
+                {TYPE_META.Architect.desc}
               </div>
             </div>
           )}
-          {donut.find((d) => d.name === "Creative") && (
+          {donut.find((d) => d.name === "Synthesizer") && (
             <div
               className="hidden md:block absolute right-0 top-0 translate-x-[60%] w-48 rounded-lg px-4 py-3 shadow-lg z-30"
               style={{
                 background: "#232432cc",
-                boxShadow: "0 0 24px 6px #A78BFA88, 0 2px 8px #0008",
+                boxShadow: "0 0 24px 6px #12DCF088, 0 2px 8px #0008",
               }}
             >
-              <div className="font-semibold text-white mb-1">Creative</div>
+              <div className="font-semibold text-white mb-1">Synthesizer</div>
               <div className="text-xs text-gray-200 leading-snug">
-                {TYPE_META.Creative.desc}
+                {TYPE_META.Synthesizer.desc}
               </div>
             </div>
           )}
-          {donut.find((d) => d.name === "Balanced") && (
+          {donut.find((d) => d.name === "Catalyst") && (
             <div
               className="hidden md:block absolute right-0 bottom-0 translate-x-[60%] w-48 rounded-lg px-4 py-3 shadow-lg z-30"
               style={{
                 background: "#232432cc",
-                boxShadow: "0 0 24px 6px #2DD4BF88, 0 2px 8px #0008",
+                boxShadow: "0 0 24px 6px #12DCF088, 0 2px 8px #0008",
               }}
             >
-              <div className="font-semibold text-white mb-1">Balanced</div>
+              <div className="font-semibold text-white mb-1">Catalyst</div>
               <div className="text-xs text-gray-200 leading-snug">
-                {TYPE_META.Balanced.desc}
+                {TYPE_META.Catalyst.desc}
+              </div>
+            </div>
+          )}
+          {donut.find((d) => d.name === "Reflector") && (
+            <div
+              className="hidden md:block absolute left-0 top-0 -translate-x-[60%] w-48 rounded-lg px-4 py-3 shadow-lg z-30"
+              style={{
+                background: "#232432cc",
+                boxShadow: "0 0 24px 6px #12DCF088, 0 2px 8px #0008",
+              }}
+            >
+              <div className="font-semibold text-white mb-1">Reflector</div>
+              <div className="text-xs text-gray-200 leading-snug">
+                {TYPE_META.Reflector.desc}
+              </div>
+            </div>
+          )}
+          {donut.find((d) => d.name === "Challenger") && (
+            <div
+              className="hidden md:block absolute left-0 bottom-0 -translate-x-[60%] w-48 rounded-lg px-4 py-3 shadow-lg z-30"
+              style={{
+                background: "#232432cc",
+                boxShadow: "0 0 24px 6px #12DCF088, 0 2px 8px #0008",
+              }}
+            >
+              <div className="font-semibold text-white mb-1">Challenger</div>
+              <div className="text-xs text-gray-200 leading-snug">
+                {TYPE_META.Challenger.desc}
               </div>
             </div>
           )}

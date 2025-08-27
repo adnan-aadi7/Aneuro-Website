@@ -1,6 +1,6 @@
 import React from "react";
 import Tabs from "../../components/promptPack/Tabs";
-import AnalyticalPrompt from "../../components/promptPack/AnalyticalPrompt";
+import AnalyticalPrompt from "../../components/promptPack/ArchitectPrompt";
 
 const PromptPacks = () => {
   return (
