@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
-import AnalyticalPrompt from "./AnalyticalPrompt";
-import CreativePrompt from "./CreativePrompt";
-import EmpatheticPrompt from "./EmpatheticPrompt";
-import StrategicPrompt from "./StrategicPrompt";
-import PracticalPrompt from "./PracticalPrompt";
+import ArchitectPrompt from "./ArchitectPrompt";
+import ChallengerPrompt from "./ChallengerPrompt";
+import SynthesizerPrompt from "./SynthesizerPrompt";
+import ReflectorPrompt from "./ReflectorPrompt";
+import CatalystPrompt from "./CatalystPrompt";
 import axios from "../../../store/axiosInstance"; // adjust path if your axiosInstance lives elsewhere
 
 export default function Tabs() {
   const [activeTab, setActiveTab] = useState("Architect");
+  const [groupedPrompts, setGroupedPrompts] = useState({});
   const [categories, setCategories] = useState([]);
 
   const tabs = ["Architect", "Challenger", "Synthesizer", "Reflector", "Catalyst"];
@@ -15,29 +16,45 @@ export default function Tabs() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await axios.get("/categories/prompts");
-        setCategories(Array.isArray(res.data?.data) ? res.data.data : []);
+        // Using the grouped prompts API endpoint
+        const res = await axios.get("/prompt-packs/grouped?tier=starter");
+        setGroupedPrompts(res.data?.data || {});
+        console.log("Grouped Prompt", res.data?.data);
       } catch (e) {
         // swallow silently per your request (no extra UI)
-        setCategories([]);
+        setGroupedPrompts({});
         console.log(e);
       }
     })();
   }, []);
 
+  useEffect(() => { 
+    (async () => {
+      try {
+        const res = await axios.get("/categories/prompts");
+        setCategories(res.data?.data || []);
+        console.log("Categories", res.data?.data);
+      } catch (e) {
+        setCategories([]);
+        console.log(e);
+      }
+    })();
+  }, []);
+  
+
   const renderTabContent = () => {
-    const common = { categories }; // pass categories only; keep everything else identical
+    const common = { groupedPrompts, categories }; // pass grouped prompts data
     switch (activeTab) {
       case "Architect":
-        return <AnalyticalPrompt {...common} />;
+        return <ArchitectPrompt {...common} />;
       case "Challenger":
-        return <CreativePrompt {...common} />;
+        return <ChallengerPrompt {...common} />;
       case "Synthesizer":
-        return <EmpatheticPrompt {...common} />;
+        return <SynthesizerPrompt {...common} />;
       case "Reflector":
-        return <StrategicPrompt {...common} />;
+        return <ReflectorPrompt {...common} />;
       case "Catalyst":
-        return <PracticalPrompt {...common} />;
+        return <CatalystPrompt {...common} />;
       default:
         return null;
     }

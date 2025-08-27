@@ -85,8 +85,11 @@ export default function Table() {
     navigate(`/admin/user/details/${user._id}`, { state: { user, activeTab: "General Details" } });
   };
 
-  // Show all users instead of just paid users
-  const sortedUsers = [...users].sort((a, b) => {
+  // Filter out admin users and show only regular users
+  const filteredUsers = users.filter(user => user.userType !== "admin");
+  
+  // Sort filtered users
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
     if (sortBy === "name") {
       return sortOrder === "asc"
         ? a.name.localeCompare(b.name)

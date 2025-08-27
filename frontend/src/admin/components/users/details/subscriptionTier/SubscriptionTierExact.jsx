@@ -223,10 +223,15 @@ export default function SubscriptionTierExact({ user }) {
                   'bg-[#232886]'
                 }`}>
                   <span
-                    className="text-white text-lg md:text-2xl font-bold tracking-widest"
+                    className="text-white text-sm md:text-lg font-bold tracking-wide"
                     style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
                   >
-                    {cardInfo.brand === 'Loading...' ? '...' : cardInfo.brand}
+                    {cardInfo.brand === 'Loading...' ? '...' : 
+                     cardInfo.brand === 'MASTERCARD' ? 'MC' :
+                     cardInfo.brand === 'VISA' ? 'VISA' :
+                     cardInfo.brand === 'AMEX' ? 'AMEX' :
+                     cardInfo.brand === 'DISCOVER' ? 'DISC' :
+                     cardInfo.brand}
                   </span>
                 </div>
                 <div className="flex flex-col justify-center">
@@ -242,9 +247,9 @@ export default function SubscriptionTierExact({ user }) {
                 </div>
               </div>
               {/* Right: Edit button */}
-              <button className="bg-[#12DCF0] text-[#232432] px-6 md:px-13 py-2 rounded text-base md:text-lg font-semibold hover:bg-cyan-300 transition-colors shadow-none">
+              {/* <button className="bg-[#12DCF0] text-[#232432] px-6 md:px-13 py-2 rounded text-base md:text-lg font-semibold hover:bg-cyan-300 transition-colors shadow-none">
                 Edit
-              </button>
+              </button> */}
             </div>
           )}
         </div>

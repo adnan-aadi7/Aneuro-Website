@@ -39,6 +39,7 @@ const SuggestTools = () => {
           <div
             className="flex items-center justify-between h-20 px-6 rounded-md cursor-pointer relative bg-[#2A2A39] bg-gradient-to-r from-[#2A2A39] to-[#19343B]"
             style={cardInnerShadow}
+            onClick={() => navigate("/email-sequences")}
           >
             <span className="text-white text-base font-semibold">
               Email Sequences
@@ -61,6 +62,7 @@ const SuggestTools = () => {
           <div
             className="flex items-center justify-between h-20 px-6 rounded-md cursor-pointer relative bg-[#2A2A39] bg-gradient-to-r from-[#2A2A39] to-[#19343B]"
             style={cardInnerShadow}
+            onClick={() => navigate("/prompt-packs")}
           >
             <span className="text-white text-base font-semibold">
               Prompt Packs
@@ -83,6 +85,7 @@ const SuggestTools = () => {
           <div
             className="flex items-center justify-between h-20 px-6 rounded-md cursor-pointer relative bg-[#2A2A39] bg-gradient-to-r from-[#2A2A39] to-[#19343B]"
             style={cardInnerShadow}
+            onClick={() => navigate("/funnel-Templates")}
           >
             <span className="text-white text-base font-semibold">
               Funnel Toolkit

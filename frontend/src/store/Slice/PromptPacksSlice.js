@@ -169,6 +169,22 @@ export const fetchPromptPackStats = createAsyncThunk(
   }
 );
 
+// GET /api/prompt-packs/grouped?tier=&category=
+export const fetchGroupedPromptsByTier = createAsyncThunk(
+  'promptPack/fetchGroupedByTier',
+  async ({ tier, category }, { rejectWithValue }) => {
+    try {
+      const params = new URLSearchParams();
+      if (tier) params.append('tier', tier);
+      if (category) params.append('category', category);
+      const response = await axios.get(`/prompt-packs/grouped?${params.toString()}`);
+      return response.data; // { success, data: { Architect:[], Challenger:[], ... } }
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to fetch grouped prompts' });
+    }
+  }
+);
+
 // Initial state
 const initialState = {
   packs: [],
@@ -198,7 +214,8 @@ const initialState = {
         totalPrompts: 0,
         avgRating: 0
       }
-    }
+    },
+    grouped: undefined
   },
   pagination: {
     currentPage: 1,
@@ -482,6 +499,21 @@ const promptPackSlice = createSlice({
       .addCase(fetchPromptPackStats.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || 'Failed to fetch prompt pack stats';
+      });
+
+    // Fetch Grouped By Tier
+    builder
+      .addCase(fetchGroupedPromptsByTier.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchGroupedPromptsByTier.fulfilled, (state, action) => {
+        state.loading = false;
+        state.stats.grouped = action.payload.data; // Architect/Challenger/... arrays
+      })
+      .addCase(fetchGroupedPromptsByTier.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || 'Failed to fetch grouped prompts';
       });
 
   }

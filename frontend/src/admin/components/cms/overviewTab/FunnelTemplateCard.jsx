@@ -11,6 +11,7 @@ import {
   clearSuccess 
 } from "../../../../store/Slice/FunnelSequenceSlice";
 import { fetchEmailCategories, createCategory as createEmailCategory } from "../../../../store/Slice/EmailSequenceSLice";
+import { getAllUsers } from "../../../../store/Slice/UserSlice";
 
 export default function FunnelTemplateCard() {
   const dispatch = useDispatch();
@@ -28,6 +29,10 @@ export default function FunnelTemplateCard() {
   const [submittingAction, setSubmittingAction] = useState(null); // 'active' | 'scheduled' | null
   const categories = useSelector((state) => state.emailSequence.categories || []);
   const categoriesLoading = useSelector((state) => state.emailSequence.categoriesLoading);
+
+  // Users data for tier counts
+  const users = useSelector((state) => state.user.users || []);
+  const usersLoading = useSelector((state) => state.user.usersLoading);
 
   const isAllowedFile = (file) => {
     const name = file?.name?.toLowerCase() || "";
@@ -149,6 +154,39 @@ export default function FunnelTemplateCard() {
   useEffect(() => {
     dispatch(fetchEmailCategories());
   }, [dispatch]);
+
+  // Load users for tier counts
+  useEffect(() => {
+    dispatch(getAllUsers({ page: 1, limit: 1000 })); // Get all users for accurate counts
+  }, [dispatch]);
+
+  // Calculate tier user counts
+  const getTierUserCounts = () => {
+    if (usersLoading || !users.length) return { basic: 0, premium: 0, enterprise: 0 };
+    
+    const counts = { basic: 0, premium: 0, enterprise: 0 };
+    
+    users.forEach(user => {
+      if (user.userType === 'admin') return; // Skip admin users
+      
+      const plan = user.subscription?.plan?.toLowerCase();
+      const hasSubscription = user.subscription && user.subscription.status === 'active';
+      
+      // Only count users with active subscriptions
+      if (hasSubscription) {
+        if (plan === 'growth') {
+          counts.premium++;
+        } else if (plan === 'enterprise') {
+          counts.enterprise++;
+        } else if (plan === 'starter') {
+          counts.basic++;
+        }
+      }
+      // Users without subscription or inactive subscription are NOT counted
+    });
+    
+    return counts;
+  };
 
   const handleStartAddCategory = () => {
     setShowAddCategory(true);
@@ -340,7 +378,7 @@ export default function FunnelTemplateCard() {
               <div className="flex items-center gap-2">
                 <span className="text-white text-sm">Basic</span>
                 <span className="bg-[#2A3344] text-gray-200 text-xs px-2 py-0.5 rounded">
-                  1250 users
+                  {getTierUserCounts().basic} users
                 </span>
               </div>
               <div className="text-gray-500 text-xs mt-1">Free tier users</div>
@@ -365,7 +403,7 @@ export default function FunnelTemplateCard() {
               <div className="flex items-center gap-2">
                 <span className="text-white text-sm">Premium</span>
                 <span className="bg-[#2A3344] text-gray-200 text-xs px-2 py-0.5 rounded">
-                  320 users
+                  {getTierUserCounts().premium} users
                 </span>
               </div>
               <div className="text-gray-500 text-xs mt-1">Paid subscribers</div>
@@ -390,7 +428,7 @@ export default function FunnelTemplateCard() {
               <div className="flex items-center gap-2">
                 <span className="text-white text-sm">Enterprise</span>
                 <span className="bg-[#2A3344] text-gray-200 text-xs px-2 py-0.5 rounded">
-                  45 users
+                  {getTierUserCounts().enterprise} users
                 </span>
               </div>
               <div className="text-gray-500 text-xs mt-1">Enterprise access</div>

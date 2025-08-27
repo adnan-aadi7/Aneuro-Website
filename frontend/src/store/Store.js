@@ -11,6 +11,7 @@ import activityReducer from "./Slice/ActivitySlice";
 import adminDashboardReducer from "./Slice/DashboardSliceAdmin";
 import quizReducer from "./Slice/QuizSlice";
 import customizationReducer from "./Slice/customizationSlice";
+import audienceQuizReducer from "./Slice/AudienceQuizSlice";
 
 
 
@@ -29,5 +30,6 @@ export const store = configureStore({
     quiz: quizReducer,
    
     customization: customizationReducer,
+    audienceQuiz: audienceQuizReducer,
   },
 });

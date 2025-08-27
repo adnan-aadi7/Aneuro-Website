@@ -1,7 +1,8 @@
 import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { isJwtExpired } from "../utils/jwt";
+// import { isJwtExpired } from "../utils/jwt";
+import { isJwtExpired } from "../../utils/jwt";
 
 export default function RequireAuth() {
   const location = useLocation();

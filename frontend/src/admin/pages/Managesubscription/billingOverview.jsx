@@ -23,6 +23,9 @@ const BillingOverview = () => {
   }, [dispatch, page, limit]);
   console.log( "users subscription",users);
 
+  // Filter out admin users to show only regular users
+  const filteredUsers = users.filter(user => user.userType !== "admin");
+
   // Helper to get price from Stripe products by plan name
   const getStripePrice = (plan) => {
     if (!stripeProducts || stripeProducts.length === 0 || !plan) return "-";
@@ -89,7 +92,7 @@ const BillingOverview = () => {
               {usersLoading || productsLoading ? (
                 <tr><td colSpan="9">Loading...</td></tr>
               ) : (
-                users.map((user) => (
+                filteredUsers.map((user) => (
                   <tr
                     onClick={() => handleUserClick(user)}
                     key={user._id}

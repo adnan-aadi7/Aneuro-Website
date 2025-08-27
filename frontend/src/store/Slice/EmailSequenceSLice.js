@@ -90,6 +90,22 @@ export const fetchEmailSequences = createAsyncThunk(
   }
 );
 
+// GET /api/email-sequences/grouped?tier=&category=
+export const fetchGroupedEmailsByTier = createAsyncThunk(
+  'emailSequence/fetchGroupedByTier',
+  async ({ tier, category }, { rejectWithValue }) => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (tier) queryParams.append('tier', tier);
+      if (category) queryParams.append('category', category);
+      const response = await axios.get(`/email-sequences/grouped?${queryParams.toString()}`);
+      return response.data; // { success, data: { Architect:[], Challenger:[], ... } }
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to fetch grouped emails' });
+    }
+  }
+);
+
 export const fetchEmailSequenceById = createAsyncThunk(
   'emailSequence/fetchById',
   async (id, { rejectWithValue }) => {
@@ -339,6 +355,22 @@ const emailSequenceSlice = createSlice({
       .addCase(fetchEmailSequences.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || 'Failed to fetch email sequences';
+      });
+
+    // Fetch Grouped By Tier
+    builder
+      .addCase(fetchGroupedEmailsByTier.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchGroupedEmailsByTier.fulfilled, (state, action) => {
+        state.loading = false;
+        // Store grouped data in stats for convenience
+        state.stats.grouped = action.payload.data;
+      })
+      .addCase(fetchGroupedEmailsByTier.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || 'Failed to fetch grouped emails';
       });
 
     // Fetch By ID

@@ -43,6 +43,7 @@ const VisaIcon = () => (
   const Payment = ({ onClose, selectedPlan }) => {
     const [name, setName] = useState("");
     const [email, setEmail] = useState(localStorage.getItem('userEmail') || '');
+    const isEmailLocked = Boolean(localStorage.getItem('userEmail'));
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
@@ -72,7 +73,7 @@ const VisaIcon = () => (
         setIsLoading(false);
         setTimeout(() => {
           dispatch(clearPaymentState());
-          navigate('/login');
+          navigate('/client/dashboard');
         }, 2000);
       }
     }, [status, subscriptionId, dispatch, navigate]);
@@ -263,11 +264,16 @@ const VisaIcon = () => (
                 placeholder="your@email.com"
                 className="bg-[#181818] border border-gray-600 rounded px-4 py-3 w-full text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 transition"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  if (!isEmailLocked) setEmail(e.target.value);
+                }}
                 required
                 autoComplete="email"
-                disabled={isLoading}
+                disabled={isLoading || isEmailLocked}
               />
+              {isEmailLocked && (
+                <div className="text-xs text-gray-400 mt-1">This email is from your signup and cannot be changed here.</div>
+              )}
             </div>
             
             <div>

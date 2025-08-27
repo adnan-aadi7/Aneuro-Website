@@ -33,14 +33,37 @@ export default function Form() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Simple password match validation
-    if (formData.password !== formData.confirmPassword) {
+    // Basic field trims
+    const name = (formData.name || "").trim();
+    const email = (formData.email || "").trim();
+    const password = formData.password || "";
+    const confirmPassword = formData.confirmPassword || "";
+
+    // Client-side validations
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const hasUpper = /[A-Z]/.test(password);
+    const hasLower = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+
+    if (name.length < 2) {
+      setFormError("Please enter your full name");
+      return;
+    }
+    if (!emailRegex.test(email)) {
+      setFormError("Please enter a valid email address");
+      return;
+    }
+    if (password.length < 8 || !hasUpper || !hasLower || !hasNumber) {
+      setFormError("Password must be 8+ chars and include upper, lower, and number");
+      return;
+    }
+    if (password !== confirmPassword) {
       setFormError("Passwords do not match");
       return;
     }
 
     try {
-      const result = await dispatch(signupUser(formData)).unwrap();
+      const result = await dispatch(signupUser({ name, email, password, confirmPassword })).unwrap();
       console.log("Signup successful", result);
       navigate("/plan");
     } catch (err) {
