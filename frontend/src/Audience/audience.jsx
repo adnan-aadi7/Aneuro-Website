@@ -300,9 +300,9 @@ const Audience = () => {
           className="relative text-center bg-black p-8 z-10 h-[400px] w-[98%] md:w-[45%] flex flex-col items-center justify-center rounded-xl border"
           style={cardBorderStyle}
         >
-          <div className="absolute top-8 right-8 cursor-pointer">
+          {/* <div className="absolute top-8 right-8 cursor-pointer">
             <X />
-          </div>
+          </div> */}
           <img src="/Frame 1000004776.png" alt="img" className="w-32 h-32" />
           <h1 className="text-[20px] md:text-[32px] font-bold mb-4">
             That’s a wrap! thanks for <br />

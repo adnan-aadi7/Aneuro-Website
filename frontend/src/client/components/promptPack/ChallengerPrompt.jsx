@@ -114,8 +114,12 @@ export default function ChallengerPrompt({ groupedPrompts = {}, categories = [] 
             )}
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
-                <h3 className="text-base font-medium mb-2">Creative Social Media Caption Generator</h3>
-                <p className="text-cyan-400 text-sm mb-4">Subject: Unleash your creativity with this idea!</p>
+                {prompt1?.title && (
+                  <h3 className="text-base font-medium mb-2">{prompt1.title}</h3>
+                )}
+                {prompt1?.subject && (
+                  <p className="text-cyan-400 text-sm mb-4">Subject: {prompt1.subject}</p>
+                )}
               </div>
               {renderButton(prompt1, 1)}
             </div>
@@ -131,8 +135,12 @@ export default function ChallengerPrompt({ groupedPrompts = {}, categories = [] 
           <div className="bg-[#23232F] p-6">
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
-                <h3 className="text-base font-medium mb-2">Creative Problem-Solution Framework</h3>
-                <p className="text-cyan-400 text-sm mb-4">Subject: Solving creative challenges with fresh ideas...</p>
+                {prompt2?.title && (
+                  <h3 className="text-base font-medium mb-2">{prompt2.title}</h3>
+                )}
+                {prompt2?.subject && (
+                  <p className="text-cyan-400 text-sm mb-4">Subject: {prompt2.subject}</p>
+                )}
               </div>
               {renderButton(prompt2, 2)}
             </div>

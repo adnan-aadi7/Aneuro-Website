@@ -121,6 +121,7 @@ export default function Header({ filters, onChangeFilters }) {
                       type="date"
                       value={dateTo}
                       onChange={(e) => setDateTo(e.target.value)}
+                      min={dateFrom || undefined}
                       className="w-full bg-[#2A2A39] text-white rounded px-3 py-2 focus:outline-none"
                     />
                   </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import { FiUser, FiActivity, FiTarget } from "react-icons/fi";
+import { FiTarget } from "react-icons/fi";
 import Looper3 from "../../../../assets/resultOverView/Looper-3.png";
 import BrainImg from "../../../../assets/quizdetails/brain.png";
 
@@ -24,12 +24,9 @@ function truncateUserId(idStr) {
   return `${str.slice(0, 6)}…`;
 }
 
-function buildRandomAvatar(name, email) {
-  const seed = encodeURIComponent((name || email || Math.random().toString(36)).toString());
-  return `https://i.pravatar.cc/64?u=${seed}`;
-}
+//
 
-const Cards = ({ name, userId, email, date, brainType, brainPercent, avatar }) => {
+const Cards = ({ name, userId, email, date, brainType, brainPercent }) => {
   const dt = formatDateTime(date);
   return (
   <div className="flex flex-col md:flex-row gap-8 w-full mt-6">
@@ -43,13 +40,9 @@ const Cards = ({ name, userId, email, date, brainType, brainPercent, avatar }) =
       <div className="mb-6 w-full">
         <div className="flex items-center justify-between w-full mb-3">
           <img
-            src={avatar || buildRandomAvatar(name, email)}
+            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(name || (email ? email.split('@')[0] : 'User'))}&background=2A2A39&color=22d3ee&bold=true&format=png`}
             alt={name || "User"}
             className="w-12 h-12 rounded-full object-cover border border-gray-400"
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name || (email ? email.split('@')[0] : 'User'))}&background=2A2A39&color=22d3ee&bold=true&format=png`;
-            }}
           />
           <div className="text-gray-200 text-base font-medium">
             {truncateUserId(userId)}
