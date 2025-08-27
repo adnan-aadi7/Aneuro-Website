@@ -76,6 +76,15 @@ export default function ResetPasswordPopup({ onClose }) {
         className="relative w-full max-w-md mx-auto  p-8 bg-[#232336] shadow-2xl"
         style={{ boxShadow: "inset 0 0 20px 0 #12DCF080" }}
       >
+        {/* Close (X) button */}
+        <button
+          type="button"
+          aria-label="Close"
+          onClick={onClose}
+          className="absolute top-3 right-3 text-slate-300 hover:text-white text-3xl leading-none p-1"
+        >
+          &times;
+        </button>
         <h2 className="text-2xl font-semibold text-white mb-8">
           Reset Password
         </h2>

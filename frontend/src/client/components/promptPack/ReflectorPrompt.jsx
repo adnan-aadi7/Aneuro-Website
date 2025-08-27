@@ -110,8 +110,12 @@ export default function ReflectorPrompt({ groupedPrompts = {}, categories = [] }
             )}
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
-                <h3 className="text-base font-medium mb-2">Strategic Social Media Caption Generator</h3>
-                <p className="text-cyan-400 text-sm mb-4">Subject: Plan for success with this strategy!</p>
+                {prompt1?.title && (
+                  <h3 className="text-base font-medium mb-2">{prompt1.title}</h3>
+                )}
+                {prompt1?.subject && (
+                  <p className="text-cyan-400 text-sm mb-4">Subject: {prompt1.subject}</p>
+                )}
               </div>
               {renderButton(prompt1, 1)}
             </div>
@@ -127,8 +131,12 @@ export default function ReflectorPrompt({ groupedPrompts = {}, categories = [] }
           <div className="bg-[#23232F] p-6">
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
-                <h3 className="text-base font-medium mb-2">Strategic Problem-Solution Framework</h3>
-                <p className="text-cyan-400 text-sm mb-4">Subject: Solving strategic challenges with proven methods...</p>
+                {prompt2?.title && (
+                  <h3 className="text-base font-medium mb-2">{prompt2.title}</h3>
+                )}
+                {prompt2?.subject && (
+                  <p className="text-cyan-400 text-sm mb-4">Subject: {prompt2.subject}</p>
+                )}
               </div>
               {renderButton(prompt2, 2)}
             </div>
