@@ -26,19 +26,10 @@ const router = express.Router();
  *   name: Audience Quiz
  *   description: APIs for managing audience quiz sessions
  *
- * components:
- *   securitySchemes:
- *     bearerAuth:            # Security scheme definition
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
- *
  * /api/quiz/start:
  *   post:
  *     summary: Start or continue a quiz session by saving audience answer tied to subscriber user ID
  *     tags: [Audience Quiz]
- *     security:
- *       - bearerAuth: []     # Apply Bearer token security
  *     requestBody:
  *       required: true
  *       content:
@@ -93,8 +84,7 @@ const router = express.Router();
  *       500:
  *         description: Server error
  */
-
-router.post('/start', authUser, createAudience);
+router.post('/start', createAudience);
 
 
 /**
