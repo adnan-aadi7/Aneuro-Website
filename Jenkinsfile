@@ -1,6 +1,6 @@
 pipeline {
     agent any
-    
+
     environment {
         NODE_HOME = "/usr/local/bin"
         PATH = "${NODE_HOME}:${env.PATH}"
@@ -33,7 +33,7 @@ pipeline {
 
                     echo "🚀 Deploying frontend to Nginx..."
                     sh '''
-                        sudo mkdir -p /var/www/aneuro-website
+                        mkdir -p /var/www/aneuro-website
                         sudo rm -rf /var/www/aneuro-website/*
                         sudo cp -r dist/* /var/www/aneuro-website/
                         sudo systemctl reload nginx
