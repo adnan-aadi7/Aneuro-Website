@@ -33,10 +33,10 @@ pipeline {
 
                     echo "🚀 Deploying frontend to Nginx..."
                     sh '''
-                        mkdir -p /var/www/aneuro-website
-                         rm -rf /var/www/aneuro-website/*
-                         cp -r dist/* /var/www/aneuro-website/
-                         systemctl reload nginx
+                       sudo mkdir -p /var/www/aneuro-website
+                       sudo rm -rf /var/www/aneuro-website/*
+                       sudo cp -r dist/* /var/www/aneuro-website/
+                       sudo systemctl restart nginx
                     '''
                 }
             }
