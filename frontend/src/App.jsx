@@ -41,7 +41,7 @@ import AdminLayout from "./admin/layout/layout";
 import AdminDashboard from "./admin/pages/dashboard/AdminDashboard";
 import Users from "./admin/pages/users/Users";
 import Details from "./admin/pages/users/Details";
-import Support from "./admin/pages/supportFeedback/Support";
+import Support from "./admin/pages/supportFeedback/support";
 import Userdetail from "./admin/pages/supportFeedback/userdetail";
 import BillingOverview from "./admin/pages/Managesubscription/billingOverview";
 import UserDetails from "./admin/pages/Managesubscription/user-details";
