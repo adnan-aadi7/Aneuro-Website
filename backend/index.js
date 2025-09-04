@@ -34,7 +34,7 @@ const startServer = async () => {
     app.use('/api/webhook', webhookRoutes);
 
     app.use(cors({
-      origin: ['https://aneuro.io'],
+      origin: ['http://aneuro.io'],
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']

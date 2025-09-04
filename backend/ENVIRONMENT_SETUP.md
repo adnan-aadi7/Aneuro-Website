@@ -22,7 +22,7 @@ FACEBOOK_APP_SECRET=your_facebook_app_secret
 FACEBOOK_CALLBACK_URL=http://localhost:3000/api/auth/facebook/callback
 
 # Frontend URL (for OAuth redirects)
-FRONTEND_URL=https://aneuro.io
+FRONTEND_URL=http://aneuro.io
 
 # Email Configuration (for password reset)
 EMAIL_USER=your_email@gmail.com
@@ -55,7 +55,7 @@ SESSION_SECRET=your_session_secret_key
 
 ### Frontend URL Configuration
 The `FRONTEND_URL` is crucial for Google OAuth redirects. Make sure it matches your frontend development server URL:
-- Development: `https://aneuro.io` (Vite default)
+- Development: `http://aneuro.io` (Vite default)
 - Production: `https://yourdomain.com`
 
 ### Google Cloud Console Setup
