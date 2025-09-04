@@ -1,5 +1,5 @@
 import { Upload, Edit, Trash2 } from "lucide-react"; 
-import Modal from "../support&feedback/modal";
+import Modal from "../supportAndfeedback/modal";
 import { useState } from "react";
 
 const Systemslogstable = ({ logs = [] }) => {
