@@ -7,7 +7,7 @@ import EmailSequenceCard from "../../../components/cms/overviewTab/EmailSequence
 import PromptPacksCard from "../../../components/cms/overviewTab/PromptPacksCard";
 import FunnelTemplateCard from "../../../components/cms/overviewTab/FunnelTemplateCard";
 import RecentActivity from "../../../components/cms/overviewTab/RecentActivity";
-import PromptPacks from "../../../components/cms/promptTab/Promptpacks";
+import PromptPacks from "../../../components/cms/promptTab/PromptPacks";
 import FunnelTemplates from "../../../components/cms/funnelTab/FunnelTemplates";
 import ScheduledReleasesTable from "../../../components/cms/sheduleReleasesTab/ScheduledReleasesTable";
 import Cards from "../../../components/cms/sheduleReleasesTab/Cards";
