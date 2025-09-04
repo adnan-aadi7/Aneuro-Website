@@ -43,20 +43,20 @@ pipeline {
         }
 
         stage('Backend Setup & Restart') {
-            steps {
-                dir('backend') {
-                    echo "📦 Installing backend dependencies..."
-                    sh 'npm install'
+    steps {
+        dir('backend') {
+            echo "📦 Installing backend dependencies..."
+            sh 'npm install'
 
-                    echo "🚀 Restarting backend service..."
-                    sh '''
-                        pm2 delete aneuro-backend || true
-                        pm2 start npm --name "aneuro-backend" -- run start
-                        pm2 save
-                    '''
-                }
-            }
+            echo "🚀 Restarting backend service..."
+            sh '''
+                /usr/bin/pm2 delete aneuro-backend || true
+                /usr/bin/pm2 start npm --name "aneuro-backend" -- run start
+                /usr/bin/pm2 save
+            '''
         }
+    }
+}
     }
     
 
