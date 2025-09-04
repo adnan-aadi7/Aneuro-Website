@@ -128,7 +128,7 @@ const Audience = () => {
   });
 
   const { userId } = useParams(); // route: /Audience-quiz/:userId
-  const API_BASE = import.meta.env.VITE_API_URL; // e.g. http://localhost:4000
+  const API_BASE = import.meta.env.VITE_API_URL; // e.g. http://api.aneuro.io
 
   const optionLetter = (i) => String.fromCharCode(65 + i);
 
