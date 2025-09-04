@@ -1,6 +1,6 @@
 pipeline {
     agent any
-
+    
     environment {
         NODE_HOME = "/usr/local/bin"
         PATH = "${NODE_HOME}:${env.PATH}"
