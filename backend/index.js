@@ -34,14 +34,15 @@ const startServer = async () => {
     app.use('/api/webhook', webhookRoutes);
 
     app.use(cors({
-      origin: ['http://aneuro.io'],
+      origin: ['http://aneuro.io', 'http://localhost:5173'],
+
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
     }));
 
     app.use(express.json());
-      
+          
      app.set("trust proxy", true);
 
     // Session configuration for Passport

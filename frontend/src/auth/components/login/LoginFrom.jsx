@@ -71,6 +71,12 @@ export default function LoginForm() {
       const token = payload?.token;
       const userId = user?._id || user?.id;
 
+      // Admins bypass quiz and subscription checks
+      if (user?.userType === "admin") {
+        navigate("/admin/dashboard");
+        return;
+      }
+
       // --- QUIZ GATE ---
       // Prefer values returned on login if present
       let completion =
@@ -93,7 +99,7 @@ export default function LoginForm() {
           completion =
             dataNode?.completionPercentage ??
             (dataNode?.isCompleted ? 100 : undefined);
-        } catch (err) {
+        } catch {
           // On any error (including 404), be safe and send to /quiz
           navigate("/quiz");
           return;
@@ -112,10 +118,6 @@ export default function LoginForm() {
         user.subscription.plan &&
         user.subscription.status === "active";
 
-      if (user?.userType === "admin") {
-        navigate("/admin/dashboard");
-        return;
-      }
       if (hasActiveSubscription) {
         navigate("/client/dashboard");
         return;

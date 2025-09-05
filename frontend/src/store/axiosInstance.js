@@ -2,6 +2,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
+  // baseURL: "http://localhost:4000/api",
   baseURL: "http://api.aneuro.io/api",
   headers: { "Content-Type": "application/json" },
 });

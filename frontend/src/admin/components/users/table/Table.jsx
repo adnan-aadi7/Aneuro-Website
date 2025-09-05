@@ -56,8 +56,11 @@ export default function Table() {
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
-            style={{ transition: "stroke-dashoffset 0.4s" }}
-            transform={`rotate(-90 ${size / 2} ${size / 2})`}
+            style={{ 
+              transition: "stroke-dashoffset 0.4s",
+              transform: `rotate(-90deg)`,
+              transformOrigin: `${size / 2}px ${size / 2}px`
+            }}
           />
         </svg>
       </div>

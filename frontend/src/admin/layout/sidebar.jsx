@@ -12,8 +12,10 @@ import {
 import { CiSettings } from "react-icons/ci";
 import { FiLogOut } from "react-icons/fi";
 import logo from "../../assets/auth/logo.png";
+import axiosInstance from "../../store/axiosInstance";
 
 const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
+  const navigate = useNavigate();
   const menuItems = [
     { icon: MdOutlineDashboard, label: "Dashboard", to: "/admin/dashboard" },
     { icon: TbUsers, label: "Users", to: "/admin/users" },
@@ -31,8 +33,28 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
 
   const bottomItems = [
     { icon: CiSettings, label: "Setting", to: "/admin/settings" },
-    { icon: FiLogOut, label: "Logout", to: "/login" },
+    { icon: FiLogOut, label: "Logout" },
   ];
+
+  const handleLogout = async () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+
+      if (axiosInstance?.defaults?.headers?.common?.Authorization) {
+        delete axiosInstance.defaults.headers.common.Authorization;
+      }
+
+      document.cookie = "token=; Max-Age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+
+      if (typeof onSidebarClose === "function") onSidebarClose();
+      navigate("/login", { replace: true });
+      // window.location.reload(); // optional
+    } catch (e) {
+      console.error("Logout error:", e);
+      navigate("/login", { replace: true });
+    }
+  };
 
   return (
     <>
@@ -100,6 +122,18 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
           <div className=" py-4 px-5 mt-6">
             {bottomItems.map((item) => {
               const Icon = item.icon;
+              if (item.label === "Logout") {
+                return (
+                  <button
+                    key={item.label}
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-4 py-3 font-medium text-[15px] transition-all text-gray-400 hover:text-gray-300 hover:bg-gray-800/50"
+                  >
+                    <Icon size={22} />
+                    {item.label}
+                  </button>
+                );
+              }
               return (
                 <NavLink
                   key={item.label}
