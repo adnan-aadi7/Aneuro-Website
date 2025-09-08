@@ -142,12 +142,12 @@ export default function Tabs({ user: userProp, userId: userIdProp }) {
           >
             Delete Account
           </button>
-          <button
+          {/* <button
             className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-transparent border border-slate-300 text-white hover:bg-slate-700 hover:text-white transition-colors text-xs sm:text-sm font-medium"
             onClick={() => setShowGetCode(true)}
           >
             Reset Password
-          </button>
+          </button> */}
         </div>
       </div>
 
