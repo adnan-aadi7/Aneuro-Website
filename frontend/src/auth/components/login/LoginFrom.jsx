@@ -23,6 +23,7 @@ export default function LoginForm() {
     (state) => state.user
   );
   const [searchParams] = useSearchParams();
+  
 
   useEffect(() => {
     dispatch(resetUserStatus());
@@ -175,7 +176,7 @@ export default function LoginForm() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-white text-xs sm:text-sm font-medium mb-2">
-                E-mail or Phone Number
+                E-mail 
               </label>
               <input
                 type="email"

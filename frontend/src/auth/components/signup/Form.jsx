@@ -28,7 +28,12 @@ export default function Form() {
       ...prev,
       [name]: value,
     }));
+    if (name === "name") {
+      const onlyLetters = value.replace(/[^a-zA-Z\s]/g, "");
+      setFormData((prev) => ({ ...prev, [name]: onlyLetters }));
+    } 
   };
+ 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -72,7 +77,7 @@ export default function Form() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen w-full px-2">
+    <div className="flex justify-center items-center w-full px-2">
       <div className="w-full max-w-sm sm:max-w-md mx-auto px-4 py-6 bg-opacity-80">
         {/* Logo */}
         <div className="flex justify-center">

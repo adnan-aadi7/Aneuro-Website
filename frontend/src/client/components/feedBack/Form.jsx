@@ -23,7 +23,7 @@ const Form = () => {
     email: "",
     mobile: "",
     message: "",
-    categories: ["Quiz Problem", "Bug/Error Report"],
+    categories: ["Quiz Problem"],
     file: null,
   });
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -72,17 +72,21 @@ const Form = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    if (name === "mobile") {
+      const numeric = value.replace(/\D/g, "");
+      setForm((prev) => ({ ...prev, [name]: numeric }));
+      return;
+    }
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleCategoryToggle = (cat) => {
+    // Keep checkboxes, but ensure only one is active by toggling clicked one
     setForm((prev) => {
       const exists = prev.categories.includes(cat);
       return {
         ...prev,
-        categories: exists
-          ? prev.categories.filter((c) => c !== cat)
-          : [...prev.categories, cat],
+        categories: exists ? [] : [cat],
       };
     });
     // Do not close dropdown here
@@ -166,6 +170,8 @@ const Form = () => {
             value={form.mobile}
             onChange={handleInputChange}
             placeholder="Mobile Number"
+            inputMode="numeric"
+            pattern="[0-9]*"
             className="bg-[#23232C] text-white px-4 py-3 rounded focus:outline-none placeholder-gray-400"
           />
           {/* Category Dropdown */}

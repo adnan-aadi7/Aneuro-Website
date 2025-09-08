@@ -196,7 +196,6 @@ export default function Quiz() {
           selectedLetter={answers[current.number] || null}
           onSelect={handleSelect}          // click option → save + auto-advance (except last)
           onBack={!isFirst ? handleBack : undefined}
-          onClose={handleClose}
           onSubmit={isLast ? handleSubmit : undefined} // last question shows Submit
           saving={saving}
           isLast={isLast}

@@ -46,13 +46,17 @@ export default function QuestionModal({
           <h2 className="text-2xl font-bold text-white tracking-wide text-center flex-1">
             {title}
           </h2>
-          <button
-            className="text-white hover:text-cyan-400 transition"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            <X size={28} />
-          </button>
+          {onClose ? (
+            <button
+              className="text-white hover:text-cyan-400 transition"
+              onClick={onClose}
+              aria-label="Close"
+            >
+              <X size={28} />
+            </button>
+          ) : (
+            <span className="w-[28px] h-[28px] inline-block" aria-hidden="true" />
+          )}
         </div>
 
         {/* Question text */}

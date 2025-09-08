@@ -42,7 +42,7 @@ const Transformation = () => {
                   </div>
 
                   <button className="text-black  w-[180px] font-bold text-[16px] px-6 py-3 mt-8 cursor-pointer rounded-full bg-[linear-gradient(to_right,_#0A95A3,_#12DCF0,_#0A95A3)]">
-                    more about us
+                    More about us
                   </button>
                   
             </div>
