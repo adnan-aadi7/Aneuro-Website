@@ -175,7 +175,7 @@ export default function Form() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-cyan-400 text-gray-900 py-3 rounded-md font-semibold hover:bg-cyan-300 transition-colors"
+                className="cursor-pointer w-full bg-cyan-400 text-gray-900 py-3 rounded-md font-semibold hover:bg-cyan-300 transition-colors"
               >
                 {loading ? "Signing up..." : "Sign up"}
               </button>

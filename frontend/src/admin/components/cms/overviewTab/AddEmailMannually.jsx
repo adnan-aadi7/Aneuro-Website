@@ -88,7 +88,7 @@ const AddEmailMannually = () => {
     if (!sel || sel.rangeCount === 0 || !editor.contains(sel.anchorNode)) {
       const range = document.createRange();
       range.selectNodeContents(editor);
-      range.collapse(false); // place caret at end
+      range.collapse(false);
       sel.removeAllRanges();
       sel.addRange(range);
     }
@@ -598,7 +598,6 @@ const AddEmailMannually = () => {
     if (editorRef.current) {
       editorRef.current.focus();
     }
-    // prefer CSS styling over presentational tags
     try { document.execCommand('styleWithCSS', false, true); } catch {
       // no-op
     }
@@ -1025,7 +1024,6 @@ const AddEmailMannually = () => {
               color: #94a3b8;
               pointer-events: none;
             }
-            /* Ensure lists render bullets/numbers inside the editor */
             [contenteditable] ul {
               list-style: disc;
               margin-left: 1.25rem;
