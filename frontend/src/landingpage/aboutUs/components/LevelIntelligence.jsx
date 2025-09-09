@@ -4,6 +4,12 @@ import brainBg from "../../../assets/aboutUs/pic2.png";
 import aIcon from "../../../assets/aboutUs/icon.png";
 
 const LevelIntelligence = () => {
+  const scrollFooterAboutUs = () => {
+    const footerSection = document.getElementById('footer-section-about-us');
+    if (footerSection) {
+      footerSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
   return (
     <section className="w-full bg-black py-12 md:py-20 lg:px-4 md:px-20">
       {/* Top Section with Heading */}
@@ -79,7 +85,9 @@ const LevelIntelligence = () => {
               Whether you're looking to build a custom neural network, explore
               deep learning.
             </p>
-            <button className="bg-gradient-to-r from-[#12DCF0] to-[#1DE6FB] text-white font-semibold px-6 md:px-8 py-2 md:py-3 rounded-full shadow-lg mt-2 w-auto text-xs md:text-base">
+            <button className="cursor-pointer bg-gradient-to-r from-[#12DCF0] to-[#1DE6FB] text-white font-semibold px-6 md:px-8 py-2 md:py-3 rounded-full shadow-lg mt-2 w-auto text-xs md:text-base"
+            onClick={scrollFooterAboutUs}
+            >
               Contact Us
             </button>
           </div>
@@ -115,7 +123,9 @@ const LevelIntelligence = () => {
         <span className="text-white mb-2 md:mb-0">
           Be the change your community needs -
         </span>
-        <a href="#" className="text-[#12DCF0] underline">
+        <a href="/signup" className="text-[#12DCF0] underline"
+        
+        >
           get involved with us today!
         </a>
       </div>

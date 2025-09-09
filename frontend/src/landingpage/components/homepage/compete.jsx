@@ -1,6 +1,12 @@
 import { Link } from "react-router-dom";
 
 const Compete =()=>{
+  const scrollToPricing = () => {
+    const pricingSection = document.getElementById('pricing-section');
+    if (pricingSection) {
+      pricingSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
     return(
        <div className="overflow-hidden flex flex-col items-center justify-center py-12 relative bg-[url('/home/lastbg.png')] bg-no-repeat bg-cover bg-center w-full   rounded-lg border border-[#FFFFFF0F]">
@@ -24,7 +30,9 @@ const Compete =()=>{
   </button>
 </Link>
 <Link to="/">
-  <button className="cursor-pointer px-6 py-3 border border-white/60 rounded-full font-semibold hover:bg-white hover:text-black transition">
+  <button className="cursor-pointer px-6 py-3 border border-white/60 rounded-full font-semibold hover:bg-white hover:text-black transition" 
+  onClick={scrollToPricing}
+  >
     View Pricing
   </button>
 </Link>

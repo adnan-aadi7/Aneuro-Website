@@ -1,5 +1,11 @@
 import { Check } from "lucide-react";
 import { ArrowRight } from "lucide-react";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchStripeProducts } from "../../../store/Slice/PaymentSlice";
+import { useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+
+
 const plans = [
   {
     icon:"/home/1.svg",
@@ -61,6 +67,67 @@ const plans = [
   },
 ];
 const Subscription = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { products } = useSelector((state) => state.payment);
+
+  useEffect(() => {
+    dispatch(fetchStripeProducts());
+  }, [dispatch]);
+  console.log("products", products);
+
+  // Map Stripe products to correct order: Starter, Growth, Enterprise
+  const getOrderedProducts = () => {
+    if (!products || products.length === 0) return plans;
+    
+    // Create a mapping from plan names to static plan data
+    const planMap = {
+      'Starter': plans[0],
+      'Growth': plans[1], 
+      'Enterprise': plans[2]
+    };
+    
+    // Map products to correct order: Starter, Growth, Enterprise
+    const orderedProducts = [];
+    
+    // Find and add Starter first
+    const starterProduct = products.find(p => p.name === 'Starter');
+    if (starterProduct) {
+      orderedProducts.push({
+        ...planMap['Starter'],
+        stripeProduct: starterProduct,
+        price: `$${starterProduct.price}`,
+        priceId: starterProduct.priceId
+      });
+    }
+    
+    // Find and add Growth second
+    const growthProduct = products.find(p => p.name === 'Growth');
+    if (growthProduct) {
+      orderedProducts.push({
+        ...planMap['Growth'],
+        stripeProduct: growthProduct,
+        price: `$${growthProduct.price}`,
+        priceId: growthProduct.priceId
+      });
+    }
+    
+    // Find and add Enterprise third
+    const enterpriseProduct = products.find(p => p.name === 'Enterprise');
+    if (enterpriseProduct) {
+      orderedProducts.push({
+        ...planMap['Enterprise'],
+        stripeProduct: enterpriseProduct,
+        price: `$${enterpriseProduct.price}`,
+        priceId: enterpriseProduct.priceId
+      });
+    }
+    
+    return orderedProducts.length > 0 ? orderedProducts : plans;
+  };
+
+  const displayPlans = getOrderedProducts();
+  
   return (
     <div className="flex flex-col items-center p-2 lg:p-8 justify-center relative bg-[url('/home/bgimg.png')] mt-12 bg-no-repeat bg-cover bg-center w-full mb-8 rounded-lg border border-[#FFFFFF0F]">
       {/* Header */}
@@ -82,7 +149,7 @@ const Subscription = () => {
 
       {/* Plans */}
       <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-6 w-full w-full  lg:max-w-7xl items-center">
-        {plans.map((plan, index) => (
+        {displayPlans.map((plan, index) => (
          <div
   key={index}
   className={`relative rounded-lg border border-[#FFFFFF0F] bg-[#0A0B0D] p-8 flex flex-col justify-between transition-all duration-300 
@@ -122,16 +189,18 @@ const Subscription = () => {
                             <h1 className="text-white mb-4">Best for:</h1>
 
                 {` ${plan.bestFor}`}</div>
-            <button
-              className={`mt-6 px-5 py-3 text-sm rounded-full font-bold flex items-center cursor-pointer justify-center ${
-                plan.highlight
-                  ? "bg-[linear-gradient(to_right,_#1FC3F9,_#6AEFFB)]  text-black gap-3"
-                  : "border border-[#12DCF0] text-[#12DCF0] hover:bg-[#12dcf010] text-white gap-3 "
-              }`}
-            >
-              {plan.button}
-              <ArrowRight/>
-            </button>
+            <Link to="/signup">
+              <button
+                className={`mt-6 px-5 py-3 text-sm rounded-full font-bold flex items-center cursor-pointer justify-center ${
+                  plan.highlight
+                    ? "bg-[linear-gradient(to_right,_#1FC3F9,_#6AEFFB)]  text-black gap-3"
+                    : "border border-[#12DCF0] text-[#12DCF0] hover:bg-[#12dcf010] text-white gap-3 "
+                }`}
+              >
+                {plan.button}
+                <ArrowRight/>
+              </button>
+            </Link>
           </div>
         ))}
       </div>

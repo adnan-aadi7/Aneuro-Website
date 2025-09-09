@@ -1,6 +1,12 @@
 
 
 const Behavioralprecision =()=>{
+    const scrollToFooter = () => {
+        const footerSection = document.getElementById('footer-section');
+        if (footerSection) {
+            footerSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
 
     return(
         <div className="relative flex flex-col w-full items-center justify-center mb-12 gap-8 px-3 lg:px-10 overflow-x-hidden">
@@ -38,7 +44,10 @@ const Behavioralprecision =()=>{
               <br/>
               Enter a secure, intelligent environment designed for strategic decision-making
               </p>
-             <button className="bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] text-white px-6 py-4 cursor-pointer mt-8 text-[16px] font-bold w-[200px] rounded-full">
+             <button 
+               onClick={scrollToFooter}
+               className="bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] text-white px-6 py-4 cursor-pointer mt-8 text-[16px] font-bold w-[200px] rounded-full"
+             >
                Contact Us Today!
              </button>
 
@@ -63,7 +72,10 @@ const Behavioralprecision =()=>{
               <br/>
               Advanced algorithms analyze patterns to deliver precision-matched strategic tools
               </p>
-             <button className="bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] text-white px-6 py-4 cursor-pointer mt-8 text-[16px] font-bold w-[200px] rounded-full">
+             <button 
+               onClick={scrollToFooter}
+               className="bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] text-white px-6 py-4 cursor-pointer mt-8 text-[16px] font-bold w-[200px] rounded-full"
+             >
                Contact Us Today!
              </button>
 
@@ -86,7 +98,10 @@ const Behavioralprecision =()=>{
               <br/>
                 Activate your customized strategy suite with behavioral intelligence at its core
               </p>
-             <button className="bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] text-white px-6 py-4 cursor-pointer mt-8 text-[16px] font-bold w-[200px] rounded-full">
+             <button 
+               onClick={scrollToFooter}
+               className="bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] text-white px-6 py-4 cursor-pointer mt-8 text-[16px] font-bold w-[200px] rounded-full"
+             >
                Contact Us Today!
              </button>
 

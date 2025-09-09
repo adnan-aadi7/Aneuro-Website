@@ -10,6 +10,13 @@ import Footer from "../aboutUs/components/Footer";
 import Compete from "../components/homepage/compete";
 
 const Home = () => {
+  const scrollToPricing = () => {
+    const pricingSection = document.getElementById('pricing-section');
+    if (pricingSection) {
+      pricingSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="w-full mx-auto px-4 md:px-12 max-w-[1750px] bg-black font-manrope ">
       <Navbar />
@@ -22,7 +29,8 @@ const Home = () => {
         primaryBtnText="GET STARTED"
         primaryBtnLink="/signup"
         secondaryBtnText="VIEW PRICING"
-        secondaryBtnLink="/"
+        secondaryBtnLink="#"
+        onSecondaryClick={scrollToPricing}
         bottomImage="/home/img.png"
         bottomText="Trusted by leading businesses in every industry"
       />
@@ -31,10 +39,14 @@ const Home = () => {
       <Behavioralprecision />
       <Neural />
       <Fact />
-      <Subscription />
+      <div id="pricing-section">
+        <Subscription />
+      </div>
       <Faq />
       <Compete />
-      <Footer />
+      <div id="footer-section">
+        <Footer />
+      </div>
     </div>
   );
 };
