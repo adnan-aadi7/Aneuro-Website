@@ -210,10 +210,25 @@ const MannualPrompt = () => {
     ));
   };
 
+  // Ensure editor has focus and a valid caret position
+  const focusEditorWithCaret = () => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.focus();
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || !editor.contains(sel.anchorNode)) {
+      const range = document.createRange();
+      range.selectNodeContents(editor);
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  };
+
   // Execute formatting commands
   const executeCommand = (command, value = null) => {
+    focusEditorWithCaret();
     document.execCommand(command, false, value);
-    editorRef.current.focus();
     updateActiveFormatting();
   };
 
@@ -578,6 +593,9 @@ const MannualPrompt = () => {
     if (editorRef.current) {
       editorRef.current.focus();
     }
+    try { document.execCommand('styleWithCSS', false, true); } catch {
+      // no-op
+    }
   }, []);
 
   // Add event listeners for selection changes
@@ -838,6 +856,7 @@ const MannualPrompt = () => {
               {/* Basic Formatting */}
               {formatButtons.map((button, index) => (
                 <button
+                  type="button"
                   key={index}
                   className={`p-2  transition-colors ${
                     activeFormatting[button.key]
@@ -845,7 +864,7 @@ const MannualPrompt = () => {
                       : 'hover:bg-slate-700 text-slate-300 hover:text-white'
                   }`}
                   title={button.label}
-                  onClick={() => executeCommand(button.command)}
+                  onMouseDown={(e) => { e.preventDefault(); executeCommand(button.command); }}
                 >
                   <button.icon size={16} />
                 </button>
@@ -856,6 +875,7 @@ const MannualPrompt = () => {
               {/* Alignment */}
               {alignButtons.map((button, index) => (
                 <button
+                  type="button"
                   key={index}
                   className={`p-2  transition-colors ${
                     activeFormatting[button.key]
@@ -863,7 +883,7 @@ const MannualPrompt = () => {
                       : 'hover:bg-slate-700 text-slate-300 hover:text-white'
                   }`}
                   title={button.label}
-                  onClick={() => handleAlignment(button.alignment)}
+                  onMouseDown={(e) => { e.preventDefault(); handleAlignment(button.alignment); }}
                 >
                   <button.icon size={16} />
                 </button>
@@ -874,6 +894,7 @@ const MannualPrompt = () => {
               {/* Lists */}
               {listButtons.map((button, index) => (
                 <button
+                  type="button"
                   key={index}
                   className={`p-2  transition-colors ${
                     activeFormatting[button.key]
@@ -881,7 +902,7 @@ const MannualPrompt = () => {
                       : 'hover:bg-slate-700 text-slate-300 hover:text-white'
                   }`}
                   title={button.label}
-                  onClick={() => executeCommand(button.command)}
+                  onMouseDown={(e) => { e.preventDefault(); executeCommand(button.command); }}
                 >
                   <button.icon size={16} />
                 </button>
@@ -891,25 +912,28 @@ const MannualPrompt = () => {
               
               {/* Link and Media */}
               <button
+                type="button"
                 className="p-2  hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
                 title="Insert Link"
-                onClick={handleLink}
+                onMouseDown={(e) => { e.preventDefault(); handleLink(); }}
               >
                 <Link size={16} />
               </button>
               
               <button
+                type="button"
                 className="p-2  hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
                 title="Attach File"
-                onClick={handleFileUpload}
+                onMouseDown={(e) => { e.preventDefault(); handleFileUpload(); }}
               >
                 <Paperclip size={16} />
               </button>
               
               <button
+                type="button"
                 className="p-2  hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
                 title="Insert Image"
-                onClick={handleImage}
+                onMouseDown={(e) => { e.preventDefault(); handleImage(); }}
               >
                 <Image size={16} />
               </button>
@@ -999,6 +1023,19 @@ const MannualPrompt = () => {
               content: attr(data-placeholder);
               color: #94a3b8;
               pointer-events: none;
+            }
+            [contenteditable] ul {
+              list-style: disc;
+              margin-left: 1.25rem;
+              padding-left: 1.25rem;
+            }
+            [contenteditable] ol {
+              list-style: decimal;
+              margin-left: 1.25rem;
+              padding-left: 1.25rem;
+            }
+            [contenteditable] li {
+              margin: 0.25rem 0;
             }
           `}</style>
         </div>
