@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import Login from "../login/Login";
 import Welcome from "../../components/quiz/Welcome";
+import Tankyou from "../../components/quiz/Tankyou";
 import QuestionModal from "../../components/quiz/QuestionModal";
 import axios from "../../../store/axiosInstance";
 import { useNavigate } from "react-router-dom";
@@ -130,10 +131,11 @@ export default function Quiz() {
   const userId =
     reduxUser?._id || reduxUser?.id || localStorage.getItem("userId") || "";
 
-  const [step, setStep] = useState("welcome"); // 'welcome' | 'q' | 'login'
+  const [step, setStep] = useState("welcome"); // 'welcome' | 'q' | 'login' | 'thankyou'
   const [idx, setIdx] = useState(0);
   const [saving, setSaving] = useState(false);
   const [answers, setAnswers] = useState({}); // { [qNum]: "A" | "B" | "C" | "D" }
+  const [showReview, setShowReview] = useState(false);
 
   const isFirst = idx === 0;
   const isLast = idx === QUESTIONS.length - 1;
@@ -177,9 +179,9 @@ export default function Quiz() {
     if (!isFirst) setIdx((i) => i - 1);
   };
 
-  // Final submit → proceed to dashboard
+  // Final submit → show Thank You; user decides where to go next
   const handleSubmit = () => {
-    navigate("/client/dashboard");
+    setStep("thankyou");
   };
 
   return (
@@ -198,6 +200,13 @@ export default function Quiz() {
         </>
       )}
       {step === "welcome" && <Welcome onClose={handleClose} />}
+      {step === "thankyou" && (
+        <Tankyou
+          onClose={() => setStep("q")}
+          onGoHome={() => navigate("/client/dashboard")}
+          onReview={() => setShowReview(true)}
+        />
+      )}
 
       {step === "q" && (
         <QuestionModal
@@ -212,6 +221,45 @@ export default function Quiz() {
           saving={saving}
           isLast={isLast}
         />
+      )}
+
+      {showReview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50"></div>
+          <div className="relative z-10 bg-[#0f0f0f] border border-gray-700 rounded-xl p-6 w-full max-w-2xl mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white text-xl font-semibold">Your Answers</h3>
+              <button className="text-gray-300 hover:text-white" onClick={() => setShowReview(false)}>✕</button>
+            </div>
+            <div className="max-h-[60vh] overflow-y-auto pr-2 space-y-4">
+              {QUESTIONS.map((q) => (
+                <div key={q.number} className="border border-gray-700 rounded-lg p-4">
+                  <div className="text-gray-300 text-sm mb-1">Question {q.number}</div>
+                  <div className="text-white font-medium mb-2">{q.text}</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {q.options.map((opt, idx) => {
+                      const letter = ["A","B","C","D"][idx];
+                      const selected = answers[q.number] === letter;
+                      return (
+                        <div
+                          key={letter}
+                          className={`px-3 py-2 rounded border ${selected ? "border-cyan-400 text-cyan-300" : "border-gray-700 text-gray-300"}`}
+                        >
+                          <span className="mr-2 text-xs opacity-75">{letter}.</span>{opt}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 flex justify-end">
+              <button className="bg-cyan-400 text-black font-semibold px-4 py-2 rounded hover:bg-cyan-300" onClick={() => setShowReview(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
