@@ -19,6 +19,8 @@ const QuestionnaireLinks = () => {
 
   const [copiedShare, setCopiedShare] = useState(false);
   const [copiedRedirect, setCopiedRedirect] = useState(false);
+  const [editableShare, setEditableShare] = useState(false);
+  const [editableRedirect, setEditableRedirect] = useState(false);
 
   const handleCopy = async (ref, onSuccess) => {
     try {
@@ -56,36 +58,45 @@ const QuestionnaireLinks = () => {
             Let's make the day productive
           </div>
         </div>
-        <div className="flex-1 flex items-center gap-2 px-2 py-1">
-          <input
-            ref={shareRef}
-            type="text"
-            readOnly
-            value={shareUrl}
-            className="flex-1 bg-transparent border border-gray-400 rounded-md px-4 py-2 text-white text-sm md:text-base truncate focus:outline-none"
-          />
-          <button className="p-2" title="Edit">
-            <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
-              <path
-                d="M14.85 2.85a2.121 2.121 0 0 1 3 3l-9.5 9.5-3.5.5.5-3.5 9.5-9.5Z"
-                stroke="#fff"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-          <button
-            className="bg-cyan-400 hover:bg-cyan-300 text-[#232432] font-semibold px-5 py-2 rounded-md ml-2 transition-colors"
-            onClick={() =>
-              handleCopy(shareRef, () => {
-                setCopiedShare(true);
-                setTimeout(() => setCopiedShare(false), 1500);
-              })
-            }
-          >
-            {copiedShare ? "Copied" : "Copy"}
-          </button>
+        <div className="flex-1 px-2 py-1">
+          <div className="flex items-stretch border border-gray-400 overflow-hidden h-11">
+            <input
+              ref={shareRef}
+              type="text"
+              readOnly={!editableShare}
+              value={shareUrl}
+              className="flex-1 bg-transparent px-4 text-white text-sm md:text-base truncate focus:outline-none"
+            />
+            <button
+              className="px-2 mx-1 my-1 text-white hover:bg-white/5"
+              title="Edit"
+              onClick={() => {
+                setEditableShare((e) => !e);
+                setTimeout(() => shareRef.current && shareRef.current.focus(), 0);
+              }}
+            >
+              <svg width="18" height="18" fill="none" viewBox="0 0 20 20">
+                <path
+                  d="M14.85 2.85a2.121 2.121 0 0 1 3 3l-9.5 9.5-3.5.5.5-3.5 9.5-9.5Z"
+                  stroke="#fff"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+            <button
+              className="px-4 bg-cyan-400 hover:bg-cyan-300 text-[#232432] font-semibold"
+              onClick={() =>
+                handleCopy(shareRef, () => {
+                  setCopiedShare(true);
+                  setTimeout(() => setCopiedShare(false), 1500);
+                })
+              }
+            >
+              {copiedShare ? "Copied" : "Copy"}
+            </button>
+          </div>
         </div>
       </div>
       {/* Redirect Link */}
@@ -98,36 +109,45 @@ const QuestionnaireLinks = () => {
             Let's redirect the audience
           </div>
         </div>
-        <div className="flex-1 flex items-center gap-2 px-2 py-1">
-          <input
-            ref={redirectRef}
-            type="text"
-            readOnly
-            value="https://clientsite.com/thank-you"
-            className="flex-1 bg-transparent border border-gray-400 rounded-md px-4 py-2 text-white text-sm md:text-base truncate focus:outline-none"
-          />
-          <button className="p-2" title="Edit">
-            <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
-              <path
-                d="M14.85 2.85a2.121 2.121 0 0 1 3 3l-9.5 9.5-3.5.5.5-3.5 9.5-9.5Z"
-                stroke="#fff"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-          <button
-            className="bg-cyan-400 hover:bg-cyan-300 text-[#232432] font-semibold px-5 py-2 rounded-md ml-2 transition-colors"
-            onClick={() =>
-              handleCopy(redirectRef, () => {
-                setCopiedRedirect(true);
-                setTimeout(() => setCopiedRedirect(false), 1500);
-              })
-            }
-          >
-            {copiedRedirect ? "Copied" : "Copy"}
-          </button>
+        <div className="flex-1 px-2 py-1">
+          <div className="flex items-stretch border border-gray-400  overflow-hidden h-11">
+            <input
+              ref={redirectRef}
+              type="text"
+              readOnly={!editableRedirect}
+              value="https://clientsite.com/thank-you"
+              className="flex-1 bg-transparent px-4 text-white text-sm md:text-base truncate focus:outline-none"
+            />
+            <button
+              className="px-2 mx-1 my-1 text-white hover:bg-white/5"
+              title="Edit"
+              onClick={() => {
+                setEditableRedirect((e) => !e);
+                setTimeout(() => redirectRef.current && redirectRef.current.focus(), 0);
+              }}
+            >
+              <svg width="18" height="18" fill="none" viewBox="0 0 20 20">
+                <path
+                  d="M14.85 2.85a2.121 2.121 0 0 1 3 3l-9.5 9.5-3.5.5.5-3.5 9.5-9.5Z"
+                  stroke="#fff"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+            <button
+              className="px-4 bg-cyan-400 hover:bg-cyan-300 text-[#232432] font-semibold"
+              onClick={() =>
+                handleCopy(redirectRef, () => {
+                  setCopiedRedirect(true);
+                  setTimeout(() => setCopiedRedirect(false), 1500);
+                })
+              }
+            >
+              {copiedRedirect ? "Copied" : "Copy"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
