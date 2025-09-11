@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
@@ -69,12 +70,18 @@ export default function Password() {
         newPassword: formData.password 
       })).unwrap();
       console.log("Password reset successfully:", result);
-      // Show success message and redirect to login
-      alert("Password updated successfully!");
+      // Show success toast and redirect to login
+      toast.success("Password updated successfully!");
       navigate("/login");
     } catch (error) {
       console.error("Failed to reset password:", error);
-      setLocalError(error || "Failed to reset password. Please try again.");
+      const msg = typeof error === "string" ? error : (error?.message || "Failed to reset password. Please try again.");
+      if (/same as|current password|old password/i.test(msg)) {
+        toast.error("This matches your current password. Please create a new password.");
+      } else {
+        toast.error(msg);
+      }
+      setLocalError(msg);
     }
   };
 

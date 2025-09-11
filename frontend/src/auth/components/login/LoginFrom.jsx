@@ -32,6 +32,8 @@ export default function LoginForm() {
   useEffect(() => {
     const errorParam = searchParams.get("error");
     if (errorParam) {
+      // Ensure any stale social loading flags are cleared when returning with an error
+      dispatch(resetUserStatus());
       switch (errorParam) {
         case "google_auth_failed":
           setError("Google authentication failed. Please try again.");
@@ -39,11 +41,14 @@ export default function LoginForm() {
         case "no_auth_code":
           setError("Authentication was cancelled or failed.");
           break;
+        case "facebook_auth_failed":
+          setError("Facebook authentication failed. Please try again.");
+          break;
         default:
           setError("An error occurred during authentication.");
       }
     }
-  }, [searchParams]);
+  }, [searchParams, dispatch]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
