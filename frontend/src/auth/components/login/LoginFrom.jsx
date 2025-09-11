@@ -157,7 +157,16 @@ export default function LoginForm() {
   const handleFacebookLogin = async () => {
     setError("");
     try {
-      await dispatch(facebookLogin());
+      const op = dispatch(facebookLogin()).unwrap();
+      await toastPromise(
+        op,
+        {
+          loading: "Connecting to Facebook…",
+          success: "Redirecting to Facebook",
+          error: "Facebook authentication failed",
+        },
+        { duration: 2500 }
+      );
     } catch {
       setError("Facebook authentication failed");
     }

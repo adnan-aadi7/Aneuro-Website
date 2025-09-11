@@ -388,6 +388,8 @@ const userSlice = createSlice({
 
       // GOOGLE OAUTH: URL redirect
       .addCase(googleLogin.fulfilled, (state, action) => {
+        state.googleLoading = false;
+        state.status = 'idle';
         window.location.href = action.payload.authUrl;
       })
 
@@ -402,6 +404,8 @@ const userSlice = createSlice({
 
       // FACEBOOK OAUTH: URL redirect
       .addCase(facebookLogin.fulfilled, (state, action) => {
+        state.facebookLoading = false; // ensure button not stuck if user returns/back
+        state.status = 'idle';
         window.location.href = action.payload.authUrl;
       })
 
