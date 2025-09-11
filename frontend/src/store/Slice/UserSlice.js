@@ -371,8 +371,10 @@ const userSlice = createSlice({
       .addCase(signupUser.fulfilled, (state, action) => {
         const normalized = normalizeUser(action.payload.user || {});
         state.user = normalized;
+        // If backend returns token on signup, persist and use it
+        state.token = action.payload.token || state.token || null;
         state.status = 'succeeded';
-        persistUser(normalized, state.token); // token may not be returned on signup
+        persistUser(normalized, state.token);
       })
 
       // LOGIN
@@ -416,14 +418,17 @@ const userSlice = createSlice({
       .addCase(sendOtp.fulfilled, (state) => {
         state.status = 'succeeded';
         state.forgotPasswordLoading = false;
+        state.error = null;
       })
       .addCase(verifyOtp.fulfilled, (state) => {
         state.status = 'succeeded';
         state.forgotPasswordLoading = false;
+        state.error = null;
       })
       .addCase(resetPassword.fulfilled, (state) => {
         state.status = 'succeeded';
         state.forgotPasswordLoading = false;
+        state.error = null;
       })
       .addCase(changePassword.fulfilled, (state) => {
         state.status = 'succeeded';
@@ -475,6 +480,7 @@ const userSlice = createSlice({
         (action) => action.type.endsWith('/pending'),
         (state, action) => {
           state.status = 'loading';
+          state.error = null;
           if (action.type.includes('googleLogin')) state.googleLoading = true;
           else if (action.type.includes('facebookLogin')) state.facebookLoading = true;
           else if (
