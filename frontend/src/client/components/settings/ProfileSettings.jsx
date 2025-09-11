@@ -41,6 +41,14 @@ export default function ProfileSettigs() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    if (name === "mobileNumber") {
+      const numeric = value.replace(/\D/g, "");
+      setFormData((prev) => ({
+        ...prev,
+        [name]: numeric,
+      }));
+      return;
+    }
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -234,6 +242,8 @@ export default function ProfileSettigs() {
               placeholder="Mobile Number"
               value={formData.mobileNumber}
               onChange={handleInputChange}
+              inputMode="numeric"
+              pattern="[0-9]*"
               className="w-full bg-[#2A2A39] border border-gray-600  px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-gray-500"
             />
           </div>

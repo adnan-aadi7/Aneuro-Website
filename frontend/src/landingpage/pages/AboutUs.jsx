@@ -30,7 +30,9 @@ const AboutUs = () => {
       <EneuroExist />
       <Marketing />
       <Welcome />
-      <Footer />
+      <div id="footer-section-about-us">
+        <Footer />
+      </div>
     </div>
   );
 };

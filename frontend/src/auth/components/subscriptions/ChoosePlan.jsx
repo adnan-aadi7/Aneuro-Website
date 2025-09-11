@@ -108,6 +108,24 @@ const ChoosePlan = () => {
     product.plan !== 'basic' && product.plan !== 'Basic'
   );
 
+  // For display only: swap Starter and Enterprise name/price without mutating objects
+  const starterPlan = displayPlans.find(p => (p.plan || '').toLowerCase() === 'starter');
+  const enterprisePlan = displayPlans.find(p => (p.plan || '').toLowerCase() === 'enterprise');
+
+  const getDisplayName = (plan) => {
+    const key = (plan.plan || '').toLowerCase();
+    if (key === 'starter' && enterprisePlan) return enterprisePlan.name;
+    if (key === 'enterprise' && starterPlan) return starterPlan.name;
+    return plan.name;
+  };
+
+  const getDisplayPrice = (plan) => {
+    const key = (plan.plan || '').toLowerCase();
+    if (key === 'starter' && enterprisePlan) return enterprisePlan.price;
+    if (key === 'enterprise' && starterPlan) return starterPlan.price;
+    return plan.price;
+  };
+
   return (
     <div className=" flex flex-col items-center justify-center py-8 px-2">
       {/* Modals */}
@@ -196,7 +214,7 @@ const ChoosePlan = () => {
                     className="flex flex-col items-center py-4 md:py-8"
                   >
                     <h3 className="text-white text-lg md:text-2xl font-bold mb-1 md:mb-2 tracking-wide text-center">
-                      {plan.name}
+                      {getDisplayName(plan)}
                     </h3>
                     <div
                       className="w-10 h-1 md:w-16 rounded-full mb-2 md:mb-4"
@@ -204,7 +222,7 @@ const ChoosePlan = () => {
                     />
                     <div className="flex items-end justify-center mb-0">
                       <span className="text-3xl md:text-5xl font-bold text-white leading-none">
-                        {plan.price}
+                        {getDisplayPrice(plan)}
                       </span>
                       <span className="text-base md:text-xl font-bold ml-1 mb-1 text-gray-200">
                         $

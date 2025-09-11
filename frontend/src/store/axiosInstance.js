@@ -1,8 +1,12 @@
 // axiosInstance.js
 import axios from "axios";
 
+const isBrowser = typeof window !== 'undefined';
+const isLocalhost = isBrowser && window.location.hostname === 'localhost';
+const baseURL = isLocalhost ? 'http://localhost:4000/api' : 'https://api.aneuro.io/api';
+
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:4000/api",
+  baseURL,
   headers: { "Content-Type": "application/json" },
 });
 

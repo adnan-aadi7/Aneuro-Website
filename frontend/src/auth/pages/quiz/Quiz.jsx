@@ -184,7 +184,19 @@ export default function Quiz() {
 
   return (
     <>
-      <Login />
+      {step === "login" && <Login />}
+      {step !== "login" && (
+        <>
+          {/* Background: render Login layout behind, non-interactive */}
+          <div className="fixed inset-0 z-0 pointer-events-none">
+            <Login />
+          </div>
+          {/* Dim + blur only for quiz questions (Welcome has its own overlay) */}
+          {step === "q" && (
+            <div className="fixed inset-0 z-40  backdrop-blur-sm pointer-events-none"></div>
+          )}
+        </>
+      )}
       {step === "welcome" && <Welcome onClose={handleClose} />}
 
       {step === "q" && (
@@ -196,7 +208,6 @@ export default function Quiz() {
           selectedLetter={answers[current.number] || null}
           onSelect={handleSelect}          // click option → save + auto-advance (except last)
           onBack={!isFirst ? handleBack : undefined}
-          onClose={handleClose}
           onSubmit={isLast ? handleSubmit : undefined} // last question shows Submit
           saving={saving}
           isLast={isLast}

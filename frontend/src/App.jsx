@@ -41,8 +41,8 @@ import AdminLayout from "./admin/layout/layout";
 import AdminDashboard from "./admin/pages/dashboard/AdminDashboard";
 import Users from "./admin/pages/users/Users";
 import Details from "./admin/pages/users/Details";
-import Support from "./admin/pages/support&feedback/Support";
-import Userdetail from "./admin/pages/support&feedback/userdetail";
+import Support from "./admin/pages/supportFeedback/support";
+import Userdetail from "./admin/pages/supportFeedback/userdetail";
 import BillingOverview from "./admin/pages/Managesubscription/billingOverview";
 import UserDetails from "./admin/pages/Managesubscription/user-details";
 import Refunddetail from "./admin/pages/Managesubscription/refunddetailrequest";
@@ -245,7 +245,7 @@ function App() {
               }
             />
             <Route
-              path="/admin/user/details"
+              path="/admin/user/details/:userId"
               element={
                 <AdminLayout>
                   <Details />

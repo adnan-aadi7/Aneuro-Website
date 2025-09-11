@@ -134,7 +134,15 @@ const BillingOverview = () => {
                       </span>
                     </td>
                     <td className="py-4 px-6 border-b border-slate-300 ">
-                     
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent row click
+                          console.log('Action clicked for user:', user.name);
+                        }}
+                       
+                      >
+                        <MoreVertical size={16} className="text-gray-300 text-bold" />
+                      </button>
                     </td>
                   
                   </tr>

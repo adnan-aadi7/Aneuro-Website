@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux";
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 
 const QuestionnaireLinks = () => {
   const shareRef = useRef(null);
@@ -17,10 +17,22 @@ const QuestionnaireLinks = () => {
     : `${window.location.origin}/Audience-quiz`;
 
 
-  const handleCopy = (ref) => {
-    if (ref.current) {
-      ref.current.select();
-      document.execCommand("copy");
+  const [copiedShare, setCopiedShare] = useState(false);
+  const [copiedRedirect, setCopiedRedirect] = useState(false);
+
+  const handleCopy = async (ref, onSuccess) => {
+    try {
+      const value = ref.current?.value || "";
+      if (!value) return;
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(value);
+      } else if (ref.current) {
+        ref.current.select();
+        document.execCommand("copy");
+      }
+      if (typeof onSuccess === "function") onSuccess();
+    } catch {
+      // no-op
     }
   };
 
@@ -65,9 +77,14 @@ const QuestionnaireLinks = () => {
           </button>
           <button
             className="bg-cyan-400 hover:bg-cyan-300 text-[#232432] font-semibold px-5 py-2 rounded-md ml-2 transition-colors"
-            onClick={() => handleCopy(shareRef)}
+            onClick={() =>
+              handleCopy(shareRef, () => {
+                setCopiedShare(true);
+                setTimeout(() => setCopiedShare(false), 1500);
+              })
+            }
           >
-            Copy
+            {copiedShare ? "Copied" : "Copy"}
           </button>
         </div>
       </div>
@@ -102,9 +119,14 @@ const QuestionnaireLinks = () => {
           </button>
           <button
             className="bg-cyan-400 hover:bg-cyan-300 text-[#232432] font-semibold px-5 py-2 rounded-md ml-2 transition-colors"
-            onClick={() => handleCopy(redirectRef)}
+            onClick={() =>
+              handleCopy(redirectRef, () => {
+                setCopiedRedirect(true);
+                setTimeout(() => setCopiedRedirect(false), 1500);
+              })
+            }
           >
-            Copy
+            {copiedRedirect ? "Copied" : "Copy"}
           </button>
         </div>
       </div>

@@ -2,7 +2,7 @@ import React from "react";
 import { X } from "lucide-react";
 import welcomeImg from "../../../assets/auth/welcome.png";
 
-const Welcome = ({ onClose }) => {
+const Welcome = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Overlay with blur and dark background */}
@@ -10,12 +10,12 @@ const Welcome = ({ onClose }) => {
       {/* Modal content */}
       <div className="relative z-10 text-center bg-black rounded-xl p-10 shadow-xl w-full max-w-md mx-4">
         {/* Close button */}
-        <button
+        {/* <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
         >
           <X size={24} />
-        </button>
+        </button> */}
         {/* Welcome image or text */}
         <img
           src={welcomeImg}

@@ -1,7 +1,7 @@
 import { X } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
+import api from "../store/axiosInstance";
 import { toastError } from "../toast";
 
 const questions = [
@@ -110,7 +110,7 @@ const questions = [
 const Audience = () => {
   const [showForm, setShowForm] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
-  const [showQuestion, setShowQuestion] = useState(false);
+  // Removed unused showQuestion state to satisfy linter
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [finished, setFinished] = useState(false);
@@ -128,7 +128,7 @@ const Audience = () => {
   });
 
   const { userId } = useParams(); // route: /Audience-quiz/:userId
-  const API_BASE = import.meta.env.VITE_API_URL; // e.g. http://localhost:4000
+  const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/^http:\/\//, "https://");
 
   const optionLetter = (i) => String.fromCharCode(65 + i);
 
@@ -139,7 +139,7 @@ const Audience = () => {
     const fetchCustomization = async () => {
       try {
         if (!API_BASE || !userId) return;
-        const { data } = await axios.get(`${API_BASE}/api/customization/${userId}`);
+        const { data } = await api.get(`/customization/${userId}`);
         const payload = data?.data || {};
 
         // prefer logoVariants[0].url
@@ -178,7 +178,7 @@ const Audience = () => {
 
   // Send answer
   const sendAnswer = async ({ question_number, selected_option }) => {
-    const res = await axios.post(`${API_BASE}/api/quiz/start`, {
+    const res = await api.post(`/quiz/start`, {
       user_id: userId,
       name: formData.name,
       email: formData.email,
@@ -226,11 +226,10 @@ const Audience = () => {
     e.preventDefault();
     if (formData.name && formData.email) {
       setFormSubmitted(true);
-      setShowQuestion(true);
     }
   };
 
-  const currentQuestion = questions[currentQuestionIndex];
+  // const currentQuestion = questions[currentQuestionIndex];
 
   // Styles from theme
   const cardBorderStyle = { borderColor: theme.borderColor };

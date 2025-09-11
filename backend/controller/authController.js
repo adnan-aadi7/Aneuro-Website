@@ -354,6 +354,12 @@ export const changePassword = async (req, res) => {
       return res.status(401).json({ error: "Current password is incorrect" });
     }
 
+    // Prevent reusing current password
+    const isSameAsCurrent = await bcrypt.compare(newPassword, user.password);
+    if (isSameAsCurrent) {
+      return res.status(400).json({ error: "New password cannot be the same as current password" });
+    }
+
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     await user.save();
@@ -436,6 +442,12 @@ export const resetPassword = async (req, res) => {
 
     if (!user || user.otp !== otp || new Date() > user.otpExpires) {
       return res.status(400).json({ error: "Invalid or expired OTP" });
+    }
+
+    // Disallow setting the same password as the current one
+    const isSameAsCurrent = await bcrypt.compare(newPassword, user.password);
+    if (isSameAsCurrent) {
+      return res.status(400).json({ error: "New password cannot be the same as current password" });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);

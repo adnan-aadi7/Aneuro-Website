@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getTickets, updateTicketStatus } from '../../../store/Slice/TicketSlice';
 
-export default function Support() {
+const  Support=()=> {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { tickets = [], count = 0, pagination } = useSelector((state) => state.ticket);
@@ -188,3 +188,5 @@ export default function Support() {
     </div>
   );
 }
+
+export default Support;

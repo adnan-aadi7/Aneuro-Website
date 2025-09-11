@@ -1,8 +1,31 @@
-import React from "react";
-import { ArrowUpRight } from "lucide-react";
+import React, { useState } from "react";
+import { ArrowUpRight, Loader2 } from "lucide-react";
 import headingImg from "../../../assets/aboutUs/heading.png";
+import axios from "../../../store/axiosInstance";
+import { toastSuccess, toastError } from "../../../toast";
 
-export default function Footer() {
+const Footer = () => {
+
+
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!email) return;
+    try {
+      setLoading(true);
+      await axios.post("/newsletter/subscribe", { email });
+      toastSuccess("Subscribed successfully!");
+      setEmail("");
+    } catch (err) {
+      const msg = err?.response?.data?.message || "Subscription failed";
+      toastError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <footer className="bg-[#101014] text-white pt-12 md:pt-16 px-2 md:px-16 relative overflow-hidden">
       {/* Top Section */}
@@ -82,19 +105,27 @@ export default function Footer() {
               Subscribe to our newsletter for the latest updates, exclusive
               content.
             </p>
-            <form className="flex items-center gap-2 w-full border-b border-b-gray-600 pb-1">
+            <form className="flex items-center gap-2 w-full border-b border-b-gray-600 pb-1" onSubmit={handleSubmit}>
               <input
                 type="email"
                 required
                 placeholder="Email Address *"
                 className="bg-transparent px-2 md:px-3 py-2 md:py-3 text-xs md:text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#12DCF0] w-full"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
               />
              <button
   type="submit"
-  className="bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] p-1 rounded hover:opacity-90 transition-opacity cursor-pointer"
+  className="bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] p-1 rounded hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-60"
   aria-label="Subscribe"
+  disabled={loading}
 >
-  <ArrowUpRight size={20} className="text-[#18192A]  text-white" />
+  {loading ? (
+    <Loader2 size={18} className="text-[#18192A] animate-spin" />
+  ) : (
+    <ArrowUpRight size={20} className="text-[#18192A]" />
+  )}
 </button>
 
             </form>
@@ -138,4 +169,6 @@ export default function Footer() {
       ></span>
     </footer>
   );
-}
+};
+
+export default Footer;

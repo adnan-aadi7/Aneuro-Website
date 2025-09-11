@@ -23,6 +23,7 @@ export default function LoginForm() {
     (state) => state.user
   );
   const [searchParams] = useSearchParams();
+  
 
   useEffect(() => {
     dispatch(resetUserStatus());
@@ -31,6 +32,8 @@ export default function LoginForm() {
   useEffect(() => {
     const errorParam = searchParams.get("error");
     if (errorParam) {
+      // Ensure any stale social loading flags are cleared when returning with an error
+      dispatch(resetUserStatus());
       switch (errorParam) {
         case "google_auth_failed":
           setError("Google authentication failed. Please try again.");
@@ -38,11 +41,14 @@ export default function LoginForm() {
         case "no_auth_code":
           setError("Authentication was cancelled or failed.");
           break;
+        case "facebook_auth_failed":
+          setError("Facebook authentication failed. Please try again.");
+          break;
         default:
           setError("An error occurred during authentication.");
       }
     }
-  }, [searchParams]);
+  }, [searchParams, dispatch]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -71,6 +77,12 @@ export default function LoginForm() {
       const token = payload?.token;
       const userId = user?._id || user?.id;
 
+      // Admins bypass quiz and subscription checks
+      if (user?.userType === "admin") {
+        navigate("/admin/dashboard");
+        return;
+      }
+
       // --- QUIZ GATE ---
       // Prefer values returned on login if present
       let completion =
@@ -93,7 +105,7 @@ export default function LoginForm() {
           completion =
             dataNode?.completionPercentage ??
             (dataNode?.isCompleted ? 100 : undefined);
-        } catch (err) {
+        } catch {
           // On any error (including 404), be safe and send to /quiz
           navigate("/quiz");
           return;
@@ -112,10 +124,6 @@ export default function LoginForm() {
         user.subscription.plan &&
         user.subscription.status === "active";
 
-      if (user?.userType === "admin") {
-        navigate("/admin/dashboard");
-        return;
-      }
       if (hasActiveSubscription) {
         navigate("/client/dashboard");
         return;
@@ -149,7 +157,16 @@ export default function LoginForm() {
   const handleFacebookLogin = async () => {
     setError("");
     try {
-      await dispatch(facebookLogin());
+      const op = dispatch(facebookLogin()).unwrap();
+      await toastPromise(
+        op,
+        {
+          loading: "Connecting to Facebook…",
+          success: "Redirecting to Facebook",
+          error: "Facebook authentication failed",
+        },
+        { duration: 2500 }
+      );
     } catch {
       setError("Facebook authentication failed");
     }
@@ -173,7 +190,7 @@ export default function LoginForm() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-white text-xs sm:text-sm font-medium mb-2">
-                E-mail or Phone Number
+                E-mail 
               </label>
               <input
                 type="email"
@@ -201,7 +218,7 @@ export default function LoginForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white cursor-pointer"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -224,7 +241,7 @@ export default function LoginForm() {
 
             <button
               type="submit"
-              className="w-full bg-cyan-400 text-gray-900 py-3 rounded-md font-semibold hover:bg-cyan-300 transition-colors text-xs sm:text-sm"
+              className="w-full bg-cyan-400 text-gray-900 py-3 rounded-md font-semibold hover:bg-cyan-300 transition-colors text-xs sm:text-sm cursor-pointer"
               disabled={status === "loading"}
             >
               {status === "loading" ? "Signing In..." : "Sign In"}
@@ -241,7 +258,7 @@ export default function LoginForm() {
             <button
               onClick={handleGoogleLogin}
               disabled={googleLoading}
-              className="w-full flex items-center px-2 bg-black border border-gray-600 rounded-md text-white font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap py-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center px-2 bg-black border border-gray-600 rounded-md text-white font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap py-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <svg className="w-5 h-5 mr-3" viewBox="0 0 48 48">
                 <g>
@@ -270,20 +287,12 @@ export default function LoginForm() {
             <button
               onClick={handleFacebookLogin}
               disabled={facebookLoading}
-              className="w-full flex items-center px-2 bg-black border border-gray-600 rounded-md text-white font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap py-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center px-2 bg-black border border-gray-600 rounded-md text-white font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap py-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
-              <span style={{ transform: "scale(.7)", display: "inline-block" }}>
-                <svg className="w-5 h-5 " viewBox="0 0 24 24">
-                  <path
-                    fill="#1877F3"
-                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
-                  />
-                  <path
-                    fill="#FFF"
-                    d="M16.671 15.543l.532-3.47h-3.328v-2.25c0-.949.465-1.874 1.956-1.874h1.436V5.996S15.312 5.761 14 5.761c-2.741 0-4.533 1.662-4.533 4.669v2.143H6.42v3.47h3.047v8.385A12.07 12.07 0 0 0 12 24c.414 0 .822-.024.1"
-                  />
-                </svg>
-              </span>
+              <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#1877F3" d="M24 12.073C24 18.7 18.627 24 12 24S0 18.7 0 12.073C0 5.746 5.373.373 12 .373s12 5.373 12 11.7z"/>
+                <path fill="#FFFFFF" d="M13.615 19.309v-6.263h2.102l.314-2.433h-2.416V8.847c0-.704.195-1.184 1.204-1.184h1.287V5.5c-.223-.03-.988-.096-1.879-.096-1.86 0-3.135 1.135-3.135 3.221v1.796H9v2.433h2.092v6.455h2.523z"/>
+              </svg>
               {facebookLoading ? "Loading..." : "Sign in with Facebook"}
             </button>
           </div>

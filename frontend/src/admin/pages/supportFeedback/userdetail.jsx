@@ -1,6 +1,6 @@
-import Openticket from '../../components/support&feedback/openticket';
-import Closeticket from '../../components/support&feedback/closeticket';
-import CloseTicketReply from '../../components/support&feedback/CloseTicketReply';
+import Openticket from '../../components/supportAndfeedback/openticket';
+import Closeticket from '../../components/supportAndfeedback/closeticket';
+import CloseTicketReply from '../../components/supportAndfeedback/CloseTicketReply';
 import React, { useState, useRef, useEffect } from 'react';
 import { Bold, Italic, Underline, Strikethrough, Link, Paperclip, Image, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, ListOrdered } from 'lucide-react';
 import { useLocation, useParams } from 'react-router-dom';

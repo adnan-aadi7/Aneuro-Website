@@ -73,7 +73,7 @@ const VisaIcon = () => (
         setIsLoading(false);
         setTimeout(() => {
           dispatch(clearPaymentState());
-          navigate('/client/dashboard');
+          navigate('/quiz');
         }, 2000);
       }
     }, [status, subscriptionId, dispatch, navigate]);

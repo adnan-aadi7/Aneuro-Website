@@ -3,6 +3,7 @@ import marketingImg from "../../../assets/aboutUs/maketing.png";
 import { Star } from "lucide-react";
 
 const Marketing = () => {
+
   return (
     <section className="w-full bg-black flex flex-col md:flex-row items-center justify-center py-16 px-4 md:px-0 max-w-5xl mx-auto">
       {/* Left Image */}
