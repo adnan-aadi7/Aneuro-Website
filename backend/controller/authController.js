@@ -101,7 +101,7 @@ export async function Login(reqBody) {
 //get api
 const TOTAL_QUESTIONS = 10; // change this to your actual total quiz questions
 
-export async function getAllUsers({ page = 1, limit = 10, accountStatus }) {
+export async function getAllUsers({ page = 1, limit = 10, accountStatus, sortBy = 'createdAt', sortOrder = 'desc' }) {
   await connectDB();
 
   const query = {};
@@ -109,9 +109,14 @@ export async function getAllUsers({ page = 1, limit = 10, accountStatus }) {
     query.accountStatus = accountStatus;
   }
 
+  const safePage = parseInt(page) || 1;
+  const safeLimit = parseInt(limit) || 10;
+  const sortObj = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
+
   const users = await User.find(query)
-    .skip((page - 1) * limit)
-    .limit(Number(limit))
+    .sort(sortObj)
+    .skip((safePage - 1) * safeLimit)
+    .limit(Number(safeLimit))
     .select("-password")
     .lean(); // use lean to easily add fields
 
@@ -145,8 +150,8 @@ export async function getAllUsers({ page = 1, limit = 10, accountStatus }) {
   return {
     users: usersWithProgress,
     total,
-    page: Number(page),
-    totalPages: Math.ceil(total / limit)
+    page: Number(safePage),
+    totalPages: Math.ceil(total / safeLimit)
   };
 }
 

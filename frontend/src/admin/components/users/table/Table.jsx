@@ -21,8 +21,8 @@ export default function Table() {
   const [sortOrder, setSortOrder] = useState("desc");
 
   useEffect(() => {
-    dispatch(getAllUsers({ page, limit }));
-  }, [dispatch, page, limit]);
+    dispatch(getAllUsers({ page, limit, sortBy, sortOrder }));
+  }, [dispatch, page, limit, sortBy, sortOrder]);
 
   const CircularProgress = ({ percentage }) => {
     const size = 20;
@@ -101,20 +101,8 @@ export default function Table() {
   // Filter out admin users and show only regular users
   const filteredUsers = users.filter(user => user.userType !== "admin");
   
-  // Sort filtered users
-  const sortedUsers = [...filteredUsers].sort((a, b) => {
-    if (sortBy === "name") {
-      return sortOrder === "asc"
-        ? a.name.localeCompare(b.name)
-        : b.name.localeCompare(a.name);
-    }
-    if (sortBy === "createdAt") {
-      const dateA = new Date(a.createdAt).getTime() || 0;
-      const dateB = new Date(b.createdAt).getTime() || 0;
-      return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
-    }
-    return 0;
-  });
+  // Server already returns sorted data; only filter out admins here
+  const sortedUsers = filteredUsers;
 
   return (
     <div className="w-full bg-[#2A2A39] mt-10 overflow-hidden p-6 relative">

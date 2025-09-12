@@ -327,9 +327,14 @@ export const reactivateUser = createAsyncThunk(
 
 export const getAllUsers = createAsyncThunk(
   'user/getAllUsers',
-  async ({ page = 1, limit = 10 } = {}, { rejectWithValue }) => {
+  async ({ page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = {}, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(`/users?page=${page}&limit=${limit}`);
+      const params = new URLSearchParams();
+      if (page) params.append('page', page);
+      if (limit) params.append('limit', limit);
+      if (sortBy) params.append('sortBy', sortBy);
+      if (sortOrder) params.append('sortOrder', sortOrder);
+      const response = await axiosInstance.get(`/users?${params.toString()}`);
       return response.data;
     } catch (err) {
       return rejectWithValue(

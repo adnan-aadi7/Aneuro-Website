@@ -146,8 +146,8 @@ router.post("/login", async (req, res) => {
  */
 router.get("/users", authUser, async (req, res) => {
   try {
-    const { page, limit, accountStatus } = req.query;
-    const result = await getAllUsers({ page, limit, accountStatus });
+    const { page, limit, accountStatus, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+    const result = await getAllUsers({ page, limit, accountStatus, sortBy, sortOrder });
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
