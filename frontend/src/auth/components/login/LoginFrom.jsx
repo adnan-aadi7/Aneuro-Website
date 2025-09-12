@@ -56,83 +56,82 @@ export default function LoginForm() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+  e.preventDefault();
+  setError("");
 
-    const op = dispatch(loginUser(formData)).unwrap();
+  const op = dispatch(loginUser(formData)).unwrap();
 
-    try {
-      const payload = await toastPromise(
-        op,
-        {
-          loading: "Signing you in…",
-          success: "Welcome back!",
-          error: (err) =>
-            typeof err === "string" ? err : err?.message || "Login failed",
-        },
-        { duration: 3000 }
-      );
+  try {
+    const payload = await toastPromise(
+      op,
+      {
+        loading: "Signing you in…",
+        success: "Welcome back!",
+        error: (err) =>
+          typeof err === "string" ? err : err?.message || "Login failed",
+      },
+      { duration: 3000 }
+    );
 
-      const user = payload?.user || {};
-      const token = payload?.token;
-      const userId = user?._id || user?.id;
+    const user = payload?.user || {};
+    const token = payload?.token;
+    const userId = user?._id || user?.id;
 
-      // Admins bypass quiz and subscription checks
-      if (user?.userType === "admin") {
-        navigate("/admin/dashboard");
-        return;
-      }
+    // Admins bypass quiz and subscription checks
+    if (user?.userType === "admin") {
+      navigate("/admin/dashboard");
+      return;
+    }
 
-      // --- QUIZ GATE ---
-      // Prefer values returned on login if present
-      let completion =
-        user?.quizProgress?.completionPercentage ??
-        (user?.quizProgress?.isCompleted ? 100 : undefined);
+    // --- SUBSCRIPTION CHECK ---
+    const hasActiveSubscription =
+      user?.subscription &&
+      user.subscription.plan &&
+      user.subscription.status === "active";
 
-      // If not provided by login response, fetch progress
-      if (completion == null && userId) {
-        try {
-          // NOTE: axiosInstance has baseURL '/api', so do NOT prefix with '/api'
-          const res = await axiosInstance.get(`/quiz/progress/${userId}`, {
-            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-          });
+    if (!hasActiveSubscription) {
+      // No subscription → go to /plan
+      navigate("/plan");
+      return;
+    }
 
-          // Accept either {completionPercentage} or {data:{completionPercentage}}
-          const body = res?.data ?? {};
-          const dataNode =
-            body && typeof body === "object" && "data" in body ? body.data : body;
+    // --- QUIZ GATE ---
+    let completion =
+      user?.quizProgress?.completionPercentage ??
+      (user?.quizProgress?.isCompleted ? 100 : undefined);
 
-          completion =
-            dataNode?.completionPercentage ??
-            (dataNode?.isCompleted ? 100 : undefined);
-        } catch {
-          // On any error (including 404), be safe and send to /quiz
-          navigate("/quiz");
-          return;
-        }
-      }
+    if (completion == null && userId) {
+      try {
+        const res = await axiosInstance.get(`/quiz/progress/${userId}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
 
-      if (Number(completion) < 100) {
+        const body = res?.data ?? {};
+        const dataNode =
+          body && typeof body === "object" && "data" in body ? body.data : body;
+
+        completion =
+          dataNode?.completionPercentage ??
+          (dataNode?.isCompleted ? 100 : undefined);
+      } catch {
         navigate("/quiz");
         return;
       }
-      // --- END QUIZ GATE ---
-
-      // Continue with existing routing
-      const hasActiveSubscription =
-        user?.subscription &&
-        user.subscription.plan &&
-        user.subscription.status === "active";
-
-      if (hasActiveSubscription) {
-        navigate("/client/dashboard");
-        return;
-      }
-      navigate("/plan");
-    } catch (err) {
-      setError(typeof err === "string" ? err : err?.message || "Login failed");
     }
-  };
+
+    if (Number(completion) < 100) {
+      // Subscription active but quiz incomplete → quiz
+      navigate("/quiz");
+      return;
+    }
+
+    // --- DASHBOARD ---
+    navigate("/client/dashboard");
+  } catch (err) {
+    setError(typeof err === "string" ? err : err?.message || "Login failed");
+  }
+};
+
 
   const handleGoogleLogin = async () => {
     setError("");
