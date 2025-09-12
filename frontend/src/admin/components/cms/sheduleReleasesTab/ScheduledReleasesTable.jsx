@@ -36,6 +36,8 @@ const ScheduledReleasesTable = ({ onSuccess, onError }) => {
   // Handle success and error messages
   useEffect(() => {
     if (!success) return;
+    // Refresh table on any successful action (create/update/delete)
+    dispatch(fetchAllScheduled());
     // Avoid duplicate toasts for create/update which are handled in popups
     const isDelete = success.toLowerCase().includes('deleted successfully');
     if (isDelete && onSuccess) onSuccess(success);

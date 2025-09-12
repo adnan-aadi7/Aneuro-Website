@@ -205,7 +205,7 @@ export default function SubscriptionTierExact({ user }) {
             </div>
           ) : userCardInfoError ? (
             <div className="flex items-center justify-center py-8">
-              <div className="text-red-400 text-sm">Failed to load card information</div>
+              <div className="text-red-400 text-sm">No data Found</div>
             </div>
           ) : !userCardInfo?.hasCards ? (
             <div className="flex items-center justify-center py-8">
