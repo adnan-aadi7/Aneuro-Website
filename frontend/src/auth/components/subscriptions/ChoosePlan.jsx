@@ -138,7 +138,7 @@ const ChoosePlan = () => {
       )}
       {modal === 'terms' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
-          <div className="relative max-h-[80vh] overflow-y-auto w-full max-w-2xl hide-scrollbar">
+          <div className="relative max-h-[90vh] overflow-y-auto w-full max-w-5xl hide-scrollbar">
             <button
               onClick={() => setModal(null)}
               className="absolute top-2 right-2 text-gray-400 hover:text-cyan-400 text-2xl font-bold z-10"
