@@ -18,12 +18,23 @@ export default function EmailSequencePage() {
   const [activeTab, setActiveTab] = useState("Architect");
   const [category, setCategory] = useState("");
 
-  // Fetch grouped emails when tab/category changes (or on mount)
-  useEffect(() => {
-    const tier = "starter"; // default tier for client view
+ useEffect(() => {
+    // 🔑 Read tier from localStorage
+    const storedUser = localStorage.getItem("user");
+    let tier = "starter"; // fallback default
+
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        // Example: assuming `subscription.plan` holds tier
+        tier = parsed?.subscription?.plan || tier;
+      } catch (err) {
+        console.error("Failed to parse user from localStorage", err);
+      }
+    }
+
     dispatch(fetchGroupedEmailsByTier({ tier, category }));
   }, [dispatch, activeTab, category]);
-
   // Compute sequences for the active brain type with optional category filter
   const filtered = useMemo(() => {
     const list = grouped?.[activeTab] || [];
