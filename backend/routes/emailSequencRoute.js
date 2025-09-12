@@ -1,5 +1,3 @@
-//email routes
-
 import express from 'express';
 import {
   create,
@@ -11,7 +9,8 @@ import {
   editEmailInSequence,
   deleteEmailInSequence,
   getGroupedEmailsByTier,
-  trackEmailOpen
+  trackEmailOpen,
+  trackEmailClick
 } from '../controller/emailSequenceController.js';
 import upload from '../middleware/multer.js';
 import { authUser } from "../middleware/userTracker.js";
@@ -244,6 +243,44 @@ router.get('/stats', authUser, getStats);
  */
 
 router.get("/:emailId/open", trackEmailOpen);
+
+
+/**
+ * @swagger
+ * /api/email-sequences/{emailId}/click:
+ *   post:
+ *     summary: Track a unique click for an email
+ *     description: Records a unique click for an email by the authenticated user. Multiple clicks by the same user on the same email are counted as one.
+ *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: emailId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the email being clicked
+ *     responses:
+ *       200:
+ *         description: Click tracked successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 emailId:
+ *                   type: string
+ *                 uniqueClicks:
+ *                   type: integer
+ *       404:
+ *         description: Email not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/:emailId/click", authUser, trackEmailClick);
 
 /**
  * @swagger

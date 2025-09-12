@@ -24,6 +24,7 @@ import upload from "../middleware/multer.js";
 import { authenticateGoogle, authenticateGoogleCallback } from "../services/googlePassport.js";
 import { authenticateFacebook, authenticateFacebookCallback } from "../services/facebookPassport.js";
 const router = express.Router();
+import { authUser } from "../middleware/userTracker.js";
 
 /**
  * @swagger
@@ -114,29 +115,36 @@ router.post("/login", async (req, res) => {
  *   get:
  *     summary: Get all users with pagination and optional accountStatus filter
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: page
  *         schema:
  *           type: integer
  *         default: 1
+ *         description: Page number for pagination
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
  *         default: 10
+ *         description: Number of users per page
  *       - in: query
  *         name: accountStatus
  *         schema:
  *           type: string
  *           enum: [active, suspended]
+ *         description: Filter users by account status
  *     responses:
  *       200:
  *         description: List of users
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
  *       500:
  *         description: Internal server error
  */
-router.get("/users", async (req, res) => {
+router.get("/users", authUser, async (req, res) => {
   try {
     const { page, limit, accountStatus } = req.query;
     const result = await getAllUsers({ page, limit, accountStatus });
@@ -146,30 +154,39 @@ router.get("/users", async (req, res) => {
   }
 });
 
+
 /**
  * @swagger
  * /api/user/{id}:
  *   get:
  *     summary: Get user by ID with optional accountStatus filter
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
+ *         description: The user ID
  *       - in: query
  *         name: accountStatus
  *         schema:
  *           type: string
  *           enum: [active, suspended]
+ *         description: Filter user by account status
  *     responses:
  *       200:
  *         description: User found
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
  *       404:
  *         description: User not found
+ *       500:
+ *         description: Internal server error
  */
-router.get("/user/:id", async (req, res) => {
+router.get("/user/:id", authUser, async (req, res) => {
   try {
     const { id } = req.params;
     const { accountStatus } = req.query;
@@ -181,12 +198,15 @@ router.get("/user/:id", async (req, res) => {
 });
 
 
+
 /**
  * @swagger
  * /api/delete/{id}:
  *   delete:
  *     summary: Delete a user by ID
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -197,12 +217,14 @@ router.get("/user/:id", async (req, res) => {
  *     responses:
  *       200:
  *         description: User deleted successfully
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
  *       404:
  *         description: User not found
  *       500:
  *         description: Internal server error
  */
-router.delete("/delete/:id", async (req, res) => {
+router.delete("/delete/:id", authUser, async (req, res) => {
   try {
     const result = await deleteUser(req.params.id);
     res.status(200).json(result);
@@ -212,12 +234,15 @@ router.delete("/delete/:id", async (req, res) => {
   }
 });
 
+
 /**
  * @swagger
  * /api/suspend/{id}:
  *   put:
  *     summary: Suspend a user by ID
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -228,12 +253,14 @@ router.delete("/delete/:id", async (req, res) => {
  *     responses:
  *       200:
  *         description: User suspended successfully
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
  *       404:
  *         description: User not found
  *       500:
  *         description: Internal server error
  */
-router.put("/suspend/:id", async (req, res) => {
+router.put("/suspend/:id", authUser, async (req, res) => {
   try {
     const result = await suspendUser(req.params.id);
     res.status(200).json(result);
@@ -243,12 +270,15 @@ router.put("/suspend/:id", async (req, res) => {
   }
 });
 
+
 /**
  * @swagger
  * /api/reactivate/{id}:
  *   put:
  *     summary: Reactivate a user by ID
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -259,12 +289,14 @@ router.put("/suspend/:id", async (req, res) => {
  *     responses:
  *       200:
  *         description: User reactivated successfully
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
  *       404:
  *         description: User not found
  *       500:
  *         description: Internal server error
  */
-router.put("/reactivate/:id", async (req, res) => {
+router.put("/reactivate/:id", authUser, async (req, res) => {
   try {
     const result = await reactivateUser(req.params.id);
     res.status(200).json(result);
@@ -275,12 +307,15 @@ router.put("/reactivate/:id", async (req, res) => {
 });
 
 
+
 /**
  * @swagger
  * /api/update/{id}:
  *   put:
  *     summary: Update user by ID
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -289,6 +324,7 @@ router.put("/reactivate/:id", async (req, res) => {
  *           type: string
  *         description: User ID
  *     requestBody:
+ *       required: true
  *       content:
  *         multipart/form-data:
  *           schema:
@@ -309,20 +345,28 @@ router.put("/reactivate/:id", async (req, res) => {
  *         description: User updated successfully
  *       400:
  *         description: Invalid input
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
  *       404:
  *         description: User not found
  *       500:
  *         description: Internal server error
  */
-router.put("/update/:id", upload.single("profileImage"), async (req, res) => {
-  try {
-    const result = await updateUser(req.params.id, req.body, req.file);
-    res.status(200).json(result);
-  } catch (error) {
-    const statusCode = error.message === "User not found" ? 404 : 500;
-    res.status(statusCode).json({ error: error.message });
+router.put(
+  "/update/:id",
+  authUser,
+  upload.single("profileImage"),
+  async (req, res) => {
+    try {
+      const result = await updateUser(req.params.id, req.body, req.file);
+      res.status(200).json(result);
+    } catch (error) {
+      const statusCode = error.message === "User not found" ? 404 : 500;
+      res.status(statusCode).json({ error: error.message });
+    }
   }
-});
+);
+
 
 
 /**
@@ -331,8 +375,9 @@ router.put("/update/:id", upload.single("profileImage"), async (req, res) => {
  *   put:
  *     summary: Change user password
  *     description: User can change their password by providing current and new password.
- *     tags:
- *       - Users
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -356,13 +401,16 @@ router.put("/update/:id", upload.single("profileImage"), async (req, res) => {
  *       400:
  *         description: Missing fields
  *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *       401:
  *         description: Current password is incorrect
  *       404:
  *         description: User not found
  *       500:
  *         description: Internal server error
  */
-router.put("/change-password", changePassword);
+router.put("/change-password", authUser, changePassword);
+
 
 
 /**

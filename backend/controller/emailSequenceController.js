@@ -433,23 +433,26 @@ export async function deleteSequence(req, res) {
 
 export async function getStats(req, res) {
   try {
-    // Aggregate main stats
     const mainStats = await EmailSequence.aggregate([
-      { $unwind: { path: "$emails", preserveNullAndEmptyArrays: true } }, // expand emails array
+      { $unwind: { path: "$emails", preserveNullAndEmptyArrays: true } },
       {
         $group: {
           _id: null,
-          totalSequences: { $addToSet: "$_id" }, // collect unique sequence IDs
-          totalEmails: { $sum: 1 }, // count emails
-          totalOpens: { $sum: "$emails.totalOpens" }, // sum opens per email
+          totalSequences: { $addToSet: "$_id" },
+          totalEmails: { $sum: 1 },
+          totalOpens: { $sum: "$emails.totalOpens" },
+          totalClicks: { $sum: "$emails.uniqueClicks" }, // ✅ use uniqueClicks instead of totalClicks
+          // OR if you want total (including duplicates):
+          // totalClicks: { $sum: { $size: "$emails.clickedUsers" } },
           totalUsage: { $sum: "$usage.count" },
         }
       },
       {
         $project: {
-          totalSequences: { $size: "$totalSequences" }, // convert set size
+          totalSequences: { $size: "$totalSequences" },
           totalEmails: 1,
           totalOpens: 1,
+          totalClicks: 1,
           totalUsage: 1
         }
       }
@@ -473,6 +476,7 @@ export async function getStats(req, res) {
         totalSequences: mainStats[0]?.totalSequences || 0,
         totalEmails: mainStats[0]?.totalEmails || 0,
         totalOpens: mainStats[0]?.totalOpens || 0,
+        totalClicks: mainStats[0]?.totalClicks || 0, // ✅ now reflects real clicks
         totalUsage: mainStats[0]?.totalUsage || 0,
         totalActive,
         totalScheduled,
@@ -490,6 +494,7 @@ export async function getStats(req, res) {
     });
   }
 }
+
 
 
 export const trackEmailOpen = async (req, res) => {
@@ -523,6 +528,40 @@ export const trackEmailOpen = async (req, res) => {
   } catch (error) {
     console.error("Error tracking email open:", error);
     res.status(500).send("Error tracking open");
+  }
+};
+
+export const trackEmailClick = async (req, res) => {
+  try {
+    const { emailId } = req.params;
+    const userId = req.user.id; 
+
+    // Find sequence that contains this email
+    const sequence = await EmailSequence.findOne({ "emails._id": emailId });
+    if (!sequence) return res.status(404).json({ error: "Email not found" });
+
+    const email = sequence.emails.id(emailId);
+    if (!email) return res.status(404).json({ error: "Email not found" });
+
+    // Initialize fields if missing
+    if (!email.uniqueClicks) email.uniqueClicks = 0;
+    if (!email.clickedUsers) email.clickedUsers = [];
+
+    // Count only unique user click
+    if (!email.clickedUsers.includes(userId)) {
+      email.uniqueClicks += 1;
+      email.clickedUsers.push(userId);
+    }
+
+    await sequence.save();
+
+    res.status(200).json({
+      message: "Click tracked successfully",
+      emailId,
+      uniqueClicks: email.uniqueClicks,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };
 

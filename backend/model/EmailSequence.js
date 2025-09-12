@@ -7,6 +7,8 @@ const EmailSchema = new mongoose.Schema({
     enum: ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst'],
   },
     totalOpens: { type: Number, default: 0 },
+      uniqueClicks: { type: Number, default: 0 }, // new field
+  clickedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }] 
 });
 
 const EmailSequenceSchema = new mongoose.Schema(

@@ -1,9 +1,18 @@
-//ticket routes
-
-import { createTicket, getTickets, getTicketById, updateTicket, updateTicketStatus, deleteTicket, addReplyToTicket, assignTicket, getFeedbackTickets, getLatestTickets } from "../controller/Tickets.js";
+import { 
+    createTicket, 
+    getTickets, 
+    getTicketById, 
+    updateTicket, 
+    updateTicketStatus, 
+    deleteTicket, 
+    addReplyToTicket, 
+    assignTicket, 
+    getFeedbackTickets, 
+    getLatestTickets 
+} from "../controller/Tickets.js";
 import upload from "../middleware/multer.js";
 import express from 'express';
-
+import { authUser } from "../middleware/userTracker.js";
 const router = express.Router();
 
 
@@ -14,6 +23,8 @@ const router = express.Router();
  *     summary: Create a new support ticket
  *     tags:
  *       - Tickets
+ *     security:
+ *       - bearerAuth: []   # Require Bearer token
  *     consumes:
  *       - multipart/form-data
  *     requestBody:
@@ -45,12 +56,11 @@ const router = express.Router();
  *       201:
  *         description: Ticket created successfully
  *       400:
- *          description: Bad request
+ *         description: Bad request
  *       500:
  *         description: Server error
  */
-
-router.post('/create', upload.single('file'), createTicket);
+router.post('/create', authUser, upload.single('file'), createTicket);
 
 /**
  * @swagger
@@ -58,6 +68,8 @@ router.post('/create', upload.single('file'), createTicket);
  *   get:
  *     summary: Get all tickets or filter by status
  *     tags: [Tickets]
+ *     security:
+ *       - bearerAuth: []   # Require Bearer token
  *     parameters:
  *       - in: query
  *         name: status
@@ -102,8 +114,7 @@ router.post('/create', upload.single('file'), createTicket);
  *       500:
  *         description: Server error
  */
-
-router.get('/', getTickets);
+router.get('/', authUser, getTickets);
 
 
 /**
@@ -111,10 +122,10 @@ router.get('/', getTickets);
  * /api/ticket/feedback:
  *   get:
  *     summary: Get all tickets with category "feedback"
- *     description: Retrieves all tickets where the category array contains "feedback".
- *     tags: [Admin Dashboard ]
+ *     description: Retrieves all tickets where the category contains "feedback".
+ *     tags: [Admin Dashboard]
  *     security:
- *       - bearerAuth: []
+ *       - bearerAuth: []   # Require Bearer token
  *     responses:
  *       200:
  *         description: List of feedback tickets
@@ -138,7 +149,8 @@ router.get('/', getTickets);
  *       500:
  *         description: Server error
  */
-router.get('/feedback',  getFeedbackTickets);
+router.get('/feedback', authUser, getFeedbackTickets);
+
 
 /**
  * @swagger
@@ -147,6 +159,8 @@ router.get('/feedback',  getFeedbackTickets);
  *     summary: Get the latest 5 tickets
  *     description: Returns the latest 5 tickets with human-readable created time (e.g., "2 hours ago").
  *     tags: [Admin Dashboard]
+ *     security:
+ *       - bearerAuth: []   # Require Bearer token
  *     responses:
  *       200:
  *         description: A list of latest tickets
@@ -176,7 +190,8 @@ router.get('/feedback',  getFeedbackTickets);
  *                         type: string
  *                         example: 2 hours ago
  */
-router.get("/latest", getLatestTickets);
+router.get("/latest", authUser, getLatestTickets);
+
 
 /**
  * @swagger
@@ -184,6 +199,8 @@ router.get("/latest", getLatestTickets);
  *   get:
  *     summary: Get a single ticket by its ID
  *     tags: [Tickets]
+ *     security:
+ *       - bearerAuth: []   # Require Bearer token
  *     parameters:
  *       - in: path
  *         name: id
@@ -196,10 +213,13 @@ router.get("/latest", getLatestTickets);
  *         description: Ticket found
  *       404:
  *         description: Ticket not found
+ *       401:
+ *         description: Unauthorized
  *       500:
  *         description: Server error
  */
-router.get('/:id', getTicketById);
+router.get('/:id', authUser, getTicketById);
+
 
 
 /**
@@ -208,6 +228,8 @@ router.get('/:id', getTicketById);
  *   put:
  *     summary: Update a ticket by ID
  *     tags: [Tickets]
+ *     security:
+ *       - bearerAuth: []   # Require Bearer token
  *     parameters:
  *       - in: path
  *         name: id
@@ -240,11 +262,13 @@ router.get('/:id', getTicketById);
  *         description: Ticket updated successfully
  *       404:
  *         description: Ticket not found
+ *       401:
+ *         description: Unauthorized
  *       500:
  *         description: Server error
  */
+router.put('/:id', authUser, updateTicket);
 
-router.put('/:id', updateTicket);
 
 /**
  * @swagger
@@ -252,6 +276,8 @@ router.put('/:id', updateTicket);
  *   put:
  *     summary: Update the status of a ticket (OPEN or CLOSED)
  *     tags: [Tickets]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -276,13 +302,15 @@ router.put('/:id', updateTicket);
  *         description: Ticket status updated
  *       400:
  *         description: Invalid status value
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
  *       404:
  *         description: Ticket not found
  *       500:
  *         description: Server error
  */
+router.put('/:id/status', authUser, updateTicketStatus);
 
-router.put('/:id/status', updateTicketStatus);
 
 /**
  * @swagger
@@ -290,6 +318,8 @@ router.put('/:id/status', updateTicketStatus);
  *   delete:
  *     summary: Delete a ticket by ID
  *     tags: [Tickets]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -300,13 +330,15 @@ router.put('/:id/status', updateTicketStatus);
  *     responses:
  *       200:
  *         description: Ticket deleted successfully
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
  *       404:
  *         description: Ticket not found
  *       500:
  *         description: Server error
  */
+router.delete('/:id', authUser, deleteTicket);
 
-router.delete('/:id', deleteTicket);
 
 
 /**
@@ -315,6 +347,8 @@ router.delete('/:id', deleteTicket);
  *   post:
  *     summary: Add a reply to a ticket (only if status is OPEN)
  *     tags: [Tickets]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -359,13 +393,15 @@ router.delete('/:id', deleteTicket);
  *                   $ref: '#/components/schemas/Ticket'
  *       400:
  *         description: Bad request (e.g., missing message or ticket is closed)
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
  *       404:
  *         description: Ticket not found
  *       500:
  *         description: Internal server error
  */
+router.post('/:id/reply', authUser, upload.single('file'), addReplyToTicket);
 
-router.post('/:id/reply', upload.single('file'), addReplyToTicket);
 
 
 /**
@@ -374,6 +410,8 @@ router.post('/:id/reply', upload.single('file'), addReplyToTicket);
  *   put:
  *     summary: Assign a ticket to another user
  *     tags: [Tickets]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -405,13 +443,15 @@ router.post('/:id/reply', upload.single('file'), addReplyToTicket);
  *                   $ref: '#/components/schemas/Ticket'
  *       400:
  *         description: Missing assignedTo in body
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
  *       404:
  *         description: Ticket not found
  *       500:
  *         description: Server error
  */
+router.put('/:id/assign', authUser, assignTicket);
 
-router.put('/:id/assign', assignTicket);
 
 
 export default router;
