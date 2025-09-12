@@ -1,20 +1,35 @@
-import axios from 'axios';
+// axiosInstance.js
+import axios from "axios";
+
+const isBrowser = typeof window !== 'undefined';
+const isLocalhost = isBrowser && window.location.hostname === 'localhost';
+const baseURL = isLocalhost ? 'http://localhost:4000/api' : 'https://api.aneuro.io/api';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:4000/api', // Change this to your backend API base URL
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  // You can add more default config here (e.g., withCredentials, timeout, etc.)
+  baseURL,
+  headers: { "Content-Type": "application/json" },
 });
 
-// Attach JWT token to every request if available
 axiosInstance.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`;
-  }
+  const token = localStorage.getItem("token");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-export default axiosInstance; 
+// NEW: 401 handler
+axiosInstance.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    const status = err?.response?.status;
+    if (status === 401) {
+      // clean local auth
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      // hard redirect (avoids circular imports)
+      window.location.replace("/login");
+    }
+    return Promise.reject(err);
+  }
+);
+
+export default axiosInstance;

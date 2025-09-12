@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { MdOutlineDashboard } from "react-icons/md";
 import {
   TbUsers,
@@ -12,8 +12,10 @@ import {
 import { CiSettings } from "react-icons/ci";
 import { FiLogOut } from "react-icons/fi";
 import logo from "../../assets/auth/logo.png";
+import axiosInstance from "../../store/axiosInstance";
 
 const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
+  const navigate = useNavigate();
   const menuItems = [
     { icon: MdOutlineDashboard, label: "Dashboard", to: "/admin/dashboard" },
     { icon: TbUsers, label: "Users", to: "/admin/users" },
@@ -31,8 +33,28 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
 
   const bottomItems = [
     { icon: CiSettings, label: "Setting", to: "/admin/settings" },
-    { icon: FiLogOut, label: "Logout", to: "/login" },
+    { icon: FiLogOut, label: "Logout" },
   ];
+
+  const handleLogout = async () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+
+      if (axiosInstance?.defaults?.headers?.common?.Authorization) {
+        delete axiosInstance.defaults.headers.common.Authorization;
+      }
+
+      document.cookie = "token=; Max-Age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+
+      if (typeof onSidebarClose === "function") onSidebarClose();
+      navigate("/login", { replace: true });
+      // window.location.reload(); // optional
+    } catch (e) {
+      console.error("Logout error:", e);
+      navigate("/login", { replace: true });
+    }
+  };
 
   return (
     <>
@@ -55,7 +77,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
         {/* Close button for mobile */}
         <button
           onClick={onSidebarClose}
-          className="absolute top-4 right-4 z-[100] size-10 lg:hidden flex items-center justify-center text-white bg-gray-800 rounded-lg border-r-1 border-r border-[#FFFFFF14]"
+          className="absolute top-4 right-4 z-[100] size-10 lg:hidden flex items-center justify-center text-white bg-gray-800 rounded-lg border-r border-[#FFFFFF14]"
         >
          <img src="/logo.png" alt="logo"/>
         </button>
@@ -100,6 +122,18 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
           <div className=" py-4 px-5 mt-6">
             {bottomItems.map((item) => {
               const Icon = item.icon;
+              if (item.label === "Logout") {
+                return (
+                  <button
+                    key={item.label}
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-4 py-3 font-medium text-[15px] transition-all text-gray-400 hover:text-gray-300 hover:bg-gray-800/50"
+                  >
+                    <Icon size={22} />
+                    {item.label}
+                  </button>
+                );
+              }
               return (
                 <NavLink
                   key={item.label}
@@ -128,12 +162,29 @@ const Sidebar = ({ sidebarOpen, onSidebarClose }) => {
 
 // Interactive Client View Toggle
 const ClientViewToggle = () => {
-  const [on, setOn] = useState(true);
+  const [on, setOn] = useState(false);
+  const navigate = useNavigate();
+
+  // Force default OFF on mount
+  React.useEffect(() => {
+    setOn(false);
+    localStorage.setItem('actAsClient', '0');
+  }, []);
+
   return (
     <button
       type="button cursor-pointer"
-      className="flex items-center gap-3 px-6 py-3 font-medium text-[17px] text-gray-400 focus:outline-none"
-      onClick={() => setOn((v) => !v)}
+      className="flex items-center gap-3 px-6 py-3 font-medium text-[17px] text-gray-400 focus:outline-none cursor-pointer"
+      onClick={() => {
+        const next = !on;
+        setOn(next);
+        localStorage.setItem('actAsClient', next ? '1' : '0');
+        if (next) {
+          navigate('/client/dashboard');
+        } else {
+          navigate('/admin/dashboard');
+        }
+      }}
       aria-pressed={on}
     >
       <span

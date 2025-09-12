@@ -1,34 +1,62 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchUserSubscription, fetchStripeProducts } from "../../../../store/Slice/PaymentSlice";
+import { fetchUserSubscription, fetchStripeProducts, fetchUserCardInfo } from "../../../../store/Slice/PaymentSlice";
 import UpgradePlanPopup from "./UpdradePlanPopup";
 
 const BillingOverview = () => {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const dispatch = useDispatch();
-  const { userSubscription, userSubscriptionLoading, products } = useSelector((state) => state.payment);
+  const { userSubscription, userSubscriptionLoading, products, userCardInfo } = useSelector((state) => state.payment || {});
+  const userFromStore = useSelector((state) => (state.user && state.user.user) || (state.auth && state.auth.user) || null);
+  const currentUserId = userFromStore?.id || userFromStore?._id || localStorage.getItem('userId') || JSON.parse(localStorage.getItem('user') || '{}')?._id || null;
 
   useEffect(() => {
     dispatch(fetchUserSubscription());
     dispatch(fetchStripeProducts());
-  }, [dispatch]);
+    if (currentUserId) dispatch(fetchUserCardInfo(currentUserId));
+  }, [dispatch, currentUserId]);
+  console.log("userCardInfo", userCardInfo);
+ 
 
   // Get current plan details from Stripe products
   const getCurrentPlanDetails = () => {
-    if (!userSubscription?.plan || !products.length) return null;
-    
-    const planProduct = products.find(
-      product => (product.metadata?.plan || product.name.toLowerCase()) === userSubscription.plan
-    );
-    
-    return planProduct ? {
-      name: planProduct.name,
-      price: planProduct.price,
-      description: planProduct.description || `Our popular plan for ${userSubscription.plan} users`
-    } : null;
+    if (!userSubscription?.plan || !products?.length) return null;
+    const planProduct = products.find((product) => (product.plan || product.name?.toLowerCase()) === userSubscription.plan);
+    return planProduct
+      ? {
+          name: planProduct.name,
+          price: planProduct.price,
+          description: planProduct.description || `Our popular plan for ${userSubscription.plan} users`,
+        }
+      : null;
   };
 
   const currentPlan = getCurrentPlanDetails();
+
+  // Map full brand names to short labels
+  const getShortBrand = (brand) => {
+    const b = String(brand || '').toLowerCase();
+    switch (b) {
+      case 'visa':
+        return 'VISA';
+      case 'mastercard':
+        return 'MC';
+      case 'amex':
+      case 'american express':
+        return 'AMEX';
+      case 'discover':
+        return 'DISC';
+      case 'jcb':
+        return 'JCB';
+      case 'diners':
+      case 'diners club':
+        return 'DINERS';
+      case 'unionpay':
+        return 'UP';
+      default:
+        return 'CARD';
+    }
+  };
 
   return (
     <div className=" text-white ">
@@ -142,16 +170,22 @@ const BillingOverview = () => {
                     className="text-white text-lg md:text-2xl font-bold tracking-widest"
                     style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
                   >
-                    VISA
+                    {getShortBrand(userCardInfo?.cards?.[0]?.card?.brand)}
                   </span>
                 </div>
                 <div className="flex flex-col justify-center">
-                  <span className="text-white text-sm md:text-lg font-medium leading-tight">
-                    Visa ending in 1234
-                  </span>
-                  <span className="text-slate-400 text-xs md:text-sm leading-tight">
-                    Expiry 20/2025
-                  </span>
+                  {userCardInfo?.cards?.length ? (
+                    <>
+                      <span className="text-white text-sm md:text-lg font-medium leading-tight">
+                        {getShortBrand(userCardInfo.cards[0].card.brand)} ending in {userCardInfo.cards[0].card.last4}
+                      </span>
+                      <span className="text-slate-400 text-xs md:text-sm leading-tight">
+                        Expiry {userCardInfo.cards[0].card.expMonth}/{userCardInfo.cards[0].card.expYear}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-slate-400 text-xs md:text-sm leading-tight">No card on file</span>
+                  )}
                 </div>
               </div>
               {/* Right: Edit button */}

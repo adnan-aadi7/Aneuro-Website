@@ -1,6 +1,6 @@
-import Openticket from '../../components/support&feedback/openticket';
-import Closeticket from '../../components/support&feedback/closeticket';
-import CloseTicketReply from '../../components/support&feedback/CloseTicketReply';
+import Openticket from '../../components/supportAndfeedback/openticket';
+import Closeticket from '../../components/supportAndfeedback/closeticket';
+import CloseTicketReply from '../../components/supportAndfeedback/CloseTicketReply';
 import React, { useState, useRef, useEffect } from 'react';
 import { Bold, Italic, Underline, Strikethrough, Link, Paperclip, Image, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, ListOrdered } from 'lucide-react';
 import { useLocation, useParams } from 'react-router-dom';
@@ -11,6 +11,7 @@ const Userdetail = () => {
   const location = useLocation();
   const { ticketId } = useParams();
   const ticketFromState = location.state?.ticket;
+  const ticketIdFromState = location.state?.ticketId;
   const dispatch = useDispatch();
   const currentTicket = useSelector((state) => state.ticket.currentTicket);
   const { loading, error } = useSelector((state) => state.ticket);
@@ -26,7 +27,17 @@ const editorRef = useRef(null);
   const fileInputRef = useRef(null);
 
   // Determine which ticket to use
-  const ticket = ticketFromState || currentTicket;
+  const ticket = currentTicket || ticketFromState;
+
+  useEffect(() => {
+    if (!ticket) return;
+    if (ticket.status === 'CLOSED') {
+      setActiveTab('closed');
+      setShowReply(false);
+    } else {
+      setActiveTab('open');
+    }
+  }, [ticket]);
 
   // Show toast message
   const showToast = (message, type = 'success') => {
@@ -43,10 +54,11 @@ const editorRef = useRef(null);
 
   // Fetch ticket by ID if not available in state
   useEffect(() => {
-    if (ticketId && !ticketFromState) {
-      dispatch(getTicketById(ticketId));
+    const effectiveId = ticketId || ticketIdFromState;
+    if (effectiveId && !currentTicket) {
+      dispatch(getTicketById(effectiveId));
     }
-  }, [dispatch, ticketId, ticketFromState]);
+  }, [dispatch, ticketId, ticketIdFromState, currentTicket]);
 
   // Remove the fetch all tickets for user - we only need the specific ticket
   // useEffect(() => {

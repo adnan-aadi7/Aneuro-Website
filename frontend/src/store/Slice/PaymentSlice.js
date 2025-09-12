@@ -4,7 +4,7 @@ import axiosInstance from '../axiosInstance';
 // Async thunk to create a subscription (calls your backend)
 export const createSubscription = createAsyncThunk(
   'payment/createSubscription',
-  async ({ plan, paymentMethodId }, { rejectWithValue }) => {
+  async ({ plan, paymentMethodId }, { rejectWithValue, dispatch, getState }) => {
     try {
       // Get user info from localStorage (set by UserSlice)
       const userId = localStorage.getItem('userId');
@@ -15,7 +15,21 @@ export const createSubscription = createAsyncThunk(
         email,
         paymentMethodId,
       });
-      return response.data; // { subscriptionId, message }
+      // Optimistically insert initial payment into store if provided
+      const initialPayment = response.data?.initialPayment;
+      if (initialPayment) {
+        const current = getState().payment.userPayments || [];
+        const exists = current.find(p => p._id === initialPayment._id);
+        if (!exists) {
+          // Prepend so it shows first
+          const updated = [initialPayment, ...current];
+          // quick reducer-less state update via dispatching fulfilled of fetchUserPayments shape
+          dispatch({ type: fetchUserPayments.fulfilled.type, payload: { payments: updated } });
+        }
+      }
+      // Also refresh from server to ensure consistency
+      if (userId) dispatch(fetchUserPayments(userId));
+      return response.data; // { subscriptionId, message, initialPayment }
     } catch (err) {
       return rejectWithValue(
         err.response?.data?.error || err.message || 'Subscription failed'
@@ -263,4 +277,10 @@ const paymentSlice = createSlice({
 });
 
 export const { clearPaymentState, clearCardInfo, clearPaymentMethods } = paymentSlice.actions;
+
+// Selectors
+export const selectStripeProducts = (state) => state.payment.products;
+export const selectStripeProductsLoading = (state) => state.payment.productsLoading;
+export const selectStripeProductsError = (state) => state.payment.productsError;
+
 export default paymentSlice.reducer;

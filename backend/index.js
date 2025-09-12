@@ -18,6 +18,13 @@ import funneltemplatesRoutes from './routes/FunnelTemplateRoute.js'
 import schduleRoutes from './routes/scheduleRoutes.js'
 import activityRoutes from "./routes/activityRoutes.js";
 import logRoutes from './routes/logRoutes.js'
+import quizRoutes from './routes/quizRoutes.js'
+import customizationRoutes from './routes/customizationRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js'
+import userAnalyticsRoutes from './routes/userAnalyticsRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
+import newsletterRoutes from './routes/newsletterRoutes.js';
+
 const app = express();
 const port = 4000;
 
@@ -28,13 +35,16 @@ const startServer = async () => {
     app.use('/api/webhook', webhookRoutes);
 
     app.use(cors({
-      origin: ['http://localhost:5173'],
+      origin: ['https://aneuro.io', 'http://localhost:5173'],
+
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
     }));
 
     app.use(express.json());
+          
+     app.set("trust proxy", true);
 
     // Session configuration for Passport
     app.use(session({
@@ -63,6 +73,12 @@ const startServer = async () => {
     app.use("/api/schedule", schduleRoutes);
     app.use("/api/activities", activityRoutes);
     app.use("/api/system-logs", logRoutes);
+    app.use("/api/quiz", quizRoutes);
+    app.use("/api/customization", customizationRoutes);
+    app.use("/api/categories", categoryRoutes);
+    app.use("/api/user-analytics", userAnalyticsRoutes);
+    app.use("/api/notifications", notificationRoutes);
+    app.use("/api/newsletter", newsletterRoutes);
 
     app.listen(port, () => {
       console.log(`✅ Server running at http://localhost:${port}`);

@@ -1,4 +1,3 @@
-//prompt model
 import mongoose from 'mongoose';
 
 const PromptSchema = new mongoose.Schema({
@@ -7,8 +6,7 @@ const PromptSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['analytical', 'creative', 'empathic', 'strategic', 'practical'],
-    required: true,
+    enum: ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst'],
   },
 });
 
@@ -23,15 +21,15 @@ const PromptPackSchema = new mongoose.Schema({
   },
   tier: {
     type: String,
-    enum: ['basic', 'premium', 'enterprise'],
+    enum: ["starter", "growth", "enterprise"],
     required: true,
   },
-    releaseDateTime: { type: Date, required: true },
+    releaseDateTime: { type: Date },
 
   status: {
     type: String,
     enum: ['active', 'scheduled'],
-    default: 'scheduled', // 👈 default value set here
+    default: 'scheduled', 
     required: true,
   },
   usageCount: {

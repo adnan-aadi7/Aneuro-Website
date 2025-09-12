@@ -1,4 +1,4 @@
-import React, { act, useState } from "react";
+import React, {  useState } from "react";
 import { Mail, Users, Calendar } from "lucide-react";
 import Promptype from "./Promptype";
 

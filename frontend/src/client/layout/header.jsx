@@ -45,8 +45,13 @@ const Header = ({ onHamburgerClick }) => {
       {/* Right side - User actions */}
       <div className="flex items-center gap-3">
         {/* Profile Icon */}
-        <button className="p-2 lg:p-3 hover:bg-gray-700 transition-colors border border-gray-400 cursor-pointer">
+        
+        <button className="p-2 lg:p-3 hover:bg-gray-700 transition-colors border border-gray-400 cursor-pointer"
+        onClick={() => navigate("/client-settings")}
+        >
+        
           <User className="text-gray-300 w-4 h-4 lg:w-5 lg:h-5" />
+          
         </button>
 
         {/* Notification Bell with badge */}

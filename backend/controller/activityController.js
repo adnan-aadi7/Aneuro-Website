@@ -1,4 +1,4 @@
-import PromptPack from "../model/PromptPack.js";
+import PromptPack from "../model/Promptpack.js";
 import EmailSequence from "../model/EmailSequence.js";
 import FunnelTemplate from "../model/FunnelTemplate.js";
 

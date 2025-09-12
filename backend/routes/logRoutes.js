@@ -1,9 +1,9 @@
 // logRoutes.js
 import { Router } from 'express';
 import { getLogs } from '../controller/logController.js';
+import { authUser } from '../middleware/userTracker.js';
 
 const router = Router();
-
 
 /**
  * @swagger
@@ -19,6 +19,8 @@ const router = Router();
  *     summary: Get system logs
  *     description: Retrieve system logs with optional filters for action type, user, time range, and search keywords.
  *     tags: [System Logs]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: action
@@ -101,6 +103,6 @@ const router = Router();
  *       500:
  *         description: Server error
  */
-router.get('/', getLogs);
+router.get('/', authUser, getLogs);
 
 export default router;

@@ -1,5 +1,3 @@
-//email routes
-
 import express from 'express';
 import {
   create,
@@ -7,13 +5,17 @@ import {
   getById,
   update,
   deleteSequence,
-  bulkDelete,
-  getStats
+  getStats,
+  editEmailInSequence,
+  deleteEmailInSequence,
+  getGroupedEmailsByTier,
+  trackEmailOpen,
+  trackEmailClick
 } from '../controller/emailSequenceController.js';
 import upload from '../middleware/multer.js';
+import { authUser } from "../middleware/userTracker.js";
 
 const router = express.Router();
-
 
 /**
  * @swagger
@@ -28,6 +30,8 @@ const router = express.Router();
  *   post:
  *     summary: Create a new email sequence
  *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []
  *     consumes:
  *       - multipart/form-data
  *     requestBody:
@@ -40,41 +44,104 @@ const router = express.Router();
  *               - name
  *               - tier
  *               - type
+ *               - brainType
  *             properties:
  *               name:
  *                 type: string
- *               emailCount:
- *                 type: number
- *               emails:
- *                 type: number
+ *                 example: "Welcome Campaign"
  *               tier:
  *                 type: string
- *                 enum: [basic, premium, enterprise]
+ *                 enum: [starter, growth, enterprise]
+ *                 example: "growth"
+ *               releaseDateTime:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2025-08-15T10:00:00Z"
  *               status:
  *                 type: string
  *                 enum: [active, scheduled]
+ *                 default: scheduled
+ *                 example: "scheduled"
+ *               category:
+ *                 type: string
+ *                 description: Category for grouping email sequences
+ *                 example: "Onboarding"
  *               type:
  *                 type: string
  *                 enum: [manual, file]
- *               manualContent:
+ *                 example: "manual"
+ *               brainType:
  *                 type: string
- *               emailTemplate:
- *                 type: string
- *                 description: JSON string of the email template, e.g. {"subject":"...","body":"...","footer":"..."}
+ *                 enum: [Architect, Challenger, Synthesizer, Reflector, Catalyst]
+ *                 example: "Architect"
  *               file:
  *                 type: string
  *                 format: binary
  *                 description: File to upload when type is "file"
+ *               emails:
+ *                 type: array
+ *                 description: Required when type is "manual". Array of email objects with content and type.
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - content
+ *                   properties:
+ *                     content:
+ *                       type: string
+ *                       description: Email body text, HTML, or file URL
+ *                       example: "Welcome to our platform!"
+ *                     type:
+ *                       type: string
+ *                       enum: [Architect, Challenger, Synthesizer, Reflector, Catalyst]
+ *                       description: Brain type for this email
+ *                       example: "Architect"
  *     responses:
  *       201:
  *         description: Email sequence created successfully
  *       400:
- *         description: Missing required fields
+ *         description: Missing or invalid required fields
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
  *       500:
  *         description: Server error
  */
 
-router.post('/', upload.single('file'), create);
+router.post("/", authUser, upload.single("file"), create);
+
+/**
+ * @swagger
+ * /api/email-sequences/grouped:
+ *   get:
+ *     summary: Get grouped emails by tier and optional category
+ *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []   # 🔒 Requires JWT token
+ *     parameters:
+ *       - in: query
+ *         name: tier
+ *         schema:
+ *           type: string
+ *           enum: [starter, growth, enterprise]
+ *         required: true
+ *         description: Tier filter
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: (Optional) Filter by category within the given tier
+ *     responses:
+ *       200:
+ *         description: Emails grouped by brain type for the given tier (and category if provided)
+ *       400:
+ *         description: Missing or invalid parameters
+ *       404:
+ *         description: No email sequences found
+ *       500:
+ *         description: Server error
+ */
+router.get("/grouped", authUser, getGroupedEmailsByTier);
+
 
 /**
  * @swagger
@@ -82,6 +149,8 @@ router.post('/', upload.single('file'), create);
  *   get:
  *     summary: Get all email sequences with filters
  *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: page
@@ -115,10 +184,12 @@ router.post('/', upload.single('file'), create);
  *     responses:
  *       200:
  *         description: List of email sequences
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
  *       500:
  *         description: Server error
  */
-router.get('/', getAll);
+router.get('/', authUser, getAll);
 
 /**
  * @swagger
@@ -126,19 +197,99 @@ router.get('/', getAll);
  *   get:
  *     summary: Get email sequence statistics
  *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Statistics retrieved successfully
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
  *       500:
  *         description: Server error
  */
-router.get('/stats', getStats);
+router.get('/stats', authUser, getStats);
+
+/**
+ * @swagger
+ * /api/email-sequences/{emailId}/open:
+ *   get:
+ *     summary: Track email open via tracking pixel
+ *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: emailId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID of the email to track
+ *     responses:
+ *       200:
+ *         description: 1x1 transparent tracking pixel
+ *         content:
+ *           image/gif:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       401:
+ *         description: Unauthorized (no token)
+ *       403:
+ *         description: Forbidden (invalid token)
+ *       404:
+ *         description: Email not found
+ *       500:
+ *         description: Server error
+ */
+
+router.get("/:emailId/open", trackEmailOpen);
+
+
+/**
+ * @swagger
+ * /api/email-sequences/{emailId}/click:
+ *   post:
+ *     summary: Track a unique click for an email
+ *     description: Records a unique click for an email by the authenticated user. Multiple clicks by the same user on the same email are counted as one.
+ *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: emailId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the email being clicked
+ *     responses:
+ *       200:
+ *         description: Click tracked successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 emailId:
+ *                   type: string
+ *                 uniqueClicks:
+ *                   type: integer
+ *       404:
+ *         description: Email not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/:emailId/click", authUser, trackEmailClick);
+
 /**
  * @swagger
  * /api/email-sequences/{id}:
  *   get:
  *     summary: Get a single email sequence by ID
  *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -148,67 +299,90 @@ router.get('/stats', getStats);
  *     responses:
  *       200:
  *         description: Email sequence found
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
  *       404:
  *         description: Not found
  *       500:
  *         description: Server error
  */
-router.get('/:id', getById);
+router.get('/:id', authUser, getById);
 
 /**
  * @swagger
  * /api/email-sequences/{id}:
  *   put:
- *     summary: Update an email sequence by ID
+ *     summary: Update an email sequence by ID (append emails instead of overwrite)
  *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
+ *         description: The ID of the email sequence (24-character MongoDB ObjectId)
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
  *               name:
  *                 type: string
+ *                 description: Name of the email sequence
  *               tier:
  *                 type: string
- *                 enum: [basic, premium, enterprise]
+ *                 enum: [starter, growth, enterprise]
+ *                 description: Subscription tier for the sequence
  *               status:
  *                 type: string
  *                 enum: [active, scheduled]
+ *                 description: Current status of the sequence
  *               type:
  *                 type: string
  *                 enum: [manual, file]
- *               fileUrl:
+ *                 description: Upload method — manual entry or file upload
+ *               brainType:
  *                 type: string
- *               manualContent:
+ *                 enum: [Architect, Challenger, Synthesizer, Reflector, Catalyst]
+ *                 description: Brain type classification for the sequence
+ *               category:
  *                 type: string
- *               emailTemplate:
- *                 type: object
- *                 properties:
- *                   subject:
- *                     type: string
- *                   body:
- *                     type: string
- *                   footer:
- *                     type: string
+ *                 description: Category for grouping email sequences
+ *               releaseDateTime:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Scheduled release date/time
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: File to upload (required if `type` is "file")
+ *               emails:
+ *                 type: string
+ *                 description: >
+ *                   Required if type is "manual".
+ *                   JSON array string of objects, each with `content` (string) and optional `type` (string).
+ *                   Example:
+ *                   `[{"content":"Welcome to our platform!","type":"Challenger"}]`
  *     responses:
  *       200:
- *         description: Email sequence updated
+ *         description: Email sequence updated successfully
  *       400:
- *         description: Invalid input
+ *         description: Invalid ID, invalid JSON, or missing required fields
  *       404:
- *         description: Not found
+ *         description: Email sequence not found
  *       500:
  *         description: Server error
  */
-router.put('/:id', update);
+
+router.put(
+  '/:id',
+  upload.single('file'), 
+  update
+);
 
 /**
  * @swagger
@@ -216,51 +390,164 @@ router.put('/:id', update);
  *   delete:
  *     summary: Delete a single email sequence by ID
  *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []   # <-- Require JWT token
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
+ *           example: "64f12c5b8d7a2c1f2a9b4567"
+ *         description: MongoDB ObjectId of the email sequence
  *     responses:
  *       200:
  *         description: Deleted successfully
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
  *       404:
  *         description: Not found
  *       500:
  *         description: Server error
  */
-router.delete('/:id', deleteSequence);
 
 /**
  * @swagger
- * /api/email-sequences/bulk/delete:
- *   delete:
- *     summary: Bulk delete email sequences by IDs
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ */
+router.delete('/:id', authUser, deleteSequence);
+
+
+/**
+ * @swagger
+ * /api/email-sequences/{sequenceId}/emails/{emailId}:
+ *   put:
+ *     summary: Edit a specific email in a sequence by emailId
+ *     description: Update the content or brain type of an email inside an email sequence.  
+ *                  Requires authentication.
  *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []   # 🔐 Require JWT
+ *     parameters:
+ *       - in: path
+ *         name: sequenceId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the email sequence
+ *       - in: path
+ *         name: emailId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the email inside the sequence
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - ids
  *             properties:
- *               ids:
- *                 type: array
- *                 items:
- *                   type: string
+ *               content:
+ *                 type: string
+ *                 example: "Welcome to our updated platform!"
+ *               type:
+ *                 type: string
+ *                 enum: [Architect, Challenger, Synthesizer, Reflector, Catalyst]
+ *                 example: "Challenger"
  *     responses:
  *       200:
- *         description: Sequences deleted
+ *         description: Email updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Email updated successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: 64f2c13eb89f1a222c33de46
+ *                     type:
+ *                       type: string
+ *                       example: Challenger
+ *                     content:
+ *                       type: string
+ *                       example: Welcome to our updated platform!
  *       400:
- *         description: Invalid IDs
+ *         description: Invalid brain type
+ *       401:
+ *         description: Unauthorized - Missing or invalid token
+ *       404:
+ *         description: Email or sequence not found
  *       500:
  *         description: Server error
  */
-router.delete('/bulk/delete', bulkDelete);
 
+router.put("/:sequenceId/emails/:emailId", authUser, editEmailInSequence);
+
+/**
+ * @swagger
+ * /api/email-sequences/{sequenceId}/emails/{emailId}:
+ *   delete:
+ *     summary: Delete a specific email in a sequence by emailId
+ *     description: Removes an email from the given email sequence. Requires authentication.
+ *     tags: [EmailSequences]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: sequenceId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the email sequence
+ *       - in: path
+ *         name: emailId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the email inside the sequence
+ *     responses:
+ *       200:
+ *         description: Email deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Email deleted successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     emailId:
+ *                       type: string
+ *                       example: 64f2c13eb89f1a222c33de46
+ *       401:
+ *         description: Unauthorized - Missing or invalid token
+ *       404:
+ *         description: Email or sequence not found
+ *       500:
+ *         description: Server error
+ */
+router.delete("/:sequenceId/emails/:emailId", authUser, deleteEmailInSequence);
 
 
 export default router;

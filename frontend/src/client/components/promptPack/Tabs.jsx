@@ -1,33 +1,60 @@
-import React, { useState } from "react";
-import AnalyticalPrompt from "./AnalyticalPrompt";
-import CreativePrompt from "./CreativePrompt";
-import EmpatheticPrompt from "./EmpatheticPrompt";
-import StrategicPrompt from "./StrategicPrompt";
-import PracticalPrompt from "./PracticalPrompt";
+import React, { useEffect, useState } from "react";
+import ArchitectPrompt from "./ArchitectPrompt";
+import ChallengerPrompt from "./ChallengerPrompt";
+import SynthesizerPrompt from "./SynthesizerPrompt";
+import ReflectorPrompt from "./ReflectorPrompt";
+import CatalystPrompt from "./CatalystPrompt";
+import axios from "../../../store/axiosInstance"; // adjust path if your axiosInstance lives elsewhere
 
 export default function Tabs() {
   const [activeTab, setActiveTab] = useState("Architect");
+  const [groupedPrompts, setGroupedPrompts] = useState({});
+  const [categories, setCategories] = useState([]);
 
-  const tabs = [
-    "Architect",
-    "Challenger",
-    "Synthesizer",
-    "Reflector",
-    "Catalyst",
-  ];
+  const tabs = ["Architect", "Challenger", "Synthesizer", "Reflector", "Catalyst"];
+
+  useEffect(() => {
+    (async () => {
+      try {
+        // Using the grouped prompts API endpoint
+        const res = await axios.get("/prompt-packs/grouped?tier=starter");
+        setGroupedPrompts(res.data?.data || {});
+        console.log("Grouped Prompt", res.data?.data);
+      } catch (e) {
+        // swallow silently per your request (no extra UI)
+        setGroupedPrompts({});
+        console.log(e);
+      }
+    })();
+  }, []);
+
+  useEffect(() => { 
+    (async () => {
+      try {
+        const res = await axios.get("/categories/prompts");
+        setCategories(res.data?.data || []);
+        console.log("Categories", res.data?.data);
+      } catch (e) {
+        setCategories([]);
+        console.log(e);
+      }
+    })();
+  }, []);
+  
 
   const renderTabContent = () => {
+    const common = { groupedPrompts, categories }; // pass grouped prompts data
     switch (activeTab) {
       case "Architect":
-        return <AnalyticalPrompt />;
+        return <ArchitectPrompt {...common} />;
       case "Challenger":
-        return <CreativePrompt />;
+        return <ChallengerPrompt {...common} />;
       case "Synthesizer":
-        return <EmpatheticPrompt />;
+        return <SynthesizerPrompt {...common} />;
       case "Reflector":
-        return <StrategicPrompt />;
+        return <ReflectorPrompt {...common} />;
       case "Catalyst":
-        return <PracticalPrompt />;
+        return <CatalystPrompt {...common} />;
       default:
         return null;
     }
@@ -37,9 +64,7 @@ export default function Tabs() {
     <div className="text-white w-full ">
       {/* Header */}
       <div className=" px-2 pt-4 pb-2">
-        <h1 className="text-2xl sm:text-4xl font-bold mb-2 sm:mb-4">
-          Prompt Packs
-        </h1>
+        <h1 className="text-2xl sm:text-4xl font-bold mb-2 sm:mb-4">Prompt Packs</h1>
         <p className="text-gray-400 text-base sm:text-lg">
           Select a brain type to view ready-to-use content prompts.
         </p>
@@ -65,7 +90,7 @@ export default function Tabs() {
         </div>
       </div>
 
-      {/* Content Area - show the correct component for the active tab */}
+      {/* Content Area */}
       <div className="px-2 ">{renderTabContent()}</div>
     </div>
   );

@@ -4,9 +4,11 @@ import App from "./App";
 import { Provider } from "react-redux";
 import { store } from "./store/Store";
 import "./index.css";
+import AneuroToaster from "./AneuroToaster";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Provider store={store}>
+    <AneuroToaster />
     <App />
   </Provider>
 );

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllUsers } from "../../../../store/Slice/UserSlice";
 import { fetchUserCardInfo } from "../../../../store/Slice/PaymentSlice";
+import { getQuizAnalytics, getBrainTypeAnalytics, getWeeklyBrainTypeStats } from "../../../../store/Slice/QuizSlice";
 
 export default function Table() {
   const dispatch = useDispatch();
@@ -55,8 +56,11 @@ export default function Table() {
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
-            style={{ transition: "stroke-dashoffset 0.4s" }}
-            transform={`rotate(-90 ${size / 2} ${size / 2})`}
+            style={{ 
+              transition: "stroke-dashoffset 0.4s",
+              transform: `rotate(-90deg)`,
+              transformOrigin: `${size / 2}px ${size / 2}px`
+            }}
           />
         </svg>
       </div>
@@ -75,13 +79,20 @@ export default function Table() {
   const handleViewUser = (user) => {
     // Fetch user card information before navigating
     dispatch(fetchUserCardInfo(user._id));
+    // Prefetch quiz analytics for a snappier Quiz Engagement view
+    dispatch(getQuizAnalytics(user._id));
+    dispatch(getBrainTypeAnalytics(user._id));
+    dispatch(getWeeklyBrainTypeStats(user._id));
     
     // Navigate to user details page
-    navigate("/admin/user/details", { state: { user } });
+    navigate(`/admin/user/details/${user._id}`, { state: { user, activeTab: "General Details" } });
   };
 
-  // Show all users instead of just paid users
-  const sortedUsers = [...users].sort((a, b) => {
+  // Filter out admin users and show only regular users
+  const filteredUsers = users.filter(user => user.userType !== "admin");
+  
+  // Sort filtered users
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
     if (sortBy === "name") {
       return sortOrder === "asc"
         ? a.name.localeCompare(b.name)
@@ -215,7 +226,7 @@ export default function Table() {
                     </span>
                   </td>
                   <td className="py-4">
-                    <CircularProgress percentage={0} />
+                    <CircularProgress percentage={user?.quizProgress?.completionPercentage ?? 0} />
                   </td>
                   <td className="py-4">
                     <button

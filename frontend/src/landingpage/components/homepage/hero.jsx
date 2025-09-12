@@ -11,6 +11,7 @@ const HeroSection = ({
   primaryBtnLink = "#",
   secondaryBtnText,
   secondaryBtnLink = "#",
+  onSecondaryClick,
   bottomImage,
   bottomText,
   highlightText
@@ -52,11 +53,20 @@ const HeroSection = ({
     {primaryBtnText}
   </button>
 </Link>
-<Link to={secondaryBtnLink}>
-  <button className="cursor-pointer px-6 py-3 border border-white rounded-full font-semibold hover:bg-white hover:text-black transition">
+{onSecondaryClick ? (
+  <button 
+    onClick={onSecondaryClick}
+    className="cursor-pointer px-6 py-3 border border-white rounded-full font-semibold hover:bg-white hover:text-black transition"
+  >
     {secondaryBtnText}
   </button>
-</Link>
+) : (
+  <Link to={secondaryBtnLink}>
+    <button className="cursor-pointer px-6 py-3 border border-white rounded-full font-semibold hover:bg-white hover:text-black transition">
+      {secondaryBtnText}
+    </button>
+  </Link>
+)}
 
           </div>
 

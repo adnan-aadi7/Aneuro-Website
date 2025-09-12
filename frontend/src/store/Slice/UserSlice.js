@@ -1,7 +1,114 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../axiosInstance';
 
-// Async thunk for signup
+// ---------- Utils ----------
+const normalizeUser = (apiUser = {}) => {
+  const id = apiUser._id || apiUser.id || null;
+  return {
+    id,                     // normalized id (ALWAYS use this in app code)
+    _id: apiUser._id || null,
+    name: apiUser.name || '',
+    email: apiUser.email || '',
+    mobileNumber: apiUser.mobileNumber || '',
+    userType: apiUser.userType || '',            // "user", "admin", etc.
+    accountStatus: apiUser.accountStatus || '',  // "active", "suspended", etc.
+    profileImage: apiUser.profileImage || '',
+    subscription: apiUser.subscription || null,  // { plan, status, ... }
+    quizCompletion: apiUser.quizCompletion ?? 0,
+    quizProgress: apiUser.quizProgress || null,  // { completionPercentage, isCompleted }
+    lastLogin: apiUser.lastLogin || null,
+    createdAt: apiUser.createdAt || null,
+    updatedAt: apiUser.updatedAt || null,
+  };
+};
+
+const persistUser = (user, token) => {
+  // full object (preferred)
+  localStorage.setItem('user', JSON.stringify(user));
+  if (token) localStorage.setItem('token', token);
+
+  // legacy keys (if other parts of app still read these)
+  if (user?.id) localStorage.setItem('userId', user.id);
+  if (user?.email) localStorage.setItem('userEmail', user.email);
+  if (user?.name) localStorage.setItem('userName', user.name);
+  localStorage.setItem('userProfileImage', user?.profileImage || '');
+  localStorage.setItem('userMobileNumber', user?.mobileNumber || '');
+  localStorage.setItem('subscription', JSON.stringify(user?.subscription || null));
+};
+
+const clearPersistedUser = () => {
+  localStorage.removeItem('user');
+  localStorage.removeItem('userId');
+  localStorage.removeItem('userEmail');
+  localStorage.removeItem('userName');
+  localStorage.removeItem('userProfileImage');
+  localStorage.removeItem('userMobileNumber');
+  localStorage.removeItem('token');
+  localStorage.removeItem('subscription');
+};
+
+// Prefer full user JSON first; fall back to legacy keys
+const getInitialUserState = () => {
+  const token = localStorage.getItem('token');
+  const storedUser = localStorage.getItem('user');
+
+  if (token && storedUser) {
+    try {
+      const user = JSON.parse(storedUser);
+      return {
+        user,
+        token,
+        status: 'succeeded',
+        googleLoading: false,
+        facebookLoading: false,
+        forgotPasswordLoading: false,
+        error: null,
+      };
+    } catch {
+      // fall through to legacy path
+    }
+  }
+
+  const userId = localStorage.getItem('userId');
+  const userEmail = localStorage.getItem('userEmail');
+  const userName = localStorage.getItem('userName');
+  const userProfileImage = localStorage.getItem('userProfileImage');
+  const userMobileNumber = localStorage.getItem('userMobileNumber');
+  const subscription = localStorage.getItem('subscription');
+
+  if (token && userId && userEmail) {
+    const user = normalizeUser({
+      _id: userId,
+      email: userEmail,
+      name: userName || userEmail.split('@')[0],
+      profileImage: userProfileImage || '',
+      mobileNumber: userMobileNumber || '',
+      subscription: subscription ? JSON.parse(subscription) : null,
+    });
+
+    return {
+      user,
+      token,
+      status: 'succeeded',
+      googleLoading: false,
+      facebookLoading: false,
+      forgotPasswordLoading: false,
+      error: null,
+    };
+  }
+
+  return {
+    user: null,
+    token: null,
+    status: 'idle',
+    googleLoading: false,
+    facebookLoading: false,
+    forgotPasswordLoading: false,
+    error: null,
+  };
+};
+
+// ---------- Thunks ----------
 export const signupUser = createAsyncThunk(
   'user/signupUser',
   async (userData, { rejectWithValue }) => {
@@ -16,13 +123,12 @@ export const signupUser = createAsyncThunk(
   }
 );
 
-// Async thunk for login
 export const loginUser = createAsyncThunk(
   'user/loginUser',
   async (loginData, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post('/login', loginData);
-      return response.data;
+      return response.data; // { message, token, user:{ _id, ... } }
     } catch (err) {
       return rejectWithValue(
         err.response?.data?.error || err.message || 'Login failed'
@@ -31,12 +137,10 @@ export const loginUser = createAsyncThunk(
   }
 );
 
-// Async thunk for Google authentication
 export const googleLogin = createAsyncThunk(
   'user/googleLogin',
   async (_, { rejectWithValue }) => {
     try {
-      // Get Google auth URL from backend
       const response = await axiosInstance.get('/auth/google/url');
       return response.data;
     } catch (err) {
@@ -47,13 +151,12 @@ export const googleLogin = createAsyncThunk(
   }
 );
 
-// Async thunk for Google authentication with code
 export const googleLoginWithCode = createAsyncThunk(
   'user/googleLoginWithCode',
   async (code, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post('/auth/google/code', { code });
-      return response.data;
+      return response.data; // expect { token, user }
     } catch (err) {
       return rejectWithValue(
         err.response?.data?.error || err.message || 'Google authentication failed'
@@ -62,12 +165,10 @@ export const googleLoginWithCode = createAsyncThunk(
   }
 );
 
-// Async thunk for Facebook authentication
 export const facebookLogin = createAsyncThunk(
   'user/facebookLogin',
   async (_, { rejectWithValue }) => {
     try {
-      // Get Facebook auth URL from backend
       const response = await axiosInstance.get('/auth/facebook/url');
       return response.data;
     } catch (err) {
@@ -78,13 +179,12 @@ export const facebookLogin = createAsyncThunk(
   }
 );
 
-// Async thunk for Facebook authentication with code
 export const facebookLoginWithCode = createAsyncThunk(
   'user/facebookLoginWithCode',
   async (code, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post('/auth/facebook/code', { code });
-      return response.data;
+      return response.data; // expect { token, user }
     } catch (err) {
       return rejectWithValue(
         err.response?.data?.error || err.message || 'Facebook authentication failed'
@@ -93,7 +193,6 @@ export const facebookLoginWithCode = createAsyncThunk(
   }
 );
 
-// Async thunk for sending OTP
 export const sendOtp = createAsyncThunk(
   'user/sendOtp',
   async (email, { rejectWithValue }) => {
@@ -108,7 +207,6 @@ export const sendOtp = createAsyncThunk(
   }
 );
 
-// Async thunk for verifying OTP
 export const verifyOtp = createAsyncThunk(
   'user/verifyOtp',
   async ({ email, otp }, { rejectWithValue }) => {
@@ -123,15 +221,14 @@ export const verifyOtp = createAsyncThunk(
   }
 );
 
-// Async thunk for resetting password
 export const resetPassword = createAsyncThunk(
   'user/resetPassword',
   async ({ email, otp, newPassword }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post('/reset-password', { 
-        email, 
-        otp, 
-        newPassword 
+      const response = await axiosInstance.post('/reset-password', {
+        email,
+        otp,
+        newPassword
       });
       return response.data;
     } catch (err) {
@@ -142,7 +239,6 @@ export const resetPassword = createAsyncThunk(
   }
 );
 
-// Async thunk for changing password from settings
 export const changePassword = createAsyncThunk(
   'user/changePassword',
   async ({ userId, currentPassword, newPassword }, { rejectWithValue }) => {
@@ -161,29 +257,24 @@ export const changePassword = createAsyncThunk(
   }
 );
 
-// Async thunk for updating user profile
 export const updateUserProfile = createAsyncThunk(
   'user/updateProfile',
   async ({ userId, userData, profileImage }, { rejectWithValue }) => {
     try {
       const formData = new FormData();
-      // Always append mobileNumber, even if empty string
-      Object.keys(userData).forEach(key => {
+      Object.keys(userData).forEach((key) => {
         if (key === 'mobileNumber') {
           formData.append(key, userData[key] ?? '');
         } else if (userData[key] !== '') {
           formData.append(key, userData[key]);
         }
       });
-      if (profileImage) {
-        formData.append('profileImage', profileImage);
-      }
+      if (profileImage) formData.append('profileImage', profileImage);
+
       const response = await axiosInstance.put(`/update/${userId}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
-      return response.data;
+      return response.data; // expect { user: {...} }
     } catch (err) {
       return rejectWithValue(
         err.response?.data?.error || err.message || 'Failed to update profile'
@@ -192,7 +283,6 @@ export const updateUserProfile = createAsyncThunk(
   }
 );
 
-// Async thunk for deleting a user
 export const deleteUser = createAsyncThunk(
   'user/deleteUser',
   async (userId, { rejectWithValue }) => {
@@ -207,7 +297,6 @@ export const deleteUser = createAsyncThunk(
   }
 );
 
-// Async thunk for suspending a user
 export const suspendUser = createAsyncThunk(
   'user/suspendUser',
   async (userId, { rejectWithValue }) => {
@@ -222,7 +311,6 @@ export const suspendUser = createAsyncThunk(
   }
 );
 
-// Async thunk for reactivating a user
 export const reactivateUser = createAsyncThunk(
   'user/reactivateUser',
   async (userId, { rejectWithValue }) => {
@@ -237,13 +325,12 @@ export const reactivateUser = createAsyncThunk(
   }
 );
 
-// Async thunk for fetching all users
 export const getAllUsers = createAsyncThunk(
   'user/getAllUsers',
   async ({ page = 1, limit = 10 } = {}, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get(`/users?page=${page}&limit=${limit}`);
-      return response.data; // { users, total, page, totalPages }
+      return response.data;
     } catch (err) {
       return rejectWithValue(
         err.response?.data?.error || err.message || 'Failed to fetch users'
@@ -252,46 +339,7 @@ export const getAllUsers = createAsyncThunk(
   }
 );
 
-// Helper function to get initial user state from localStorage
-const getInitialUserState = () => {
-  const token = localStorage.getItem('token');
-  const userId = localStorage.getItem('userId');
-  const userEmail = localStorage.getItem('userEmail');
-  const userName = localStorage.getItem('userName');
-  const userProfileImage = localStorage.getItem('userProfileImage');
-  const userMobileNumber = localStorage.getItem('userMobileNumber');
-  const subscription = localStorage.getItem('subscription');
-  
-  if (token && userId && userEmail) {
-    return {
-      user: {
-        id: userId,
-        email: userEmail,
-        name: userName || userEmail.split('@')[0], // Use stored name or email prefix as fallback
-        profileImage: userProfileImage || "",
-        mobileNumber: userMobileNumber || "",
-        subscription: subscription ? JSON.parse(subscription) : null
-      },
-      token: token,
-      status: 'succeeded',
-      googleLoading: false,
-      facebookLoading: false,
-      forgotPasswordLoading: false,
-      error: null,
-    };
-  }
-  
-  return {
-    user: null,
-    token: null,
-    status: 'idle',
-    googleLoading: false,
-    facebookLoading: false,
-    forgotPasswordLoading: false,
-    error: null,
-  };
-};
-
+// ---------- Slice ----------
 const userSlice = createSlice({
   name: 'user',
   initialState: {
@@ -307,13 +355,7 @@ const userSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.token = null;
-      localStorage.removeItem('userId');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('userName');
-      localStorage.removeItem('userProfileImage');
-      localStorage.removeItem('userMobileNumber');
-      localStorage.removeItem('token');
-      localStorage.removeItem('subscription');
+      clearPersistedUser();
     },
     resetUserStatus: (state) => {
       state.status = 'idle';
@@ -325,97 +367,87 @@ const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // SIGNUP
       .addCase(signupUser.fulfilled, (state, action) => {
-        state.user = action.payload.user;
+        const normalized = normalizeUser(action.payload.user || {});
+        state.user = normalized;
+        // If backend returns token on signup, persist and use it
+        state.token = action.payload.token || state.token || null;
         state.status = 'succeeded';
-        // Save to localStorage for payment flow
-        localStorage.setItem('userId', action.payload.user.id);
-        localStorage.setItem('userEmail', action.payload.user.email);
-        localStorage.setItem('userName', action.payload.user.name);
+        persistUser(normalized, state.token);
       })
+
+      // LOGIN
       .addCase(loginUser.fulfilled, (state, action) => {
-        state.user = action.payload.user;
-        state.token = action.payload.token;
+        const normalized = normalizeUser(action.payload.user || {});
+        state.user = normalized;
+        state.token = action.payload.token || null;
         state.status = 'succeeded';
-        // Save to localStorage for payment flow
-        localStorage.setItem('userId', action.payload.user.id);
-        localStorage.setItem('userEmail', action.payload.user.email);
-        localStorage.setItem('userName', action.payload.user.name);
-        localStorage.setItem('userProfileImage', action.payload.user.profileImage || ""); // Always Cloudinary URL
-        localStorage.setItem('userMobileNumber', action.payload.user.mobileNumber || "");
-        localStorage.setItem('token', action.payload.token);
-        // Save subscription to localStorage for plan-based UI
-        localStorage.setItem('subscription', JSON.stringify(action.payload.user.subscription || null));
+        persistUser(normalized, state.token);
       })
+
+      // GOOGLE OAUTH: URL redirect
       .addCase(googleLogin.fulfilled, (state, action) => {
-        // Redirect to Google OAuth2 URL
+        state.googleLoading = false;
+        state.status = 'idle';
         window.location.href = action.payload.authUrl;
       })
+
+      // GOOGLE OAUTH: with code
       .addCase(googleLoginWithCode.fulfilled, (state, action) => {
-        state.user = action.payload.user;
-        state.token = action.payload.token;
+        const normalized = normalizeUser(action.payload.user || {});
+        state.user = normalized;
+        state.token = action.payload.token || null;
         state.status = 'succeeded';
-        // Save to localStorage for payment flow
-        localStorage.setItem('userId', action.payload.user.id);
-        localStorage.setItem('userEmail', action.payload.user.email);
-        localStorage.setItem('userName', action.payload.user.name);
-        localStorage.setItem('userProfileImage', action.payload.user.profileImage || "");
-        localStorage.setItem('userMobileNumber', action.payload.user.mobileNumber || "");
-        localStorage.setItem('token', action.payload.token);
-        // Save subscription to localStorage for plan-based UI
-        localStorage.setItem('subscription', JSON.stringify(action.payload.user.subscription || null));
+        persistUser(normalized, state.token);
       })
+
+      // FACEBOOK OAUTH: URL redirect
       .addCase(facebookLogin.fulfilled, (state, action) => {
-        // Redirect to Facebook OAuth2 URL
+        state.facebookLoading = false; // ensure button not stuck if user returns/back
+        state.status = 'idle';
         window.location.href = action.payload.authUrl;
       })
+
+      // FACEBOOK OAUTH: with code
       .addCase(facebookLoginWithCode.fulfilled, (state, action) => {
-        state.user = action.payload.user;
-        state.token = action.payload.token;
+        const normalized = normalizeUser(action.payload.user || {});
+        state.user = normalized;
+        state.token = action.payload.token || null;
         state.status = 'succeeded';
-        // Save to localStorage for payment flow
-        localStorage.setItem('userId', action.payload.user.id);
-        localStorage.setItem('userEmail', action.payload.user.email);
-        localStorage.setItem('userName', action.payload.user.name);
-        localStorage.setItem('userProfileImage', action.payload.user.profileImage || "");
-        localStorage.setItem('userMobileNumber', action.payload.user.mobileNumber || "");
-        localStorage.setItem('token', action.payload.token);
-        // Save subscription to localStorage for plan-based UI
-        localStorage.setItem('subscription', JSON.stringify(action.payload.user.subscription || null));
+        persistUser(normalized, state.token);
       })
+
+      // OTP / PASSWORD
       .addCase(sendOtp.fulfilled, (state) => {
         state.status = 'succeeded';
         state.forgotPasswordLoading = false;
+        state.error = null;
       })
       .addCase(verifyOtp.fulfilled, (state) => {
         state.status = 'succeeded';
         state.forgotPasswordLoading = false;
+        state.error = null;
       })
       .addCase(resetPassword.fulfilled, (state) => {
         state.status = 'succeeded';
         state.forgotPasswordLoading = false;
+        state.error = null;
       })
       .addCase(changePassword.fulfilled, (state) => {
         state.status = 'succeeded';
         state.forgotPasswordLoading = false;
       })
+
+      // UPDATE PROFILE
       .addCase(updateUserProfile.fulfilled, (state, action) => {
-        state.user = {
-          ...state.user,
-          ...action.payload.user,
-        };
+        const merged = normalizeUser({ ...(state.user || {}), ...(action.payload.user || {}) });
+        state.user = merged;
         state.status = 'succeeded';
-        // Update localStorage with new user data
-        if (action.payload.user.name) {
-          localStorage.setItem('userName', action.payload.user.name);
-        }
-        if (action.payload.user.profileImage) {
-          localStorage.setItem('userProfileImage', action.payload.user.profileImage); // Always Cloudinary URL
-        }
-        if (action.payload.user.mobileNumber !== undefined) {
-          localStorage.setItem('userMobileNumber', action.payload.user.mobileNumber);
-        }
+        persistUser(merged, state.token);
       })
+
+      // ADMIN ACTIONS
       .addCase(deleteUser.fulfilled, (state) => {
         state.status = 'succeeded';
         state.error = null;
@@ -428,7 +460,8 @@ const userSlice = createSlice({
         state.status = 'succeeded';
         state.error = null;
       })
-      // Fetch users list
+
+      // USERS LIST
       .addCase(getAllUsers.pending, (state) => {
         state.usersLoading = true;
         state.usersError = null;
@@ -445,16 +478,20 @@ const userSlice = createSlice({
         state.usersLoading = false;
         state.usersError = action.payload || 'Failed to fetch users';
       })
+
+      // GLOBAL PENDING/REJECTED
       .addMatcher(
         (action) => action.type.endsWith('/pending'),
-        (state, action) => { 
+        (state, action) => {
           state.status = 'loading';
-          // Set specific loading states for Google and Facebook
-          if (action.type.includes('googleLogin')) {
-            state.googleLoading = true;
-          } else if (action.type.includes('facebookLogin')) {
-            state.facebookLoading = true;
-          } else if (action.type.includes('sendOtp') || action.type.includes('verifyOtp') || action.type.includes('resetPassword')) {
+          state.error = null;
+          if (action.type.includes('googleLogin')) state.googleLoading = true;
+          else if (action.type.includes('facebookLogin')) state.facebookLoading = true;
+          else if (
+            action.type.includes('sendOtp') ||
+            action.type.includes('verifyOtp') ||
+            action.type.includes('resetPassword')
+          ) {
             state.forgotPasswordLoading = true;
           }
         }
@@ -466,11 +503,13 @@ const userSlice = createSlice({
           state.googleLoading = false;
           state.facebookLoading = false;
           state.forgotPasswordLoading = false;
-          state.error = action.error.message;
+          state.error = action.payload?.message || action.error?.message || 'Request failed';
         }
       );
   },
 });
 
 export const { logout, resetUserStatus } = userSlice.actions;
+export const selectUser = (state) => state.user.user;
+export const selectUserId = (state) => state.user.user?.id || null; // convenience
 export default userSlice.reducer;

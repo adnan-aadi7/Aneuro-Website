@@ -1,15 +1,16 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchStripeProducts, upgradeSubscription } from "../../../../store/Slice/PaymentSlice";
+import { fetchStripeProducts, fetchUserSubscription, upgradeSubscription } from "../../../../store/Slice/PaymentSlice";
 
 export default function UpgradePlanPopup({ open, onClose, onUpgrade }) {
   const [plan, setPlan] = useState(null);
   const dispatch = useDispatch();
-  const { status, error, products, productsLoading } = useSelector((state) => state.payment);
+  const { status, error, products, productsLoading, userSubscription } = useSelector((state) => state.payment);
   const userId = localStorage.getItem("userId");
 
   React.useEffect(() => {
     dispatch(fetchStripeProducts());
+    dispatch(fetchUserSubscription());
   }, [dispatch]);
 
   // Filter out the "Basic" plan and get the actual plans from Stripe
@@ -17,11 +18,27 @@ export default function UpgradePlanPopup({ open, onClose, onUpgrade }) {
     (product) => product.plan !== "basic" && product.plan !== "Basic"
   );
 
+  // Get current plan price to prevent downgrades
+  const currentPlanKey = userSubscription?.plan || JSON.parse(localStorage.getItem('subscription') || '{}')?.plan || JSON.parse(localStorage.getItem('user') || '{}')?.subscription?.plan;
+  const currentPlan = displayPlans.find((p) => p.plan === currentPlanKey);
+  const currentPrice = currentPlan?.price ?? null;
+
   React.useEffect(() => {
-    if (displayPlans.length > 0 && !plan) {
-      setPlan(displayPlans[0].plan);
+    if (displayPlans.length === 0 || plan) return;
+    // Prefer current plan if present in product list
+    if (currentPlanKey && displayPlans.some((p) => p.plan === currentPlanKey)) {
+      setPlan(currentPlanKey);
+      return;
     }
-  }, [displayPlans, plan]);
+    // Else choose first plan that is not a downgrade
+    if (currentPrice != null) {
+      const firstEligible = displayPlans.find((p) => p.price >= currentPrice) || displayPlans[0];
+      setPlan(firstEligible.plan);
+      return;
+    }
+    // Fallback to first
+    setPlan(displayPlans[0].plan);
+  }, [displayPlans, plan, currentPlanKey, currentPrice]);
 
   if (!open) return null;
   if (productsLoading) {
@@ -70,11 +87,16 @@ export default function UpgradePlanPopup({ open, onClose, onUpgrade }) {
         </div>
         {/* Plans */}
         <div className="flex flex-col gap-4 w-full mb-6">
-          {displayPlans.map((p) => (
+          {displayPlans.map((p) => {
+            const isLowerThanCurrent = currentPrice != null && p.price < currentPrice;
+            const disabled = Boolean(isLowerThanCurrent);
+            return (
             <label
               key={p.id}
-              className={`flex items-center justify-between border rounded-lg px-6 py-4 cursor-pointer transition-colors ${
-                plan === p.plan
+              className={`flex items-center justify-between border rounded-lg px-6 py-4 transition-colors ${
+                disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+              } ${
+                plan === p.plan && !disabled
                   ? "border-cyan-400 bg-[#232432]"
                   : "border-slate-600 bg-transparent"
               }`}
@@ -84,8 +106,11 @@ export default function UpgradePlanPopup({ open, onClose, onUpgrade }) {
                   type="radio"
                   name="plan"
                   checked={plan === p.plan}
-                  onChange={() => setPlan(p.plan)}
+                  onChange={() => {
+                    if (!disabled) setPlan(p.plan);
+                  }}
                   className="form-radio accent-cyan-400 w-5 h-5"
+                  disabled={disabled}
                 />
                 <div>
                   <div className="text-white text-lg font-semibold">{p.name}</div>
@@ -97,7 +122,13 @@ export default function UpgradePlanPopup({ open, onClose, onUpgrade }) {
                 <div className="text-slate-400 text-xs">per {p.interval}</div>
               </div>
             </label>
-          ))}
+            );
+          })}
+          {currentPrice != null && (
+            <div className="text-xs text-slate-400 mt-1">
+              You can only move to an equal or higher-priced plan from your current plan.
+            </div>
+          )}
         </div>
         {/* Error Message */}
         {error && status === "failed" && (

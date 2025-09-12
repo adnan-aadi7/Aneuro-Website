@@ -1,7 +1,7 @@
 import React from "react";
 import { X, ArrowLeft, ArrowRight, Star } from "lucide-react";
 
-const Tankyou = ({ onClose }) => {
+const Tankyou = ({ onClose, onGoHome, onReview }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Overlay with blur and dark background */}
@@ -35,10 +35,10 @@ const Tankyou = ({ onClose }) => {
         </p>
         {/* Buttons */}
         <div className="flex w-full gap-2">
-          <button className="flex-1 bg-white text-black font-semibold  rounded-md text-lg hover:bg-gray-100 transition-all border-2 border-white">
+          <button className="flex-1 bg-white text-black font-semibold  rounded-md text-lg hover:bg-gray-100 transition-all border-2 border-white" onClick={onReview}>
             Review Quiz
           </button>
-          <button className="flex-1 bg-cyan-400 text-black font-semibold py-2 rounded-md text-lg hover:bg-cyan-300 transition-all">
+          <button className="flex-1 bg-cyan-400 text-black font-semibold py-2 rounded-md text-lg hover:bg-cyan-300 transition-all" onClick={onGoHome}>
             Go Home
           </button>
         </div>

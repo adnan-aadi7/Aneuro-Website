@@ -1,8 +1,10 @@
 import React from "react";
 import frame1 from "../../../assets/aboutUs/frame2.png";
 import glow from "../../../assets/aboutUs/Ellipse.png";
+import { useNavigate } from "react-router-dom";
 
 const AneuroCreatedSection = () => {
+  const navigate = useNavigate();
   return (
     <section className="w-full bg-black mt-12">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center md:px-40 lg:px-4">
@@ -27,7 +29,9 @@ const AneuroCreatedSection = () => {
             <br className="hidden md:block" /> works at the level of human
             behavior.
           </p>
-          <button className="bg-gradient-to-r from-[#12DCF0] to-[#1DE6FB] text-black font-semibold px-4 md:px-8 py-2 rounded-full shadow-lg hover:brightness-110 transition-all w-auto md:w-auto text-sm md:text-base">
+          <button className="bg-gradient-to-r from-[#12DCF0] to-[#1DE6FB] text-black font-semibold px-4 md:px-8 py-2 rounded-full shadow-lg hover:brightness-110 transition-all w-auto md:w-auto text-sm md:text-base"
+          onClick={() => navigate("/login")}
+          >
             SIGN IN
           </button>
         </div>

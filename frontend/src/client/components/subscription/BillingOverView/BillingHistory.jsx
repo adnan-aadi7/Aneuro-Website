@@ -13,6 +13,7 @@ const BillingHistory = () => {
       dispatch(fetchUserPayments(userId));
     }
   }, [dispatch, userId]);
+  console.log("userPayments", userPayments);
 
   // Format date for display
   const formatDate = (dateString) => {
@@ -29,39 +30,126 @@ const BillingHistory = () => {
     return `${currency.toUpperCase()} $${amount.toFixed(2)}`;
   };
 
-  // Download single bill as Excel
-  const downloadSingleBill = (payment) => {
-    const data = [
-      ['Invoice Details'],
-      [''],
-      ['Invoice Number:', payment.stripePaymentIntentId ? `Invoice #${payment.stripePaymentIntentId.slice(-8)}` : `Payment #${payment._id?.slice(-8)}`],
-      ['Date:', formatDate(payment.createdAt)],
-      ['Amount:', formatAmount(payment.amount, payment.currency)],
-      ['Plan:', payment.plan],
-      ['Status:', payment.status],
-      ['Customer Email:', payment.customerEmail],
-      [''],
-      ['Payment ID:', payment._id],
-      ['Stripe Payment Intent:', payment.stripePaymentIntentId || 'N/A'],
-      ['Stripe Subscription ID:', payment.stripeSubscriptionId || 'N/A'],
-    ];
+  // Helpers for CSV numeric amount and currency split
+  const getAmountNumber = (amount) => {
+    const num = Number(amount || 0);
+    return num.toFixed(2);
+  };
+  const getCurrency = (currency) => (currency || 'usd').toUpperCase();
 
-    // Convert to CSV format
-    const csvContent = data.map(row => row.join(',')).join('\n');
-    
-    // Create and download file
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  // Get invoice identifier to display (prefer Stripe invoiceId from metadata)
+  const getInvoiceId = (payment) => {
+    return (payment && payment.metadata && payment.metadata.invoiceId)
+      || payment?.stripePaymentIntentId
+      || payment?._id
+      || 'N/A';
+  };
+
+  // Shorten invoice id for display (show first and last few chars)
+  const getInvoiceShort = (payment) => {
+    const full = getInvoiceId(payment);
+    if (!full || full === 'N/A') return 'Invoice #N/A';
+    const str = String(full);
+    const head = str.slice(0, 6);
+    const tail = str.slice(-6);
+    return `${head}...${tail}`;
+  };
+
+  // Slug for filenames using invoice id
+  const getInvoiceSlug = (payment) => {
+    const full = getInvoiceId(payment);
+    if (!full || full === 'N/A') return 'payment';
+    const str = String(full);
+    return `${str.slice(0, 6)}_${str.slice(-6)}`;
+  };
+
+  const formatPlanLabel = (plan) => {
+    if (!plan) return '';
+    return String(plan).charAt(0).toUpperCase() + String(plan).slice(1);
+  };
+
+  // Build Excel-compatible HTML table with column widths sized to content
+  const exportAsExcelHtml = (headers, rows, filename) => {
+    // Compute width per column by character length
+    const colWidthsPx = headers.map((h, colIdx) => {
+      const headerLen = String(h).length;
+      const maxDataLen = rows.reduce((max, r) => {
+        const cell = r[colIdx] == null ? '' : String(r[colIdx]);
+        return Math.max(max, cell.length);
+      }, 0);
+      const chars = Math.max(headerLen, maxDataLen) + 2; // padding
+      const px = Math.min(500, Math.max(60, Math.round(chars * 8))); // clamp
+      return px;
+    });
+
+    const colgroup = colWidthsPx
+      .map((w) => `<col style="width:${w}px;">`)
+      .join('');
+
+    const thead = `<thead><tr>${headers
+      .map((h) => `<th style="text-align:left;border:1px solid #ddd;padding:6px;background:#f3f4f6;">${h}</th>`) 
+      .join('')}</tr></thead>`;
+
+    const tbody = `<tbody>${rows
+      .map(
+        (r) =>
+          `<tr>${r
+            .map((c) => `<td style="text-align:left;border:1px solid #ddd;padding:6px;">${c == null ? '' : String(c)}</td>`)
+            .join('')}</tr>`
+      )
+      .join('')}</tbody>`;
+
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>
+      <table style="border-collapse:collapse;font-family:Segoe UI,Arial,sans-serif;font-size:12px;">
+        <colgroup>${colgroup}</colgroup>
+        ${thead}
+        ${tbody}
+      </table>
+    </body></html>`;
+
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `invoice_${payment._id?.slice(-8) || 'payment'}.csv`);
+    link.setAttribute('download', filename.endsWith('.xls') ? filename : `${filename}.xls`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  // Download all bills as Excel
+  // Download single bill as Excel (HTML table export)
+  const downloadSingleBill = (payment) => {
+    const headers = [
+      'Invoice',
+      'Billing date',
+      'Amount',
+      'Currency',
+      'Plan',
+      'Status',
+      'Customer Email',
+      'Payment ID',
+      'Stripe Payment Intent ID',
+      'Stripe Subscription ID'
+    ];
+
+    const row = [
+      getInvoiceId(payment),
+      formatDate(payment.createdAt),
+      getAmountNumber(payment.amount),
+      getCurrency(payment.currency),
+      formatPlanLabel(payment.plan),
+      payment.status,
+      payment.customerEmail,
+      payment._id,
+      (payment.stripePaymentIntentId || 'N/A'),
+      (payment.stripeSubscriptionId || 'N/A')
+    ];
+
+    exportAsExcelHtml(headers, [row], `invoice_${getInvoiceSlug(payment)}`);
+  };
+
+  // Download all bills as Excel (HTML table export)
   const downloadAllBills = () => {
     if (!userPayments || userPayments.length === 0) {
       alert('No billing data available to download');
@@ -70,23 +158,25 @@ const BillingHistory = () => {
 
     // Create headers
     const headers = [
-      'Invoice Number',
-      'Date',
+      'Invoice',
+      'Billing date',
       'Amount',
+      'Currency',
       'Plan',
       'Status',
       'Customer Email',
       'Payment ID',
-      'Stripe Payment Intent',
+      'Stripe Payment Intent ID',
       'Stripe Subscription ID'
     ];
 
     // Create data rows
     const dataRows = userPayments.map(payment => [
-      payment.stripePaymentIntentId ? `Invoice #${payment.stripePaymentIntentId.slice(-8)}` : `Payment #${payment._id?.slice(-8)}`,
+      getInvoiceId(payment),
       formatDate(payment.createdAt),
-      formatAmount(payment.amount, payment.currency),
-      payment.plan,
+      getAmountNumber(payment.amount),
+      getCurrency(payment.currency),
+      formatPlanLabel(payment.plan),
       payment.status,
       payment.customerEmail,
       payment._id,
@@ -94,20 +184,7 @@ const BillingHistory = () => {
       payment.stripeSubscriptionId || 'N/A'
     ]);
 
-    // Combine headers and data
-    const allData = [headers, ...dataRows];
-    const csvContent = allData.map(row => row.join(',')).join('\n');
-    
-    // Create and download file
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `billing_history_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    exportAsExcelHtml(headers, dataRows, `billing_history_${new Date().toISOString().split('T')[0]}`);
   };
 
   return (
@@ -168,8 +245,8 @@ const BillingHistory = () => {
                     key={payment._id || index}
                     className="grid grid-cols-6 gap-0 border-b border-gray-700 hover:bg-[#262634] transition-colors items-center"
                   >
-                    <div className="text-gray-100 font-medium pl-6 py-4">
-                      {payment.stripePaymentIntentId ? `Invoice #${payment.stripePaymentIntentId.slice(-8)}` : `Payment #${payment._id?.slice(-8) || index + 1}`}
+                    <div className="text-gray-100 font-medium pl-6 py-4" title={getInvoiceId(payment)}>
+                      {getInvoiceShort(payment)}
                     </div>
                     <div className="text-gray-100 pl-4 py-4">
                       {formatDate(payment.createdAt)}

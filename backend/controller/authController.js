@@ -6,6 +6,8 @@ import nodemailer from "nodemailer";
 import { uploadToCloudinary } from '../middleware/uploadToCloudinary.js';
 import { generateGoogleToken } from '../services/googlePassport.js';
 import { generateFacebookToken } from '../services/facebookPassport.js';
+import QuizSession from '../model/quiz.js';
+
 
 export async function Signup(reqBody) {
   try {
@@ -53,41 +55,41 @@ export async function Login(reqBody) {
       throw new Error("Email and password are required");
     }
 
-    // Populate subscription field
     const user = await User.findOne({ email }).lean();
-
-    if (!user) {
-      throw new Error("Invalid email or password");
-    }
+    if (!user) throw new Error("Invalid email or password");
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) throw new Error("Invalid email or password");
 
-    if (!isPasswordValid) {
-      throw new Error("Invalid email or password");
-    }
-   const token = jwt.sign(
-      {
-        id: user._id,
-        email: user.email,
-        userType: user.userType,
-      },
-      process.env.JWT_SECRET, 
-      {
-        expiresIn: "7d",
-      }
+    const token = jwt.sign(
+      { id: user._id, email: user.email, userType: user.userType },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
     );
+
+    const { password: _, ...userWithoutPassword } = user;
+
+    await User.updateOne({ _id: user._id }, { lastLogin: new Date() });
+
+    const quizSession = await QuizSession.findOne({ user_id: user._id }).lean();
+
+    let quizProgress = { completionPercentage: 0, isCompleted: false };
+    if (quizSession) {
+      const answeredCount = quizSession.answers.length;
+      quizProgress = {
+        completionPercentage: Math.round((answeredCount / TOTAL_QUESTIONS) * 100),
+        isCompleted: quizSession.is_completed,
+      };
+    }
+
     return {
       message: "Login successful",
       token,
       user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        mobileNumber: user.mobileNumber || "",
-        userType: user.userType,
-        accountStatus: user.accountStatus,
+        ...userWithoutPassword,
         subscription: user.subscription || null,
-        profileImage: user.profileImage || "",
+        notificationPreferences: user.notificationPreferences || {},
+        quizProgress, 
       },
     };
   } catch (error) {
@@ -95,7 +97,10 @@ export async function Login(reqBody) {
   }
 }
 
+
 //get api
+const TOTAL_QUESTIONS = 10; // change this to your actual total quiz questions
+
 export async function getAllUsers({ page = 1, limit = 10, accountStatus }) {
   await connectDB();
 
@@ -107,25 +112,41 @@ export async function getAllUsers({ page = 1, limit = 10, accountStatus }) {
   const users = await User.find(query)
     .skip((page - 1) * limit)
     .limit(Number(limit))
-    .select("-password");
+    .select("-password")
+    .lean(); // use lean to easily add fields
+
+  const userIds = users.map(u => u._id);
+  const quizSessions = await QuizSession.find({ user_id: { $in: userIds } })
+    .select('user_id answers is_completed')
+    .lean();
+
+  // Map quiz progress
+  const progressMap = {};
+  quizSessions.forEach(qs => {
+    const answeredCount = qs.answers.length;
+    const completion = Math.round((answeredCount / TOTAL_QUESTIONS) * 100);
+    progressMap[qs.user_id.toString()] = {
+      completionPercentage: completion,
+      isCompleted: qs.is_completed
+    };
+  });
+
+  // Attach to users
+  const usersWithProgress = users.map(u => ({
+    ...u,
+    quizProgress: progressMap[u._id.toString()] || {
+      completionPercentage: 0,
+      isCompleted: false
+    }
+  }));
 
   const total = await User.countDocuments(query);
 
-  if (!users || users.length === 0) {
-    return {
-      users: [],
-      total: 0,
-      page: Number(page),
-      totalPages: 0,
-      message: "No users found",
-    };
-  }
-
   return {
-    users,
+    users: usersWithProgress,
     total,
     page: Number(page),
-    totalPages: Math.ceil(total / limit),
+    totalPages: Math.ceil(total / limit)
   };
 }
 
@@ -137,7 +158,9 @@ export async function getUserById({ id, accountStatus }) {
     query.accountStatus = accountStatus;
   }
 
-  const user = await User.findOne(query).select("-password");
+  const user = await User.findOne(query)
+    .select("-password")
+    .lean();
 
   if (!user) {
     return {
@@ -146,7 +169,26 @@ export async function getUserById({ id, accountStatus }) {
     };
   }
 
-  return user;
+  const quizSession = await QuizSession.findOne({ user_id: id })
+    .select('answers is_completed')
+    .lean();
+
+  let completionPercentage = 0;
+  let isCompleted = false;
+  if (quizSession) {
+    completionPercentage = Math.round(
+      (quizSession.answers.length / TOTAL_QUESTIONS) * 100
+    );
+    isCompleted = quizSession.is_completed;
+  }
+
+  return {
+    ...user,
+    quizProgress: {
+      completionPercentage,
+      isCompleted
+    }
+  };
 }
 
 
@@ -312,6 +354,12 @@ export const changePassword = async (req, res) => {
       return res.status(401).json({ error: "Current password is incorrect" });
     }
 
+    // Prevent reusing current password
+    const isSameAsCurrent = await bcrypt.compare(newPassword, user.password);
+    if (isSameAsCurrent) {
+      return res.status(400).json({ error: "New password cannot be the same as current password" });
+    }
+
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     await user.save();
@@ -396,6 +444,12 @@ export const resetPassword = async (req, res) => {
       return res.status(400).json({ error: "Invalid or expired OTP" });
     }
 
+    // Disallow setting the same password as the current one
+    const isSameAsCurrent = await bcrypt.compare(newPassword, user.password);
+    if (isSameAsCurrent) {
+      return res.status(400).json({ error: "New password cannot be the same as current password" });
+    }
+
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
 
@@ -433,6 +487,17 @@ export const handleGoogleCallback = async (req, res) => {
                                user.subscription.plan && 
                                user.subscription.status === 'active';
 
+    // Compute quiz progress
+    const quizSession = await QuizSession.findOne({ user_id: user._id }).lean();
+    let quizProgress = { completionPercentage: 0, isCompleted: false };
+    if (quizSession) {
+      const answeredCount = quizSession.answers.length;
+      quizProgress = {
+        completionPercentage: Math.round((answeredCount / TOTAL_QUESTIONS) * 100),
+        isCompleted: quizSession.is_completed,
+      };
+    }
+
     // Redirect to frontend with user data and token
     const userData = {
       id: user._id,
@@ -443,6 +508,8 @@ export const handleGoogleCallback = async (req, res) => {
       accountStatus: user.accountStatus,
       profileImage: user.profileImage || "",
       subscription: user.subscription || null,
+      notificationPreferences: user.notificationPreferences || {},
+      quizProgress,
     };
 
     // Encode the data to pass via URL
@@ -562,6 +629,17 @@ export const googleAuthWithCode = async (req, res) => {
     // Generate JWT token
     const token = generateGoogleToken(user);
 
+    // Compute quiz progress
+    const quizSession = await QuizSession.findOne({ user_id: user._id }).lean();
+    let quizProgress = { completionPercentage: 0, isCompleted: false };
+    if (quizSession) {
+      const answeredCount = quizSession.answers.length;
+      quizProgress = {
+        completionPercentage: Math.round((answeredCount / TOTAL_QUESTIONS) * 100),
+        isCompleted: quizSession.is_completed,
+      };
+    }
+
     return res.status(200).json({
       message: "Google login successful",
       token,
@@ -574,6 +652,8 @@ export const googleAuthWithCode = async (req, res) => {
         accountStatus: user.accountStatus,
         profileImage: user.profileImage || "",
         subscription: user.subscription || null,
+        notificationPreferences: user.notificationPreferences || {},
+        quizProgress,
       },
     });
   } catch (error) {
@@ -604,6 +684,17 @@ export const handleFacebookCallback = async (req, res) => {
                                user.subscription.plan && 
                                user.subscription.status === 'active';
 
+    // Compute quiz progress
+    const quizSession = await QuizSession.findOne({ user_id: user._id }).lean();
+    let quizProgress = { completionPercentage: 0, isCompleted: false };
+    if (quizSession) {
+      const answeredCount = quizSession.answers.length;
+      quizProgress = {
+        completionPercentage: Math.round((answeredCount / TOTAL_QUESTIONS) * 100),
+        isCompleted: quizSession.is_completed,
+      };
+    }
+
     // Redirect to frontend with user data and token
     const userData = {
       id: user._id,
@@ -614,6 +705,8 @@ export const handleFacebookCallback = async (req, res) => {
       accountStatus: user.accountStatus,
       profileImage: user.profileImage || "",
       subscription: user.subscription || null,
+      notificationPreferences: user.notificationPreferences || {},
+      quizProgress,
     };
 
     // Encode the data to pass via URL
@@ -726,6 +819,17 @@ export const facebookAuthWithCode = async (req, res) => {
     // Generate JWT token
     const token = generateFacebookToken(user);
 
+    // Compute quiz progress
+    const quizSession = await QuizSession.findOne({ user_id: user._id }).lean();
+    let quizProgress = { completionPercentage: 0, isCompleted: false };
+    if (quizSession) {
+      const answeredCount = quizSession.answers.length;
+      quizProgress = {
+        completionPercentage: Math.round((answeredCount / TOTAL_QUESTIONS) * 100),
+        isCompleted: quizSession.is_completed,
+      };
+    }
+
     return res.status(200).json({
       message: "Facebook login successful",
       token,
@@ -738,6 +842,8 @@ export const facebookAuthWithCode = async (req, res) => {
         accountStatus: user.accountStatus,
         profileImage: user.profileImage || "",
         subscription: user.subscription || null,
+        notificationPreferences: user.notificationPreferences || {},
+        quizProgress,
       },
     });
   } catch (error) {

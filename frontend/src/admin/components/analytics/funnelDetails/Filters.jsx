@@ -1,5 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { ChevronDown, Copy } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { 
+  fetchFunnelTemplateById,
+  selectCurrentFunnelTemplate,
+  selectFunnelTemplateLoading
+} from "../../../../store/Slice/FunnelSequenceSlice";
 
 const CustomSelect = ({ options, value, onChange }) => (
   <div className="relative">
@@ -33,7 +39,19 @@ const funnelPages = [
   },
 ];
 
-const Filters = () => {
+const Filters = ({ templateId }) => {
+  const dispatch = useDispatch();
+  const template = useSelector(selectCurrentFunnelTemplate);
+  const loading = useSelector(selectFunnelTemplateLoading);
+
+  useEffect(() => {
+    if (templateId) {
+      dispatch(fetchFunnelTemplateById(templateId));
+    }
+  }, [dispatch, templateId]);
+
+  const documentUrl = template?.fileUrl || null;
+
   return (
     <>
       <div className="bg-[#353545] p-6 rounded mb-8">
@@ -88,37 +106,55 @@ const Filters = () => {
         </div>
       </div>
 
-      {/* Funnel Structure Section */}
-      <div className="bg-[#353545] p-6 rounded mb-8">
-        <div className="text-white text-xl font-semibold mb-6">
-          Funnel Structure
+      {/* Funnel Structure or File Button */}
+      {!loading && documentUrl ? (
+        <div className="bg-[#353545] p-6 rounded mb-8">
+          <div className="text-white text-xl font-semibold mb-6">
+            Funnel Template File
+          </div>
+          <a
+            href={documentUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-sm px-3 py-2 border border-cyan-400 text-white hover:bg-cyan-900 transition"
+          >
+            View Uploaded Document
+          </a>
         </div>
-        <div className="flex flex-col gap-4">
-          {funnelPages.map((page, idx) => (
-            <div
-              key={idx}
-              className="bg-[#232334] border border-[#353545] rounded px-6 py-4 flex items-center justify-between"
-            >
-              <div>
-                <div className="text-white text-base font-semibold">
-                  {page.title}
-                </div>
-                <div className="text-cyan-400 text-sm mt-1">
-                  {page.subtitle}
-                </div>
-              </div>
-              <button className="border border-cyan-400 text-white text-xs px-4 py-1 rounded flex items-center gap-1 hover:bg-cyan-900 transition">
-                <Copy className="w-4 h-4" /> Copy
-              </button>
+      ) : (
+        <>
+          <div className="bg-[#353545] p-6 rounded mb-8">
+            <div className="text-white text-xl font-semibold mb-6">
+              Funnel Structure
             </div>
-          ))}
-        </div>
-      </div>
-      <div className="flex justify-center mt-2 mb-8">
-        <button className="border border-cyan-400 text-white text-xs px-8 py-2 rounded hover:bg-cyan-900 transition">
-          View All 5 Pages
-        </button>
-      </div>
+            <div className="flex flex-col gap-4">
+              {funnelPages.map((page, idx) => (
+                <div
+                  key={idx}
+                  className="bg-[#232334] border border-[#353545] rounded px-6 py-4 flex items-center justify-between"
+                >
+                  <div>
+                    <div className="text-white text-base font-semibold">
+                      {page.title}
+                    </div>
+                    <div className="text-cyan-400 text-sm mt-1">
+                      {page.subtitle}
+                    </div>
+                  </div>
+                  <button className="border border-cyan-400 text-white text-xs px-4 py-1 rounded flex items-center gap-1 hover:bg-cyan-900 transition">
+                    <Copy className="w-4 h-4" /> Copy
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="flex justify-center mt-2 mb-8">
+            <button className="border border-cyan-400 text-white text-xs px-8 py-2 rounded hover:bg-cyan-900 transition">
+              View All 5 Pages
+            </button>
+          </div>
+        </>
+      )}
     </>
   );
 };

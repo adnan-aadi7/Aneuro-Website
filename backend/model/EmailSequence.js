@@ -1,21 +1,30 @@
-//email model
 import mongoose from 'mongoose';
+
+const EmailSchema = new mongoose.Schema({
+  content: { type: String },
+  type: {
+    type: String,
+    enum: ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst'],
+  },
+    totalOpens: { type: Number, default: 0 },
+      uniqueClicks: { type: Number, default: 0 }, // new field
+  clickedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }] 
+});
 
 const EmailSequenceSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    emailCount: { type: Number, default: 0 },
-    emails: { type: Number, default: 0 },
-    opens: { type: Number, default: 0 }, 
-    clicks: { type: Number, default: 0 }, 
-    rating: { type: Number, default: 0 }, 
 
     tier: {
       type: String,
-      enum: ['basic', 'premium', 'enterprise'],
+      enum: ["starter", "growth", "enterprise"],
       required: true,
     },
-  releaseDateTime: { type: Date },
+category: {
+    type: String, 
+    required: true,
+  },
+    releaseDateTime: { type: Date },
 
     status: {
       type: String,
@@ -34,20 +43,23 @@ const EmailSequenceSchema = new mongoose.Schema(
       required: true,
     },
 
-    fileUrl: { type: String },
-    manualContent: { type: String },
+    brainType: {
+      type: String,
+      enum: ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst'],
+      required: true,
+    },
 
-    emailTemplate: {
-      subject: { type: String, default: '' },
-      body: { type: String, default: '' },
-      footer: { type: String, default: '' }
+    fileUrl: { type: String },
+
+    emails: [EmailSchema],
+
+    createdDate: {
+      type: Date,
+      default: Date.now,
     },
   },
   { timestamps: true }
 );
 
-const EmailSequence =
-  mongoose.models.EmailSequence ||
+export default mongoose.models.EmailSequence ||
   mongoose.model('EmailSequence', EmailSequenceSchema);
-
-export default EmailSequence;

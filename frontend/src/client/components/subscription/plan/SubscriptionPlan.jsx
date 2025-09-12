@@ -83,6 +83,36 @@ const SubscriptionPlan = () => {
     (product) => product.plan !== "basic" && product.plan !== "Basic"
   );
 
+  // Build name/price maps by plan key
+  const namePriceMaps = React.useMemo(() => {
+    const names = {};
+    const prices = {};
+    displayPlans.forEach((p) => {
+      const key = (p.plan || p.name || "").toLowerCase();
+      if (key) {
+        names[key] = p.name;
+        prices[key] = p.price;
+      }
+    });
+    return { names, prices };
+  }, [displayPlans]);
+
+  // Mapping to swap only the headings/prices for starter <-> enterprise
+  const swapMap = React.useMemo(() => ({ starter: "enterprise", enterprise: "starter" }), []);
+
+  // Create a derived list with display name/price already swapped via mapping
+  const mappedPlans = React.useMemo(() => {
+    return displayPlans.map((p) => {
+      const key = (p.plan || p.name || "").toLowerCase();
+      const targetKey = swapMap[key] || key;
+      return {
+        ...p,
+        __displayName: namePriceMaps.names[targetKey] ?? p.name,
+        __displayPrice: namePriceMaps.prices[targetKey] ?? p.price,
+      };
+    });
+  }, [displayPlans, namePriceMaps, swapMap]);
+
   if (productsLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-8 px-2">
@@ -144,13 +174,13 @@ const SubscriptionPlan = () => {
                   />
                 </div>
                 {/* Other plans */}
-                {displayPlans.map((plan) => (
+                {mappedPlans.map((plan) => (
                   <div
                     key={plan.id}
                     className="flex flex-col items-center py-4 md:py-8"
                   >
                     <h3 className="text-white text-sm lg:text-2xl font-bold mb-1 md:mb-2 tracking-wide text-center">
-                      {plan.name}
+                      {plan.__displayName}
                     </h3>
                     <div
                       className="w-10 h-1 md:w-16 rounded-full mb-2 md:mb-4"
@@ -158,7 +188,7 @@ const SubscriptionPlan = () => {
                     />
                     <div className="flex items-end justify-center mb-0">
                       <span className="lg:text-3xl text-lg md:text-5xl font-bold text-white leading-none">
-                        {plan.price}
+                        {plan.__displayPrice}
                       </span>
                       <span className="text-base md:text-xl font-bold ml-1 mb-1 text-gray-200">
                         $

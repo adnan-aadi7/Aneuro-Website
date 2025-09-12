@@ -1,26 +1,52 @@
 import EmailSequence from "../model/EmailSequence.js";
 import { uploadToCloudinary } from "../middleware/uploadToCloudinary.js";
 import { logAction } from "../config/logAction.js";
-
+import Notification from "../model/Notification.js";
 
 export async function create(req, res) {
   try {
-    const {
-      name, emailCount, emails, tier, status, type, manualContent, emailTemplate
+    let {
+      name,
+      emails, 
+      tier,
+      status,
+      type,
+      brainType,
+      releaseDateTime,
+      category
     } = req.body;
 
-    let fileUrl = req.body.fileUrl;
+    let fileUrl;
 
-    if (!name || !tier || !type) {
+    // ✅ Validate required fields
+    if (!name || !tier || !type || !brainType) {
       return res.status(400).json({
         success: false,
-        message: 'Name, tier, and type are required'
+        message: 'Name, tier, type, and brainType are required'
       });
     }
 
+    // ✅ Enum validation
+    const allowedTiers = ['starter', 'growth', 'enterprise'];
+    const allowedTypes = ['manual', 'file'];
+    const allowedBrainTypes = ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst'];
+
+    if (!allowedTiers.includes(tier)) {
+      return res.status(400).json({ success: false, message: 'Invalid tier value' });
+    }
+    if (!allowedTypes.includes(type)) {
+      return res.status(400).json({ success: false, message: 'Invalid type value' });
+    }
+    if (!allowedBrainTypes.includes(brainType)) {
+      return res.status(400).json({ success: false, message: 'Invalid brainType value' });
+    }
+
+    let emailArray = [];
+
+    // ✅ File type handling
     if (type === 'file') {
       if (!req.file || !req.file.buffer) {
-        return res.status(400).json({ success: false, message: 'File is required' });
+        return res.status(400).json({ success: false, message: 'File is required for file type' });
       }
 
       const uploadResult = await uploadToCloudinary(req.file.buffer);
@@ -32,50 +58,88 @@ export async function create(req, res) {
       }
 
       fileUrl = uploadResult.secure_url;
+      emailArray.push({ content: fileUrl, type: brainType });
+
+    } else if (type === 'manual') {
+      // ✅ Parse emails if it's a JSON string
+      if (typeof emails === 'string') {
+        try {
+          emails = JSON.parse(emails);
+        } catch (err) {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid JSON format for emails'
+          });
+        }
+      }
+
+      if (!Array.isArray(emails) || emails.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Emails array is required for manual type'
+        });
+      }
+
+      emailArray = emails.map(email => ({
+        content: email.content || '',
+        type: email.type || brainType
+      }));
     }
 
-    if (type === 'manual' && !manualContent) {
-      return res.status(400).json({ success: false, message: 'Manual content required' });
-    }
+   if (!category) {
+  return res.status(400).json({ success: false, message: 'Category is required' });
+}
 
-    let parsedTemplate = { subject: '', body: '', footer: '' };
-    try {
-      if (emailTemplate) parsedTemplate = JSON.parse(emailTemplate);
-    } catch {
-      return res.status(400).json({ success: false, message: 'Invalid emailTemplate JSON' });
-    }
-
-    const newSequence = new EmailSequence({
-      name,
-      emailCount: Number(emailCount) || 0,
-      emails: Number(emails) || 0,
-      tier,
-      status: status || 'scheduled',
-      type,
-      fileUrl,
-      manualContent,
-      emailTemplate: parsedTemplate
-    });
+const newSequence = new EmailSequence({
+  name,
+  tier,
+  category, 
+  releaseDateTime: releaseDateTime || null,
+  status: status || 'scheduled',
+  type,
+  brainType,
+  fileUrl,
+  emails: emailArray,
+  usage: { count: 0, users: [] }
+});
 
     const savedSequence = await newSequence.save();
 
-    // ✅ Log this action
- await logAction({
-      action: "CREATE", // must match your schema enum
+    // ✅ Log action
+    await logAction({
+      action: "UPLOAD",
       user: {
-        id: req.user?._id || null,
-        email: req.user?.email || "guest",
-        ipAddress: req.ip || req.headers["x-forwarded-for"] || "unknown"
+        id: req.user?.id,
+        email: req.user?.email
       },
-      affectedAsset: savedSequence._id,
+      affectedAsset: savedSequence.name,
       contentType: "email-sequence",
-      details: `Created email sequence: ${savedSequence.name}`
+      description: "Created new email sequence",
+      req
     });
-    res.status(201).json({
-      success: true,
-      message: 'Email sequence created successfully',
-      data: savedSequence
-    });
+
+if (savedSequence.status === "active") {
+  const notification = new Notification({
+    title: ` ${name}`,
+    message: `A new ${tier} tier email sequence has been created in category: ${category}`,
+    type: "newtool", 
+    isPublic: true,
+    targetTier: tier,
+  });
+
+  console.log("Notification that will be created:", notification);
+
+  // Save to DB
+  const savedNotification = await notification.save();
+
+  console.log("Notification saved to DB:", savedNotification);
+}
+
+res.status(201).json({
+  success: true,
+  message: 'Email sequence created successfully (notification logged if active)',
+  data: savedSequence
+});
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -84,6 +148,72 @@ export async function create(req, res) {
     });
   }
 }
+
+
+export const getGroupedEmailsByTier = async (req, res) => {
+  try {
+    const { tier, category } = req.query;
+
+    if (!tier) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Tier query parameter is required" });
+    }
+
+    // Build query dynamically (filter by tier and optional category)
+    const query = { tier };
+    if (category) {
+      query.category = category;
+    }
+
+    // Find sequences for that tier (and category if provided)
+    const sequences = await EmailSequence.find(query);
+
+    // Initialize grouped structure
+    const grouped = {
+      Architect: [],
+      Challenger: [],
+      Synthesizer: [],
+      Reflector: [],
+      Catalyst: [],
+    };
+
+    if (sequences && sequences.length > 0) {
+      // Go through each sequence and collect emails into the right array
+      sequences.forEach((seq) => {
+        if (seq.emails && seq.emails.length > 0) {
+          seq.emails.forEach((email) => {
+            if (grouped[email.type]) {
+              grouped[email.type].push({
+                ...email.toObject(),
+                sequenceName: seq.name,
+                category: seq.category,
+              });
+            }
+          });
+        }
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      tier,
+      category: category || "all",
+      message:
+        sequences.length === 0
+          ? "No email sequences found for this tier/category"
+          : "Emails fetched successfully",
+      data: grouped,
+    });
+  } catch (error) {
+    console.error("Error fetching grouped emails:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
 
 
 // GET ALL
@@ -166,50 +296,86 @@ export async function getById(req, res) {
 }
 
 // UPDATE
-// UPDATE
 export async function update(req, res) {
   try {
     const { id } = req.params;
-    const updateData = req.body;
+    let { name, emails, tier, status, type, brainType, releaseDateTime,category } = req.body;
 
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ success: false, message: 'Invalid ID format' });
     }
 
-    delete updateData.usage;
-    delete updateData.createdAt;
-    delete updateData.updatedAt;
-    delete updateData._id;
-
-    if (updateData.type === 'file' && !updateData.fileUrl) {
-      return res.status(400).json({ success: false, message: 'File URL is required' });
-    }
-
-    if (updateData.type === 'manual' && !updateData.manualContent) {
-      return res.status(400).json({ success: false, message: 'Manual content required' });
-    }
-
-    // Ensure emailTemplate fields exist or set to default
-    updateData.emailTemplate = {
-      subject: updateData?.emailTemplate?.subject || '',
-      body: updateData?.emailTemplate?.body || '',
-      footer: updateData?.emailTemplate?.footer || ''
-    };
-
-    const updatedSequence = await EmailSequence.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true
-    }).populate('usage.users', 'name email');
-
-    if (!updatedSequence) {
+    const existingSequence = await EmailSequence.findById(id);
+    if (!existingSequence) {
       return res.status(404).json({ success: false, message: 'Email sequence not found' });
     }
+
+    let fileUrl = existingSequence.fileUrl;
+    let emailArray = existingSequence.emails; // start with existing emails
+
+    // ✅ Handle file type
+    if (type === 'file') {
+      if (req.file && req.file.buffer) {
+        const uploadResult = await uploadToCloudinary(req.file.buffer);
+        if (!uploadResult?.secure_url) {
+          return res.status(500).json({ success: false, message: 'Failed to upload file to Cloudinary' });
+        }
+        fileUrl = uploadResult.secure_url;
+        emailArray.push({ content: fileUrl, type: brainType || existingSequence.brainType });
+      }
+    }
+
+    // ✅ Handle manual type (append instead of overwrite)
+    if (type === 'manual') {
+      if (typeof emails === 'string') {
+        try {
+          emails = JSON.parse(emails);
+        } catch (err) {
+          return res.status(400).json({ success: false, message: 'Invalid JSON format for emails' });
+        }
+      }
+
+      if (Array.isArray(emails) && emails.length > 0) {
+        const newEmails = emails.map(email => ({
+          content: email.content || '',
+          type: email.type || brainType || existingSequence.brainType
+        }));
+
+        emailArray = [...emailArray, ...newEmails]; // append new emails
+      }
+    }
+
+    const updatedSequence = await EmailSequence.findByIdAndUpdate(
+      id,
+      {
+        name: name ?? existingSequence.name,
+        tier: tier ?? existingSequence.tier,
+        status: status ?? existingSequence.status,
+            category: category ?? existingSequence.category, 
+        type: type ?? existingSequence.type,
+        brainType: brainType ?? existingSequence.brainType,
+        releaseDateTime: releaseDateTime ?? existingSequence.releaseDateTime,
+        fileUrl,
+        emails: emailArray
+      },
+      { new: true, runValidators: true }
+    ).populate('usage.users', 'name email');
+
+    await logAction({
+      action: "UPDATE",
+      user: { id: req.user?.id, email: req.user?.email },
+      affectedAsset: updatedSequence.name,
+      contentType: "email-sequence",
+      description: `Updated email sequence: ${updatedSequence.name}`,
+      req
+    });
 
     res.status(200).json({
       success: true,
       message: 'Email sequence updated successfully',
       data: updatedSequence
     });
+
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -218,6 +384,7 @@ export async function update(req, res) {
     });
   }
 }
+
 
 // DELETE
 export async function deleteSequence(req, res) {
@@ -233,6 +400,18 @@ export async function deleteSequence(req, res) {
     if (!deletedSequence) {
       return res.status(404).json({ success: false, message: 'Email sequence not found' });
     }
+
+     await logAction({
+      action: "DELETE",
+      user: {
+        id: req.user?.id,
+        email: req.user?.email
+      },
+      affectedAsset: `${deletedSequence.name}`,
+      contentType: "email-sequence",
+      description: `Deleted email sequence: ${deletedSequence.name}`,
+      req
+    });
 
     res.status(200).json({
       success: true,
@@ -251,49 +430,30 @@ export async function deleteSequence(req, res) {
   }
 }
 
-// BULK DELETE
-export async function bulkDelete(req, res) {
-  try {
-    const { ids } = req.body;
-
-    if (!Array.isArray(ids) || ids.length === 0) {
-      return res.status(400).json({ success: false, message: 'IDs array is required' });
-    }
-
-    const invalidIds = ids.filter(id => !id.match(/^[0-9a-fA-F]{24}$/));
-    if (invalidIds.length > 0) {
-      return res.status(400).json({ success: false, message: `Invalid IDs: ${invalidIds.join(', ')}` });
-    }
-
-    const result = await EmailSequence.deleteMany({ _id: { $in: ids } });
-
-    res.status(200).json({
-      success: true,
-      message: `${result.deletedCount} email sequences deleted successfully`,
-      data: { deletedCount: result.deletedCount, requestedCount: ids.length }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error deleting email sequences',
-      error: error.message
-    });
-  }
-}
-
 
 export async function getStats(req, res) {
   try {
     const mainStats = await EmailSequence.aggregate([
+      { $unwind: { path: "$emails", preserveNullAndEmptyArrays: true } },
       {
         $group: {
           _id: null,
-          totalSequences: { $sum: 1 },
-          totalEmails: { $sum: "$emailCount" },
-          totalOpens: { $sum: "$opens" },
-          totalClicks: { $sum: "$clicks" },
+          totalSequences: { $addToSet: "$_id" },
+          totalEmails: { $sum: 1 },
+          totalOpens: { $sum: "$emails.totalOpens" },
+          totalClicks: { $sum: "$emails.uniqueClicks" }, // ✅ use uniqueClicks instead of totalClicks
+          // OR if you want total (including duplicates):
+          // totalClicks: { $sum: { $size: "$emails.clickedUsers" } },
           totalUsage: { $sum: "$usage.count" },
-          averageRating: { $avg: "$rating" }
+        }
+      },
+      {
+        $project: {
+          totalSequences: { $size: "$totalSequences" },
+          totalEmails: 1,
+          totalOpens: 1,
+          totalClicks: 1,
+          totalUsage: 1
         }
       }
     ]);
@@ -301,11 +461,10 @@ export async function getStats(req, res) {
     const totalActive = await EmailSequence.countDocuments({ status: "active" });
     const totalScheduled = await EmailSequence.countDocuments({ status: "scheduled" });
 
-    // 🔹 Count by tier/category
     const categoryStats = await EmailSequence.aggregate([
       {
         $group: {
-          _id: "$tier", // Group by category (tier)
+          _id: "$tier",
           count: { $sum: 1 }
         }
       }
@@ -317,11 +476,10 @@ export async function getStats(req, res) {
         totalSequences: mainStats[0]?.totalSequences || 0,
         totalEmails: mainStats[0]?.totalEmails || 0,
         totalOpens: mainStats[0]?.totalOpens || 0,
-        totalClicks: mainStats[0]?.totalClicks || 0,
+        totalClicks: mainStats[0]?.totalClicks || 0, // ✅ now reflects real clicks
         totalUsage: mainStats[0]?.totalUsage || 0,
         totalActive,
         totalScheduled,
-        averageRating: mainStats[0]?.averageRating || 0,
         categoryCounts: categoryStats.reduce((acc, item) => {
           acc[item._id] = item.count;
           return acc;
@@ -337,3 +495,199 @@ export async function getStats(req, res) {
   }
 }
 
+
+
+export const trackEmailOpen = async (req, res) => {
+  try {
+    const { emailId } = req.params;
+
+    // Find the sequence that contains this email
+    const sequence = await EmailSequence.findOne({ "emails._id": emailId });
+    if (!sequence) return res.status(404).send("Email not found in any sequence");
+
+    const email = sequence.emails.id(emailId);
+    if (!email) return res.status(404).send("Email not found");
+
+    // Increment opens
+    email.totalOpens = (email.totalOpens || 0) + 1;
+    await sequence.save();
+
+    // Return 1x1 transparent gif pixel
+    const pixel = Buffer.from(
+      "R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",
+      "base64"
+    );
+    res.writeHead(200, {
+      "Content-Type": "image/gif",
+      "Content-Length": pixel.length,
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      "Pragma": "no-cache",
+      "Expires": "0",
+    });
+    res.end(pixel, "binary");
+  } catch (error) {
+    console.error("Error tracking email open:", error);
+    res.status(500).send("Error tracking open");
+  }
+};
+
+export const trackEmailClick = async (req, res) => {
+  try {
+    const { emailId } = req.params;
+    const userId = req.user.id; 
+
+    // Find sequence that contains this email
+    const sequence = await EmailSequence.findOne({ "emails._id": emailId });
+    if (!sequence) return res.status(404).json({ error: "Email not found" });
+
+    const email = sequence.emails.id(emailId);
+    if (!email) return res.status(404).json({ error: "Email not found" });
+
+    // Initialize fields if missing
+    if (!email.uniqueClicks) email.uniqueClicks = 0;
+    if (!email.clickedUsers) email.clickedUsers = [];
+
+    // Count only unique user click
+    if (!email.clickedUsers.includes(userId)) {
+      email.uniqueClicks += 1;
+      email.clickedUsers.push(userId);
+    }
+
+    await sequence.save();
+
+    res.status(200).json({
+      message: "Click tracked successfully",
+      emailId,
+      uniqueClicks: email.uniqueClicks,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const editEmailInSequence = async (req, res) => {
+  try {
+    const { sequenceId, emailId } = req.params;
+    const { content, type } = req.body;
+
+    const sequence = await EmailSequence.findOne({
+      _id: sequenceId,
+      "emails._id": emailId,
+    });
+
+    if (!sequence) {
+      return res.status(404).json({
+        success: false,
+        message: "Email sequence or email not found",
+      });
+    }
+
+    // Locate the email inside array
+    const email = sequence.emails.id(emailId);
+
+    if (!email) {
+      return res.status(404).json({
+        success: false,
+        message: "Email not found in the sequence",
+      });
+    }
+
+    // Store old values for logging
+    const oldContent = email.content;
+    const oldType = email.type;
+
+    // Update fields
+    if (content) email.content = content;
+    if (type) {
+      const allowedTypes = ["Architect", "Challenger", "Synthesizer", "Reflector", "Catalyst"];
+      if (!allowedTypes.includes(type)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid brain type",
+        });
+      }
+      email.type = type;
+    }
+
+    await sequence.save();
+
+    // ✅ Log EDIT action
+    await logAction({
+      action: "EDIT",
+      user: {
+        id: req.user?.id,
+        email: req.user?.email,
+      },
+      affectedAsset: `${sequence.name}`,
+      contentType: "email-sequence",
+      description: `Edited email (${emailId}) in sequence: ${sequence.name}`,
+      details: {
+        oldContent,
+        newContent: email.content,
+        oldType,
+        newType: email.type,
+      },
+      req,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Email updated successfully",
+      data: email,
+    });
+  } catch (error) {
+    console.error("Error editing email:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+
+export const deleteEmailInSequence = async (req, res) => {
+  try {
+    const { sequenceId, emailId } = req.params;
+
+    // Try to pull the email from the array
+    const updatedSequence = await EmailSequence.findOneAndUpdate(
+      { _id: sequenceId },
+      { $pull: { emails: { _id: emailId } } },
+      { new: true }
+    );
+
+    if (!updatedSequence) {
+      return res.status(404).json({
+        success: false,
+        message: "Email sequence or email not found",
+      });
+    }
+
+    // Log the deletion
+    await logAction({
+      action: "DELETE",
+      user: {
+        id: req.user?.id,
+        email: req.user?.email,
+      },
+      affectedAsset: `${updatedSequence.name}`,
+      contentType: "email-sequence",
+      description: `Deleted email with ID: ${emailId} from sequence: ${updatedSequence.name}`,
+      req,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Email deleted successfully",
+      data: { emailId },
+    });
+  } catch (error) {
+    console.error("Error deleting email:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};

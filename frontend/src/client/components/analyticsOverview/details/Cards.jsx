@@ -1,20 +1,34 @@
 import React from "react";
-import { FiUser, FiActivity, FiTarget } from "react-icons/fi";
+import { FiTarget } from "react-icons/fi";
 import Looper3 from "../../../../assets/resultOverView/Looper-3.png";
 import BrainImg from "../../../../assets/quizdetails/brain.png";
 
-const user = {
-  name: "Devon Lane",
-  userId: "#45674",
-  email: "devon@gmail.com",
-  date: "June 17, 2025",
-  time: "3:42 PM",
-  avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-  brainType: "Reflector",
-  brainPercent: 40,
-};
+function formatDateTime(iso) {
+  if (!iso) return { date: "-", time: "-" };
+  const d = new Date(iso);
+  return {
+    date: d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+    time: d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+  };
+}
 
-const Cards = () => (
+function truncateUserId(idStr) {
+  if (!idStr) return "-";
+  const str = String(idStr);
+  if (str.length <= 8) return str;
+  if (str.startsWith("#")) {
+    const core = str.slice(1);
+    const head = core.slice(0, 6);
+    return `#${head}…`;
+  }
+  return `${str.slice(0, 6)}…`;
+}
+
+//
+
+const Cards = ({ name, userId, email, date, brainType, brainPercent }) => {
+  const dt = formatDateTime(date);
+  return (
   <div className="flex flex-col md:flex-row gap-8 w-full mt-6">
     {/* User Info Card */}
     <div
@@ -26,24 +40,24 @@ const Cards = () => (
       <div className="mb-6 w-full">
         <div className="flex items-center justify-between w-full mb-3">
           <img
-            src={user.avatar}
-            alt={user.name}
+            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(name || (email ? email.split('@')[0] : 'User'))}&background=2A2A39&color=22d3ee&bold=true&format=png`}
+            alt={name || "User"}
             className="w-12 h-12 rounded-full object-cover border border-gray-400"
           />
           <div className="text-gray-200 text-base font-medium">
-            {user.userId}
+            {truncateUserId(userId)}
           </div>
         </div>
         <div>
           <div className="text-2xl font-semibold text-white leading-tight">
-            {user.name}
+            {name || "-"}
           </div>
-          <div className="text-gray-300 text-base">{user.email}</div>
+          <div className="text-gray-300 text-base">{email || "-"}</div>
         </div>
       </div>
       <div className="flex justify-between text-gray-300 text-base mt-auto">
-        <span>{user.date}</span>
-        <span>{user.time}</span>
+        <span>{dt.date}</span>
+        <span>{dt.time}</span>
       </div>
     </div>
     {/* Dominant Brain Type Card */}
@@ -66,7 +80,7 @@ const Cards = () => (
         </span>
         <div className="w-full">
           <div className="text-2xl font-bold text-[#232432]">
-            {user.brainType}
+            {brainType || "-"}
           </div>
           <div className="text-[#232432] text-base font-medium opacity-80">
             Dominant Brain Type
@@ -74,8 +88,8 @@ const Cards = () => (
         </div>
       </div>
       <div className="flex justify-between text-[#232432] text-base mt-auto opacity-80">
-        <span>{user.date}</span>
-        <span>{user.time}</span>
+        <span>{dt.date}</span>
+        <span>{dt.time}</span>
       </div>
     </div>
     {/* Brain Percentage Card */}
@@ -91,19 +105,20 @@ const Cards = () => (
         </span>
         <div className="w-full">
           <div className="text-2xl font-bold text-white">
-            {user.brainPercent}%
+            {typeof brainPercent === 'number' ? `${brainPercent}%` : '-'}
           </div>
           <div className="text-gray-300 text-base font-medium">
-            {user.brainType} Brain Percentage
+            {(brainType || '-') + ' Brain Percentage'}
           </div>
         </div>
       </div>
       <div className="flex justify-between text-gray-300 text-base mt-auto">
-        <span>{user.date}</span>
-        <span>{user.time}</span>
+        <span>{dt.date}</span>
+        <span>{dt.time}</span>
       </div>
     </div>
   </div>
-);
+  );
+};
 
 export default Cards;

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Download } from "lucide-react";
-import Modal from "../../components/support&feedback/modal";
+import Modal from "../../components/supportAndfeedback/modal";
 import Texteditor from "../../components/subscription/texteditor";
 
 const Refunddetail = () => {
