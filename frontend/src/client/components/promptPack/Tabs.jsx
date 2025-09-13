@@ -14,19 +14,24 @@ export default function Tabs() {
   const tabs = ["Architect", "Challenger", "Synthesizer", "Reflector", "Catalyst"];
 
   useEffect(() => {
-    (async () => {
-      try {
-        // Using the grouped prompts API endpoint
-        const res = await axios.get("/prompt-packs/grouped?tier=starter");
-        setGroupedPrompts(res.data?.data || {});
-        console.log("Grouped Prompt", res.data?.data);
-      } catch (e) {
-        // swallow silently per your request (no extra UI)
-        setGroupedPrompts({});
-        console.log(e);
-      }
-    })();
-  }, []);
+  (async () => {
+    try {
+      // Read subscription object from localStorage
+      const subscription = JSON.parse(localStorage.getItem("subscription") || "{}");
+      const tier = subscription?.plan || "starter"; // fallback if not found
+
+      // Using the grouped prompts API endpoint
+      const res = await axios.get(`/prompt-packs/grouped?tier=${tier}`);
+      setGroupedPrompts(res.data?.data || {});
+      console.log("Grouped Prompt", res.data?.data);
+    } catch (e) {
+      // swallow silently per your request (no extra UI)
+      setGroupedPrompts({});
+      console.log(e);
+    }
+  })();
+}, []);
+
 
   useEffect(() => { 
     (async () => {
