@@ -43,6 +43,9 @@ export const createFunnelTemplateWithFile = createAsyncThunk(
         formData.append('tier', payload.tier);
         formData.append('status', payload.status);
         formData.append('category', payload.category || '');
+        if (payload.brainType) {
+          formData.append('brainType', payload.brainType);
+        }
         if (payload.releaseDateTime) {
           formData.append('releaseDateTime', payload.releaseDateTime);
         }

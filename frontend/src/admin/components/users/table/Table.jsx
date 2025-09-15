@@ -17,12 +17,12 @@ export default function Table() {
   const error = useSelector((state) => state.user.usersError);
   const totalPages = useSelector((state) => state.user.totalPages);
 
-  const [sortBy, setSortBy] = useState("name");
-  const [sortOrder, setSortOrder] = useState("asc");
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState("desc");
 
   useEffect(() => {
-    dispatch(getAllUsers({ page, limit }));
-  }, [dispatch, page, limit]);
+    dispatch(getAllUsers({ page, limit, sortBy, sortOrder }));
+  }, [dispatch, page, limit, sortBy, sortOrder]);
 
   const CircularProgress = ({ percentage }) => {
     const size = 20;
@@ -88,18 +88,21 @@ export default function Table() {
     navigate(`/admin/user/details/${user._id}`, { state: { user, activeTab: "General Details" } });
   };
 
+  const formatDateDMY = (isoString) => {
+    if (!isoString) return "N/A";
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return "N/A";
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  };
+
   // Filter out admin users and show only regular users
   const filteredUsers = users.filter(user => user.userType !== "admin");
   
-  // Sort filtered users
-  const sortedUsers = [...filteredUsers].sort((a, b) => {
-    if (sortBy === "name") {
-      return sortOrder === "asc"
-        ? a.name.localeCompare(b.name)
-        : b.name.localeCompare(a.name);
-    }
-    return 0;
-  });
+  // Server already returns sorted data; only filter out admins here
+  const sortedUsers = filteredUsers;
 
   return (
     <div className="w-full bg-[#2A2A39] mt-10 overflow-hidden p-6 relative">
@@ -211,9 +214,7 @@ export default function Table() {
                   <td className="py-4 text-slate-300">
                     {user.subscription?.plan || "N/A"}
                   </td>
-                  <td className="py-4 text-slate-300">
-                    {new Date(user.createdAt).toLocaleDateString()}
-                  </td>
+                  <td className="py-4 text-slate-300">{formatDateDMY(user.createdAt)}</td>
                   <td className="py-4">
                     <span
                       className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${

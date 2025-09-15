@@ -224,7 +224,7 @@ export default function PromptPacksCard() {
         <span className="text-white text-sm">Manual Prompt</span>
         <input
           type="checkbox"
-          className="w-5 h-5 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+          className="w-5 h-5 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500 cursor-pointer"
           onChange={handleManualPromptChange}
         />
       </div>
@@ -358,7 +358,7 @@ export default function PromptPacksCard() {
             <input
               type="checkbox"
               name="tier"
-              className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+              className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500 cursor-pointer"
               onChange={() => setSelectedTier("basic")}
               checked={selectedTier === "basic"}
             />
@@ -383,7 +383,7 @@ export default function PromptPacksCard() {
             <input
             type="checkbox"
               name="tier"
-              className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+              className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500 cursor-pointer"
               onChange={() => setSelectedTier("premium")}
               checked={selectedTier === "premium"}
             />
@@ -408,7 +408,7 @@ export default function PromptPacksCard() {
             <input
               type="checkbox"
               name="tier"
-              className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+              className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500 cursor-pointer"
               onChange={() => setSelectedTier("enterprise")}
               checked={selectedTier === "enterprise"}
             />

@@ -129,9 +129,15 @@ const FunnelTemplates = () => {
 
   // Ensure funnelTemplates is an array
   const safeTemplates = Array.isArray(funnelTemplates) ? funnelTemplates : [];
+  // Sort newest first by createdAt (fallback to _id if missing)
+  const sortedTemplates = [...safeTemplates].sort((a, b) => {
+    const aTime = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const bTime = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return bTime - aTime;
+  });
 
   return (
-    <div className="bg-[#16161C] text-white  w-full mt-3 border border-slate-800 p-5">
+    <div className="bg-[#16161C] text_white  w-full mt-3 border border-slate-800 p-5">
       <Toaster position="top-right" />
       {/* Header */}
       <h1 className="text-3xl font-medium mb-6">All Funnel Templates</h1>
@@ -177,14 +183,14 @@ const FunnelTemplates = () => {
                   </div>
                 </td>
               </tr>
-            ) : safeTemplates.length === 0 ? (
+            ) : sortedTemplates.length === 0 ? (
               <tr>
                 <td colSpan="8" className="py-8 text-center text-gray-400">
                   No funnel templates found
                 </td>
               </tr>
             ) : (
-              safeTemplates.map((template) => {
+              sortedTemplates.map((template) => {
                 if (!template || typeof template !== 'object') {
                   console.warn('Invalid template data:', template);
                   return null;
@@ -233,7 +239,7 @@ const FunnelTemplates = () => {
                       {formatDate(template.createdAt)}
                     </td>
                     <td className="py-4 px-4">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items_center space-x-2">
                         <button
                           className="text-gray-400 hover:text-white transition-colors"
                           title="View"
