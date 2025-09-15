@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { Upload } from "lucide-react";
 import { Toaster, toast } from "react-hot-toast";
@@ -14,6 +15,7 @@ import { fetchEmailCategories, createCategory as createEmailCategory } from "../
 import { getAllUsers } from "../../../../store/Slice/UserSlice";
 
 export default function FunnelTemplateCard() {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { loading, error, success } = useSelector((state) => state.funnelTemplate);
   const fileInputRef = useRef(null);
@@ -231,8 +233,19 @@ export default function FunnelTemplateCard() {
           </p>
         </div>
       </div>
+
+      {/* Manual Funnel Toggle */}
+      <div className="flex items-center justify-between mt-8">
+        <span className="text-white text-sm cursor-pointer">Manual Funnel</span>
+        <input
+          type="checkbox"
+          id="manual-prompt-toggle"
+          className="w-5 h-5 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500 cursor-pointer"
+          onChange={(e) => { if (e.target.checked) navigate("/admin/mannual-funnel"); }}
+        />
+      </div>
       
-      <div className="mb-6 mt-19">
+      <div className="mb-6 mt-6">
         <label className="block text-white text-base mb-2" htmlFor="sequence-name">
           Name
         </label>
@@ -364,7 +377,7 @@ export default function FunnelTemplateCard() {
           <div className="flex items-center gap-3">
             <input
               type="checkbox"
-              className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+              className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500 cursor-pointer"
               id="basic"
               checked={selectedTiers.includes("basic")}
               onChange={handleTierSelect}
@@ -390,7 +403,7 @@ export default function FunnelTemplateCard() {
             <input
               type="checkbox"
               id="premium"
-              className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+              className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500 cursor-pointer"
               checked={selectedTiers.includes("premium")}
               onChange={handleTierSelect}
             />
@@ -415,7 +428,7 @@ export default function FunnelTemplateCard() {
             <input
               type="checkbox"
               id="vip"
-              className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+              className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500 cursor-pointer"
               checked={selectedTiers.includes("enterprise")}
               onChange={handleTierSelect}
             />

@@ -79,7 +79,7 @@ const PromptPreview = () => {
         <div className="bg-[#232334] border border-[#353545] rounded mb-6 pb-6 relative">
           <div className="absolute top-3 right-3 flex items-center space-x-2">
             <button
-              className={`text-gray-400 hover:text-white transition-colors ${!firstPromptId ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`text-gray-400 hover:text-white transition-colors cursor-pointer ${!firstPromptId ? 'opacity-50 cursor-not-allowed' : ''}`}
               title="Edit Prompt"
               disabled={!firstPromptId}
               onClick={() => firstPromptId && navigate(`/admin/mannual-prompt/${packId}/${firstPromptId}`, { state: { prompt: prompts[0] } })}
@@ -87,7 +87,7 @@ const PromptPreview = () => {
               <Edit className="w-4 h-4" />
             </button>
             <button
-              className={`text-gray-400 hover:text-white transition-colors ${!firstPromptId ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`text-gray-400 hover:text-white transition-colors cursor-pointer ${!firstPromptId ? 'opacity-50 cursor-not-allowed' : ''}`}
               title="Delete Prompt"
               disabled={!firstPromptId}
               onClick={() => firstPromptId && openConfirm(firstPromptId)}

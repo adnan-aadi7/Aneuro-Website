@@ -238,7 +238,7 @@ export default function EmailSequenceCard() {
         <input
           type="checkbox"
           id="manual-email-toggle"
-          className="w-5 h-5 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+          className="w-5 h-5 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500 cursor-pointer"
           onChange={handleManualEmailChange}
         />
       </div>
@@ -399,7 +399,7 @@ export default function EmailSequenceCard() {
             <input
               type="checkbox"
               id="premium"
-              className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+              className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500 cursor-pointer"
               checked={selectedTiers.includes("premium")}
               onChange={handleTierSelect}
             />
@@ -424,7 +424,7 @@ export default function EmailSequenceCard() {
             <input
               type="checkbox"
               id="vip"
-              className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
+              className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500 cursor-pointer"
               checked={selectedTiers.includes("enterprise")}
               onChange={handleTierSelect}
             />

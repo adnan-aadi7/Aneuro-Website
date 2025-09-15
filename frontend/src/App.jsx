@@ -65,6 +65,7 @@ import AddAdmin from "./admin/components/settings/AddAdmin";
 import AdminPermission from "./admin/components/settings/AdminPermission";
 import MannualPrompt from "./admin/components/cms/overviewTab/MannualPrompt";
 import EditFunnel from "./admin/components/cms/funnelTab/EditFunnel";
+import ManuallFunnel from "./admin/components/cms/overviewTab/ManuallFunnel";
 
 function App() {
   return (
@@ -373,6 +374,14 @@ function App() {
               }
             />
             <Route
+              path="/admin/mannual-funnel"
+              element={
+                <AdminLayout>
+                  <ManuallFunnel />
+                </AdminLayout>
+              }
+            />
+            <Route
               path="/admin/mannual-prompt"
               element={
                 <AdminLayout>
@@ -381,13 +390,21 @@ function App() {
               }
             />
             <Route
-              path="/admin/mannual-prompt/:packId"
+              path="/admin/mannual-prompt/:packId/:promptId"
               element={
                 <AdminLayout>
                   <MannualPrompt />
                 </AdminLayout>
               }
             />
+            {/* <Route
+              path="/admin/mannual-prompt/:packId/:promptId"
+              element={
+                <AdminLayout>
+                  <MannualPrompt />
+                </AdminLayout>
+              }
+            /> */}
             <Route
               path="/admin/Settings"
               element={
