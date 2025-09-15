@@ -429,10 +429,10 @@ export const sendIncompleteQuizNotifications = async (req, res) => {
 
     const sendPromises = audienceEmails.map(async (email) => {
       const htmlContent = incompleteQuizTemplate(
-        '',
-        quizSession.quiz_title || 'Your Quiz',
-        `${process.env.FRONTEND_URL}/quiz/${quizId}`
-      );
+    '',
+    quizSession.quiz_title || 'Your Quiz',
+    `${process.env.FRONTEND_URL}/Audience-quiz/${quizSession.user_id}` // ✅ use user_id, not quizId
+  );
 
       // 📧 Send email
       await transporter.sendMail({

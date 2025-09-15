@@ -49,16 +49,34 @@ const Table = ({ rows = [], loading, error, filters }) => {
   if (loading) return <p className="text-white mt-5">Loading...</p>;
   if (error) return <p className="text-red-400 mt-5">Error: {String(error)}</p>;
 
-  // 🔎 Apply search filter before rendering rows
-  const filteredRows = (localRows || []).filter((user) => {
-    if (!filters?.search) return true;
+  // 🔎 Apply search + date filters before rendering rows
+const filteredRows = (localRows || []).filter((user) => {
+  if (filters?.search) {
     const query = filters.search.toLowerCase();
-    return (
+    const matchesSearch =
       user.name?.toLowerCase().includes(query) ||
       user.email?.toLowerCase().includes(query) ||
-      String(user.user_id).toLowerCase().includes(query)
-    );
-  });
+      String(user.user_id).toLowerCase().includes(query);
+    if (!matchesSearch) return false;
+  }
+
+  // ✅ Date filter
+  if (filters?.dateFrom || filters?.dateTo) {
+    const createdAt = new Date(user.createdAt || user.timestamp || Date.now());
+    const from = filters.dateFrom ? new Date(filters.dateFrom) : null;
+    const to = filters.dateTo ? new Date(filters.dateTo) : null;
+
+    if (from && createdAt < from) return false;
+    if (to) {
+      const endOfTo = new Date(to);
+      endOfTo.setHours(23, 59, 59, 999);
+      if (createdAt > endOfTo) return false;
+    }
+  }
+
+  return true;
+});
+
 
   return (
     <div className="relative overflow-x-auto bg-[#232432] mt-6 py-7 px-5">
