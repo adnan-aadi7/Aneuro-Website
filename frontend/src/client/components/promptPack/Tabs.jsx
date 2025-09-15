@@ -4,7 +4,7 @@ import ChallengerPrompt from "./ChallengerPrompt";
 import SynthesizerPrompt from "./SynthesizerPrompt";
 import ReflectorPrompt from "./ReflectorPrompt";
 import CatalystPrompt from "./CatalystPrompt";
-import axios from "../../../store/axiosInstance"; // adjust path if your axiosInstance lives elsewhere
+import axios from "../../../store/axiosInstance"; 
 
 export default function Tabs() {
   const [activeTab, setActiveTab] = useState("Architect");
@@ -14,19 +14,24 @@ export default function Tabs() {
   const tabs = ["Architect", "Challenger", "Synthesizer", "Reflector", "Catalyst"];
 
   useEffect(() => {
-    (async () => {
-      try {
-        // Using the grouped prompts API endpoint
-        const res = await axios.get("/prompt-packs/grouped?tier=starter");
-        setGroupedPrompts(res.data?.data || {});
-        console.log("Grouped Prompt", res.data?.data);
-      } catch (e) {
-        // swallow silently per your request (no extra UI)
-        setGroupedPrompts({});
-        console.log(e);
-      }
-    })();
-  }, []);
+  (async () => {
+    try {
+      // Read subscription object from localStorage
+      const subscription = JSON.parse(localStorage.getItem("subscription") || "{}");
+      const tier = subscription?.plan || "starter"; // fallback if not found
+
+      // Using the grouped prompts API endpoint
+      const res = await axios.get(`/prompt-packs/grouped?tier=${tier}`);
+      setGroupedPrompts(res.data?.data || {});
+      console.log("Grouped Prompt", res.data?.data);
+    } catch (e) {
+      // swallow silently per your request (no extra UI)
+      setGroupedPrompts({});
+      console.log(e);
+    }
+  })();
+}, []);
+
 
   useEffect(() => { 
     (async () => {
@@ -43,7 +48,7 @@ export default function Tabs() {
   
 
   const renderTabContent = () => {
-    const common = { groupedPrompts, categories }; // pass grouped prompts data
+    const common = { groupedPrompts, categories }; 
     switch (activeTab) {
       case "Architect":
         return <ArchitectPrompt {...common} />;
