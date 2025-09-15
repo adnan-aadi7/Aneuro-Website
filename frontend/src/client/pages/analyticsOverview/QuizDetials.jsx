@@ -75,6 +75,8 @@ const QuizDetials = () => {
               brainType={session?.brain_type}
               brainPercent={brainPercent}
               avatar={avatar}
+              report={rep}   
+
             />
             <DetailsChart chartData={rep?.brain_types} />
           </>
