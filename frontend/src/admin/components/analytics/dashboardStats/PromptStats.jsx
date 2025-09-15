@@ -30,7 +30,7 @@ const PromptStats = () => {
             </h2>
           </div>
           <button
-            className="bg-cyan-400 text-black font-medium px-3 sm:px-6 py-2 rounded hover:bg-cyan-300 transition-all text-sm whitespace-nowrap"
+            className="cursor-pointer bg-cyan-400 text-black font-medium px-3 sm:px-6 py-2 rounded hover:bg-cyan-300 transition-all text-sm whitespace-nowrap"
             onClick={() => navigate("")}
           >
             View Details

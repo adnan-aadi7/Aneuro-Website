@@ -262,63 +262,100 @@ export const deleteSchedule = async (req, res) => {
 
 export const getScheduledStats = async (req, res) => {
   try {
-    await updateStatuses(); // Ensure statuses are updated before calculating stats
+    await updateStatuses(); // update before calculating
 
     const [emails, prompts, funnels] = await Promise.all([
-      EmailSequence.find({ status: 'scheduled' }).lean(),
-      PromptPack.find({ status: 'scheduled' }).lean(),
-      FunnelTemplate.find({ status: 'scheduled' }).lean(),
+      EmailSequence.find({ status: "scheduled" }).lean(),
+      PromptPack.find({ status: "scheduled" }).lean(),
+      FunnelTemplate.find({ status: "scheduled" }).lean(),
     ]);
 
     const combined = [...emails, ...prompts, ...funnels];
 
     const now = new Date();
+
+    // Week boundaries (Sunday → Saturday)
     const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay());
     startOfWeek.setHours(0, 0, 0, 0);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
 
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
     endOfWeek.setHours(23, 59, 59, 999);
 
+    // Month boundaries
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    startOfMonth.setHours(0, 0, 0, 0);
 
-    const upcomingCount = combined.filter(item =>
-      item.scheduledDate &&
-      new Date(item.scheduledDate) >= now &&
-      new Date(item.scheduledDate) <= new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
-    ).length;
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    endOfMonth.setHours(23, 59, 59, 999);
 
-    const thisWeekCount = combined.filter(item =>
-      item.scheduledDate &&
-      new Date(item.scheduledDate) >= startOfWeek &&
-      new Date(item.scheduledDate) <= endOfWeek
-    ).length;
+    // Upcoming (next 30 days)
+    const upcomingLimit = new Date(now);
+    upcomingLimit.setDate(now.getDate() + 30);
 
-    const thisMonthCount = combined.filter(item =>
-      item.scheduledDate &&
-      new Date(item.scheduledDate) >= startOfMonth &&
-      new Date(item.scheduledDate) <= endOfMonth
-    ).length;
+    // Normalize scheduled field (always use releaseDateTime if available)
+    const scheduledItems = combined
+      .map((item) => ({
+        id: item._id.toString(),
+        content: item.title || item.name || item.quiz_title || "Untitled",
+        type:
+          item.sequenceType ||
+          (item.promptText ? "Prompt Pack" : "Email Sequence") ||
+          "Funnel Template",
+        releaseDateTime: item.releaseDateTime || item.scheduledDate, // FIX
+        tier: item.tier || "basic",
+        status: item.status,
+      }))
+      .filter((i) => i.releaseDateTime);
 
-    const overdueCount = combined.filter(item =>
-      item.scheduledDate && new Date(item.scheduledDate) < now
-    ).length;
+    // Counts
+    const upcomingCount = scheduledItems.filter((i) => {
+      const d = new Date(i.releaseDateTime);
+      return d >= now && d <= upcomingLimit;
+    }).length;
+
+    const thisWeekCount = scheduledItems.filter((i) => {
+      const d = new Date(i.releaseDateTime);
+      return d >= startOfWeek && d <= endOfWeek;
+    }).length;
+
+    const thisMonthCount = scheduledItems.filter((i) => {
+      const d = new Date(i.releaseDateTime);
+      return d >= startOfMonth && d <= endOfMonth;
+    }).length;
+
+    const overdueCount = scheduledItems.filter((i) => {
+      const d = new Date(i.releaseDateTime);
+      return d < now;
+    }).length;
+
+    // Find next release (closest upcoming date after now)
+    const nextRelease = scheduledItems
+      .filter((i) => new Date(i.releaseDateTime) >= now)
+      .sort((a, b) => new Date(a.releaseDateTime) - new Date(b.releaseDateTime))[0] || null;
 
     res.json({
       success: true,
       stats: {
+        totalPending: scheduledItems.length,
+        totalPrompts: prompts.length,
+        totalEmails: emails.length,
+        totalFunnels: funnels.length,
+        thisWeekReleases: thisWeekCount,
+        thisMonthReleases: thisMonthCount,
         upcoming: upcomingCount,
-        thisWeek: thisWeekCount,
-        thisMonth: thisMonthCount,
-        overdue: overdueCount
-      }
+        overdue: overdueCount,
+        nextRelease,
+      },
+      data: scheduledItems,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+
 
 
 export const getAllScheduledWithoutRelease = async (req, res) => {

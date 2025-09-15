@@ -85,7 +85,7 @@ const Cards = () => {
           </div>
           <div className="mb-2">
             <span className="text-3xl font-bold text-white">
-              {stats?.thisWeek ?? stats?.thisWeekReleases ?? 0}
+              {stats?.thisWeekReleases || 0}
             </span>
           </div>
           <p className="text-gray-400 text-sm">Releases this week</p>

@@ -60,7 +60,7 @@ const SehduleStats = () => {
             Scheduled Releases Summary
           </h2>
         </div>
-        <button className="bg-cyan-400 text-black font-medium px-3 sm:px-6 py-2 rounded hover:bg-cyan-300 transition-all text-sm whitespace-nowrap"
+        <button className="cursor-pointer bg-cyan-400 text-black font-medium px-3 sm:px-6 py-2 rounded hover:bg-cyan-300 transition-all text-sm whitespace-nowrap"
         onClick={() => navigate(`/admin/CMS?tab=${encodeURIComponent('Scheduled Releases')}`)}>
           View Details
         </button>
@@ -82,7 +82,7 @@ const SehduleStats = () => {
             <Calendar className="w-5 h-5 text-white" />
             This Week
           </div>
-          <div className="text-white text-3xl font-bold mb-1">{stats?.thisWeek || 0}</div>
+          <div className="text-white text-3xl font-bold mb-1">{stats?.thisWeekReleases || 0}</div>
           <div className="text-xs text-cyan-400 font-medium">Due this week</div>
         </div>
         {/* This Month */}
@@ -91,7 +91,7 @@ const SehduleStats = () => {
             <Calendar className="w-5 h-5 text-white" />
             This Month
           </div>
-          <div className="text-white text-3xl font-bold mb-1">{stats?.thisMonth || 0}</div>
+          <div className="text-white text-3xl font-bold mb-1">{stats?.thisMonthReleases || 0}</div>
           <div className="text-xs text-cyan-400 font-medium">
             Due this month
           </div>
