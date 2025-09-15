@@ -45,7 +45,7 @@ export default function ResultsOverView() {
       try {
         const params = { user_id: uid };
         if (typeof filters.isCompleted === "boolean") {
-          params.is_completed = filters.isCompleted; // omit when ALL
+          params.is_completed = filters.isCompleted; 
         }
         const res = await axios.get("/quiz/sessions", { params });
         console.log(res?.data?.data);
@@ -80,6 +80,7 @@ export default function ResultsOverView() {
           rows={rows}
           loading={loading}
           error={error}
+          filters={filters} 
         />
       ) : (
         <Table

@@ -2,11 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "../../../../store/axiosInstance";
 import { toast } from "react-hot-toast";
 
-const Table = ({ rows = [], loading, error }) => {
-  // No dropdown; simple send/resend button behavior
+const Table = ({ rows = [], loading, error, filters }) => {
   const [sendingId, setSendingId] = useState(null);
-
-  useEffect(() => {}, []);
 
   const sendReminder = async (row) => {
     try {
@@ -28,16 +25,26 @@ const Table = ({ rows = [], loading, error }) => {
   if (loading) return <p className="text-white mt-5">Loading...</p>;
   if (error) return <p className="text-red-400 mt-5">Error: {String(error)}</p>;
 
+  // 🔎 Apply search filter before rendering rows
+  const filteredRows = (rows || []).filter((user) => {
+    if (!filters?.search) return true;
+    const query = filters.search.toLowerCase();
+    return (
+      user.name?.toLowerCase().includes(query) ||
+      user.email?.toLowerCase().includes(query) ||
+      String(user.user_id).toLowerCase().includes(query)
+    );
+  });
+
   return (
     <div className="relative overflow-x-auto bg-[#232432] mt-6 py-7 px-5">
-      {/* Gradient overlay in bottom right corner to match completed table */}
       <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-teal-500/20 to-transparent blur-xl pointer-events-none"></div>
       <table className="min-w-full text-left text-sm">
         <thead>
           <tr className="text-white border-b border-gray-300 text-sm ">
             <th className="py-3 px-4 font-semibold flex items-center gap-2 ">
               Name
-              <svg className="w-7 h-8 mt-2 ml-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="w-7 h-8 mt-2 ml-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v8m0 0l-4-4m4 4l4-4" />
               </svg>
             </th>
@@ -49,9 +56,10 @@ const Table = ({ rows = [], loading, error }) => {
             <th className="py-3 px-4 font-semibold text-center text-sm">Action</th>
           </tr>
         </thead>
-        <tbody>
-          {(rows || []).map((user, idx) => (
-            <tr
+       <tbody>
+  {filteredRows.length > 0 ? (
+    filteredRows.map((user, idx) => (
+     <tr
               key={idx}
               className="border-b border-gray-300 last:border-b-0 hover:bg-[#2b2b3d] transition-colors text-sm"
             >
@@ -107,11 +115,20 @@ const Table = ({ rows = [], loading, error }) => {
                 </button>
               </td>
             </tr>
-          ))}
-        </tbody>
+    ))
+  ) : (
+    <tr>
+      <td colSpan={7} className="text-center text-gray-400 py-6">
+        No matching results found
+      </td>
+    </tr>
+  )}
+</tbody>
+
       </table>
     </div>
   );
 };
+
 
 export default Table;
