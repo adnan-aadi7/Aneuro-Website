@@ -334,30 +334,29 @@ const editorRef = useRef(null);
             </div>
 
             <div className="flex gap-3 flex-wrap">
-              <div className="flex gap-2">
-                <select 
-                  value={selectedAdmin} 
-                  onChange={(e) => setSelectedAdmin(e.target.value)}
-                  className="bg-[#2A2A39] border border-gray-600 px-1 py-2 text-sm outline-none text-white"
-                >
-                  {/* <option value="">
-                    {ticket?.assignedTo ? `Currently: ${ticket.assignedTo}` : 'Assign To Admin'}
-                  </option> */}
-                  <option value="Admin 1">Admin</option>
-                  <option value="Admin 2">Support Agent</option>
-                  
-                </select>
-                
-                {selectedAdmin && (
-                  <button
-                    onClick={handleAssignTicket}
-                    disabled={assignLoading}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 text-sm font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {assignLoading ? 'Assigning...' : 'Assign'}
-                  </button>
-                )}
-              </div>
+             {/*
+<div className="flex gap-2">
+  <select 
+    value={selectedAdmin} 
+    onChange={(e) => setSelectedAdmin(e.target.value)}
+    className="bg-[#2A2A39] border border-gray-600 px-1 py-2 text-sm outline-none text-white"
+  >
+    <option value="Admin 1">Admin</option>
+    <option value="Admin 2">Support Agent</option>
+  </select>
+  
+  {selectedAdmin && (
+    <button
+      onClick={handleAssignTicket}
+      disabled={assignLoading}
+      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 text-sm font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {assignLoading ? 'Assigning...' : 'Assign'}
+    </button>
+  )}
+</div>
+*/}
+
 
               {activeTab === 'open' && (
                 <>

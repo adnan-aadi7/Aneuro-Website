@@ -28,7 +28,7 @@ const Header = () => {
       <p className="text-lg text-gray-300 mb-6">We are here to assist you!</p>
       <div className="flex gap-26 px-16 mt-10">
         <button
-          className={`text-lg font-medium text-white pb-1 border-b-2 transition-all duration-200 ${
+          className={`text-lg font-medium text-white pb-1 border-b-2 transition-all duration-200 cursor-pointer ${
             activeTab === "Open" ? "border-cyan-400" : "border-transparent"
           }`}
           onClick={() => setActiveTab("Open")}
@@ -36,7 +36,7 @@ const Header = () => {
           Open
         </button>
         <button
-          className={`text-lg font-medium text-white pb-1 border-b-2 transition-all duration-200 ${
+          className={`text-lg font-medium text-white pb-1 border-b-2 transition-all duration-200 cursor-pointer ${
             activeTab === "Closure" ? "border-cyan-400" : "border-transparent"
           }`}
           onClick={() => setActiveTab("Closure")}
