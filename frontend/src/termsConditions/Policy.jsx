@@ -285,8 +285,6 @@ shall survive termination or expiration of this Agreement.    </li>
 </ul>          
 </div>
 
-<p>By completing your payment, you acknowledge that you have read, understood, and 
-agreed to be legally bound by this Agreement.</p>
 
         </div>
         {/* Agreement Confirmation */}
