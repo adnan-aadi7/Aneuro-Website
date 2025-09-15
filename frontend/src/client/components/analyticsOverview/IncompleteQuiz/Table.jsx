@@ -4,6 +4,12 @@ import { toast } from "react-hot-toast";
 
 const Table = ({ rows = [], loading, error, filters }) => {
   const [sendingId, setSendingId] = useState(null);
+  const [localRows, setLocalRows] = useState(rows);
+
+  // ✅ keep rows in sync if parent updates
+  useEffect(() => {
+    setLocalRows(rows);
+  }, [rows]);
 
   const sendReminder = async (row) => {
     try {
@@ -13,6 +19,24 @@ const Table = ({ rows = [], loading, error, filters }) => {
         quizId: row._id,
         audienceEmails: [row.email],
       });
+
+      // ✅ Update reminders in local state immediately
+      setLocalRows((prev) =>
+        prev.map((u) =>
+          u._id === row._id
+            ? {
+                ...u,
+                reminders: [
+                  {
+                    createdAt: new Date().toISOString(), // update immediately
+                  },
+                  ...(u.reminders || []),
+                ],
+              }
+            : u
+        )
+      );
+
       toast.success("Reminder sent successfully");
     } catch (e) {
       console.error(e);
@@ -26,7 +50,7 @@ const Table = ({ rows = [], loading, error, filters }) => {
   if (error) return <p className="text-red-400 mt-5">Error: {String(error)}</p>;
 
   // 🔎 Apply search filter before rendering rows
-  const filteredRows = (rows || []).filter((user) => {
+  const filteredRows = (localRows || []).filter((user) => {
     if (!filters?.search) return true;
     const query = filters.search.toLowerCase();
     return (
@@ -56,79 +80,98 @@ const Table = ({ rows = [], loading, error, filters }) => {
             <th className="py-3 px-4 font-semibold text-center text-sm">Action</th>
           </tr>
         </thead>
-       <tbody>
-  {filteredRows.length > 0 ? (
-    filteredRows.map((user, idx) => (
-     <tr
-              key={idx}
-              className="border-b border-gray-300 last:border-b-0 hover:bg-[#2b2b3d] transition-colors text-sm"
-            >
-              <td className="py-3 px-4 flex items-center gap-3 min-w-[160px]">
-                <div className="w-10 h-10 rounded-full object-cover border border-gray-300 bg-[#2A2A39] flex items-center justify-center overflow-hidden">
-                  <img
-                    src={user.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.email || 'U')}&background=2A2A39&color=22d3ee&bold=true&format=png`}
-                    alt={user.name || 'User'}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <span className="text-white truncate max-w-[200px]">{user.name || '-'}</span>
-              </td>
-              <td className="py-3 px-4 text-white min-w-[100px]">
-                {user.user_id ? `#${String(user.user_id).slice(0,6)}…` : '-'}
-              </td>
-              <td className="py-3 px-4 text-white min-w-[180px] truncate">
-                {user.email || '-'}
-              </td>
-              <td className="py-3 px-4 text-white min-w-[120px]">
-                {new Date(user.createdAt || user.timestamp || Date.now()).toLocaleDateString('en-GB')}
-              </td>
-              <td className="py-3 px-4 text-white min-w-[100px]">
-                Q{user.questions_completed ?? '-'}
-              </td>
-              <td className="py-3 px-4 text-white min-w-[120px]">
-                <span className="block text-white">
-                  {(user.reminders?.length || 0) > 0 ? 'Yes' : 'No'}
-                </span>
-                {user.reminders?.length > 0 && (
-                  <span className="block text-xs text-gray-300 mt-1">
-                    {`Sent: ${user.reminders[0]?.createdAt ? new Date(user.reminders[0].createdAt).toLocaleDateString('en-GB') : ''}`}
-                  </span>
-                )}
-              </td>
-              <td className="py-2 px-2 text-center min-w-[10px]">
-                <button
-                  disabled={sendingId === user._id}
-                  onClick={() => sendReminder(user)}
-                  className={`${sendingId === user._id ? "opacity-70 cursor-not-allowed" : "hover:bg-green-300"} bg-[#BBF7D0] text-green-900 py-2 rounded-full cursor-pointer text-xs font-semibold px-4 inline-flex items-center justify-center gap-2`}
-                >
-                  {sendingId === user._id ? (
-                    <>
-                      <svg className="animate-spin h-3 w-3 text-green-900" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                      </svg>
-                      <span>Sending...</span>
-                    </>
-                  ) : (
-                    <span>{(user.reminders?.length || 0) > 0 ? "Resend" : "Send"}</span>
+        <tbody>
+          {filteredRows.length > 0 ? (
+            filteredRows.map((user, idx) => (
+              <tr
+                key={idx}
+                className="border-b border-gray-300 last:border-b-0 hover:bg-[#2b2b3d] transition-colors text-sm"
+              >
+                <td className="py-3 px-4 flex items-center gap-3 min-w-[160px]">
+                  <div className="w-10 h-10 rounded-full object-cover border border-gray-300 bg-[#2A2A39] flex items-center justify-center overflow-hidden">
+                    <img
+                      src={
+                        user.profilePicture ||
+                        `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          user.name || user.email || "U"
+                        )}&background=2A2A39&color=22d3ee&bold=true&format=png`
+                      }
+                      alt={user.name || "User"}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <span className="text-white truncate max-w-[200px]">{user.name || "-"}</span>
+                </td>
+                <td className="py-3 px-4 text-white min-w-[100px]">
+                  {user.user_id ? `#${String(user.user_id).slice(0, 6)}…` : "-"}
+                </td>
+                <td className="py-3 px-4 text-white min-w-[180px] truncate">{user.email || "-"}</td>
+                <td className="py-3 px-4 text-white min-w-[120px]">
+                  {new Date(user.createdAt || user.timestamp || Date.now()).toLocaleDateString("en-GB")}
+                </td>
+                <td className="py-3 px-4 text-white min-w-[100px]">Q{user.questions_completed ?? "-"}</td>
+                <td className="py-3 px-4 text-white min-w-[120px]">
+                  <span className="block text-white">{(user.reminders?.length || 0) > 0 ? "Yes" : "No"}</span>
+                  {user.reminders?.length > 0 && (
+                    <span className="block text-xs text-gray-300 mt-1">
+                      {`Sent: ${
+                        user.reminders[0]?.createdAt
+                          ? new Date(user.reminders[0].createdAt).toLocaleDateString("en-GB")
+                          : ""
+                      }`}
+                    </span>
                   )}
-                </button>
+                </td>
+                <td className="py-2 px-2 text-center min-w-[10px]">
+                  <button
+                    disabled={sendingId === user._id}
+                    onClick={() => sendReminder(user)}
+                    className={`${
+                      sendingId === user._id
+                        ? "opacity-70 cursor-not-allowed"
+                        : "hover:bg-green-300"
+                    } bg-[#BBF7D0] text-green-900 py-2 rounded-full cursor-pointer text-xs font-semibold px-4 inline-flex items-center justify-center gap-2`}
+                  >
+                    {sendingId === user._id ? (
+                      <>
+                        <svg
+                          className="animate-spin h-3 w-3 text-green-900"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                          ></path>
+                        </svg>
+                        <span>Sending...</span>
+                      </>
+                    ) : (
+                      <span>{(user.reminders?.length || 0) > 0 ? "Resend" : "Send"}</span>
+                    )}
+                  </button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={7} className="text-center text-gray-400 py-6">
+                No matching results found
               </td>
             </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan={7} className="text-center text-gray-400 py-6">
-        No matching results found
-      </td>
-    </tr>
-  )}
-</tbody>
-
+          )}
+        </tbody>
       </table>
     </div>
   );
 };
-
 
 export default Table;
