@@ -80,13 +80,14 @@ export default function AnalyticalBrainEmail({
           return;
         }
         items.push(
-          <ManualEmailCard
-            key={seq._id || `${seq.sequenceName || 'email'}-${outerIdx}`}
-            title={`${seq.sequenceName || 'Email'}${seq.type ? ` — ${seq.type}` : ''}`}
-            preview={seq.content ? seq.content.slice(0, 120) : "—"}
-            body={seq.content || ""}
-          />
-        );
+  <ManualEmailCard
+    key={seq._id || `${seq.sequenceName || 'email'}-${outerIdx}`}
+    emailId={seq?._id}   // <-- pass emailId here
+    title={`${seq.sequenceName || 'Email'}${seq.type ? ` — ${seq.type}` : ''}`}
+    preview={seq.content ? seq.content.slice(0, 120) : "—"}
+    body={seq.content || ""}
+  />
+);
         return;
       }
 

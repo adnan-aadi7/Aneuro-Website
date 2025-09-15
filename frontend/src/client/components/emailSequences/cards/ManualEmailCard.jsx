@@ -1,29 +1,39 @@
+"use client";
 import React, { useState } from "react";
+import axiosInstance from "../../../../store/axiosInstance";
 
-/** Renders a single manual email block with your dark UI styling */
-export default function ManualEmailCard({ title, preview, body }) {
-  const [showTip, setShowTip] = useState(false);
-  const [pos, setPos] = useState({ x: 0, y: 0 });
+export default function ManualEmailCard({ emailId, title, preview, body }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const handleViewFull = async () => {
+    try {
+      if (!expanded) {
+        // count click only when expanding (not collapsing)
+        await axiosInstance.post(`/email-sequences/${emailId}/click`);
+      }
+      setExpanded(!expanded);
+    } catch (error) {
+      console.error("Error tracking email click:", error);
+    }
+  };
+
+  const renderBody = () => {
+    // normalize body into a single string
+    const content = Array.isArray(body) ? body.join("\n\n") : body;
+
+    return (
+      <p
+        className={`leading-6 text-[#B0B0B0] whitespace-pre-wrap transition-all duration-300 ${
+          expanded ? "max-h-none" : "max-h-12 overflow-hidden"
+        }`}
+      >
+        {content}
+      </p>
+    );
+  };
 
   return (
-    <div
-      className="bg-[#23232A] p-6 mb-6 relative"
-      onMouseEnter={() => setShowTip(true)}
-      onMouseLeave={() => setShowTip(false)}
-      onMouseMove={(e) => {
-        const r = e.currentTarget.getBoundingClientRect();
-        setPos({ x: e.clientX - r.left, y: e.clientY - r.top });
-      }}
-    >
-      {showTip && (
-        <div
-          className="pointer-events-none bg-black text-white text-[10px] px-2 py-1 rounded shadow-lg z-20 whitespace-nowrap"
-          style={{ position: "absolute", left: pos.x + 10, top: pos.y + 10 }}
-        >
-          Full manual email preview (subject, preview, content).
-        </div>
-      )}
-
+    <div className="bg-[#23232A] p-6 mb-6 relative">
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-base font-semibold mb-2">
@@ -32,27 +42,24 @@ export default function ManualEmailCard({ title, preview, body }) {
               🔐
             </span>
           </h3>
-          {preview ? (
+        {/*  {preview ? (
             <p className="text-[#12DCF0] text-sm">{preview}</p>
-          ) : null}
+          ) : null} */}
         </div>
-        <button className="border border-[#12DCF080] text-[#B0B0B0] px-4 py-2 text-xs font-medium transition-colors hover:bg-[#292933]">
-          View Full Email
+        <button
+          onClick={handleViewFull}
+          className="border border-[#12DCF080] text-[#B0B0B0] px-4 py-2 z-10 cursor-pointer text-xs font-medium transition-colors hover:bg-[#292933]"
+        >
+          {expanded ? "Hide Email" : "View Full Email"}
         </button>
       </div>
 
-      <div className="bg-transparent rounded-lg p-4 text-sm text-[#B0B0B0] space-y-4">
-        {Array.isArray(body)
-          ? body.map((p, i) => (
-              <p key={i} className="leading-6 whitespace-pre-wrap">
-                {p}
-              </p>
-            ))
-          : <p className="leading-6 whitespace-pre-wrap">{body}</p>}
-        <div className="text-sm text-[#B0B0B0]">
+      <div className="bg-transparent rounded-lg p-4 text-sm space-y-4">
+        {renderBody()}
+       {/* <div className="text-sm text-[#B0B0B0]">
           <p>Best regards,</p>
           <p>The Aneuro Team</p>
-        </div>
+        </div> */}
       </div>
     </div>
   );
