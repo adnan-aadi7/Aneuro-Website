@@ -123,71 +123,44 @@ export default function ArchitectPrompt({ groupedPrompts = {}, categories = [] }
 
         <h2 className="text-lg font-medium mb-6">Email Prompts for Architect Types</h2>
 
-        <div
-          className="bg-[#23232F] p-6 mb-4 relative"
-          onMouseEnter={() => setShowEmailTooltip(true)}
-          onMouseLeave={() => setShowEmailTooltip(false)}
-          onMouseMove={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            setEmailTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-          }}
-        >
-          {showEmailTooltip && (
-            <div
-              className="pointer-events-none bg-black text-white text-[10px] px-2 py-1 rounded shadow-lg z-20 whitespace-nowrap"
-              style={{ position: "absolute", left: emailTooltipPos.x + 10, top: emailTooltipPos.y + 10, minWidth: "max-content", maxWidth: 180 }}
-            >
-              This section generates a social media caption email prompt for Analytical types.
-            </div>
-          )}
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex-1">
-              {prompt1?.title && (
-                <h3 className="text-base font-medium mb-2">{prompt1.title}</h3>
-              )}
-              {prompt1?.subject && (
-                <p className="text-cyan-400 text-sm mb-4">Subject: {prompt1.subject}</p>
-              )}
-            </div>
-            {renderButton(prompt1, 1)}
-          </div>
+        {/* Prompt 1 Card */}
+<div className="bg-[#23232F] p-6 mb-4 relative">
+  <div className="flex justify-between items-start mb-4">
+    <div className="flex-1">
+      {prompt1?.title && (
+        <h3 className="text-base font-medium mb-2">{prompt1.title}</h3>
+      )}
+      {prompt1?.subject && (
+        <p className="text-cyan-400 text-sm mb-4">Subject: {prompt1.subject}</p>
+      )}
+    </div>
+    {renderButton(prompt1, 1)}
+  </div>
 
-          {showFirstPrompt && renderBody(prompt1?.content)}
+  {/* Content with clamp */}
+  <div
+    className={`text-sm text-gray-300 space-y-3 transition-all duration-300 ${
+      showFirstPrompt ? "line-clamp-none" : "line-clamp-2"
+    }`}
+  >
+    <pre className="whitespace-pre-wrap font-sans">{prompt1?.content}</pre>
+  </div>
 
-          <button
-            onClick={() => setShowFirstPrompt(!showFirstPrompt)}
-            className="flex items-center gap-2 mt-4 text-sm text-gray-400 hover:text-gray-300"
-          >
-            <ChevronDown className={`w-4 h-4 transition-transform ${showFirstPrompt ? "rotate-180" : ""}`} />
-            {showFirstPrompt ? "Show Less" : "Show More"}
-          </button>
-        </div>
+  <button
+    onClick={() => setShowFirstPrompt(!showFirstPrompt)}
+    className="flex items-center gap-2 mt-4 text-sm text-gray-400 hover:text-gray-300"
+  >
+    <ChevronDown
+      className={`w-4 h-4 transition-transform ${
+        showFirstPrompt ? "rotate-180" : ""
+      }`}
+    />
+    {showFirstPrompt ? "Show Less" : "View Full Prompt"}
+  </button>
+</div>
 
-        <div className="bg-[#23232F] p-6">
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex-1">
-              {prompt2?.title && (
-                <h3 className="text-base font-medium mb-2">{prompt2.title}</h3>
-              )}
-              {prompt2?.subject && (
-                <p className="text-cyan-400 text-sm mb-4">Subject: {prompt2.subject}</p>
-              )}
-            </div>
-            {renderButton(prompt2, 2)}
-          </div>
 
-          {showFullPrompt && (
-            <div className="mt-4 text-sm text-gray-300 space-y-3">{renderBody(prompt2?.content)}</div>
-          )}
-
-          <button
-            onClick={() => setShowFullPrompt(!showFullPrompt)}
-            className="flex items-center gap-2 mt-4 text-sm text-gray-400 hover:text-gray-300"
-          >
-            <ChevronDown className={`w-4 h-4 transition-transform ${showFullPrompt ? "rotate-180" : ""}`} />
-            {showFullPrompt ? "Show Less" : "View Full Prompt"}
-          </button>
-        </div>
+       
       </div>
     </div>
   );

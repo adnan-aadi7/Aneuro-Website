@@ -4,7 +4,7 @@ import ChallengerPrompt from "./ChallengerPrompt";
 import SynthesizerPrompt from "./SynthesizerPrompt";
 import ReflectorPrompt from "./ReflectorPrompt";
 import CatalystPrompt from "./CatalystPrompt";
-import axios from "../../../store/axiosInstance"; // adjust path if your axiosInstance lives elsewhere
+import axios from "../../../store/axiosInstance"; 
 
 export default function Tabs() {
   const [activeTab, setActiveTab] = useState("Architect");
@@ -48,7 +48,7 @@ export default function Tabs() {
   
 
   const renderTabContent = () => {
-    const common = { groupedPrompts, categories }; // pass grouped prompts data
+    const common = { groupedPrompts, categories }; 
     switch (activeTab) {
       case "Architect":
         return <ArchitectPrompt {...common} />;
