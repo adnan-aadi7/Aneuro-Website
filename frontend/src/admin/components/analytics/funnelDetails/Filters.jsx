@@ -90,12 +90,11 @@ const Filters = ({ templateId }) => {
 
   return (
     <>
-      <div className="bg-[#353545] p-6 rounded mb-8">
+     {/*  <div className="bg-[#353545] p-6 rounded mb-8">
         <div className="text-cyan-400 text-xl font-semibold mb-6">
           Filter Templates
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Brain Type */}
           <div>
             <label className="block text-gray-300 text-sm mb-2">
               Brain Type
@@ -111,7 +110,7 @@ const Filters = ({ templateId }) => {
               onChange={() => {}}
             />
           </div>
-          {/* Use Case (Categories) */}
+          
           <div>
             <label className="block text-gray-300 text-sm mb-2">Use Case</label>
             <CustomSelect
@@ -123,7 +122,6 @@ const Filters = ({ templateId }) => {
               onChange={() => {}}
             />
           </div>
-          {/* Tier */}
           <div>
             <label className="block text-gray-300 text-sm mb-2">Tier</label>
             <CustomSelect
@@ -138,7 +136,7 @@ const Filters = ({ templateId }) => {
             />
           </div>
         </div>
-      </div>
+      </div>  */}
 
       {/* Funnel Structure or File Button */}
       {!loading && documentUrl ? (
