@@ -10,24 +10,6 @@ import {
 } from "../../../../store/Slice/PromptPacksSlice";
 import { removePromptFromPack } from "../../../../store/Slice/PromptPacksSlice";
 
-// const prompts = [
-//   {
-//     id: 1,
-//     title: "Blog Post Creator",
-//     subtitle:
-//       "Create engaging blog posts that convert readers into customers...",
-//     expanded: true,
-//     prompt: "Lead with bold ideas — not what’s safe, but what’s next”.",
-//   },
-//   {
-//     id: 2,
-//     title: "Social Media Caption Generator",
-//     subtitle:
-//       "Generate compelling social media captions that drive engagement...",
-//     expanded: false,
-//     prompt: null,
-//   },
-// ];
 
 const PromptPreview = () => {
   const dispatch = useDispatch();
