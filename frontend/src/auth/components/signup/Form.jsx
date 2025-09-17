@@ -235,11 +235,11 @@ export default function Form() {
             <div className="flex-1 border-t border-gray-600"></div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className=" gap-3">
             <button
               onClick={handleGoogleLogin}
               disabled={googleLoading}
-              className="w-full flex items-center px-2 bg-black border border-gray-600 rounded-md text-white font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap py-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full flex items-center justify-center px-2 bg-black border border-gray-600 rounded-md text-white font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap py-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <svg className="w-5 h-5 mr-3" viewBox="0 0 48 48">
                 <g>
@@ -265,7 +265,7 @@ export default function Form() {
               {googleLoading ? "Loading..." : "Sign up with Google"}
             </button>
 
-            <button
+           {/*} <button
               onClick={handleFacebookLogin}
               disabled={facebookLoading}
               className="w-full flex items-center px-2 bg-black border border-gray-600 rounded-md text-white font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap py-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
@@ -275,7 +275,7 @@ export default function Form() {
                 <path fill="#FFFFFF" d="M13.615 19.309v-6.263h2.102l.314-2.433h-2.416V8.847c0-.704.195-1.184 1.204-1.184h1.287V5.5c-.223-.03-.988-.096-1.879-.096-1.86 0-3.135 1.135-3.135 3.221v1.796H9v2.433h2.092v6.455h2.523z"/>
               </svg>
               {facebookLoading ? "Loading..." : "Sign up with Facebook"}
-            </button>
+            </button> */}
           </div>
 
           {/* Login link */}

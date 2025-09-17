@@ -137,7 +137,7 @@ export default function Tabs({ user: userProp, userId: userIdProp }) {
         {/* Action Buttons */}
         <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <button
-            className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-transparent border border-slate-300 text-white  hover:bg-slate-700 hover:text-white transition-colors text-xs sm:text-sm font-medium"
+            className="flex-1 cursor-pointer sm:flex-none px-3 sm:px-4 py-2 bg-transparent border border-slate-300 text-white  hover:bg-slate-700 hover:text-white transition-colors text-xs sm:text-sm font-medium"
             onClick={() => setShowDeletePopup(true)}
           >
             Delete Account
@@ -195,7 +195,7 @@ export default function Tabs({ user: userProp, userId: userIdProp }) {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-shrink-0 pb-2 sm:pb-3 px-3 sm:px-0 text-xs sm:text-sm font-medium transition-colors relative whitespace-nowrap ${
+            className={`cursor-pointer flex-shrink-0 pb-2 sm:pb-3 px-3 sm:px-0 text-xs sm:text-sm font-medium transition-colors relative whitespace-nowrap ${
               activeTab === tab
                 ? "text-teal-400 border-b-2 border-teal-400"
                 : "text-slate-400 hover:text-slate-300"
@@ -207,7 +207,7 @@ export default function Tabs({ user: userProp, userId: userIdProp }) {
       </div>
       {/* Tab Content */}
       {activeTab === "General Details" && (
-        <div className="mt-6 sm:mt-8 flex justify-start">
+        <div className="mt-6 sm:mt-8 flex justify-start ">
           <GeneralDetails user={user} />
         </div>
       )}

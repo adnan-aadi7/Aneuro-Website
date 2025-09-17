@@ -2,85 +2,93 @@ import React, { useEffect, useMemo, useState } from "react";
 import Header from "../../components/analyticsOverview/individualQuizSubmissions/Header";
 import Table from "../../components/analyticsOverview/individualQuizSubmissions/Table";
 import IncompleteTable from "../../components/analyticsOverview/IncompleteQuiz/Table";
-import axios from "../../../store/axiosInstance"; // <-- adjust path if needed
+import axios from "../../../store/axiosInstance";
 
-// Helper to pull the logged-in user id from localStorage
-function getUserId() {
+// Helper to pull logged-in user info from localStorage
+function getUserInfo() {
   try {
     const u = JSON.parse(localStorage.getItem("user") || "null");
-    if (u?.id) return u.id;        // our normalized id (preferred)
-    if (u?._id) return u._id;      // sometimes only _id exists
+    return u || {};
   } catch {
-    // ignore parse error and fallback to legacy key
+    return {};
   }
-  const legacy = localStorage.getItem("userId");
-  return legacy || null;
 }
 
 export default function ResultsOverView() {
-  const [rows, setRows] = useState([]);          // server data array
-  const [loading, setLoading] = useState(false); // boolean
-  const [error, setError] = useState(null);      // string|null
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Frontend filters (no redux): isCompleted triggers server refetch
   const [filters, setFilters] = useState({
-    isCompleted: null, // null -> ALL, true -> completed, false -> incomplete
+    isCompleted: null,
     search: "",
-    dateFrom: "",      // YYYY-MM-DD
-    dateTo: "",        // YYYY-MM-DD
+    dateFrom: "",
+    dateTo: "",
   });
 
-  const uid = useMemo(getUserId, []); // resolve once
+  const user = useMemo(getUserInfo, []); // contains id, role, userType
 
-  // Fetch from API whenever completion filter changes (or on mount)
-  useEffect(() => {
-    const fetchSessions = async () => {
-      if (!uid) {
-        setError("User ID not found. Please log in.");
+useEffect(() => {
+  const fetchData = async () => {
+    if (!user?.id) {
+      setError("User ID not found. Please log in.");
+      setRows([]);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      let res;
+      const params = {
+        userId: user.id,       // logged-in user ID
+        userType: user.userType, // pass userType
+      };
+
+      if (user.userType === "admin") {
+        res = await axios.get("/quiz/user/subscribers-quizzes", { params });
+      } else if (user.userType === "user") {
+        if (typeof filters.isCompleted === "boolean") {
+          params.is_completed = filters.isCompleted;
+        }
+        params.user_id = user.id;
+        res = await axios.get("/quiz/sessions", { params });
+      } else {
+        setError("Invalid user type.");
         setRows([]);
+        setLoading(false);
         return;
       }
-      setLoading(true);
-      setError(null);
-      try {
-        const params = { user_id: uid };
-        if (typeof filters.isCompleted === "boolean") {
-          params.is_completed = filters.isCompleted; 
-        }
-        const res = await axios.get("/quiz/sessions", { params });
-        console.log(res?.data?.data);
-        setRows(Array.isArray(res?.data?.data) ? res.data.data : []);
-      } catch (e) {
-        setError(
-          e?.response?.data?.message ||
-          e?.response?.data?.error ||
-          e?.message ||
-          "Failed to load sessions"
-        );
-        setRows([]);
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchSessions();
-  }, [uid, filters.isCompleted]);
+      setRows(Array.isArray(res?.data?.data) ? res.data.data : []);
+    } catch (e) {
+      setError(
+        e?.response?.data?.message ||
+        e?.response?.data?.error ||
+        e?.message ||
+        "Failed to fetch quiz data"
+      );
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // update filters helper
+  fetchData();
+}, [user, filters.isCompleted]);
+
   const updateFilters = (patch) => setFilters((f) => ({ ...f, ...patch }));
 
   return (
     <>
-      <Header
-        filters={filters}
-        onChangeFilters={updateFilters}
-      />
+      <Header filters={filters} onChangeFilters={updateFilters} />
       {filters.isCompleted === false ? (
         <IncompleteTable
           rows={rows}
           loading={loading}
           error={error}
-          filters={filters} 
+          filters={filters}
         />
       ) : (
         <Table

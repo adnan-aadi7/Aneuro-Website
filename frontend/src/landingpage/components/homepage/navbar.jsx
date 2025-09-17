@@ -35,12 +35,20 @@ const Navbar = () => {
         </div>
 
         {/* Desktop CTA */}
+        <div className="flex flex-row items-center gap-5">
         <a
           href="/signup"
           className="hidden lg:block text-white font-bold text-[16px] px-5 py-3 rounded-full bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3]"
         >
           GET STARTED
         </a>
+         <a
+          href="/login"
+          className="hidden lg:block text-white font-bold text-[16px] px-5 py-3 rounded-full bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3]"
+        >
+          Sign In
+        </a>
+        </div>
 
         {/* Mobile Menu Button */}
         <button onClick={toggleSidebar} className="lg:hidden">
@@ -62,6 +70,12 @@ const Navbar = () => {
             </a>
           ))}
           <a
+            href="/signup"
+            className="w-full text-white font-bold text-[16px] px-5 py-3 rounded-full bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3]"
+          >
+            GET STARTED
+          </a>
+           <a
             href="/signup"
             className="w-full text-white font-bold text-[16px] px-5 py-3 rounded-full bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3]"
           >

@@ -8,7 +8,8 @@ import {
     getQuizAnalytics, 
     getAudienceBrainTypeAnalyticsByUser, 
     getUserWeeklyBrainTypeStats, 
-    getAudienceQuizReport 
+    getAudienceQuizReport,
+    getSubscribersWithQuizData
 } from '../controller/quizController.js';
 import { authUser } from "../middleware/userTracker.js";
 const router = express.Router();
@@ -649,6 +650,88 @@ router.get('/analytics/brain-types/:userId', authUser, getAudienceBrainTypeAnaly
  */
 
 router.get('/:userId/weekly-brain-types', authUser, getUserWeeklyBrainTypeStats);
+
+
+
+
+/**
+ * @swagger
+ * /api/quiz/user/subscribers-quizzes:
+ *   get:
+ *     summary: Get all subscribers with their quiz data for an admin
+ *     description: Returns subscriber name, email, and all quizzes for a given admin user.
+ *     tags:
+ *       - Audience Quiz
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Admin user ID
+ *       - in: query
+ *         name: userType
+ *         schema:
+ *           type: string
+ *           enum: [admin, user]
+ *         required: true
+ *         description: User type of the logged-in user (admin or user)
+ *     responses:
+ *       200:
+ *         description: Subscribers with quiz data retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       email:
+ *                         type: string
+ *                       subscription:
+ *                         type: object
+ *                         nullable: true
+ *                       quizzes:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             quizId:
+ *                               type: string
+ *                             is_completed:
+ *                               type: boolean
+ *                             answers:
+ *                               type: array
+ *                               items: {}
+ *                             brain_type:
+ *                               type: string
+ *                               nullable: true
+ *                             createdAt:
+ *                               type: string
+ *                               format: date-time
+ *                             questions_completed:
+ *                               type: number
+ *                             completion_percentage:
+ *                               type: string
+ *       400:
+ *         description: Missing required query parameters
+ *       403:
+ *         description: Unauthorized access for invalid userType
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/user/subscribers-quizzes", getSubscribersWithQuizData);
 
 
 export default router;

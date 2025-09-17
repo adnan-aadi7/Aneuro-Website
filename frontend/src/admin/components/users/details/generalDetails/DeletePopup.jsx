@@ -47,15 +47,15 @@ export default function DeletePopup({
           Delete This User
         </div>
         {/* Action Buttons */}
-        <div className="flex w-full gap-4 mt-2">
-          <button
+        <div className="flex gap-4 mt-2">
+         {/*} <button
             className="flex-1 py-2 bg-white text-[#232432]  font-medium hover:bg-slate-100 transition-colors"
             onClick={onReviewQuiz}
           >
             Review Quiz
-          </button>
+          </button> */}
           <button
-            className="flex-1 py-2 bg-red-600 text-white  font-medium hover:bg-red-700 transition-colors"
+            className="flex-1 py-2 bg-red-600 text-white px-8 cursor-pointer font-medium hover:bg-red-700 transition-colors"
             onClick={onDeleteUser}
           >
             Delete User

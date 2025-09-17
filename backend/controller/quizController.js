@@ -1,4 +1,5 @@
 import QuizSession from '../model/quiz.js';
+import User from '../model/User.js';
 import nodemailer from 'nodemailer';
 import { incompleteQuizTemplate } from '../config/emailTemplates.js';
 import Reminder from '../model/reminder.js';
@@ -668,3 +669,92 @@ export const getUserWeeklyBrainTypeStats = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch brain type stats' });
   }
 };
+
+
+
+export const getSubscribersWithQuizData = async (req, res) => {
+  try {
+    const { userType, userId, is_completed } = req.query;
+
+    if (!userType) {
+      return res.status(400).json({ success: false, message: "userType is required" });
+    }
+
+    let users = [];
+
+    if (userType === "admin") {
+      // Admin → fetch all active subscribers
+      users = await User.find({
+        userType: "user",
+        subscription: { $exists: true },
+        "subscription.status": "active",
+      }).select("_id name email subscription");
+    } else if (userType === "user") {
+      if (!userId) {
+        return res.status(400).json({ success: false, message: "userId is required for normal users" });
+      }
+      const user = await User.findOne({ _id: userId, userType: "user" }).select("_id name email subscription");
+      if (user) users.push(user);
+    } else {
+      return res.status(403).json({ success: false, message: "Invalid userType" });
+    }
+
+    if (!users.length) {
+      return res.json({ success: true, message: "No users found", data: [] });
+    }
+
+    const userIds = users.map((u) => u._id);
+
+    const quizQuery = { user_id: { $in: userIds }, is_subscriber_quiz: true };
+    if (is_completed !== undefined) quizQuery.is_completed = is_completed === "true";
+
+    const quizzes = await QuizSession.find(quizQuery);
+
+    // Map each quiz into the "flat" user quiz structure
+    const data = quizzes
+      .map((q) => {
+        const user = users.find((u) => u._id.toString() === q.user_id.toString());
+        if (!user) return null;
+
+        // Only include quizzes after subscription start date
+        if (user.subscription?.startDate && new Date(q.createdAt) < new Date(user.subscription.startDate)) {
+          return null;
+        }
+
+        return {
+          _id: q._id,
+          user_id: user._id,
+          name: user.name,
+          email: user.email,
+          answers: q.answers || [],
+          is_completed: q.is_completed || false,
+          questions_completed: q.answers?.length || 0,
+          timestamp: q.timestamp || q.createdAt,
+          createdAt: q.createdAt,
+          updatedAt: q.updatedAt,
+          is_subscriber_quiz: q.is_subscriber_quiz || false,
+          brain_type: q.brain_type || null,
+          reminders: q.reminders || [],
+          score_breakdown: q.score_breakdown || { Architect: 0, Reflector: 0, Catalyst: 0, Synthesizer: 0 },
+        };
+      })
+      .filter(Boolean);
+
+    return res.status(200).json({
+      success: true,
+      message:
+        userType === "admin"
+          ? "Active subscribers with their own quiz data after subscription"
+          : "User with their own quiz data after subscription",
+      data,
+    });
+  } catch (error) {
+    console.error("Error fetching users quiz data:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
+
+

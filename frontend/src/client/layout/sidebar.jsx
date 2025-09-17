@@ -1,9 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { MdOutlineDashboard } from "react-icons/md";
 import {
   TbFileSearch,
-  TbChartBar,
   TbMail,
   TbStars,
   TbClock,
@@ -14,15 +13,21 @@ import {
 import { CiSettings } from "react-icons/ci";
 import { FiLogOut } from "react-icons/fi";
 import logo from "../../assets/auth/logo.png";
-import axiosInstance from "../../store/axiosInstance"; // ensure path is correct
+import axiosInstance from "../../store/axiosInstance"; 
 
 const Sidebar = ({ sidebarOpen, onSidebarClose, onLogout }) => {
   const navigate = useNavigate();
+  const [on, setOn] = useState(false);
+
+  // Load initial toggle state from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("actAsClient");
+    setOn(saved === "1");
+  }, []);
 
   const menuItems = [
     { icon: MdOutlineDashboard, label: "Dashboard", to: "/client/dashboard" },
     { icon: TbFileSearch, label: "Results Overview", to: "/results-overview" },
-    // { icon: TbChartBar, label: "Analytics Overview", to: "/analytics-overview" },
     { icon: TbMail, label: "Email Sequences", to: "/email-sequences" },
     { icon: TbStars, label: "Prompt Packs", to: "/prompt-packs" },
     { icon: TbClock, label: "Funnel Templates", to: "/funnel-templates" },
@@ -37,38 +42,27 @@ const Sidebar = ({ sidebarOpen, onSidebarClose, onLogout }) => {
 
   const bottomItems = [
     { icon: CiSettings, label: "Setting", to: "/client-settings" },
-    { icon: FiLogOut, label: "Logout" }, // special-cased to be a button
+    { icon: FiLogOut, label: "Logout" },
   ];
 
   const handleLogout = async () => {
     try {
-      // (optional) tell backend if you have an API for logout
-      // await axiosInstance.post("/logout");
-
-      // 1) Clear storages
       localStorage.clear();
       sessionStorage.clear();
 
-      // 2) Drop Authorization header from axios instance (belt & suspenders)
       if (axiosInstance?.defaults?.headers?.common?.Authorization) {
         delete axiosInstance.defaults.headers.common.Authorization;
       }
 
-      // 3) Explicitly expire any auth cookie named "token" (if used)
-      document.cookie = "token=; Max-Age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+      document.cookie =
+        "token=; Max-Age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
 
-      // 4) Let app-level context know (if provided)
       if (typeof onLogout === "function") onLogout();
-
-      // 5) Close sidebar on mobile, then navigate
       if (typeof onSidebarClose === "function") onSidebarClose();
-      navigate("/login", { replace: true });
 
-      // 6) (optional) hard refresh to flush any in-memory state
-      // window.location.reload();
+      navigate("/login", { replace: true });
     } catch (e) {
       console.error("Logout error:", e);
-      // still navigate away even if an optional API call failed
       navigate("/login", { replace: true });
     }
   };
@@ -78,14 +72,19 @@ const Sidebar = ({ sidebarOpen, onSidebarClose, onLogout }) => {
       {/* Overlay for mobile */}
       <div
         className={`fixed inset-0 z-40 transition-opacity duration-300 lg:hidden ${
-          sidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          sidebarOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         }`}
         onClick={onSidebarClose}
       />
+
       {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 h-screen w-64 bg-black text-white flex flex-col z-50 shadow-md transform transition-transform duration-300
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 lg:static lg:shadow-none overflow-y-auto lg:overflow-visible`}
+        ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0 lg:static lg:shadow-none overflow-y-auto lg:overflow-visible`}
       >
         {/* Close button for mobile */}
         <button
@@ -104,8 +103,8 @@ const Sidebar = ({ sidebarOpen, onSidebarClose, onLogout }) => {
         <div
           style={{
             overflowY: "auto",
-            scrollbarWidth: "none", // Firefox
-            msOverflowStyle: "none", // IE and Edge
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
           }}
           className="custom-scroll"
         >
@@ -129,6 +128,36 @@ const Sidebar = ({ sidebarOpen, onSidebarClose, onLogout }) => {
                 </NavLink>
               );
             })}
+
+            {/* Client View Toggle */}
+            <button
+              type="button"
+              className="flex items-center gap-3 px-6 py-3 font-medium text-[17px] text-gray-400 focus:outline-none cursor-pointer"
+              onClick={() => {
+                const next = !on;
+                setOn(next);
+                localStorage.setItem("actAsClient", next ? "1" : "0");
+                if (next) {
+                  navigate("/client/dashboard");
+                } else {
+                  navigate("/admin/dashboard");
+                }
+              }}
+              aria-pressed={on}
+            >
+              <span
+                className={`w-9 h-5 flex items-center rounded-full transition-colors duration-200 ${
+                  on ? "bg-[#12DCF0]" : "bg-gray-600"
+                }`}
+              >
+                <span
+                  className={`w-4 h-4 rounded-full bg-black transition-all duration-200 ${
+                    on ? "ml-4" : "ml-1"
+                  }`}
+                />
+              </span>
+              Client View
+            </button>
           </nav>
 
           {/* Bottom Menu */}
@@ -136,7 +165,6 @@ const Sidebar = ({ sidebarOpen, onSidebarClose, onLogout }) => {
             {bottomItems.map((item) => {
               const Icon = item.icon;
               if (item.label === "Logout") {
-                // Render as a button to run logout logic
                 return (
                   <button
                     key={item.label}
@@ -148,7 +176,6 @@ const Sidebar = ({ sidebarOpen, onSidebarClose, onLogout }) => {
                   </button>
                 );
               }
-              // Regular nav items
               return (
                 <NavLink
                   key={item.label}
@@ -170,7 +197,7 @@ const Sidebar = ({ sidebarOpen, onSidebarClose, onLogout }) => {
         </div>
       </aside>
 
-      {/* Vertical separator for large screens */}
+      {/* Vertical separator */}
       <div className="hidden lg:block fixed top-0 left-64 h-screen w-[2px] bg-[#232432] z-50" />
     </>
   );
