@@ -382,7 +382,7 @@ function App() {
               }
             />
             <Route
-              path="/admin/mannual-prompt"
+              path="/admin/mannual-prompt/:packId"
               element={
                 <AdminLayout>
                   <MannualPrompt />
