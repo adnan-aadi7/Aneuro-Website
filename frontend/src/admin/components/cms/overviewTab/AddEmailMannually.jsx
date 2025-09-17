@@ -38,6 +38,8 @@ const AddEmailMannually = () => {
   const editorRef = useRef(null);
   const fileInputRef = useRef(null);
   const [attachments, setAttachments] = useState([]); // {id, file?, url, isImage, name?}[]
+const [emailsInitialized, setEmailsInitialized] = useState(false);
+
 
   // New state for multiple emails
   const [emails, setEmails] = useState([
@@ -74,10 +76,18 @@ const AddEmailMannually = () => {
   // Local form state
   const [sequenceName, setSequenceName] = useState("");
   const [category, setCategory] = useState("");
-  const [selectedTier, setSelectedTier] = useState(""); // basic | premium | enterprise
   const [brainType, setBrainType] = useState("Architect");
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+
+  // ✅ always store backend keys in state
+const [selectedTier, setSelectedTier] = useState([]); 
+
+const toggleTier = (tier) => {
+  setSelectedTier((prev) =>
+    prev.includes(tier) ? prev.filter((t) => t !== tier) : [...prev, tier]
+  );
+};
 
   // Ensure editor has focus and a valid caret position
   const focusEditorWithCaret = () => {
@@ -340,99 +350,94 @@ const AddEmailMannually = () => {
     }
   }, [dispatch, editSequenceId, currentSequence]);
 
-  useEffect(() => {
-    if (editSequenceId && currentSequence && currentSequence._id === editSequenceId) {
-      setSequenceName(currentSequence.name || "");
-      setCategory(currentSequence.category || "");
-      // Map backend tier to UI tier
-      const reverseTierMap = { starter: "basic", growth: "premium", enterprise: "enterprise" };
-      setSelectedTier(reverseTierMap[currentSequence.tier] || "");
-      // Prefill: file-based sequence or manual emails
-      if (currentSequence.type === 'file' && currentSequence.fileUrl) {
-        const fileUrl = currentSequence.fileUrl;
-        const fileName = fileUrl.split('/').pop() || 'file';
-        const id = `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-        const isImg = isImageUrl(fileUrl);
-        // Keep editor body empty for file-based sequences; show only attachment preview above.
-        if (editorRef.current) editorRef.current.innerHTML = '';
-        setAttachments([{ id, url: fileUrl, isImage: isImg, name: fileName }]);
-      } else {
-        // Manual emails
-        const emailsArr = Array.isArray(currentSequence.emails) ? currentSequence.emails : [];
-        if (editSingleEmail && editingEmailId) {
-          // Editing single email
-          const targetEmail = emailsArr.find((e) => e._id === editingEmailId);
-          if (targetEmail && editorRef.current) {
-            const { html, attachments: extracted } = transformContentForEditor(targetEmail.content || "");
-            editorRef.current.innerHTML = html;
-            setAttachments(extracted);
-            setBrainType(targetEmail.type || "Architect");
-            
-            // Update emails array with single email
-            setEmails([{
+
+useEffect(() => {
+  if (
+    editSequenceId &&
+    currentSequence &&
+    currentSequence._id === editSequenceId &&
+    !emailsInitialized
+  ) {
+    setSequenceName(currentSequence.name || "");
+    setCategory(currentSequence.category || "");
+
+    // Tier mapping
+    const reverseTierMap = { starter: "starter", growth: "growth", enterprise: "enterprise" };
+    if (Array.isArray(currentSequence.tier)) {
+      setSelectedTier(currentSequence.tier.map((t) => reverseTierMap[t] || t));
+    } else if (currentSequence.tier) {
+      setSelectedTier([reverseTierMap[currentSequence.tier] || currentSequence.tier]);
+    } else {
+      setSelectedTier([]);
+    }
+
+    // --- Initialize only once ---
+    if (currentSequence.type === "file" && currentSequence.fileUrl) {
+      const fileUrl = currentSequence.fileUrl;
+      const fileName = fileUrl.split("/").pop() || "file";
+      const id = `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+      const isImg = isImageUrl(fileUrl);
+
+      if (editorRef.current) editorRef.current.innerHTML = "";
+      setAttachments([{ id, url: fileUrl, isImage: isImg, name: fileName }]);
+    } else {
+      const emailsArr = Array.isArray(currentSequence.emails) ? currentSequence.emails : [];
+
+      if (editSingleEmail && editingEmailId) {
+        // Edit one email only
+        const targetEmail = emailsArr.find((e) => e._id === editingEmailId);
+        if (targetEmail && editorRef.current) {
+          const { html, attachments: extracted } = transformContentForEditor(targetEmail.content || "");
+          editorRef.current.innerHTML = html;
+          setAttachments(extracted);
+          setBrainType(targetEmail.type || "Architect");
+
+          setEmails([
+            {
               id: 1,
               brainType: targetEmail.type || "Architect",
               content: html,
-              attachments: extracted
-            }]);
-            setCurrentEmailIndex(0);
-          }
-        } else {
-          // Editing entire sequence - load all emails
-          const transformedEmails = emailsArr.map((email, index) => {
-            const { html, attachments: extracted } = transformContentForEditor(email.content || "");
-            return {
-              id: index + 1,
-              brainType: email.type || "Architect",
-              content: html,
-              attachments: extracted
-            };
-          });
-          
-          if (transformedEmails.length > 0) {
-            setEmails(transformedEmails);
-            setCurrentEmailIndex(0);
-            
-            // Load first email
-            const firstEmail = transformedEmails[0];
-            if (editorRef.current) {
-              editorRef.current.innerHTML = firstEmail.content || "";
-            }
-            setAttachments(firstEmail.attachments || []);
-            setBrainType(firstEmail.brainType);
-          }
+              attachments: extracted,
+            },
+          ]);
+          setCurrentEmailIndex(0);
         }
-
-        // Upgrade remote URLs to Blob URLs for inline display
-        const upgradeToBlob = async (item) => {
-          try {
-            const res = await fetch(item.url, { credentials: 'omit' });
-            if (!res.ok) return;
-            const blob = await res.blob();
-            const fileName = item.name || (item.url && item.url.split('/').pop()) || 'file';
-            const file = new File([blob], fileName, { type: blob.type || undefined });
-            const blobUrl = URL.createObjectURL(blob);
-            const node = editorRef.current?.querySelector(`[data-attachment-id="${item.id}"]`);
-            if (node && item.isImage) {
-              node.setAttribute('src', blobUrl);
-            }
-            setAttachments((prev) => prev.map((a) => (a.id === item.id ? { ...a, url: blobUrl, file } : a)));
-          } catch {
-            // Ignore fetch errors; leave as original URL chip/image
-          }
-        };
-
-        // Apply to all emails
-        emails.forEach((email) => {
-          email.attachments.forEach((it) => {
-            if (it.isImage || (it.url || '').toLowerCase().endsWith('.pdf')) {
-              upgradeToBlob(it);
-            }
-          });
+      } else {
+        // Load entire sequence
+        const transformedEmails = emailsArr.map((email, index) => {
+          const { html, attachments: extracted } = transformContentForEditor(email.content || "");
+          return {
+            id: index + 1,
+            brainType: email.type || "Architect",
+            content: html,
+            attachments: extracted,
+          };
         });
+
+        if (transformedEmails.length > 0) {
+          setEmails(transformedEmails);
+          setCurrentEmailIndex(0);
+
+          // Load first email into editor
+          if (editorRef.current) {
+            editorRef.current.innerHTML = transformedEmails[0].content || "";
+          }
+          setAttachments(transformedEmails[0].attachments || []);
+          setBrainType(transformedEmails[0].brainType);
+        }
       }
     }
-  }, [editSequenceId, currentSequence, transformContentForEditor, editSingleEmail, editingEmailId]);
+
+    setEmailsInitialized(true);
+  }
+}, [
+  editSequenceId,
+  currentSequence,
+  transformContentForEditor,
+  editSingleEmail,
+  editingEmailId,
+  emailsInitialized,
+]);
 
   const handleSend = () => {
     // Save current email content before submission
@@ -472,44 +477,35 @@ const AddEmailMannually = () => {
       return;
     }
 
-    // Map UI tier to backend tier values
-    const tierMap = { basic: 'starter', premium: 'growth', enterprise: 'enterprise' };
-    const backendTier = tierMap[selectedTier] || 'starter';
+    if (selectedTier.length === 0) {
+    toast.error("Please select at least one tier");
+    return;
+  }
 
-    // Build emails array per backend contract
-    const backendEmails = emailsWithContent.map(email => ({
-      content: email.content,
-      type: email.brainType
-    }));
+const payload = {
+  name: sequenceName || "email",
+  category: category || "test",
+  type: "manual",
+  brainType: brainType || "Challenger",
+  status: "scheduled",
+  tier: selectedTier,
+  emails: emails.map(email => ({
+    content: email.content,   // content saved from editor
+    type: email.brainType || brainType
+  }))
+};
 
-    const payload = {
-      name: sequenceName?.trim() || `Manual Email - ${new Date().toLocaleString()}`,
-      tier: backendTier,
-      type: "manual",
-      brainType: brainType, // Keep for backward compatibility
-      category,
-      emails: backendEmails
-    };
 
-    if (editSingleEmail && editSequenceId && editingEmailId) {
-      // Update only the specific email via API
-      (async () => {
-        try {
-          await axios.put(`/email-sequences/${editSequenceId}/emails/${editingEmailId}`, {
-            content: emailsWithContent[currentEmailIndex].content,
-            type: emailsWithContent[currentEmailIndex].brainType,
-          });
-          toast.success('Email updated');
-          dispatch(fetchEmailSequenceById(editSequenceId));
-        } catch (e) {
-          toast.error(e?.response?.data?.message || 'Failed to update email');
-        }
-      })();
-    } else if (editSequenceId) {
-      dispatch(updateEmailSequence({ id: editSequenceId, updateData: payload }));
-    } else {
-      dispatch(createEmailSequence(payload));
-    }
+
+
+
+  if (editSingleEmail && editSequenceId && editingEmailId) {
+    // ...
+  } else if (editSequenceId) {
+    dispatch(updateEmailSequence({ id: editSequenceId, updateData: payload }));
+  } else {
+    dispatch(createEmailSequence(payload));
+  }
   };
 
   // Add new email function
@@ -737,61 +733,65 @@ const AddEmailMannually = () => {
           }}
         >
           <h3 className="text-white text-sm font-medium mb-4">Tier Access Control</h3>
-          <div className="space-y-3">
-            {/* Basic Tier */}
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                className="w-4 h-4  border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
-                checked={selectedTier === "basic"}
-                onChange={() => setSelectedTier(selectedTier === "basic" ? "" : "basic")}
-              />
-              <img src={StarIcon} alt="Basic" className="w-6 h-6 object-contain" />
-              <div className="flex-1 ml-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-white text-sm">Basic</span>
-                  <span className="bg-[#2A3344] text-gray-200 text-xs px-2 py-0.5 ">1250 users</span>
-                </div>
-                <div className="text-gray-500 text-xs mt-1">Free tier users</div>
-              </div>
-            </div>
+         <div className="space-y-3">
+  {/* Basic Tier */}
+  <div className="flex items-center gap-3">
+    <input
+      type="checkbox"
+      checked={selectedTier.includes("starter")}
+      onChange={() => toggleTier("starter")}
+    />
+    <img src={StarIcon} alt="Basic" className="w-6 h-6 object-contain" />
+    <div className="flex-1 ml-2">
+      <div className="flex items-center gap-2">
+        <span className="text-white text-sm">Basic</span>
+        <span className="bg-[#2A3344] text-gray-200 text-xs px-2 py-0.5 rounded">
+          1250 users
+        </span>
+      </div>
+      <div className="text-gray-500 text-xs mt-1">Free tier users</div>
+    </div>
+  </div>
 
-            {/* Premium Tier */}
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                className="w-4 h-4  border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
-                checked={selectedTier === "premium"}
-                onChange={() => setSelectedTier(selectedTier === "premium" ? "" : "premium")}
-              />
-              <img src={KingIcon} alt="Premium" className="w-6 h-6 object-contain" />
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-white text-sm">Premium</span>
-                  <span className="text-gray-400 text-sm">330 users</span>
-                </div>
-                <div className="text-gray-400 text-xs mt-1">Paid subscribers</div>
-              </div>
-            </div>
+  {/* Premium Tier */}
+  <div className="flex items-center gap-3">
+    <input
+      type="checkbox"
+      checked={selectedTier.includes("growth")}
+      onChange={() => toggleTier("growth")}
+    />
+    <img src={KingIcon} alt="Premium" className="w-6 h-6 object-contain" />
+    <div className="flex-1 ml-2">
+      <div className="flex items-center gap-2">
+        <span className="text-white text-sm">Premium</span>
+        <span className="text-gray-400 text-xs px-2 py-0.5 rounded">
+          330 users
+        </span>
+      </div>
+      <div className="text-gray-400 text-xs mt-1">Paid subscribers</div>
+    </div>
+  </div>
 
-            {/* VIP / Enterprise Tier */}
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                className="w-4 h-4  border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
-                checked={selectedTier === "enterprise"}
-                onChange={() => setSelectedTier(selectedTier === "enterprise" ? "" : "enterprise")}
-              />
-              <img src={DiamondIcon} alt="VIP" className="w-6 h-6 object-contain" />
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-white text-sm">VIP</span>
-                  <span className="text-gray-400 text-sm">45 users</span>
-                </div>
-                <div className="text-gray-400 text-xs mt-1">Exclusive access</div>
-              </div>
-            </div>
-          </div>
+  {/* Enterprise Tier */}
+  <div className="flex items-center gap-3">
+    <input
+      type="checkbox"
+      checked={selectedTier.includes("enterprise")}
+      onChange={() => toggleTier("enterprise")}
+    />
+    <img src={DiamondIcon} alt="Enterprise" className="w-6 h-6 object-contain" />
+    <div className="flex-1 ml-2">
+      <div className="flex items-center gap-2">
+        <span className="text-white text-sm">Enterprise</span>
+        <span className="text-gray-400 text-xs px-2 py-0.5 rounded">
+          55 users
+        </span>
+      </div>
+      <div className="text-gray-400 text-xs mt-1">Corporate clients</div>
+    </div>
+  </div>
+</div>
+
         </div>
       </div>
 

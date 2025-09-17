@@ -165,12 +165,12 @@ export default function EmailSequenceCard() {
     }
     
     // Only one tier allowed per upload (based on backend model)
-    const tierMap = { basic: 'starter', premium: 'growth', enterprise: 'enterprise' };
-    const backendTier = tierMap[selectedTiers[0]] || 'starter';
+const tierMap = { basic: 'starter', premium: 'growth', enterprise: 'enterprise' };
+const backendTiers = selectedTiers.map(t => tierMap[t]);
 
     const payload = {
       name: sequenceName?.trim() || selectedFile.name,
-      tier: backendTier,
+      tier: backendTiers,
       type: "file",
       brainType,
       category: selectedCategory,

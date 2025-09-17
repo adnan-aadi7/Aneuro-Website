@@ -170,19 +170,31 @@ const EmailStatsCards = ({ sequenceId }) => {
           Downloads: {downloadsCount.toLocaleString()}
         </div>
       </div>
-      {/* Tier */}
-      <div className="bg-[#2A2A39] border border-[#3A3A4A] rounded p-6 min-w-[180px] flex-1">
-        <div className="flex items-center gap-2 text-white text-sm mb-2">
-          <BarChart className="w-5 h-5 text-white" />
-          {isCategoryView ? 'Tiers' : 'Tier'}
-        </div>
-        <div className="text-white text-2xl font-bold mb-1">{tier}</div>
-        {isCategoryView && categoryStats?.tiers.length > 1 && (
-          <div className="text-xs text-gray-400">
-            {categoryStats.tiers.length} different tiers
-          </div>
-        )}
-      </div>
+    {/* Tier */}
+<div className="bg-[#2A2A39] border border-[#3A3A4A] rounded p-6 min-w-[180px] flex-1">
+  <div className="flex items-center gap-2 text-white text-sm mb-2">
+    <BarChart className="w-5 h-5 text-white" />
+    {isCategoryView ? "Tiers" : "Tier"}
+  </div>
+
+  {/* Handle array vs single tier */}
+  <div className="flex flex-wrap gap-2 mb-1 text-white text-2xl font-bold">
+    {Array.isArray(tier) ? (
+      tier.map((t, i) => (
+        <span key={i}>{t}</span>
+      ))
+    ) : (
+      <span>{tier}</span>
+    )}
+  </div>
+
+  {isCategoryView && categoryStats?.tiers.length > 1 && (
+    <div className="text-2xl text-white">
+      {categoryStats.tiers.length} different tiers
+    </div>
+  )}
+</div>
+
       {/* Status */}
       <div className="bg-[#2A2A39] border border-[#3A3A4A] rounded p-6 min-w-[180px] flex-1">
         <div className="flex items-center gap-2 text-white text-sm mb-2">

@@ -27,13 +27,22 @@ export async function create(req, res) {
     }
 
     // ✅ Enum validation
-    const allowedTiers = ['starter', 'growth', 'enterprise'];
-    const allowedTypes = ['manual', 'file'];
-    const allowedBrainTypes = ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst'];
+// ✅ Enum validation
+const allowedTiers = ['starter', 'growth', 'enterprise'];
+const allowedTypes = ['manual', 'file'];
+const allowedBrainTypes = ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst'];
 
-    if (!allowedTiers.includes(tier)) {
-      return res.status(400).json({ success: false, message: 'Invalid tier value' });
-    }
+// ✅ Normalize tiers to array
+let tierArray = Array.isArray(tier) ? tier : [tier];
+
+// ✅ Validate tiers
+for (let t of tierArray) {
+  if (!allowedTiers.includes(t)) {
+    return res.status(400).json({ success: false, message: `Invalid tier value: ${t}` });
+  }
+}
+
+  
     if (!allowedTypes.includes(type)) {
       return res.status(400).json({ success: false, message: 'Invalid type value' });
     }
@@ -92,8 +101,8 @@ export async function create(req, res) {
 
 const newSequence = new EmailSequence({
   name,
-  tier,
-  category, 
+  tier: tierArray,   // 👈 save array instead of single string
+  category,
   releaseDateTime: releaseDateTime || null,
   status: status || 'scheduled',
   type,
@@ -102,6 +111,7 @@ const newSequence = new EmailSequence({
   emails: emailArray,
   usage: { count: 0, users: [] }
 });
+
 
     const savedSequence = await newSequence.save();
 
@@ -119,21 +129,18 @@ const newSequence = new EmailSequence({
     });
 
 if (savedSequence.status === "active") {
-  const notification = new Notification({
-    title: ` ${name}`,
-    message: `A new ${tier} tier email sequence has been created in category: ${category}`,
-    type: "newtool", 
-    isPublic: true,
-    targetTier: tier,
-  });
-
-  console.log("Notification that will be created:", notification);
-
-  // Save to DB
-  const savedNotification = await notification.save();
-
-  console.log("Notification saved to DB:", savedNotification);
+  for (const t of savedSequence.tier) {
+    const notification = new Notification({
+      title: `${name}`,
+      message: `A new ${t} tier email sequence has been created in category: ${category}`,
+      type: "newtool",
+      isPublic: true,
+      targetTier: t,
+    });
+    await notification.save();
+  }
 }
+
 
 res.status(201).json({
   success: true,
@@ -221,7 +228,7 @@ export async function getAll(req, res) {
   try {
     const {
       page = 1,
-      limit = 10,
+      limit = 100000,
       tier,
       status,
       sortBy = 'createdAt',
@@ -295,53 +302,55 @@ export async function getById(req, res) {
   }
 }
 
-// UPDATE
 export async function update(req, res) {
   try {
     const { id } = req.params;
-    let { name, emails, tier, status, type, brainType, releaseDateTime,category } = req.body;
+    let { name, tier, status, type, brainType, releaseDateTime, category, emails } = req.body;
 
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({ success: false, message: 'Invalid ID format' });
+      return res.status(400).json({ success: false, message: "Invalid ID format" });
     }
 
     const existingSequence = await EmailSequence.findById(id);
     if (!existingSequence) {
-      return res.status(404).json({ success: false, message: 'Email sequence not found' });
+      return res.status(404).json({ success: false, message: "Email sequence not found" });
     }
 
-    let fileUrl = existingSequence.fileUrl;
-    let emailArray = existingSequence.emails; // start with existing emails
+    // Keep existing emails
+    let emailArray = existingSequence.emails || [];
 
-    // ✅ Handle file type
-    if (type === 'file') {
-      if (req.file && req.file.buffer) {
-        const uploadResult = await uploadToCloudinary(req.file.buffer);
-        if (!uploadResult?.secure_url) {
-          return res.status(500).json({ success: false, message: 'Failed to upload file to Cloudinary' });
-        }
-        fileUrl = uploadResult.secure_url;
-        emailArray.push({ content: fileUrl, type: brainType || existingSequence.brainType });
+    // Normalize tier(s) into array
+    const allowedTiers = ["starter", "growth", "enterprise"];
+    let tierArray = Array.isArray(tier) ? tier : tier ? [tier] : existingSequence.tier;
+
+    // Validate tiers
+    for (let t of tierArray) {
+      if (!allowedTiers.includes(t)) {
+        return res.status(400).json({ success: false, message: `Invalid tier value: ${t}` });
       }
     }
 
-    // ✅ Handle manual type (append instead of overwrite)
-    if (type === 'manual') {
-      if (typeof emails === 'string') {
+    // Handle new emails (avoid duplicates)
+    if (emails) {
+      if (typeof emails === "string") {
         try {
           emails = JSON.parse(emails);
         } catch (err) {
-          return res.status(400).json({ success: false, message: 'Invalid JSON format for emails' });
+          return res.status(400).json({ success: false, message: "Invalid JSON format for emails" });
         }
       }
 
       if (Array.isArray(emails) && emails.length > 0) {
-        const newEmails = emails.map(email => ({
-          content: email.content || '',
-          type: email.type || brainType || existingSequence.brainType
+        const newEmails = emails.map((email) => ({
+          content: email.content || "",
+          type: email.type || brainType || existingSequence.brainType,
         }));
 
-        emailArray = [...emailArray, ...newEmails]; // append new emails
+        // Filter out duplicates
+        const existingContents = new Set(emailArray.map(e => e.content));
+        const filteredEmails = newEmails.filter(e => !existingContents.has(e.content));
+
+        emailArray = [...emailArray, ...filteredEmails]; // append only unique new emails
       }
     }
 
@@ -349,17 +358,16 @@ export async function update(req, res) {
       id,
       {
         name: name ?? existingSequence.name,
-        tier: tier ?? existingSequence.tier,
+        tier: tierArray,
         status: status ?? existingSequence.status,
-            category: category ?? existingSequence.category, 
+        category: category ?? existingSequence.category,
         type: type ?? existingSequence.type,
         brainType: brainType ?? existingSequence.brainType,
         releaseDateTime: releaseDateTime ?? existingSequence.releaseDateTime,
-        fileUrl,
-        emails: emailArray
+        emails: emailArray,
       },
       { new: true, runValidators: true }
-    ).populate('usage.users', 'name email');
+    ).populate("usage.users", "name email");
 
     await logAction({
       action: "UPDATE",
@@ -367,24 +375,22 @@ export async function update(req, res) {
       affectedAsset: updatedSequence.name,
       contentType: "email-sequence",
       description: `Updated email sequence: ${updatedSequence.name}`,
-      req
+      req,
     });
 
     res.status(200).json({
       success: true,
-      message: 'Email sequence updated successfully',
-      data: updatedSequence
+      message: "Email sequence updated successfully",
+      data: updatedSequence,
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error updating email sequence',
-      error: error.message
+      message: "Error updating email sequence",
+      error: error.message,
     });
   }
 }
-
 
 // DELETE
 export async function deleteSequence(req, res) {

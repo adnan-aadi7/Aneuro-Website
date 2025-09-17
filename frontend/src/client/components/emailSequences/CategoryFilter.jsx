@@ -8,30 +8,16 @@ export default function CategoryFilter({ value, onChange }) {
   useEffect(() => {
     (async () => {
       try {
-        // Read user from localStorage
-        const userStr = localStorage.getItem("user");
-        const user = userStr ? JSON.parse(userStr) : null;
-        const tier = user?.subscription?.plan?.toLowerCase() || "starter";
+        // Fetch categories directly
+        const { data } = await axios.get("/categories/email-sequences");
 
-        const { data } = await axios.get(
-          `/email-sequences/grouped?tier=${encodeURIComponent(tier)}`
-        );
+        // Assuming API returns something like { success: true, data: [ "new", "marketing", "updates" ] }
+        const cats = data?.data || [];
 
-        const grouped = data?.data || {};
-        console.log("grouped", grouped);
-
-        // Derive unique categories
-        const unique = new Set();
-        Object.values(grouped).forEach((arr) => {
-          (arr || []).forEach((item) => {
-            if (item?.category) unique.add(item.category);
-          });
-        });
-
-        setCategories(Array.from(unique));
+        setCategories(cats);
       } catch (e) {
         console.log("Category fetch error:", e);
-        setCategories([]); // fail soft
+        setCategories([]); // fallback to none
       }
     })();
   }, []);

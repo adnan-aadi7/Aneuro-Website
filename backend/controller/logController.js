@@ -2,7 +2,7 @@ import Log from '../model/Log.js';
 
 export const getLogs = async (req, res) => {
   try {
-    const { action, user, timeRange, search, page = 1, limit = 10 } = req.query;
+    const { action, user, timeRange, search, page = 1, limit = 10000000 } = req.query;
     const filter = {};
 
     if (action) filter.action = action.toUpperCase();

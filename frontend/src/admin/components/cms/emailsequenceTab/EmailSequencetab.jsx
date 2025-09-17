@@ -209,15 +209,29 @@ const EmailSequences = () => {
                     <td className="py-4 px-4 text-gray-300 text-sm">
                       {getEmailCount(sequence)} emails
                     </td>
-                    <td className="py-4 px-4">
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${getTierBadge(
-                          safeRender(sequence.tier)
-                        )}`}
-                      >
-                        {safeRender(sequence.tier)}
-                      </span>
-                    </td>
+                   <td className="py-4 px-4">
+  <div className="flex flex-wrap gap-1">
+    {Array.isArray(sequence.tier) ? (
+      sequence.tier.map((t, i) => (
+        <span
+          key={i}
+          className={`px-2 py-1 rounded text-xs font-medium ${getTierBadge(t)}`}
+        >
+          {t}
+        </span>
+      ))
+    ) : (
+      <span
+        className={`px-2 py-1 rounded text-xs font-medium ${getTierBadge(
+          safeRender(sequence.tier)
+        )}`}
+      >
+        {safeRender(sequence.tier)}
+      </span>
+    )}
+  </div>
+</td>
+
                     <td className="py-4 px-4">
                       <span
                         className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadge(
@@ -239,14 +253,14 @@ const EmailSequences = () => {
                     <td className="py-4 px-4">
                       <div className="flex items-center space-x-2">
                         <button 
-                          className="text-gray-400 hover:text-white transition-colors"
+                          className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                           title="View"
                           onClick={() => navigate(`/admin/analytics/email-details/${sequence._id}`)}
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button 
-                          className="text-gray-400 hover:text-white transition-colors"
+                          className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                           title="Edit"
                           onClick={() => {
                             // Prefill store and navigate to add-manually in edit mode
@@ -257,7 +271,7 @@ const EmailSequences = () => {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button 
-                          className="text-gray-400 hover:text-white transition-colors"
+                          className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                           title="Delete"
                           onClick={() => handleDelete(sequence)}
                         >

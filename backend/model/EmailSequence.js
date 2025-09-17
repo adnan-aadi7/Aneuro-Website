@@ -16,10 +16,11 @@ const EmailSequenceSchema = new mongoose.Schema(
     name: { type: String, required: true },
 
     tier: {
-      type: String,
-      enum: ["starter", "growth", "enterprise"],
-      required: true,
-    },
+  type: [String], 
+  enum: ["starter", "growth", "enterprise"],
+  required: true,
+},
+
 category: {
     type: String, 
     required: true,

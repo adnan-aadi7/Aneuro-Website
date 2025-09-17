@@ -26,47 +26,56 @@ export const createCategory = createAsyncThunk(
     }
   }
 );
-
 export const createEmailSequence = createAsyncThunk(
-  'emailSequence/create',
+  "emailSequences/create",
   async (sequenceData, { rejectWithValue }) => {
     try {
-      const formData = new FormData();
-      // Required/primary fields per backend controller
-      formData.append('name', sequenceData.name);
-      formData.append('tier', sequenceData.tier);
-      formData.append('status', sequenceData.status || 'scheduled');
-      formData.append('type', sequenceData.type);
-      formData.append('brainType', sequenceData.brainType);
-      formData.append('category', sequenceData.category);
+      let response;
 
-      if (sequenceData.releaseDateTime) {
-        formData.append('releaseDateTime', sequenceData.releaseDateTime);
+      if (sequenceData.type === "file" && sequenceData.file) {
+        // File upload mode → use FormData
+        const formData = new FormData();
+        formData.append("name", sequenceData.name);
+        formData.append("category", sequenceData.category);
+        formData.append("type", sequenceData.type);
+        formData.append("brainType", sequenceData.brainType);
+        formData.append("status", sequenceData.status || "scheduled");
+
+        // always array
+        (Array.isArray(sequenceData.tier) ? sequenceData.tier : [sequenceData.tier])
+          .forEach((t) => formData.append("tier", t));
+
+        formData.append("file", sequenceData.file); // actual file upload
+
+        response = await axios.post("/email-sequences", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      } else {
+        // Manual type → JSON
+        const payload = {
+          name: sequenceData.name,
+          category: sequenceData.category,
+          type: sequenceData.type,
+          brainType: sequenceData.brainType,
+          status: sequenceData.status || "scheduled",
+          tier: Array.isArray(sequenceData.tier) ? sequenceData.tier : [sequenceData.tier],
+          emails: sequenceData.emails || [],
+        };
+
+        response = await axios.post("/email-sequences", payload, {
+          headers: { "Content-Type": "application/json" },
+        });
       }
 
-      // Content based on type expected by backend
-      if (sequenceData.type === 'manual') {
-        // Backend expects `emails` to be an array or a JSON string of array
-        const emailsPayload = Array.isArray(sequenceData.emails)
-          ? JSON.stringify(sequenceData.emails)
-          : sequenceData.emails || '[]';
-        formData.append('emails', emailsPayload);
-      } else if (sequenceData.type === 'file' && sequenceData.file) {
-        formData.append('file', sequenceData.file);
-      }
-
-      const response = await axios.post('/email-sequences', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to create email sequence' });
+      return rejectWithValue(error.response?.data || error.message);
     }
   }
 );
+
+
+
 
 export const fetchEmailSequences = createAsyncThunk(
   'emailSequence/fetchAll',
@@ -127,7 +136,11 @@ export const updateEmailSequence = createAsyncThunk(
 
       // Append fields only if provided to avoid overwriting unintentionally
       if (updateData.name !== undefined) formData.append('name', updateData.name);
-      if (updateData.tier !== undefined) formData.append('tier', updateData.tier);
+if (Array.isArray(updateData.tier)) {
+  updateData.tier.forEach((t) => formData.append("tier", t));
+} else if (updateData.tier) {
+  formData.append("tier", updateData.tier);
+}
       if (updateData.status !== undefined) formData.append('status', updateData.status);
       if (updateData.type !== undefined) formData.append('type', updateData.type);
       if (updateData.brainType !== undefined) formData.append('brainType', updateData.brainType);
