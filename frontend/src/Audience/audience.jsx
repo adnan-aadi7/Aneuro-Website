@@ -172,8 +172,8 @@ const Audience = () => {
 
   // Auto show lead form after 10s
   useEffect(() => {
-    const timer = setTimeout(() => setShowForm(true), 10000);
-    return () => clearTimeout(timer);
+   // const timer = setTimeout(() => setShowForm(true), 10000);
+    //return () => clearTimeout(timer);
   }, []);
 
   // Send answer
@@ -247,20 +247,29 @@ const Audience = () => {
     >
       <div className="absolute w-[90%] h-[93%] rounded-full blur-2xl opacity-30 z-0 bg-[radial-gradient(circle,_rgba(34,211,238,1)_0%,_transparent_60%)]" />
 
-      {!showForm && !formSubmitted ? (
-        // 🕒 Welcome Screen
-        <div
-          className="flex flex-col items-center justify-center gap-5 pb-16 relative bg-[url('/bg.png')] bg-cover bg-center bg-no-repeat text-center px-6 py-10 rounded-xl z-10 shadow-lg lg:w-[36%] border"
-          style={cardBorderStyle}
-        >
-          <img src="/welcome.png" alt="Welcome" />
-          <h2 className="text-[20px] md:text-[40px] font-medium mt-10">Just A Few Questions</h2>
-          <p className="text-[14px] lg:text-[16px] leading-relaxed px-12 opacity-90">
-            This won’t take long — just a handful of simple, intuitive questions about how you
-            naturally think and make decisions. Trust your instincts and enjoy the ride.
-          </p>
-        </div>
-      ) : !formSubmitted ? (
+     {!showForm && !formSubmitted ? (
+  <div
+    className="flex flex-col items-center justify-center gap-5 pb-16 relative bg-[url('/bg.png')] bg-cover bg-center bg-no-repeat text-center px-6 py-10 rounded-xl z-10 shadow-lg lg:w-[36%] border"
+    style={cardBorderStyle}
+  >
+    <img src="/welcome.png" alt="Welcome" />
+    <h2 className="text-[20px] md:text-[40px] font-medium mt-10">Just A Few Questions</h2>
+    <p className="text-[14px] lg:text-[16px] leading-relaxed px-12 opacity-90">
+      This won’t take long — just a handful of simple, intuitive questions about how you
+      naturally think and make decisions. Trust your instincts and enjoy the ride.
+    </p>
+
+    {/* ✅ New Button */}
+    <button
+      onClick={() => setShowForm(true)}
+      className="mt-6 px-8 py-3 rounded-lg font-semibold shadow-md hover:opacity-90 transition cursor-pointer"
+      style={primaryBtnStyle}
+    >
+      Let’s Get Started
+    </button>
+  </div>
+) : !formSubmitted ? (
+
         // ✏️ Name + Email Form
         <form
           onSubmit={handleFormSubmit}
