@@ -23,11 +23,11 @@ const notificationSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  targetTier: {
-    type: String,
-    enum: ["all", "starter", "growth", "enterprise"],
-    default: "all",   
-  },
+ targetTier: {
+  type: [String],
+  enum: ["all", "starter", "growth", "enterprise"],
+  default: ["all"],   
+},
   read: {
     type: Boolean,
     default: false,

@@ -8,47 +8,69 @@ export const createFunnelTemplateWithFile = async (req, res) => {
   try {
     const { name, tier, status, category, brainType } = req.body;
 
+    // ✅ Normalize tier: always store as array
+    let normalizedTier;
+    if (Array.isArray(tier)) {
+      normalizedTier = tier.filter(Boolean); // remove null/empty
+    } else if (typeof tier === "string") {
+      // if single value comes as comma-separated string
+      normalizedTier = tier.split(",").map(t => t.trim()).filter(Boolean);
+    } else {
+      normalizedTier = [];
+    }
+
     // Required fields validation
-    if (!name || !tier) {
+    if (!name || !normalizedTier.length) {
       return res.status(400).json({
         success: false,
-        message: 'Name and tier are required',
+        message: "Name and at least one tier are required",
+      });
+    }
+
+    // ✅ enforce max 3 tiers
+    if (normalizedTier.length > 3) {
+      return res.status(400).json({
+        success: false,
+        message: "You can only assign up to 3 tiers",
       });
     }
 
     if (!req.file) {
       return res.status(400).json({
         success: false,
-        message: 'No file uploaded',
+        message: "No file uploaded",
       });
     }
 
     // Allowed file types
-    const allowedExtensions = ['.pdf', '.docx', '.md', '.html', '.txt'];
+    const allowedExtensions = [".pdf", ".docx", ".md", ".html", ".txt"];
     const ext = path.extname(req.file.originalname.toLowerCase());
     if (!allowedExtensions.includes(ext)) {
       return res.status(400).json({
         success: false,
-        message: 'Unsupported file type',
+        message: "Unsupported file type",
       });
     }
 
     // Upload file to Cloudinary
-    const uploadResult = await uploadToCloudinary(req.file.buffer, 'funnel_templates');
+    const uploadResult = await uploadToCloudinary(
+      req.file.buffer,
+      "funnel_templates"
+    );
     if (!uploadResult?.secure_url) {
       return res.status(500).json({
         success: false,
-        message: 'File upload failed',
+        message: "File upload failed",
       });
     }
 
     // Create and save template
     const newTemplate = new FunnelTemplate({
       name,
-      tier,
-      category: category || '',
-      status: status || 'scheduled',
-      brainType: brainType || '',   // ✅ added brainType
+      tier: normalizedTier,
+      category: category || "",
+      status: status || "scheduled",
+      brainType: brainType || "",
       fileUrl: uploadResult.secure_url,
       content: uploadResult.secure_url,
     });
@@ -57,31 +79,37 @@ export const createFunnelTemplateWithFile = async (req, res) => {
 
     // Log action
     await logAction({
-      action: 'UPLOAD',
+      action: "UPLOAD",
       user: { id: req.user?.id, email: req.user?.email },
       affectedAsset: savedTemplate.name,
-      contentType: 'funnel-template',
-      description: 'Created new funnel template with file',
+      contentType: "funnel-template",
+      description: "Created new funnel template with file",
       req,
     });
 
     // Send notification if active
-    if (savedTemplate.status === 'active') {
+    if (savedTemplate.status === "active") {
       const notification = new Notification({
         title: `${name}`,
-        message: `A new ${tier} tier funnel template has been created in category: ${category || 'general'} ${brainType ? `for brain type: ${brainType}` : ''}`, // ✅ include brainType in message
-        type: 'newtool',
+        message: `A new ${normalizedTier.join(
+          ", "
+        )} tier funnel template has been created in category: ${
+          category || "general"
+        } ${
+          brainType ? `for brain type: ${brainType}` : ""
+        }`,
+        type: "newtool",
         isPublic: true,
-        targetTier: tier,
+        targetTier: normalizedTier,
       });
       await notification.save();
-      console.log('Funnel Template notification saved:', notification);
+      console.log("Funnel Template notification saved:", notification);
     }
 
     // Response
     res.status(201).json({
       success: true,
-      message: 'Funnel Template created successfully',
+      message: "Funnel Template created successfully",
       data: savedTemplate,
     });
   } catch (error) {
@@ -92,15 +120,45 @@ export const createFunnelTemplateWithFile = async (req, res) => {
   }
 };
 
-// ✅ Create Funnel Template with direct content
+
 export const createFunnelTemplate = async (req, res) => {
   try {
-    const { name, pages, category, tier, status, brainType, usage, conversions, content, fileUrl, userRating, releaseDateTime } = req.body;
+    const { 
+      name, 
+      pages, 
+      category, 
+      tier, // can be string or array
+      status, 
+      brainType, 
+      usage, 
+      conversions, 
+      content, 
+      fileUrl, 
+      userRating, 
+      releaseDateTime 
+    } = req.body;
 
-    if (!name || !tier) {
-      return res.status(400).json({ success: false, message: 'Name and tier are required' });
+    if (!name || !tier || (Array.isArray(tier) && tier.length === 0)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Name and at least one tier are required' 
+      });
     }
 
+    // ✅ Normalize tier to array
+    const tiersArray = Array.isArray(tier) ? tier : [tier];
+
+    // ✅ Validate tiers against enum
+    const allowedTiers = ["starter", "growth", "enterprise"];
+    const invalidTiers = tiersArray.filter(t => !allowedTiers.includes(t));
+    if (invalidTiers.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid tier(s): ${invalidTiers.join(", ")}. Allowed values: ${allowedTiers.join(", ")}`
+      });
+    }
+
+    // ✅ Validate brainType
     const allowedBrainTypes = ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst'];
     if (brainType && !allowedBrainTypes.includes(brainType)) {
       return res.status(400).json({
@@ -109,11 +167,12 @@ export const createFunnelTemplate = async (req, res) => {
       });
     }
 
+    // ✅ Save template
     const newTemplate = new FunnelTemplate({
       name,
       pages,
       category,
-      tier,
+      tier: tiersArray,   // <-- store as array
       status: status || 'scheduled',
       brainType,
       usage,
@@ -124,8 +183,9 @@ export const createFunnelTemplate = async (req, res) => {
       releaseDateTime: releaseDateTime ? new Date(releaseDateTime) : null, 
     });
 
-const savedTemplate = await newTemplate.save();
-    
+    const savedTemplate = await newTemplate.save();
+
+    // ✅ Log action
     await logAction({
       action: "CREATE",
       user: { id: req.user?.id, email: req.user?.email },
@@ -134,31 +194,38 @@ const savedTemplate = await newTemplate.save();
       description: "Created new funnel template",
       req
     });
+
+    // ✅ Create notifications for each tier if active
     if (savedTemplate.status === 'active') {
-      const notification = new Notification({
-        title: ` ${savedTemplate.name}`,
-        message: `A new ${tier} tier funnel template has been created in category: ${category || 'general'}`,
-        type: 'newtool',
-        isPublic: true,
-        targetTier: tier,
-      });
-      await notification.save();
-      console.log('Funnel Template notification saved:', notification);
+      for (const t of tiersArray) {
+        const notification = new Notification({
+          title: savedTemplate.name,
+          message: `A new ${t} tier funnel template has been created in category: ${category || 'general'}`,
+          type: 'newtool',
+          isPublic: true,
+          targetTier: t,
+        });
+        await notification.save();
+        console.log('Funnel Template notification saved for tier:', t);
+      }
     }
+
     res.status(201).json({
       success: true,
       message: 'Funnel Template created successfully',
       data: savedTemplate,
     });
+
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
 };
 
+
 // ✅ Get all Funnel Templates
 export const getAllFunnelTemplates = async (req, res) => {
   try {
-    const templates = await FunnelTemplate.find();
+    const templates = await FunnelTemplate.find().sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: templates });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

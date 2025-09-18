@@ -32,7 +32,6 @@ export const createFunnelTemplateWithFile = createAsyncThunk(
   'funnelTemplate/createWithFile',
   async (payload, { rejectWithValue }) => {
     try {
-      // Support both: direct FormData or plain object { file, name, category, tier, status, releaseDateTime? }
       let formData;
       if (payload instanceof FormData) {
         formData = payload;
@@ -40,7 +39,14 @@ export const createFunnelTemplateWithFile = createAsyncThunk(
         formData = new FormData();
         formData.append('file', payload.file);
         formData.append('name', payload.name);
-        formData.append('tier', payload.tier);
+
+        // ✅ Handle array of tiers
+        if (Array.isArray(payload.tier)) {
+          payload.tier.forEach((t) => formData.append('tier[]', t));
+        } else {
+          formData.append('tier[]', payload.tier);
+        }
+
         formData.append('status', payload.status);
         formData.append('category', payload.category || '');
         if (payload.brainType) {
@@ -58,10 +64,13 @@ export const createFunnelTemplateWithFile = createAsyncThunk(
       });
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to create funnel template with file' });
+      return rejectWithValue(
+        error.response?.data || { message: 'Failed to create funnel template with file' }
+      );
     }
   }
 );
+
 
 export const fetchFunnelTemplates = createAsyncThunk(
   'funnelTemplate/fetchAll',

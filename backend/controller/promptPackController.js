@@ -168,7 +168,7 @@ export async function getAll(req, res) {
   try {
     const {
       page = 1,
-      limit = 10,
+      limit = 10000000,
       category,
       tier,
       status,

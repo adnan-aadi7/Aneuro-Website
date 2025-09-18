@@ -22,7 +22,7 @@ export default function FunnelTemplateCard() {
   
   const [isDragOver, setIsDragOver] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [selectedTiers, setSelectedTiers] = useState([]); // ["basic", "premium", "enterprise"]
+  const [selectedTiers, setSelectedTiers] = useState([]); 
   const [templateName, setTemplateName] = useState("");
   const [category, setCategory] = useState("");
   const [showAddCategory, setShowAddCategory] = useState(false);
@@ -78,79 +78,80 @@ export default function FunnelTemplateCard() {
   };
 
   const handleTierSelect = (e) => {
-    const tier = e.target.id === "premium" ? "premium" : e.target.id === "vip" ? "enterprise" : "basic";
-    console.log(`[${new Date().toISOString()}] Tier selection:`, { id: e.target.id, mappedTier: tier, checked: e.target.checked });
-    setSelectedTiers((prev) =>
-      e.target.checked
-        ? [...new Set([...prev, tier])]
-        : prev.filter((t) => t !== tier)
-    );
-  };
+  let tier = "";
+  if (e.target.id === "basic") tier = "starter";
+  else if (e.target.id === "premium") tier = "growth";
+  else if (e.target.id === "vip") tier = "enterprise";
 
-  // Handle upload submission
-  const handleUpload = async () => {
-    const desiredStatus = 'active';
-    if (!selectedFile) {
-      toast.error("Please select a file first");
-      return;
-    }
+  setSelectedTiers((prev) =>
+    e.target.checked
+      ? [...new Set([...prev, tier])]
+      : prev.filter((t) => t !== tier)
+  );
+};
 
-    if (selectedTiers.length === 0) {
-      toast.error("Please select at least one tier");
-      return;
-    }
 
-    if (!templateName.trim()) {
-      toast.error("Please enter a name");
-      return;
-    }
+ const handleUpload = async () => {
+  const desiredStatus = "active";
+  if (!selectedFile) {
+    toast.error("Please select a file first");
+    return;
+  }
+  if (selectedTiers.length === 0) {
+    toast.error("Please select at least one tier");
+    return;
+  }
+  if (!templateName.trim()) {
+    toast.error("Please enter a name");
+    return;
+  }
+  if (!category) {
+    toast.error("Please select a category");
+    return;
+  }
 
-    if (!category) {
-      toast.error("Please select a category");
-      return;
-    }
-
-    try {
-      const tierMap = { basic: 'starter', premium: 'growth', enterprise: 'enterprise' };
-      const backendTier = tierMap[selectedTiers[0]] || 'starter';
-
-      setSubmittingAction(desiredStatus);
-      await dispatch(createFunnelTemplateWithFile({
+  try {
+    setSubmittingAction(desiredStatus);
+    await dispatch(
+      createFunnelTemplateWithFile({
         file: selectedFile,
         name: templateName.trim(),
         category,
-        tier: backendTier,
+        tier: selectedTiers,   // ✅ send array
         status: desiredStatus,
-        brainType
-      })).unwrap();
-      
-      // Reset form on success
-      setSelectedFile(null);
-      setSelectedTiers([]);
-      setTemplateName("");
-      setCategory("");
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-      
-    } catch (error) {
-      console.error('Upload failed:', error);
-    }
-  };
+        brainType,
+      })
+    ).unwrap();
 
-  // Clear messages when component unmounts or when they change
-  useEffect(() => {
-    if (success) {
-      toast.success(success);
-      dispatch(clearSuccess());
-      setSubmittingAction(null);
+    // Reset form
+    setSelectedFile(null);
+    setSelectedTiers([]);
+    setTemplateName("");
+    setCategory("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
-    if (error) {
-      toast.error(error);
-      dispatch(clearError());
-      setSubmittingAction(null);
-    }
-  }, [success, error, dispatch]);
+  } catch (error) {
+    console.error("Upload failed:", error);
+  }
+};
+
+
+useEffect(() => {
+  if (success) {
+    toast.success(success);
+    dispatch(clearSuccess());
+    setSubmittingAction(null);
+
+    navigate("/admin/CMS?tab=Funnel+Templates");
+  }
+  if (error) {
+    toast.error(error);
+    dispatch(clearError());
+    setSubmittingAction(null);
+  }
+}, [success, error, dispatch, navigate]);
+
 
   // Load categories on mount
   useEffect(() => {
@@ -379,7 +380,7 @@ export default function FunnelTemplateCard() {
               type="checkbox"
               className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500 cursor-pointer"
               id="basic"
-              checked={selectedTiers.includes("basic")}
+              checked={selectedTiers.includes("starter")}
               onChange={handleTierSelect}
             />
             <img
@@ -404,7 +405,7 @@ export default function FunnelTemplateCard() {
               type="checkbox"
               id="premium"
               className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500 cursor-pointer"
-              checked={selectedTiers.includes("premium")}
+              checked={selectedTiers.includes("growth")}
               onChange={handleTierSelect}
             />
             <img
@@ -453,7 +454,7 @@ export default function FunnelTemplateCard() {
       {/* Upload Button */}
       <button
         onClick={() => { setSubmittingAction('active'); handleUpload(); }}
-        className="mt-6 w-full bg-cyan-400 text-black font-medium py-3  hover:bg-cyan-300 transition-colors text-sm"
+        className="mt-6 w-full bg-cyan-400 text-black font-medium py-3  hover:bg-cyan-300 transition-colors text-sm cursor-pointer"
         disabled={loading}
         aria-busy={loading && submittingAction === 'active'}
       >
@@ -461,35 +462,33 @@ export default function FunnelTemplateCard() {
       </button>
 
       <button
-        onClick={async () => {
-          // schedule
-          const desiredStatus = 'scheduled';
-          if (!selectedFile || selectedTiers.length === 0 || !templateName.trim() || !category) {
-            handleUpload(); // Will show validations
-            return;
-          }
-          try {
-            const tierMap = { basic: 'starter', premium: 'growth', enterprise: 'enterprise' };
-            const backendTier = tierMap[selectedTiers[0]] || 'starter';
-            setSubmittingAction('scheduled');
-            await dispatch(createFunnelTemplateWithFile({
-              file: selectedFile,
-              name: templateName.trim(),
-              category,
-              tier: backendTier,
-              status: desiredStatus,
-              brainType
-            }));
-          } catch {
-            // no-op, error toast handled globally
-          }
-        }}
-        className="w-full bg-[#FFFFFF] text-black font-medium py-3  hover:bg-cyan-300 transition-colors text-sm mt-5"
-        disabled={loading}
-        aria-busy={loading && submittingAction === 'scheduled'}
-      >
-        {loading && submittingAction === 'scheduled' ? 'Scheduling...' : 'Schedule for later'}
-      </button>
+  onClick={async () => {
+    const desiredStatus = 'scheduled';
+    if (!selectedFile || selectedTiers.length === 0 || !templateName.trim() || !category) {
+      handleUpload(); // Will show validations
+      return;
+    }
+    try {
+      setSubmittingAction('scheduled');
+      await dispatch(createFunnelTemplateWithFile({
+        file: selectedFile,
+        name: templateName.trim(),
+        category,
+        tier: selectedTiers,   // ✅ send array (not just one string)
+        status: desiredStatus,
+        brainType
+      })).unwrap();
+    } catch {
+      // error toast handled globally
+    }
+  }}
+  className="w-full bg-[#FFFFFF] text-black font-medium py-3 hover:bg-cyan-300 transition-colors text-sm mt-5 cursor-pointer"
+  disabled={loading}
+  aria-busy={loading && submittingAction === 'scheduled'}
+>
+  {loading && submittingAction === 'scheduled' ? 'Scheduling...' : 'Schedule for later'}
+</button>
+
 
       {/* Toast Notifications */}
       <Toaster position="top-right" />

@@ -25,14 +25,16 @@ const MannualPrompt = () => {
   const dispatch = useDispatch();
   const params = useParams();
     const navigate = useNavigate();
+
   const editPackId = params.packId || null;
   const editingPromptId = params.promptId || null;
-  const loading = useSelector(selectPromptPackLoading);
   const error = useSelector(selectPromptPackError);
   const success = useSelector(selectPromptPackSuccess);
   const currentPack = useSelector(selectCurrentPromptPack);
   const categories = useSelector((state) => state.emailSequence.categories || []);
   const categoriesLoading = useSelector((state) => state.emailSequence.categoriesLoading);
+const [loadingAdd, setLoadingAdd] = useState(false);
+const [loadingSchedule, setLoadingSchedule] = useState(false);
 
   const editorRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -396,25 +398,26 @@ const toggleTier = (tier) => {
     updateActiveFormatting();
   }, []);
 
- useEffect(() => {
+
+useEffect(() => {
   if (success) {
     toast.success(success);
 
     if (editPackId) {
-      // If editing a prompt pack or single prompt, return back to details page
-      navigate(`/admin/analytics/prompts-details/${editPackId}`);
+      // Editing a pack → go to Prompt Packs list
+      navigate(-1);
     } else {
-      // If creating new, go back to packs listing
+      // Creating a pack → also go to Prompt Packs list
       navigate("/admin/CMS?tab=Prompt+Packs");
     }
 
-    if (editorRef.current) {
-      editorRef.current.innerHTML = "";
-    }
+    // Clear editor and attachments
+    if (editorRef.current) editorRef.current.innerHTML = "";
     dispatch(clearPromptPackSuccess());
     setAttachments([]);
   }
 }, [success, dispatch, navigate, editPackId]);
+
 
 
   useEffect(() => {
@@ -528,88 +531,98 @@ const toggleTier = (tier) => {
     }
   }, [editPackId, currentPack, transformContentForEditor, editingPromptId]);
 
- const handleSend = async () => {
-  // Save current prompt content before submission
-  if (editorRef.current) {
-    const currentContent = editorRef.current.innerHTML;
-    setPrompts(prev =>
-      prev.map((prompt, i) =>
-        i === currentPromptIndex
-          ? { ...prompt, content: currentContent, attachments: [...attachments] }
-          : prompt
-      )
-    );
+const handleSend = async (status) => {
+  if (status === "active") {
+    setLoadingAdd(true);
+  } else if (status === "scheduled") {
+    setLoadingSchedule(true);
   }
 
-  // Validate all prompts have content
-  const promptsWithContent = prompts.map((prompt, index) => {
-    if (index === currentPromptIndex) {
-      return {
-        ...prompt,
-        content: editorRef.current?.innerHTML || "",
-        attachments: [...attachments],
-      };
+  try {
+    // ✅ Save current editor content
+    if (editorRef.current) {
+      const currentContent = editorRef.current.innerHTML;
+      setPrompts((prev) =>
+        prev.map((prompt, i) =>
+          i === currentPromptIndex
+            ? { ...prompt, content: currentContent, attachments: [...attachments] }
+            : prompt
+        )
+      );
     }
-    return prompt;
-  });
 
-  const backendPrompts = promptsWithContent.map(p => ({
-    content: p.content,
-    type: p.brainType,
-  }));
-
-  const hasValidContent = promptsWithContent.some(
-    prompt => prompt.content.trim() || prompt.attachments.length > 0
-  );
-
-  if (!hasValidContent) {
-    toast.error("Please add content or attach at least one file to at least one prompt");
-    return;
-  }
-
-  if (!category) {
-    toast.error("Please select a category");
-    return;
-  }
-
-  if (!selectedTier.length) {
-    toast.error("Please select at least one tier");
-    return;
-  }
-
- const normalizedTier = Array.isArray(selectedTier)
-  ? selectedTier
-  : selectedTier
-  ? [selectedTier]
-  : [];
-
-const payload = {
-  name: sequenceName?.trim() || `Manual Prompt - ${new Date().toLocaleString()}`,
-  tier: normalizedTier,   // ✅ always ["starter"] | ["growth"] | ["enterprise"]
-  category,
-  prompts: backendPrompts,
-};
-
-
-  if (editPackId && editingPromptId) {
-    // Update only specific prompt
-    dispatch(
-      editPromptInPack({
-        packId: editPackId,
-        promptId: editingPromptId,
-        update: {
-          content: promptsWithContent[currentPromptIndex].content,
-          type: promptsWithContent[currentPromptIndex].brainType,
-        },
-      })
+    // Validate content
+    const promptsWithContent = prompts.map((prompt, index) =>
+      index === currentPromptIndex
+        ? { ...prompt, content: editorRef.current?.innerHTML || "", attachments: [...attachments] }
+        : prompt
     );
-  } else if (editPackId) {
-    dispatch(updatePromptPack({ id: editPackId, updateData: payload }));
-  } else {
-    dispatch(createPromptPack({ ...payload, status: "active" }));
+
+    const hasValidContent = promptsWithContent.some(
+      (p) => p.content.trim() || p.attachments.length > 0
+    );
+    if (!hasValidContent) {
+      toast.error("Please add content or attach at least one file");
+      resetLocalLoading(status);
+      return;
+    }
+
+    if (!category) {
+      toast.error("Please select a category");
+      resetLocalLoading(status);
+      return;
+    }
+
+    if (!selectedTier.length) {
+      toast.error("Please select at least one tier");
+      resetLocalLoading(status);
+      return;
+    }
+
+    const backendPrompts = promptsWithContent.map((p) => ({
+      content: p.content,
+      type: p.brainType,
+    }));
+
+    const payload = {
+      name: sequenceName?.trim() || `Manual Prompt - ${new Date().toLocaleString()}`,
+      tier: selectedTier,
+      category,
+      prompts: backendPrompts,
+      status,
+    };
+
+    if (editPackId && editingPromptId) {
+      await dispatch(
+        editPromptInPack({
+          packId: editPackId,
+          promptId: editingPromptId,
+          update: {
+            content: promptsWithContent[currentPromptIndex].content,
+            type: promptsWithContent[currentPromptIndex].brainType,
+          },
+        })
+      );
+    } else if (editPackId) {
+      await dispatch(updatePromptPack({ id: editPackId, updateData: payload }));
+    } else {
+      await dispatch(createPromptPack(payload));
+    }
+  } catch (err) {
+    toast.error("Something went wrong");
+  } finally {
+    // ✅ reset AFTER dispatch finishes
+    resetLocalLoading(status);
   }
 };
 
+const resetLocalLoading = (status) => {
+  if (status === "active") {
+    setLoadingAdd(false);
+  } else if (status === "scheduled") {
+    setLoadingSchedule(false);
+  }
+};
 
   const formatButtons = [
     { icon: Bold, label: 'Bold', command: 'bold', key: 'bold' },
@@ -1082,15 +1095,28 @@ const payload = {
             }
           `}</style>
         </div>
-        <div className="flex justify-start ml-6 mt-4">
-          <button
-            className="cursor-pointer bg-cyan-400 text-black font-semibold px-10 py-2  hover:bg-cyan-300 transition-all text-sm "
-            onClick={handleSend}
-            disabled={loading}
-          >
-            {loading ? (editPackId ? "Saving..." : "Adding...") : (editPackId ? "Save" : "Add")}
-          </button>
-        </div>
+       <div className="flex gap-6 mt-4 ">
+ <div className="flex gap-6 mt-4 ml-8">
+  <button
+    onClick={() => handleSend("active")}
+    disabled={loadingAdd} // only disable this button
+    className="px-4 py-2 bg-cyan-400 text-black  cursor-pointer"
+  >
+    {loadingAdd ? "Saving..." : "Save & Activate"}
+  </button>
+
+  <button
+    onClick={() => handleSend("scheduled")}
+    disabled={loadingSchedule} // only disable this button
+    className="px-4 py-2 bg-cyan-400 text-black  cursor-pointer"
+  >
+    {loadingSchedule ? "Scheduling..." : "Save & Schedule"}
+  </button>
+</div>
+
+
+</div>
+
       </div>
     </div>
   );

@@ -286,136 +286,124 @@ const AddShedulePopup = ({ open, onClose, editingRelease = null, onSuccess = nul
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    let hasError = false;
-    
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    // Validate date
-    const dateError = validateDate(formData.scheduledDate);
-    if (dateError) {
-      setValidationErrors(prev => ({ ...prev, scheduledDate: dateError }));
-      hasError = true;
-    } else {
-      setValidationErrors(prev => ({ ...prev, scheduledDate: '' }));
-    }
+  let hasError = false;
 
-    // Validate time (only empty check)
-    const timeError = validateTime(formData.scheduledTime);
-    if (timeError) {
-      setValidationErrors(prev => ({ ...prev, scheduledTime: timeError }));
-      hasError = true;
-    } else {
-      setValidationErrors(prev => ({ ...prev, scheduledTime: '' }));
-    }
+  // Validate date
+  const dateError = validateDate(formData.scheduledDate);
+  if (dateError) {
+    setValidationErrors(prev => ({ ...prev, scheduledDate: dateError }));
+    hasError = true;
+  } else {
+    setValidationErrors(prev => ({ ...prev, scheduledDate: '' }));
+  }
 
-    // Validate combined date and time
-    const combinedDateTimeError = validateCombinedDateTime(formData.scheduledDate, formData.scheduledTime);
-    if (combinedDateTimeError) {
-      setValidationErrors(prev => ({ ...prev, combinedDateTime: combinedDateTimeError }));
-      hasError = true;
-    } else {
-      setValidationErrors(prev => ({ ...prev, combinedDateTime: '' }));
-    }
+  // Validate time
+  const timeError = validateTime(formData.scheduledTime);
+  if (timeError) {
+    setValidationErrors(prev => ({ ...prev, scheduledTime: timeError }));
+    hasError = true;
+  } else {
+    setValidationErrors(prev => ({ ...prev, scheduledTime: '' }));
+  }
 
-    // Validate tier (only non-empty)
-    const tierError = validateTier(formData.tier);
-    if (tierError) {
-      setValidationErrors(prev => ({ ...prev, tier: tierError }));
-      hasError = true;
-    } else {
-      setValidationErrors(prev => ({ ...prev, tier: '' }));
-    }
+  // Validate combined date & time
+  const combinedDateTimeError = validateCombinedDateTime(formData.scheduledDate, formData.scheduledTime);
+  if (combinedDateTimeError) {
+    setValidationErrors(prev => ({ ...prev, combinedDateTime: combinedDateTimeError }));
+    hasError = true;
+  } else {
+    setValidationErrors(prev => ({ ...prev, combinedDateTime: '' }));
+  }
 
-    if (hasError) {
-      if (onError) {
-        onError('Please correct the errors in the form.');
-      }
-      return;
-    }
+  // Validate tier
+  const tierError = validateTier(formData.tier);
+  if (tierError) {
+    setValidationErrors(prev => ({ ...prev, tier: tierError }));
+    hasError = true;
+  } else {
+    setValidationErrors(prev => ({ ...prev, tier: '' }));
+  }
 
-    if (!formData.contentId || !formData.modelType || !formData.scheduledDate || !formData.scheduledTime || !formData.tier) {
-      if (onError) {
-        onError('Please fill in all required fields');
-      }
-      return;
-    }
+  if (hasError) {
+    if (onError) onError('Please correct the errors in the form.');
+    return;
+  }
 
-    // Validate that the selected content still exists
-    const selectedOption = generateContentOptions().find(option => option.value === formData.contentId);
+  if (!formData.contentId || !formData.modelType || !formData.scheduledDate || !formData.scheduledTime || !formData.tier) {
+    if (onError) onError('Please fill in all required fields');
+    return;
+  }
+
+  // Skip content existence check when editing
+  let selectedOption = null;
+  if (!editingRelease) {
+    selectedOption = generateContentOptions().find(option => option.value === formData.contentId);
     if (!selectedOption) {
-      if (onError) {
-        onError('Selected content is no longer available. Please refresh and try again.');
-      }
+      if (onError) onError('Selected content is no longer available. Please refresh and try again.');
       return;
     }
+  } else {
+    // Editing: create a fake option to map model type
+    selectedOption = { value: formData.contentId, type: formData.modelType };
+  }
 
-    try {
-      // Map the selected Stripe product name to backend tier
-      const backendTier = mapStripeProductToBackendTier(formData.tier);
+  try {
+    const backendTier = mapStripeProductToBackendTier(formData.tier);
 
-      const result = await dispatch(scheduleContent({
-        ...formData,
-        tier: backendTier
-      })).unwrap();
+    const result = await dispatch(scheduleContent({
+      ...formData,
+      tier: backendTier
+    })).unwrap();
+
+    if (result && result.success) {
+      const successMessage = editingRelease ? 'Release updated successfully!' : 'Content scheduled successfully!';
       
-      // Check if the API call was successful
-      if (result && result.success) {
-        const successMessage = editingRelease ? 'Release updated successfully!' : 'Content scheduled successfully!';
-        
-        // Clear validation errors on success
-        setValidationErrors({
-          scheduledDate: '',
-          scheduledTime: '',
-          combinedDateTime: '',
-          tier: ''
-        });
-        
-        // Refresh the content list to update the dropdown
-        refreshContentList();
-        
-        if (onSuccess) {
-          onSuccess(successMessage);
-        }
-        
-        // Reset form and close popup
-        setFormData({
-          contentId: '',
-          modelType: '',
-          scheduledDate: '',
-          scheduledTime: '',
-          tier: ''
-        });
-        handleClose();
-      } else {
-        // Handle case where API returns success: false
-        const errorMessage = result?.message || 'Failed to schedule content. Please try again.';
-        if (onError) {
-          onError(errorMessage);
-        }
-      }
-    } catch (error) {
-      // Handle different types of errors
-      let errorMessage = 'Failed to schedule content. Please try again.';
-      
-      if (error && typeof error === 'object') {
-        if (error.message === 'Invalid modelType') {
-          errorMessage = `Invalid model type: ${formData.modelType}. Please try again.`;
-        } else if (error.message) {
-          errorMessage = error.message;
-        } else if (error.error) {
-          errorMessage = error.error;
-        }
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-      
-      if (onError) {
-        onError(errorMessage);
-      }
+      setValidationErrors({
+        scheduledDate: '',
+        scheduledTime: '',
+        combinedDateTime: '',
+        tier: ''
+      });
+
+      refreshContentList();
+
+      if (onSuccess) onSuccess(successMessage);
+
+      // Reset form and close popup
+      setFormData({
+        contentId: '',
+        modelType: '',
+        scheduledDate: '',
+        scheduledTime: '',
+        tier: ''
+      });
+      handleClose();
+    } else {
+      const errorMessage = result?.message || 'Failed to schedule content. Please try again.';
+      if (onError) onError(errorMessage);
     }
-  };
+  } catch (error) {
+    let errorMessage = 'Failed to schedule content. Please try again.';
+    
+    if (error && typeof error === 'object') {
+      if (error.message === 'Invalid modelType') {
+        errorMessage = `Invalid model type: ${formData.modelType}. Please try again.`;
+      } else if (error.message) {
+        errorMessage = error.message;
+      } else if (error.error) {
+        errorMessage = error.error;
+      }
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    }
+
+    if (onError) onError(errorMessage);
+  }
+};
+
 
   // Generate content options for dropdown
   const generateContentOptions = () => {

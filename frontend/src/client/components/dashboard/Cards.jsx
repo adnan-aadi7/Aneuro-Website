@@ -131,11 +131,11 @@ const cards = [
 
 const Cards = () => {
   return (
-    <div className="flex flex-col md:flex-row gap-4 w-full mt-7">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  2xl:grid-cols-4 gap-4 w-full mt-7">
       {cards.map((card, i) => (
         <div
           key={i}
-          className={`flex flex-col justify-between p-5  w-full relative transition-all duration-200 hover:brightness-110 hover:-translate-y-1 hover:scale-105 hover:shadow-lg cursor-pointer ${
+          className={`flex flex-col justify-between p-5  w-full relative transition-all duration-200 hover:brightness-110   hover:shadow-lg cursor-pointer ${
             card.bg || "bg-gradient-to-r from-[#232432] to-[#19343B]"
           } ${card.text || "text-white"}`}
         >

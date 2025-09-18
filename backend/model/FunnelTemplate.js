@@ -5,11 +5,18 @@ const FunnelTemplateSchema = new mongoose.Schema({
   name: { type: String, required: true },
   pages: { type: Number },
   category: { type: String },
-  tier: { 
-    type: String, 
-    enum: ["starter", "growth", "enterprise"], 
-    required: true 
+  tier: {
+    type: [String],
+    enum: ["starter", "growth", "enterprise"],
+    required: true,
+    validate: {
+      validator: function (value) {
+        return Array.isArray(value) && value.length >= 1 && value.length <= 3;
+      },
+      message: "Tier must be an array with 1 to 3 values."
+    }
   },
+
   brainType: {
     type: String,
     enum: ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst']

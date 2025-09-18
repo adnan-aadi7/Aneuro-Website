@@ -363,14 +363,14 @@ const ScheduledReleasesTable = ({ onSuccess, onError }) => {
                     <div className="flex items-center space-x-2">
                       <button 
                         onClick={() => handleEdit(release)}
-                        className="text-gray-400 hover:text-white transition-colors"
+                        className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                         title="Edit"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleDelete(release)}
-                        className="text-gray-400 hover:text-white transition-colors"
+                        className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                         title="Delete"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -385,15 +385,15 @@ const ScheduledReleasesTable = ({ onSuccess, onError }) => {
       </div>
 
       {/* Edit Schedule Popup */}
-      {editPopupOpen && editingRelease && (
-        <AddShedulePopup
-          open={editPopupOpen}
-          onClose={handleEditClose}
-          editingRelease={editingRelease}
-          onSuccess={handleEditSuccess}
-          onError={onError}
-        />
-      )}
+    {editPopupOpen && editingRelease && (
+  <AddShedulePopup
+    open={editPopupOpen}
+    onClose={handleEditClose}
+    editingRelease={editingRelease}
+    onSuccess={handleEditSuccess}
+    onError={onError}
+  />
+)}
 
       {/* Delete Confirmation Popup */}
       {deletePopupOpen && deletingRelease && (

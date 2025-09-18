@@ -66,8 +66,8 @@ const FunnelTemplates = () => {
 
   const getTierBadge = (tier) => {
     const styles = {
-      premium: "bg-[#3B82F633] text-[#60A5FA]",
-      basic: "bg-[#22C55E33] text-[#4ADE80]",
+      growth: "bg-[#3B82F633] text-[#60A5FA]",
+      starter: "bg-[#22C55E33] text-[#4ADE80]",
       enterprise: "bg-[#A855F733] text-[#C084FC]",
     };
     return styles[tier] || "bg-gray-600 text-white";
@@ -211,15 +211,29 @@ const FunnelTemplates = () => {
                     <td className="py-4 px-4 text-gray-300 text-sm">
                       {safeRender(template.category)}
                     </td>
-                    <td className="py-4 px-4">
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${getTierBadge(
-                          safeRender(template.tier)
-                        )}`}
-                      >
-                        {safeRender(template.tier)}
-                      </span>
-                    </td>
+                   <td className="py-4 px-4">
+  <div className="flex flex-wrap gap-1">
+    {Array.isArray(template.tier) ? (
+      template.tier.map((t, i) => (
+        <span
+          key={i}
+          className={`px-2 py-1 rounded text-xs font-medium ${getTierBadge(t)}`}
+        >
+          {t}
+        </span>
+      ))
+    ) : (
+      <span
+        className={`px-2 py-1 rounded text-xs font-medium ${getTierBadge(
+          safeRender(template.tier)
+        )}`}
+      >
+        {safeRender(template.tier)}
+      </span>
+    )}
+  </div>
+</td>
+
                     <td className="py-4 px-4">
                       <span
                         className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadge(
@@ -241,21 +255,21 @@ const FunnelTemplates = () => {
                     <td className="py-4 px-4">
                       <div className="flex items_center space-x-2">
                         <button
-                          className="text-gray-400 hover:text-white transition-colors"
+                          className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                           title="View"
                           onClick={() => navigate(`/admin/analytics/funnel-details/${template._id}`)}
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
-                          className="text-gray-400 hover:text-white transition-colors"
+                          className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                           title="Edit"
                           onClick={() => navigate(`/admin/edit-funnel/${template._id}`)}
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          className="text-gray-400 hover:text-white transition-colors"
+                          className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                           title="Delete"
                           onClick={() => handleDelete(template)}
                         >

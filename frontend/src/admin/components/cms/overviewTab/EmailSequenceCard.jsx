@@ -44,6 +44,8 @@ export default function EmailSequenceCard() {
   useEffect(() => {
     if (success) {
       toast.success(success);
+          navigate(`/admin/CMS?tab=${encodeURIComponent('Email Sequences')}`);
+
       setSelectedFile(null);
       setSelectedTiers([]);
       setSequenceName("");
@@ -449,7 +451,7 @@ const backendTiers = selectedTiers.map(t => tierMap[t]);
       {/* Upload Button */}
       <button
         onClick={() => handleUpload('active')}
-        className="w-full bg-cyan-400 text-black font-medium py-3  hover:bg-cyan-300 transition-colors text-sm"
+        className="w-full bg-cyan-400 text-black font-medium py-3  hover:bg-cyan-300 transition-colors text-sm cursor-pointer"
         disabled={loading}
         aria-busy={loading && submittingAction === 'active'}
       >
@@ -457,7 +459,7 @@ const backendTiers = selectedTiers.map(t => tierMap[t]);
       </button>
       <button
         onClick={() => handleUpload('scheduled')}
-        className="w-full bg-[#FFFFFF] text-black font-medium py-3  hover:bg-cyan-300 transition-colors text-sm mt-5"
+        className="w-full bg-[#FFFFFF] text-black font-medium py-3  hover:bg-cyan-300 transition-colors text-sm mt-5 cursor-pointer"
         disabled={loading}
         aria-busy={loading && submittingAction === 'scheduled'}
       >

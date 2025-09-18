@@ -444,7 +444,7 @@ export default function PromptPacksCard() {
 
       {/* Upload Button */}
       <button
-        className="w-full bg-cyan-400 text-[#232432] font-medium py-3 hover:bg-cyan-300 transition-colors text-sm mt-6"
+        className="w-full bg-cyan-400 text-[#232432] font-medium py-3 hover:bg-cyan-300 transition-colors text-sm mt-6 cursor-pointer"
         onClick={() => handleUploadClick('active')}
         disabled={loading}
         aria-busy={loading && submittingAction === 'active'}
@@ -453,7 +453,7 @@ export default function PromptPacksCard() {
       </button>
       <button
         onClick={() => handleUploadClick('scheduled')}
-        className="w-full bg-[#FFFFFF] text-black font-medium py-3  hover:bg-cyan-300 transition-colors text-sm mt-5"
+        className="w-full bg-[#FFFFFF] text-black font-medium py-3  hover:bg-cyan-300 transition-colors text-sm mt-5 cursor-pointer"
         disabled={loading}
         aria-busy={loading && submittingAction === 'scheduled'}
       >

@@ -7,6 +7,7 @@ import { Bold, Italic, Underline, Strikethrough, Link, Paperclip, Image, AlignLe
 import DiamondIcon from "../../../../../public/icons/diamond.png";
 import KingIcon from "../../../../../public/icons/king.png";
 import StarIcon from "../../../../../public/icons/star.png";
+import { useNavigate } from "react-router-dom";
 import {
   createEmailSequence,
   fetchEmailSequenceById,
@@ -40,6 +41,7 @@ const AddEmailMannually = () => {
   const [attachments, setAttachments] = useState([]); // {id, file?, url, isImage, name?}[]
 const [emailsInitialized, setEmailsInitialized] = useState(false);
 
+  const navigate = useNavigate(); // ✅ create navigate hook
 
   // New state for multiple emails
   const [emails, setEmails] = useState([
@@ -324,6 +326,8 @@ const toggleTier = (tier) => {
   useEffect(() => {
     if (success) {
       toast.success(success);
+            navigate("/admin/CMS?tab=Email+Sequences", { replace: true });
+
       if (editorRef.current) {
         editorRef.current.innerHTML = '';
       }
@@ -439,74 +443,105 @@ useEffect(() => {
   emailsInitialized,
 ]);
 
-  const handleSend = () => {
-    // Save current email content before submission
-    if (editorRef.current) {
-      const currentContent = editorRef.current.innerHTML;
-      setEmails(prev => prev.map((email, i) => 
-        i === currentEmailIndex 
+const [loadingAdd, setLoadingAdd] = useState(false);
+const [loadingSchedule, setLoadingSchedule] = useState(false);
+const [loadingSave, setLoadingSave] = useState(false);
+
+const handleSend = async (status) => {
+  // Save current email content before submission
+  if (editorRef.current) {
+    const currentContent = editorRef.current.innerHTML;
+    setEmails(prev =>
+      prev.map((email, i) =>
+        i === currentEmailIndex
           ? { ...email, content: currentContent, attachments: [...attachments] }
           : email
-      ));
-    }
-
-    // Validate all emails have content
-    const emailsWithContent = emails.map((email, index) => {
-      if (index === currentEmailIndex) {
-        return { ...email, content: editorRef.current?.innerHTML || "", attachments: [...attachments] };
-      }
-      return email;
-    });
-
-    const hasValidContent = emailsWithContent.some(email => 
-      email.content.trim() || email.attachments.length > 0
+      )
     );
+  }
 
-    if (!hasValidContent) {
-      toast.error("Please add content or attach at least one file to at least one email");
-      return;
-    }
+  // ✅ Set loading state
+  if (status === "active") setLoadingAdd(true);
+  else if (status === "scheduled") setLoadingSchedule(true);
+  else if (editSingleEmail) setLoadingSave(true); // for single Save
 
-    if (!category) {
-      toast.error("Please select a category");
-      return;
-    }
+  // Validate emails
+  const emailsWithContent = emails.map((email, index) =>
+    index === currentEmailIndex
+      ? { ...email, content: editorRef.current?.innerHTML || "", attachments: [...attachments] }
+      : email
+  );
 
-    if (!selectedTier) {
-      toast.error("Please select a tier");
-      return;
-    }
+  const hasValidContent = emailsWithContent.some(
+    email => email.content.trim() || email.attachments.length > 0
+  );
 
-    if (selectedTier.length === 0) {
-    toast.error("Please select at least one tier");
+  if (!hasValidContent) {
+    toast.error("Please add content or attach at least one file to at least one email");
+    setLoadingAdd(false);
+    setLoadingSchedule(false);
+    setLoadingSave(false);
     return;
   }
 
-const payload = {
-  name: sequenceName || "email",
-  category: category || "test",
-  type: "manual",
-  brainType: brainType || "Challenger",
-  status: "scheduled",
-  tier: selectedTier,
-  emails: emails.map(email => ({
-    content: email.content,   // content saved from editor
-    type: email.brainType || brainType
-  }))
+  if (!category) {
+    toast.error("Please select a category");
+    setLoadingAdd(false);
+    setLoadingSchedule(false);
+    setLoadingSave(false);
+    return;
+  }
+
+  if (!selectedTier || selectedTier.length === 0) {
+    toast.error("Please select at least one tier");
+    setLoadingAdd(false);
+    setLoadingSchedule(false);
+    setLoadingSave(false);
+    return;
+  }
+
+  const payload = {
+    name: sequenceName || "email",
+    category: category || "test",
+    type: "manual",
+    brainType: brainType || "Challenger",
+    status,
+    tier: selectedTier,
+    emails: emails.map(email => ({
+      content: email.content,
+      type: email.brainType || brainType,
+    })),
+  };
+
+  try {
+    if (editSingleEmail && editSequenceId && editingEmailId) {
+      // Update specific email
+      const emailPayload = {
+        content: editorRef.current?.innerHTML || "",
+        type: brainType || "Challenger",
+      };
+      await axios.put(
+        `/email-sequences/${editSequenceId}/emails/${editingEmailId}`,
+        emailPayload
+      );
+      toast.success("Email updated successfully");
+      navigate(`/admin/analytics/email-details/${editSequenceId}`);
+    } else if (editSequenceId) {
+      // Update entire sequence
+      await dispatch(updateEmailSequence({ id: editSequenceId, updateData: payload }));
+    } else {
+      // Create new sequence
+      await dispatch(createEmailSequence(payload));
+    }
+  } catch (error) {
+    toast.error(error?.response?.data?.message || error?.message || "Something went wrong");
+  } finally {
+    setLoadingAdd(false);
+    setLoadingSchedule(false);
+    setLoadingSave(false); // ✅ always reset
+  }
 };
 
-
-
-
-
-  if (editSingleEmail && editSequenceId && editingEmailId) {
-    // ...
-  } else if (editSequenceId) {
-    dispatch(updateEmailSequence({ id: editSequenceId, updateData: payload }));
-  } else {
-    dispatch(createEmailSequence(payload));
-  }
-  };
 
   // Add new email function
   const addNewEmail = () => {
@@ -1039,15 +1074,37 @@ const payload = {
             }
           `}</style>
         </div>
-        <div className="flex justify-start ml-6 mt-4">
-          <button
-            className="cursor-pointer bg-cyan-400 text-black font-semibold px-10 py-2  hover:bg-cyan-300 transition-all text-sm "
-            onClick={handleSend}
-            disabled={loading}
-          >
-            {loading ? (editSequenceId ? "Saving..." : "Adding...") : (editSequenceId ? "Save" : "Add")}
-          </button>
-        </div>
+       <div className="flex gap-6 mt-4 ml-8">
+  {editSingleEmail ? (
+   <button
+    onClick={() => handleSend()} 
+    disabled={loadingSave || loading} 
+    className="px-4 py-2 bg-cyan-400 text-black cursor-pointer"
+  >
+    {loadingSave || loading ? "Saving..." : "Save"}
+  </button>
+) : (
+  <>
+    <button
+      onClick={() => handleSend("active")}
+      disabled={loadingAdd}
+      className="px-4 py-2 bg-cyan-400 text-black cursor-pointer"
+    >
+      {loadingAdd ? "Saving..." : "Save & Activate"}
+    </button>
+
+    <button
+      onClick={() => handleSend("scheduled")}
+      disabled={loadingSchedule}
+      className="px-4 py-2 bg-cyan-400 text-black cursor-pointer"
+    >
+      {loadingSchedule ? "Scheduling..." : "Save & Schedule"}
+    </button>
+  </>
+)}
+
+</div>
+
       </div>
     </div>
   );

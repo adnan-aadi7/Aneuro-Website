@@ -6,13 +6,14 @@ export const createNotification = async (req, res) => {
   try {
     const { userId, title, message, type, targetTier } = req.body;
 
-    let notificationData = {
-      title,
-      message,
-      type,
-      isPublic: false,
-      targetTier: targetTier || "all",
-    };
+   let notificationData = {
+  title,
+  message,
+  type,
+  isPublic: false,
+  targetTier: Array.isArray(targetTier) ? targetTier : [targetTier || "all"], 
+};
+
 
     switch (type) {
       case "newtool":

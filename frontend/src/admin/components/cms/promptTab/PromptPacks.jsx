@@ -237,21 +237,21 @@ const PromptPacks = () => {
                     <td className="py-4 px-4">
                       <div className="flex items-center space-x-2">
                         <button 
-                          className="text-gray-400 hover:text-white transition-colors"
+                          className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                           title="View"
                           onClick={() => navigate(`/admin/analytics/prompts-details/${pack._id}`)}
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button 
-                          className="text-gray-400 hover:text-white transition-colors"
+                          className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                           title="Edit"
                           onClick={() => navigate(`/admin/mannual-prompt/${pack._id}`)}
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button 
-                          className="text-gray-400 hover:text-white transition-colors"
+                          className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                           title="Delete"
                           onClick={() => handleDelete(pack)}
                         >
