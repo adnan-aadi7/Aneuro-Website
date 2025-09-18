@@ -20,7 +20,7 @@ import StarIcon from "../../../../../public/icons/star.png";
 export default function PromptPacksCard() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [selectedTier, setSelectedTier] = useState("");
+  const [selectedTier, setSelectedTier] = useState([]);
   const [packName, setPackName] = useState("");
   const [category, setCategory] = useState("");
   const [promptType, setPromptType] = useState("Architect");
@@ -45,15 +45,27 @@ export default function PromptPacksCard() {
     return name.endsWith('.pdf') || name.endsWith('.doc') || name.endsWith('.docx') || name.endsWith('.txt');
   };
 
-  useEffect(() => {
-    if (success) {
-      toast.success(success);
-      setSelectedFile(null);
-      setSelectedTier("");
-      setSubmittingAction(null);
-      dispatch(clearPromptPackSuccess());
-    }
-  }, [success, dispatch]);
+  const handleTierChange = (tier) => {
+  setSelectedTier((prev) =>
+    prev.includes(tier) ? prev.filter((t) => t !== tier) : [...prev, tier]
+  );
+};
+
+ useEffect(() => {
+  if (success) {
+    toast.success(success);
+
+    // ✅ Redirect to Prompt Packs tab after success
+    navigate("/admin/CMS?tab=Prompt+Packs");
+
+    // Reset state
+    setSelectedFile(null);
+    setSelectedTier([]);
+    setSubmittingAction(null);
+    dispatch(clearPromptPackSuccess());
+  }
+}, [success, dispatch, navigate]);
+
 
   useEffect(() => {
     if (error) {
@@ -80,7 +92,7 @@ export default function PromptPacksCard() {
     const counts = { basic: 0, premium: 0, enterprise: 0 };
     
     users.forEach(user => {
-      if (user.userType === 'admin') return; // Skip admin users
+      if (user.userType === 'admin') return; 
       
       const plan = user.subscription?.plan?.toLowerCase();
       const hasSubscription = user.subscription && user.subscription.status === 'active';
@@ -142,36 +154,36 @@ export default function PromptPacksCard() {
   };
 
   const handleUploadClick = (desiredStatus = 'active') => {
-    if (!selectedFile) {
-      toast.error("Please select a file first");
-      return;
-    }
-    if (!selectedTier) {
-      toast.error("Please select a tier");
-      return;
-    }
-    if (!packName.trim()) {
-      toast.error("Please enter a name");
-      return;
-    }
-    if (!category) {
-      toast.error("Please select a category");
-      return;
-    }
+  if (!selectedFile) {
+    toast.error("Please select a file first");
+    return;
+  }
+  if (!selectedTier.length) {
+    toast.error("Please select at least one tier");
+    return;
+  }
+  if (!packName.trim()) {
+    toast.error("Please enter a name");
+    return;
+  }
+  if (!category) {
+    toast.error("Please select a category");
+    return;
+  }
 
-    const tierMap = { basic: 'starter', premium: 'growth', enterprise: 'enterprise' };
-    const backendTier = tierMap[selectedTier] || 'starter';
-
-    setSubmittingAction(desiredStatus);
-    dispatch(uploadPromptPack({
+  setSubmittingAction(desiredStatus);
+  dispatch(
+    uploadPromptPack({
       file: selectedFile,
       name: packName.trim(),
       category,
-      tier: backendTier,
+      tier: selectedTier, 
       status: desiredStatus,
       type: promptType,
-    }));
-  };
+    })
+  );
+};
+
 
   const handleStartAddCategory = () => {
     setShowAddCategory(true);
@@ -355,13 +367,13 @@ export default function PromptPacksCard() {
         <div className="space-y-3">
           {/* Basic Tier */}
           <div className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              name="tier"
-              className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500 cursor-pointer"
-              onChange={() => setSelectedTier("basic")}
-              checked={selectedTier === "basic"}
-            />
+           <input
+               type="checkbox"
+               name="tier"
+               className="w-4 h-4 ..."
+               onChange={() => handleTierChange("starter")}
+               checked={selectedTier.includes("starter")}
+             />
             <img
               src={StarIcon}
               alt="Basic"
@@ -380,12 +392,12 @@ export default function PromptPacksCard() {
 
           {/* Premium Tier */}
           <div className="flex items-center gap-3">
-            <input
-            type="checkbox"
+           <input
+              type="checkbox"
               name="tier"
-              className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500 cursor-pointer"
-              onChange={() => setSelectedTier("premium")}
-              checked={selectedTier === "premium"}
+              className="w-4 h-4 ..."
+              onChange={() => handleTierChange("growth")}
+              checked={selectedTier.includes("growth")}
             />
             <img
               src={KingIcon}
@@ -406,12 +418,12 @@ export default function PromptPacksCard() {
           {/* VIP Tier */}
           <div className="flex items-center gap-3">
             <input
-              type="checkbox"
-              name="tier"
-              className="w-4 h-4 rounded border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500 cursor-pointer"
-              onChange={() => setSelectedTier("enterprise")}
-              checked={selectedTier === "enterprise"}
-            />
+                 type="checkbox"
+                 name="tier"
+                 className="w-4 h-4 ..."
+                 onChange={() => handleTierChange("enterprise")}
+                 checked={selectedTier.includes("enterprise")}
+               />
             <img
               src={DiamondIcon}
               alt="VIP"

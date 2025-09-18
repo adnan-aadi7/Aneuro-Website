@@ -23,8 +23,11 @@ export const uploadPromptPack = createAsyncThunk(
       formData.append('file', uploadData.file);
       formData.append('name', uploadData.name);
       formData.append('category', uploadData.category);
-      formData.append('tier', uploadData.tier);
-      formData.append('status', uploadData.status);
+ if (Array.isArray(uploadData.tier)) {
+        uploadData.tier.forEach((t) => formData.append("tier", t));
+      } else if (uploadData.tier) {
+        formData.append("tier", uploadData.tier);
+      }      formData.append('status', uploadData.status);
       // Optional fields
       if (uploadData.releaseDateTime) {
         formData.append('releaseDateTime', uploadData.releaseDateTime);

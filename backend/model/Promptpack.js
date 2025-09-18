@@ -19,10 +19,16 @@ const PromptPackSchema = new mongoose.Schema({
     type: String, 
     required: true,
   },
-  tier: {
-    type: String,
+    tier: {
+    type: [String], 
     enum: ["starter", "growth", "enterprise"],
     required: true,
+    validate: {
+      validator: function (arr) {
+        return arr.length >= 1 && arr.length <= 3; // allow 1–3 tiers
+      },
+      message: "Tier must contain between 1 and 3 values."
+    }
   },
     releaseDateTime: { type: Date },
 

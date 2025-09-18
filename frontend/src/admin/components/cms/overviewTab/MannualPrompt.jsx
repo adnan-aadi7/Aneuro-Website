@@ -19,10 +19,12 @@ import {
   clearSuccess as clearPromptPackSuccess,
   editPromptInPack,
 } from "../../../../store/Slice/PromptPacksSlice";
+import { useNavigate } from "react-router-dom";
 
 const MannualPrompt = () => {
   const dispatch = useDispatch();
   const params = useParams();
+    const navigate = useNavigate();
   const editPackId = params.packId || null;
   const editingPromptId = params.promptId || null;
   const loading = useSelector(selectPromptPackLoading);
@@ -143,10 +145,19 @@ const MannualPrompt = () => {
   // Local form state
   const [sequenceName, setSequenceName] = useState("");
   const [category, setCategory] = useState("");
-  const [selectedTier, setSelectedTier] = useState(""); // basic | premium | enterprise
+  const [selectedTier, setSelectedTier] = useState([]); // basic | premium | enterprise
   const [brainType, setBrainType] = useState("Architect");
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+
+const toggleTier = (tier) => {
+  setSelectedTier(prev =>
+    prev.includes(tier)
+      ? prev.filter(t => t !== tier) 
+      : [...prev, tier]
+  );
+};
+
 
   // Add new prompt function
   const addNewPrompt = () => {
@@ -385,16 +396,26 @@ const MannualPrompt = () => {
     updateActiveFormatting();
   }, []);
 
-  useEffect(() => {
-    if (success) {
-      toast.success(success);
-      if (editorRef.current) {
-        editorRef.current.innerHTML = '';
-      }
-      dispatch(clearPromptPackSuccess());
-      setAttachments([]);
+ useEffect(() => {
+  if (success) {
+    toast.success(success);
+
+    if (editPackId) {
+      // If editing a prompt pack or single prompt, return back to details page
+      navigate(`/admin/analytics/prompts-details/${editPackId}`);
+    } else {
+      // If creating new, go back to packs listing
+      navigate("/admin/CMS?tab=Prompt+Packs");
     }
-  }, [success, dispatch]);
+
+    if (editorRef.current) {
+      editorRef.current.innerHTML = "";
+    }
+    dispatch(clearPromptPackSuccess());
+    setAttachments([]);
+  }
+}, [success, dispatch, navigate, editPackId]);
+
 
   useEffect(() => {
     if (error) {
@@ -419,9 +440,19 @@ const MannualPrompt = () => {
     if (editPackId && currentPack && currentPack._id === editPackId) {
       setSequenceName(currentPack.name || "");
       setCategory(currentPack.category || "");
-      const reverseTierMap = { starter: "basic", growth: "premium", enterprise: "enterprise" };
-      setSelectedTier(reverseTierMap[currentPack.tier] || "");
-      
+        if (currentPack) {
+    setCategory(currentPack.category || "");
+    setSequenceName(currentPack.name || "");
+
+    // ✅ normalize tiers here
+    setSelectedTier(
+      Array.isArray(currentPack.tier)
+        ? currentPack.tier
+        : currentPack.tier
+        ? [currentPack.tier]
+        : []
+    );
+  }
       if (editingPromptId) {
         // Editing single prompt
         const targetPrompt = currentPack.prompts?.find((p) => p._id === editingPromptId);
@@ -497,77 +528,88 @@ const MannualPrompt = () => {
     }
   }, [editPackId, currentPack, transformContentForEditor, editingPromptId]);
 
-  const handleSend = async () => {
-    // Save current prompt content before submission
-    if (editorRef.current) {
-      const currentContent = editorRef.current.innerHTML;
-      setPrompts(prev => prev.map((prompt, i) => 
-        i === currentPromptIndex 
+ const handleSend = async () => {
+  // Save current prompt content before submission
+  if (editorRef.current) {
+    const currentContent = editorRef.current.innerHTML;
+    setPrompts(prev =>
+      prev.map((prompt, i) =>
+        i === currentPromptIndex
           ? { ...prompt, content: currentContent, attachments: [...attachments] }
           : prompt
-      ));
-    }
-
-    // Validate all prompts have content
-    const promptsWithContent = prompts.map((prompt, index) => {
-      if (index === currentPromptIndex) {
-        return { ...prompt, content: editorRef.current?.innerHTML || "", attachments: [...attachments] };
-      }
-      return prompt;
-    });
-
-    const hasValidContent = promptsWithContent.some(prompt => 
-      prompt.content.trim() || prompt.attachments.length > 0
+      )
     );
+  }
 
-    if (!hasValidContent) {
-      toast.error("Please add content or attach at least one file to at least one prompt");
-      return;
+  // Validate all prompts have content
+  const promptsWithContent = prompts.map((prompt, index) => {
+    if (index === currentPromptIndex) {
+      return {
+        ...prompt,
+        content: editorRef.current?.innerHTML || "",
+        attachments: [...attachments],
+      };
     }
+    return prompt;
+  });
 
-    if (!category) {
-      toast.error("Please select a category");
-      return;
-    }
+  const backendPrompts = promptsWithContent.map(p => ({
+    content: p.content,
+    type: p.brainType,
+  }));
 
-    if (!selectedTier) {
-      toast.error("Please select a tier");
-      return;
-    }
+  const hasValidContent = promptsWithContent.some(
+    prompt => prompt.content.trim() || prompt.attachments.length > 0
+  );
 
-    // Map UI tier to backend tier values
-    const tierMap = { basic: 'starter', premium: 'growth', enterprise: 'enterprise' };
-    const backendTier = tierMap[selectedTier] || 'starter';
+  if (!hasValidContent) {
+    toast.error("Please add content or attach at least one file to at least one prompt");
+    return;
+  }
 
-    // Build prompts array per backend contract
-    const backendPrompts = promptsWithContent.map(prompt => ({
-      content: prompt.content,
-      type: prompt.brainType
-    }));
+  if (!category) {
+    toast.error("Please select a category");
+    return;
+  }
 
-    const payload = {
-      name: sequenceName?.trim() || `Manual Prompt - ${new Date().toLocaleString()}`,
-      tier: backendTier,
-      category,
-      prompts: backendPrompts
-    };
+  if (!selectedTier.length) {
+    toast.error("Please select at least one tier");
+    return;
+  }
 
-    if (editPackId && editingPromptId) {
-      // Update only specific prompt
-      dispatch(editPromptInPack({ 
-        packId: editPackId, 
-        promptId: editingPromptId, 
-        update: { 
-          content: promptsWithContent[currentPromptIndex].content, 
-          type: promptsWithContent[currentPromptIndex].brainType 
-        } 
-      }));
-    } else if (editPackId) {
-      dispatch(updatePromptPack({ id: editPackId, updateData: payload }));
-    } else {
-      dispatch(createPromptPack({ ...payload, status: 'active' }));
-    }
-  };
+ const normalizedTier = Array.isArray(selectedTier)
+  ? selectedTier
+  : selectedTier
+  ? [selectedTier]
+  : [];
+
+const payload = {
+  name: sequenceName?.trim() || `Manual Prompt - ${new Date().toLocaleString()}`,
+  tier: normalizedTier,   // ✅ always ["starter"] | ["growth"] | ["enterprise"]
+  category,
+  prompts: backendPrompts,
+};
+
+
+  if (editPackId && editingPromptId) {
+    // Update only specific prompt
+    dispatch(
+      editPromptInPack({
+        packId: editPackId,
+        promptId: editingPromptId,
+        update: {
+          content: promptsWithContent[currentPromptIndex].content,
+          type: promptsWithContent[currentPromptIndex].brainType,
+        },
+      })
+    );
+  } else if (editPackId) {
+    dispatch(updatePromptPack({ id: editPackId, updateData: payload }));
+  } else {
+    dispatch(createPromptPack({ ...payload, status: "active" }));
+  }
+};
+
 
   const formatButtons = [
     { icon: Bold, label: 'Bold', command: 'bold', key: 'bold' },
@@ -736,11 +778,11 @@ const MannualPrompt = () => {
             {/* Basic Tier */}
             <div className="flex items-center gap-3">
               <input
-                type="checkbox"
-                className="w-4 h-4  border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
-                checked={selectedTier === "basic"}
-                onChange={() => setSelectedTier(selectedTier === "basic" ? "" : "basic")}
-              />
+                 type="checkbox"
+                 className="w-4 h-4 border-2 border-gray-400 bg-transparent focus:ring-0 accent-blue-500"
+                 checked={selectedTier.includes("starter")}
+                 onChange={() => toggleTier("starter")}
+               />
               <img src={StarIcon} alt="Basic" className="w-6 h-6 object-contain" />
               <div className="flex-1 ml-2">
                 <div className="flex items-center gap-2">
@@ -753,12 +795,13 @@ const MannualPrompt = () => {
 
             {/* Premium Tier */}
             <div className="flex items-center gap-3">
-              <input
+             <input
                 type="checkbox"
-                className="w-4 h-4  border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
-                checked={selectedTier === "premium"}
-                onChange={() => setSelectedTier(selectedTier === "premium" ? "" : "premium")}
+                className="w-4 h-4 border-2 border-gray-400 bg-transparent focus:ring-0 accent-blue-500"
+                checked={selectedTier.includes("growth")}
+                onChange={() => toggleTier("growth")}
               />
+
               <img src={KingIcon} alt="Premium" className="w-6 h-6 object-contain" />
               <div className="flex-1">
                 <div className="flex items-center gap-2">
@@ -771,12 +814,12 @@ const MannualPrompt = () => {
 
             {/* VIP / Enterprise Tier */}
             <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                className="w-4 h-4  border-2 border-gray-400 bg-transparent focus:ring-0 focus:outline-none accent-blue-500"
-                checked={selectedTier === "enterprise"}
-                onChange={() => setSelectedTier(selectedTier === "enterprise" ? "" : "enterprise")}
-              />
+             <input
+                 type="checkbox"
+                 className="w-4 h-4 border-2 border-gray-400 bg-transparent focus:ring-0 accent-blue-500"
+                 checked={selectedTier.includes("enterprise")}
+                 onChange={() => toggleTier("enterprise")}
+               />
               <img src={DiamondIcon} alt="VIP" className="w-6 h-6 object-contain" />
               <div className="flex-1">
                 <div className="flex items-center gap-2">

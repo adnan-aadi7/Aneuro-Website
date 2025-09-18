@@ -72,10 +72,10 @@ const EmailSequences = () => {
 
   const getTierBadge = (tier) => {
     const styles = {
-      premium: "bg-[#3B82F633] text-[#60A5FA]",
-      basic: "bg-[#22C55E33] text-[#4ADE80]",
+     growth: "bg-[#3B82F633] text-[#60A5FA]",
+       starter: "bg-[#22C55E33] text-[#4ADE80]",
       enterprise: "bg-[#A855F733] text-[#C084FC]",
-      starter: "bg-[#22C55E33] text-[#4ADE80]",
+      //starter: "bg-[#22C55E33] text-[#4ADE80]",
     };
     return styles[tier] || "bg-gray-600 text-white";
   };

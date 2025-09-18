@@ -71,8 +71,8 @@ const PromptPacks = () => {
 
   const getTierBadge = (tier) => {
     const styles = {
-      premium: "bg-[#3B82F633] text-[#60A5FA]",
-      basic: "bg-[#22C55E33] text-[#4ADE80]",
+      growth: "bg-[#3B82F633] text-[#60A5FA]",
+      starter: "bg-[#22C55E33] text-[#4ADE80]",
       enterprise: "bg-[#A855F733] text-[#C084FC]",
     };
     return styles[tier] || "bg-gray-600 text-white";
@@ -193,15 +193,29 @@ const PromptPacks = () => {
                     <td className="py-4 px-4 text-gray-300 text-sm">
                       {safeRender(pack.category)}
                     </td>
-                    <td className="py-4 px-4">
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${getTierBadge(
-                          safeRender(pack.tier)
-                        )}`}
-                      >
-                        {safeRender(pack.tier)}
-                      </span>
-                    </td>
+                   <td className="py-4 px-4">
+  <div className="flex flex-wrap gap-1">
+    {Array.isArray(pack.tier) ? (
+      pack.tier.map((t, i) => (
+        <span
+          key={i}
+          className={`px-2 py-1 rounded text-xs font-medium ${getTierBadge(t)}`}
+        >
+          {t}
+        </span>
+      ))
+    ) : (
+      <span
+        className={`px-2 py-1 rounded text-xs font-medium ${getTierBadge(
+          safeRender(pack.tier)
+        )}`}
+      >
+        {safeRender(pack.tier)}
+      </span>
+    )}
+  </div>
+</td>
+
                     <td className="py-4 px-4">
                       <span
                         className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadge(

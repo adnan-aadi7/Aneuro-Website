@@ -6,32 +6,33 @@ import Notification from "../model/Notification.js";
 
 export const uploadPromptPack = async (req, res) => {
   try {
-    // 1️⃣ Validate file
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
-    const { name, category, tier, status, type, releaseDateTime } = req.body;
+    let { name, category, tier, status, type, releaseDateTime } = req.body;
 
-    // 2️⃣ Validate required fields
-    if (!name || !category || !tier || !status) {
-      return res.status(400).json({
-        success: false,
-        message: 'Name, category, tier, and status are required'
-      });
+    // Normalize tier input
+    if (typeof tier === "string") {
+      try {
+        tier = JSON.parse(tier); // handles JSON string from form-data
+      } catch {
+        tier = [tier]; // fallback if just a plain string
+      }
     }
 
-    // 3️⃣ Upload file to Cloudinary
+    if (!Array.isArray(tier) || tier.length === 0) {
+      return res.status(400).json({ success: false, message: 'Tier must be an array of 1–3 values' });
+    }
+
+    // File upload logic
     const cloudinaryResult = await uploadToCloudinary(req.file.buffer);
     const fileUrl = cloudinaryResult?.secure_url;
-
     if (!fileUrl) {
       return res.status(500).json({ success: false, message: 'Failed to upload file' });
     }
 
     const filename = req.file.originalname.toLowerCase();
-
-    // 4️⃣ Only allow specific file types
     const allowedExtensions = ['.pdf', '.docx', '.md', '.html'];
     const ext = path.extname(filename);
 
@@ -39,14 +40,14 @@ export const uploadPromptPack = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Unsupported file type' });
     }
 
-    // 5️⃣ Save PromptPack to MongoDB
+    // Save to MongoDB
     const newPack = new PromptPack({
       name,
       category,
-      tier,
+      tier, // ✅ now an array
       status,
       fileUrl,
-  releaseDateTime: releaseDateTime ? new Date(releaseDateTime) : null, 
+      releaseDateTime: releaseDateTime ? new Date(releaseDateTime) : null, 
       prompts: [
         {
           content: fileUrl,
@@ -57,30 +58,26 @@ export const uploadPromptPack = async (req, res) => {
 
     const savedPack = await newPack.save();
 
+    // Log + notify
     await logAction({
       action: "UPLOAD",
-      user: {
-        id: req.user?.id,
-        email: req.user?.email
-      },
+      user: { id: req.user?.id, email: req.user?.email },
       affectedAsset: savedPack.name,
       contentType: "prompt-pack",
       description: "Uploaded new prompt pack",
       req
     });
 
-     if (savedPack.status === "active") {
+    if (savedPack.status === "active") {
       const notification = new Notification({
         title: ` ${name}`,
-        message: `A new ${tier} tier prompt pack has been uploaded in category: ${category}`,
+        message: `A new ${tier.join(", ")} tier prompt pack has been uploaded in category: ${category}`,
         type: "newtool",
         isPublic: true,
         targetTier: tier,
       });
       await notification.save();
-      console.log("Prompt Pack notification saved:", notification);
     }
-
 
     res.status(201).json({
       success: true,
@@ -95,17 +92,20 @@ export const uploadPromptPack = async (req, res) => {
 };
 
 
-
-
 export async function create(req, res) {
   try {
-    const { name, category, tier, status, prompts, releaseDateTime } = req.body;
+    let { name, category, tier, status, prompts, releaseDateTime } = req.body;
 
     if (!name || !category || !tier || !status) {
       return res.status(400).json({
         success: false,
-        message: 'Name, category, tier, and status are required'
+        message: "Name, category, tier, and status are required",
       });
+    }
+
+    // 🔑 Ensure tier is an array
+    if (!Array.isArray(tier)) {
+      tier = [tier]; // wrap single value into array
     }
 
     const newPromptPack = new PromptPack({
@@ -114,7 +114,7 @@ export async function create(req, res) {
       tier,
       status,
       prompts: prompts || [],
-  releaseDateTime: releaseDateTime ? new Date(releaseDateTime) : null, 
+      releaseDateTime: releaseDateTime ? new Date(releaseDateTime) : null,
     });
 
     const savedPromptPack = await newPromptPack.save();
@@ -123,41 +123,43 @@ export async function create(req, res) {
       action: "UPLOAD",
       user: {
         id: req.user?.id,
-        email: req.user?.email
+        email: req.user?.email,
       },
-      affectedAsset: savedPromptPack.name,  
+      affectedAsset: savedPromptPack.name,
       contentType: "prompt-pack",
       description: "Created new prompt pack",
-      req
+      req,
     });
 
-     if (savedPromptPack.status === "active") {
-      const notification = new Notification({
-        title: ` ${name}`,
-        message: `A new ${tier} tier prompt pack has been uploaded in category: ${category}`,
-        type: "newtool",
-        isPublic: true,
-        targetTier: tier,
-      });
-      await notification.save();
-      console.log("Prompt Pack notification saved:", notification);
+    // 🔔 notification per tier
+    if (savedPromptPack.status === "active") {
+      for (const t of savedPromptPack.tier) {
+        const notification = new Notification({
+          title: `${name}`,
+          message: `A new ${t} tier prompt pack has been uploaded in category: ${category}`,
+          type: "newtool",
+          isPublic: true,
+          targetTier: t,
+        });
+        await notification.save();
+        console.log("Prompt Pack notification saved:", notification);
+      }
     }
-
 
     res.status(201).json({
       success: true,
-      message: 'Prompt pack created successfully',
-      data: savedPromptPack
+      message: "Prompt pack created successfully",
+      data: savedPromptPack,
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error creating prompt pack',
-      error: error.message
+      message: "Error creating prompt pack",
+      error: error.message,
     });
   }
 }
+
 
 
 
