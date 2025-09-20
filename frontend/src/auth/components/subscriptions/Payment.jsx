@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createSubscription, clearPaymentState } from "../../../store/Slice/PaymentSlice";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const CYAN = "#12DCF0";
 
@@ -66,17 +66,48 @@ const VisaIcon = () => (
       }
     }, [paymentError]);
 
-    useEffect(() => {
-      // Handle successful subscription creation
-      if (status === 'succeeded' && subscriptionId) {
-        setSuccess(true);
-        setIsLoading(false);
-        setTimeout(() => {
-          dispatch(clearPaymentState());
-          navigate('/quiz');
-        }, 2000);
+useEffect(() => {
+  if (status === "succeeded" && subscriptionId) {
+    setSuccess(true);
+    setIsLoading(false);
+
+    setTimeout(() => {
+      dispatch(clearPaymentState());
+
+      // ✅ Save subscription info into localStorage user object
+      try {
+        const userData = JSON.parse(localStorage.getItem("user"));
+        if (userData) {
+          userData.subscription = {
+            plan: selectedPlan?.name?.toLowerCase() || "starter",
+            status: "active",
+            startDate: new Date().toISOString(),
+            subscriptionId: subscriptionId,
+          };
+          localStorage.setItem("user", JSON.stringify(userData));
+          console.log("✅ Updated user with subscription:", userData);
+        }
+      } catch (err) {
+        console.error("Failed to update subscription in localStorage:", err);
       }
-    }, [status, subscriptionId, dispatch, navigate]);
+
+      // ✅ Handle navigation
+      const from = location.state?.from || sessionStorage.getItem("from");
+      console.log("📍 Redirect source:", from);
+
+      if (from === "signup") {
+        navigate("/login");
+      } else if (from === "login") {
+        navigate("/quiz");
+      } else {
+        navigate("/");
+      }
+
+      sessionStorage.removeItem("from");
+    }, 2000);
+  }
+}, [status, subscriptionId, dispatch, navigate, location.state, selectedPlan]);
+
 
     useEffect(() => {
       // Load Stripe.js

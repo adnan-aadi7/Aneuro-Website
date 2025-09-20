@@ -120,7 +120,6 @@ const  Support=()=> {
       </td>
       <td className="py-4 px-6 border-b border-slate-300">
         <button
-          onClick={(e) => handleToggleStatus(e, ticket)}
           disabled={!!rowLoading[ticket._id]}
           className={`px-3 py-1 text-xs font-semibold rounded-full cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed 
             ${ticket.status === 'CLOSED'

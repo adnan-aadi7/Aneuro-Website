@@ -10,6 +10,7 @@ export default function Form() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  sessionStorage.setItem("from", "signup");
 
   const { loading, error, googleLoading, facebookLoading } = useSelector((state) => state.user);
 

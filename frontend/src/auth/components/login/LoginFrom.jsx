@@ -23,7 +23,8 @@ export default function LoginForm() {
     (state) => state.user
   );
   const [searchParams] = useSearchParams();
-  
+  sessionStorage.setItem("from", "login");
+
 
   useEffect(() => {
     dispatch(resetUserStatus());

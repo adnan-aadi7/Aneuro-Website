@@ -33,6 +33,10 @@ const quizSessionSchema = new mongoose.Schema({
     Synthesizer: { type: Number, default: 0 }
   },
   challenger_detected: { type: Boolean, default: false },
+
+  redirect_link: { type: String, default: null },
+  redirect_token: { type: String, default: null },
+
   timestamp: { type: Date, default: Date.now }
 }, { timestamps: true });
 

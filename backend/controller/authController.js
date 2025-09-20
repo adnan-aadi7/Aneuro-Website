@@ -56,7 +56,15 @@ export async function Login(reqBody) {
     }
 
     const user = await User.findOne({ email }).lean();
-    if (!user) throw new Error("Invalid email or password");
+    if (!user) {
+      throw new Error("Invalid email or password");
+    }
+
+    // Correct field from schema
+if (user.accountStatus === "suspended") {
+  throw new Error("Your account is suspended. Please contact support.");
+}
+
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) throw new Error("Invalid email or password");
@@ -77,7 +85,9 @@ export async function Login(reqBody) {
     if (quizSession) {
       const answeredCount = quizSession.answers.length;
       quizProgress = {
-        completionPercentage: Math.round((answeredCount / TOTAL_QUESTIONS) * 100),
+        completionPercentage: Math.round(
+          (answeredCount / TOTAL_QUESTIONS) * 100
+        ),
         isCompleted: quizSession.is_completed,
       };
     }
@@ -89,13 +99,14 @@ export async function Login(reqBody) {
         ...userWithoutPassword,
         subscription: user.subscription || null,
         notificationPreferences: user.notificationPreferences || {},
-        quizProgress, 
+        quizProgress,
       },
     };
   } catch (error) {
     throw new Error(error.message || "Login failed");
   }
 }
+
 
 
 //get api
