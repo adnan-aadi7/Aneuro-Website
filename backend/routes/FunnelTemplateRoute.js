@@ -6,7 +6,8 @@ import {
   getFunnelTemplateById,
   updateFunnelTemplate,
   deleteFunnelTemplate,
-  getFunnelTemplateStats
+  getFunnelTemplateStats,
+  rateFunnel
 } from '../controller/funnelTemplateController.js';
 import upload from '../middleware/multer.js';
 import { authUser } from '../middleware/userTracker.js';
@@ -284,5 +285,62 @@ router.put('/:id', authUser, updateFunnelTemplate);
  *         description: Template not found
  */
 router.delete('/:id', authUser, deleteFunnelTemplate);
+
+/**
+ * @swagger
+ * /api/funnel-templates/{funnelId}/rate:
+ *   post:
+ *     summary: Rate a funnel
+ *     tags:
+ *       - Rating Funnel
+ *     security:
+ *       - bearerAuth: []        # <-- add this for JWT Bearer token auth
+ *     parameters:
+ *       - name: funnelId
+ *         in: path
+ *         description: The ID of the funnel to rate
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       description: Rating details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - rating
+ *             properties:
+ *               rating:
+ *                 type: number
+ *                 description: Rating value between 0 and 5
+ *                 minimum: 0
+ *                 maximum: 5
+ *     responses:
+ *       200:
+ *         description: Rating submitted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 averageRating:
+ *                   type: number
+ *                 ratingsCount:
+ *                   type: integer
+ *       400:
+ *         description: Bad request (missing or invalid fields)
+ *       404:
+ *         description: Funnel not found
+ *       500:
+ *         description: Internal server error
+ */
+
+// ✅ Add authMiddleware before rateFunnel
+router.post("/:funnelId/rate", authUser, rateFunnel);
+
 
 export default router;

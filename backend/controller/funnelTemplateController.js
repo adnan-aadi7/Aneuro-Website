@@ -331,3 +331,42 @@ export const getFunnelTemplateStats = async (req, res) => {
     res.status(500).json({ success: false, message: "Error fetching funnel template statistics", error: error.message });
   }
 };
+
+
+export const rateFunnel = async (req, res) => {
+  try {
+    const { funnelId } = req.params;
+    const { rating } = req.body;
+    const userId = req.user?.id; // <-- get userId from auth middleware
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (rating === undefined) {
+      return res.status(400).json({ message: "Rating is required" });
+    }
+
+    if (rating < 0 || rating > 5) {
+      return res.status(400).json({ message: "Rating must be between 0 and 5" });
+    }
+
+    const funnel = await FunnelTemplate.findById(funnelId);
+    if (!funnel) {
+      return res.status(404).json({ message: "Funnel not found" });
+    }
+
+    // Assuming you have a method to add/update rating
+    await funnel.addRating(userId, rating);
+
+    return res.status(200).json({
+      message: "Rating submitted successfully",
+      averageRating: funnel.averageRating,
+      ratingsCount: funnel.ratings.length,
+    });
+
+  } catch (error) {
+    console.error("Error rating funnel:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};

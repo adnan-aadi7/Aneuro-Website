@@ -17,7 +17,7 @@ function getFileMeta(url = "") {
 
 const DOWNLOADABLE = new Set(["txt", "doc", "docx"]);
 
-export default function FileEmailCard({ title, preview, fileUrl }) {
+export default function FileEmailCard({sequenceId, emailId, title, preview, fileUrl }) {
   const { name, ext } = getFileMeta(fileUrl);
   const canDownload = DOWNLOADABLE.has(ext);
   const [showPopup, setShowPopup] = useState(false); // state for popup
@@ -78,9 +78,12 @@ export default function FileEmailCard({ title, preview, fileUrl }) {
         Rate This Tool
       </button>
       </div>
-       <Popup isOpen={showPopup} onClose={() => setShowPopup(false)}>
-        <Popup />
-      </Popup>
+       <Popup
+        isOpen={showPopup}
+        onClose={() => setShowPopup(false)}
+        sequenceId={sequenceId}  // ✅ ensure props passed
+        emailId={emailId}        // ✅ ensure props passed
+      />
     </div>
   );
 }

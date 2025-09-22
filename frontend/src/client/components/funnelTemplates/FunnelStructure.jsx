@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import FunnelCategoryFilter from "./FunnelCategoryFilter";
+import Popup from "./modal"; // ⭐ Import your rating modal
 
 function getFileMeta(url = "") {
   try {
@@ -22,19 +23,22 @@ export default function FunnelStructure({
   category,
   onCategoryChange,
 }) {
-  console.log('====================================');
-  console.log(templates);
-  console.log('====================================');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedFunnelId, setSelectedFunnelId] = useState(null);
+
+  const openRatingModal = (funnelId) => {
+    setSelectedFunnelId(funnelId);
+    setIsModalOpen(true);
+  };
+
   return (
     <div className="bg-[#303041] text-white mt-10">
-      {/* Top heading like emails */}
       <div className="lg:p-6 p-2">
         <h2 className="text-xl font-semibold">
           {activeTab ? `${activeTab} Funnel Templates` : "Funnel Templates"}
         </h2>
       </div>
 
-      {/* Category dropdown inside */}
       <div className="lg:p-6 p-2">
         <FunnelCategoryFilter value={category} onChange={onCategoryChange} />
       </div>
@@ -47,32 +51,33 @@ export default function FunnelStructure({
 
         {!loading &&
           templates?.map((tpl) => {
-            // Simple card per template (name + optional file row)
             const hasFile = !!tpl.fileUrl;
             const file = hasFile ? getFileMeta(tpl.fileUrl) : null;
             const canDownload = hasFile && DOWNLOADABLE.has(file.ext);
 
             return (
-              <div key={tpl._id} className="bg-[#23232A] p-6 mb-6">
+              <div key={tpl._id} className="bg-[#23232A] p-6 mb-6 rounded-lg">
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-base font-semibold mb-1">
                       {tpl.name || "Funnel Template"}
                     </h3>
-                    {tpl.description ? (
+                    {tpl.description && (
                       <p className="text-[#12DCF0] text-sm">{tpl.description}</p>
-                    ) : null}
+                    )}
                   </div>
                 </div>
 
-                {/* If template has file, list row with View / Download (no inline preview) */}
                 {hasFile && (
-                  <div className="flex items-center justify-between bg-[#1c1c22] rounded-lg p-3">
+                  <div className="flex items-center justify-between bg-[#1c1c22] rounded-lg p-3 mb-4">
                     <div className="text-sm text-[#B0B0B0] truncate">
                       <span className="mr-2 inline-block px-2 py-0.5 rounded bg-[#2b2b35] text-xs uppercase tracking-wide">
                         {file.ext || "file"}
                       </span>
-                      <span title={file.name} className="align-middle truncate max-w-[55vw] inline-block">
+                      <span
+                        title={file.name}
+                        className="align-middle truncate max-w-[55vw] inline-block"
+                      >
                         {file.name}
                       </span>
                     </div>
@@ -97,6 +102,16 @@ export default function FunnelStructure({
                     </div>
                   </div>
                 )}
+
+                {/* ⭐ Rate this Tool Button */}
+                <div className="text-right">
+                  <button
+                    onClick={() => openRatingModal(tpl._id)}
+                    className="text-cyan-500 underline  font-medium cursor-pointer  text-sm"
+                  >
+                    Rate this Tool
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -107,6 +122,15 @@ export default function FunnelStructure({
           </button>
         </div>
       </div>
+
+      {/* ⭐ Popup Modal for rating */}
+      {isModalOpen && selectedFunnelId && (
+        <Popup
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          funnelId={selectedFunnelId}
+        />
+      )}
     </div>
   );
 }

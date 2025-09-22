@@ -191,10 +191,19 @@ export const getGroupedEmailsByTier = async (req, res) => {
         if (seq.emails && seq.emails.length > 0) {
           seq.emails.forEach((email) => {
             if (grouped[email.type]) {
+              // calculate average rating
+              const ratings = email.ratings || [];
+              const avgRating =
+                ratings.length > 0
+                  ? ratings.reduce((sum, r) => sum + r.value, 0) / ratings.length
+                  : 0;
+
               grouped[email.type].push({
                 ...email.toObject(),
+                sequenceId: seq._id, // ✅ include sequenceId
                 sequenceName: seq.name,
                 category: seq.category,
+                averageRating: avgRating,
               });
             }
           });
@@ -221,6 +230,7 @@ export const getGroupedEmailsByTier = async (req, res) => {
     });
   }
 };
+
 
 
 // GET ALL
@@ -695,5 +705,60 @@ export const deleteEmailInSequence = async (req, res) => {
       message: "Server error",
       error: error.message,
     });
+  }
+};
+
+
+export const rateEmail = async (req, res) => {
+  try {
+    const { sequenceId, emailId } = req.params;
+    const userId = req.user.id;
+
+    // Accept either `rating` or `value`
+    const rawValue = req.body.rating ?? req.body.value;
+    const value = Number(rawValue);
+
+    if (!value || value < 1 || value > 5) {
+      return res.status(400).json({ error: "Rating must be between 1 and 5" });
+    }
+
+    const sequence = await EmailSequence.findById(sequenceId);
+    if (!sequence) {
+      return res.status(404).json({ error: "Email sequence not found" });
+    }
+
+    const email = sequence.emails.id(emailId);
+    if (!email) {
+      return res.status(404).json({ error: "Email not found" });
+    }
+
+    // Check if user already rated
+    const existingRating = email.ratings.find(
+      (r) => r.user.toString() === userId
+    );
+
+    if (existingRating) {
+      existingRating.value = value;
+    } else {
+      email.ratings.push({ user: userId, value });
+    }
+
+    // ✅ Safe average calculation
+    if (email.ratings.length > 0) {
+      const total = email.ratings.reduce((sum, r) => sum + r.value, 0);
+      email.averageRating = total / email.ratings.length;
+    } else {
+      email.averageRating = 0;
+    }
+
+    await sequence.save();
+
+    res.json({
+      success: true,
+      message: "Rating submitted successfully",
+      averageRating: email.averageRating,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Server error", details: err.message });
   }
 };

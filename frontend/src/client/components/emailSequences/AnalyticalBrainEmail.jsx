@@ -75,6 +75,10 @@ export default function AnalyticalBrainEmail({
               title={`${seq.sequenceName || 'Email'}${seq.type ? ` — ${seq.type}` : ''}`}
               preview={""}
               fileUrl={seq.content}
+                sequenceId={seq.sequenceId}   // ✅ fixed
+                    emailId={seq?._id}   // <-- pass emailId here
+
+
             />
           );
           return;
@@ -86,6 +90,8 @@ export default function AnalyticalBrainEmail({
     title={`${seq.sequenceName || 'Email'}${seq.type ? ` — ${seq.type}` : ''}`}
     preview={seq.content ? seq.content.slice(0, 120) : "—"}
     body={seq.content || ""}
+  sequenceId={seq.sequenceId}   // ✅ fixed
+
   />
 );
         return;

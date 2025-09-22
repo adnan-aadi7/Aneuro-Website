@@ -716,28 +716,37 @@ export const getSubscribersWithQuizData = async (req, res) => {
 
     const userIds = users.map((u) => u._id);
 
-    // 🔹 Build base quiz query
+    // 🔹 Base quiz query
     const quizQuery = { user_id: { $in: userIds }, is_subscriber_quiz: true };
 
-    // 🔹 Handle is_completed filter properly
     if (typeof is_completed !== "undefined") {
       if (is_completed === "true") {
         quizQuery.is_completed = true;
       } else {
-        // Match quizzes explicitly incomplete OR without is_completed field
         quizQuery.$or = [{ is_completed: false }, { is_completed: { $exists: false } }];
       }
     }
 
-    const quizzes = await QuizSession.find(quizQuery);
+    const quizzes = await QuizSession.find(quizQuery).lean();
 
-    // 🔹 Map each quiz into the "flat" user quiz structure
+    // 🔹 Fetch reminders for all quiz IDs at once
+    const quizIds = quizzes.map((q) => q._id);
+    const reminders = await Reminder.find({ quizSessionId: { $in: quizIds } }).lean();
+
+    // 🔹 Map reminders by quizSessionId for quick lookup
+    const remindersByQuiz = reminders.reduce((acc, r) => {
+      const key = r.quizSessionId.toString();
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(r);
+      return acc;
+    }, {});
+
+    // 🔹 Build response
     const data = quizzes
       .map((q) => {
         const user = users.find((u) => u._id.toString() === q.user_id.toString());
         if (!user) return null;
 
-        // Only include quizzes created after subscription start date
         if (user.subscription?.startDate && new Date(q.createdAt) < new Date(user.subscription.startDate)) {
           return null;
         }
@@ -755,7 +764,10 @@ export const getSubscribersWithQuizData = async (req, res) => {
           updatedAt: q.updatedAt,
           is_subscriber_quiz: q.is_subscriber_quiz || false,
           brain_type: q.brain_type || null,
-          reminders: q.reminders || [],
+
+          // 🔹 Now reminders come from Reminder collection
+          reminders: remindersByQuiz[q._id.toString()] || [],
+
           score_breakdown: q.score_breakdown || {
             Architect: 0,
             Reflector: 0,
@@ -780,8 +792,68 @@ export const getSubscribersWithQuizData = async (req, res) => {
   }
 };
 
+export const getSubscriberQuizDetail = async (req, res) => {
+  try {
+    const { subscriberId } = req.params;
 
+    const subscriber = await User.findById(subscriberId).lean();
+    if (!subscriber) {
+      return res.status(404).json({ message: "Subscriber not found" });
+    }
 
+    const sessions = await QuizSession.find({ user_id: subscriberId }).lean();
+    if (!sessions || sessions.length === 0) {
+      return res.status(404).json({ message: "No quiz sessions found for this subscriber" });
+    }
 
+    // Compute brain type summary
+    const brainTypesRaw = {};
+    let totalAnswers = 0;
+    sessions.forEach((session) => {
+      totalAnswers += session.questions_completed || 0;
+      Object.entries(session.score_breakdown || {}).forEach(([type, value]) => {
+        brainTypesRaw[type] = (brainTypesRaw[type] || 0) + value;
+      });
+    });
 
+    // Compute percentages
+    const totalScore = Object.values(brainTypesRaw).reduce((a, b) => a + b, 0);
+    const brainTypesPercent = {};
+    Object.entries(brainTypesRaw).forEach(([type, value]) => {
+      brainTypesPercent[type] = totalScore > 0 ? Math.round((value / totalScore) * 100) : 0;
+    });
 
+    const response = {
+      success: true,
+      user_id: subscriberId,
+      audience_id: sessions[0]._id, // first session ID
+      report: {
+        total_answers: totalAnswers,
+        brain_types: brainTypesPercent,
+      },
+      sessions: sessions.map((s) => ({
+        _id: s._id,
+        user_id: s.user_id,
+        name: subscriber.name || "",       // use subscriber's real name
+        email: subscriber.email || "",     // use subscriber's real email
+        answers: s.answers || [],
+        is_completed: s.is_completed || false,
+        is_subscriber_quiz: s.is_subscriber_quiz || false,
+        challenger_detected: s.challenger_detected || false,
+        timestamp: s.timestamp,
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt,
+        brain_type: s.brain_type || null,
+        questions_completed: s.questions_completed || 0,
+        reminders: s.reminders || [],
+        score_breakdown: s.score_breakdown || {},
+        redirect_link: s.redirect_link || null,
+      })),
+    };
+
+    return res.json(response);
+  } catch (error) {
+    console.error("Error fetching subscriber quiz detail:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};

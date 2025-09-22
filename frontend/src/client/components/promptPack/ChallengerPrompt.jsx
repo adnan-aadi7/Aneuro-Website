@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { ChevronDown, Copy } from "lucide-react";
-
+import Popup from "./modal";
 export default function ChallengerPrompt({ groupedPrompts = {}, categories = [] }) {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [showFirstPrompt, setShowFirstPrompt] = useState(true);
@@ -8,6 +8,8 @@ export default function ChallengerPrompt({ groupedPrompts = {}, categories = [] 
   const [copiedPrompt, setCopiedPrompt] = useState(0);
   const [showEmailTooltip, setShowEmailTooltip] = useState(false);
   const [emailTooltipPos, setEmailTooltipPos] = useState({ x: 0, y: 0 });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPrompt, setSelectedPrompt] = useState(null);
 
   const isFileContent = (s) => typeof s === "string" && (/^https?:\/\//i.test(s) || /\.(pdf|docx?|txt)$/i.test(s));
 
@@ -104,32 +106,74 @@ export default function ChallengerPrompt({ groupedPrompts = {}, categories = [] 
         {renderDropdown()}
 
         <h2 className="text-lg font-medium mb-6">Email Prompts for Challenger Types</h2>
+{hasPayload(prompt1) && (
+  <div
+    className="bg-[#23232F] p-6 mb-4 relative"
+   
+  >
+    {showEmailTooltip && (
+      <div
+        className="pointer-events-none bg-black text-white text-[10px] px-2 py-1 rounded shadow-lg z-20 whitespace-nowrap"
+        style={{ position: "absolute", left: emailTooltipPos.x + 10, top: emailTooltipPos.y + 10, minWidth: "max-content", maxWidth: 180 }}
+      >
+        This section generates a creative social media caption email prompt, including subject, copy button, and example message.
+      </div>
+    )}
 
-        {hasPayload(prompt1) && (
-          <div className="bg-[#23232F] p-6 mb-4 relative" onMouseEnter={() => setShowEmailTooltip(true)} onMouseLeave={() => setShowEmailTooltip(false)} onMouseMove={(e) => { const rect = e.currentTarget.getBoundingClientRect(); setEmailTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top }); }}>
-            {showEmailTooltip && (
-              <div className="pointer-events-none bg-black text-white text-[10px] px-2 py-1 rounded shadow-lg z-20 whitespace-nowrap" style={{ position: "absolute", left: emailTooltipPos.x + 10, top: emailTooltipPos.y + 10, minWidth: "max-content", maxWidth: 180 }}>
-                This section generates a creative social media caption email prompt, including subject, copy button, and example message.
-              </div>
-            )}
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex-1">
-                {prompt1?.title && (
-                  <h3 className="text-base font-medium mb-2">{prompt1.title}</h3>
-                )}
-                {prompt1?.subject && (
-                  <p className="text-cyan-400 text-sm mb-4">Subject: {prompt1.subject}</p>
-                )}
-              </div>
-              {renderButton(prompt1, 1)}
-            </div>
-            {showFirstPrompt && renderBody(prompt1?.content)}
-            <button onClick={() => setShowFirstPrompt(!showFirstPrompt)} className="flex items-center gap-2 mt-4 text-sm text-gray-400 hover:text-gray-300">
-              <ChevronDown className={`w-4 h-4 transition-transform ${showFirstPrompt ? "rotate-180" : ""}`} />
-              {showFirstPrompt ? "Show Less" : "Show More"}
-            </button>
-          </div>
-        )}
+    <div className="flex justify-between items-start mb-4">
+      <div className="flex-1">
+        {prompt1?.title && <h3 className="text-base font-medium mb-2">{prompt1.title}</h3>}
+        {prompt1?.subject && <p className="text-cyan-400 text-sm mb-4">Subject: {prompt1.subject}</p>}
+      </div>
+      {renderButton(prompt1, 1)}
+    </div>
+
+    {/* If content is a file, show the actual link */}
+    {isFileContent(prompt1?.content) && (
+      <div className="mb-4 text-sm">
+        <a
+          href={prompt1.content}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-gray-400 break-words"
+        >
+          {prompt1.content}
+        </a>
+      </div>
+    )}
+
+    {/* Only show text content if not a file */}
+    {!isFileContent(prompt1?.content) && showFirstPrompt && renderBody(prompt1?.content)}
+
+    {/* Only show "Show More/Less" if not a file */}
+    {!isFileContent(prompt1?.content) && (
+      <button
+        onClick={() => setShowFirstPrompt(!showFirstPrompt)}
+        className="flex items-center gap-2 mt-4 text-sm text-gray-400 hover:text-gray-300"
+      >
+        <ChevronDown className={`w-4 h-4 transition-transform ${showFirstPrompt ? "rotate-180" : ""}`} />
+        {showFirstPrompt ? "Show Less" : "Show More"}
+      </button>
+    )}
+
+    {/* Rate this tool button always visible */}
+    <div className="mt-6 text-right">
+      <button
+        onClick={() => {
+          setSelectedPrompt({
+            packId: prompt1?.packId,
+            promptId: prompt1?.promptId,
+          });
+          setIsModalOpen(true);
+        }}
+        className="text-cyan-300 underline rounded font-medium cursor-pointer"
+      >
+        Rate this tool
+      </button>
+    </div>
+  </div>
+)}
+
 
         {hasPayload(prompt2) && (
           <div className="bg-[#23232F] p-6">
@@ -149,9 +193,29 @@ export default function ChallengerPrompt({ groupedPrompts = {}, categories = [] 
               <ChevronDown className={`w-4 h-4 transition-transform ${showFullPrompt ? "rotate-180" : ""}`} />
               {showFullPrompt ? "Show Less" : "View Full Prompt"}
             </button>
+             <div className="mt-6 text-right">
+            <button
+              onClick={() => {
+                setSelectedPrompt({
+                  packId: prompt1?.packId,
+                  promptId: prompt1?.promptId,
+                });
+                setIsModalOpen(true);
+              }}
+              className="text-cyan-300 underline rounded font-medium cursor-pointer"
+            >
+              Rate this tool
+            </button>
+          </div>
           </div>
         )}
       </div>
+      <Popup
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        packId={selectedPrompt?.packId}
+        promptId={selectedPrompt?.promptId}
+      />
     </div>
   );
 }

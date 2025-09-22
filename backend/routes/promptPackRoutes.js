@@ -11,7 +11,8 @@ import {
   getStatistics,
   uploadPromptPack,
   editPromptInPromptPack,
-  getGroupedPromptsByTier
+  getGroupedPromptsByTier,
+  ratePrompt
 } from '../controller/promptPackController.js';
 import upload from '../middleware/multer.js';
 import { authUser } from "../middleware/userTracker.js";
@@ -495,6 +496,71 @@ router.put('/:id/usage', authUser, incrementUsage);
  *         description: Failed to update prompt
  */
 router.put("/:packId/prompts/:promptId", authUser, editPromptInPromptPack);
+
+
+/**
+ * @swagger
+ * /api/prompt-packs/{packId}/prompts/{promptId}/rate:
+ *   post:
+ *     summary: Rate a specific prompt inside a Prompt Pack
+ *     description: Allows an authenticated user to submit or update their rating (1–5) for a given prompt inside a prompt pack.
+ *     tags:
+ *       - tagsRating Emailprompt and Funnel
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: packId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Prompt Pack
+ *       - in: path
+ *         name: promptId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Prompt inside the pack
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               rating:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 5
+ *                 example: 4
+ *     responses:
+ *       200:
+ *         description: Rating submitted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Prompt rated successfully
+ *                 averageRating:
+ *                   type: number
+ *                   format: float
+ *                   example: 4.2
+ *       400:
+ *         description: Invalid rating (must be 1–5)
+ *       401:
+ *         description: Unauthorized (missing/invalid token)
+ *       404:
+ *         description: Prompt Pack or Prompt not found
+ *       500:
+ *         description: Server error
+ */
+router.post("/:packId/prompts/:promptId/rate", authUser, ratePrompt);
 
 
 export default router;

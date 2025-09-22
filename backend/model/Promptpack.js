@@ -1,13 +1,20 @@
 import mongoose from 'mongoose';
 
+const PromptRatingSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  value: { type: Number, min: 1, max: 5, required: true },
+});
+
 const PromptSchema = new mongoose.Schema({
-  content: {
-    type: String,
-  },
+  content: { type: String },
   type: {
     type: String,
-    enum: ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst'],
+    enum: ["Architect", "Challenger", "Synthesizer", "Reflector", "Catalyst"],
   },
+
+  // ⭐ Individual ratings for each prompt
+  ratings: [PromptRatingSchema],
+  averageRating: { type: Number, default: 0 },
 });
 
 const PromptPackSchema = new mongoose.Schema({

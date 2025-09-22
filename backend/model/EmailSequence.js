@@ -4,12 +4,22 @@ const EmailSchema = new mongoose.Schema({
   content: { type: String },
   type: {
     type: String,
-    enum: ['Architect', 'Challenger', 'Synthesizer', 'Reflector', 'Catalyst'],
+    enum: ["Architect", "Challenger", "Synthesizer", "Reflector", "Catalyst"],
   },
-    totalOpens: { type: Number, default: 0 },
-      uniqueClicks: { type: Number, default: 0 }, // new field
-  clickedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }] 
+  totalOpens: { type: Number, default: 0 },
+  uniqueClicks: { type: Number, default: 0 },
+  clickedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+
+  // ✅ Rating system
+  ratings: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      value: { type: Number, min: 1, max: 5 },
+    },
+  ],
+  averageRating: { type: Number, default: 0 },
 });
+
 
 const EmailSequenceSchema = new mongoose.Schema(
   {

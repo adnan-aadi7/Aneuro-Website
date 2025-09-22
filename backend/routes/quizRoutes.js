@@ -9,7 +9,8 @@ import {
     getAudienceBrainTypeAnalyticsByUser, 
     getUserWeeklyBrainTypeStats, 
     getAudienceQuizReport,
-    getSubscribersWithQuizData
+    getSubscribersWithQuizData,
+    getSubscriberQuizDetail
 } from '../controller/quizController.js';
 import { authUser } from "../middleware/userTracker.js";
 const router = express.Router();
@@ -732,6 +733,125 @@ router.get('/:userId/weekly-brain-types', authUser, getUserWeeklyBrainTypeStats)
  *         description: Internal server error
  */
 router.get("/user/subscribers-quizzes", getSubscribersWithQuizData);
+
+/**
+ * @swagger
+ * /api/quiz/{subscriberId}/quiz-detail:
+ *   get:
+ *     summary: Get quiz details for a specific subscriber
+ *     tags:
+ *       - Quiz
+ *     security:
+ *       - bearerAuth: []   # JWT Bearer token
+ *     parameters:
+ *       - name: subscriberId
+ *         in: path
+ *         description: The ID of the subscriber
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Subscriber quiz detail retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 user_id:
+ *                   type: string
+ *                 audience_id:
+ *                   type: string
+ *                 report:
+ *                   type: object
+ *                   properties:
+ *                     total_answers:
+ *                       type: integer
+ *                     brain_types:
+ *                       type: object
+ *                       additionalProperties:
+ *                         type: integer
+ *                 sessions:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       user_id:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       email:
+ *                         type: string
+ *                       answers:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             question_number:
+ *                               type: integer
+ *                             selected_option:
+ *                               type: string
+ *                             mapped_brain_type:
+ *                               type: string
+ *                             _id:
+ *                               type: string
+ *                       is_completed:
+ *                         type: boolean
+ *                       is_subscriber_quiz:
+ *                         type: boolean
+ *                       challenger_detected:
+ *                         type: boolean
+ *                       timestamp:
+ *                         type: string
+ *                         format: date-time
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                       brain_type:
+ *                         type: string
+ *                       questions_completed:
+ *                         type: integer
+ *                       reminders:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                       score_breakdown:
+ *                         type: object
+ *                         additionalProperties:
+ *                           type: integer
+ *                       redirect_link:
+ *                         type: string
+ *                         nullable: true
+ *       404:
+ *         description: Subscriber not found or no sessions available
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Subscriber not found or no sessions available
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+router.get("/:subscriberId/quiz-detail", authUser, getSubscriberQuizDetail);
 
 
 export default router;

@@ -301,6 +301,8 @@ export const getGroupedPromptsByTier = async (req, res) => {
           pack.prompts.forEach((prompt) => {
             if (grouped[prompt.type]) {
               grouped[prompt.type].push({
+                promptId: prompt._id,   // ✅ add promptId
+                packId: pack._id,       // ✅ add packId
                 content: prompt.content,
                 type: prompt.type,
                 packName: pack.name,
@@ -331,6 +333,7 @@ export const getGroupedPromptsByTier = async (req, res) => {
     });
   }
 };
+
 
 
 // UPDATE - Update prompt pack
@@ -707,5 +710,54 @@ export const editPromptInPromptPack = async (req, res) => {
       success: false,
       message: error.message || "Failed to update prompt",
     });
+  }
+};
+
+
+export const ratePrompt = async (req, res) => {
+  try {
+    const { packId, promptId } = req.params;
+    const { rating } = req.body;
+    const userId = req.user.id;
+
+    const value = Number(rating);
+    if (!value || value < 1 || value > 5) {
+      return res.status(400).json({ error: "Rating must be between 1 and 5" });
+    }
+
+    const pack = await PromptPack.findById(packId);
+    if (!pack) {
+      return res.status(404).json({ error: "Prompt Pack not found" });
+    }
+
+    const prompt = pack.prompts.id(promptId);
+    if (!prompt) {
+      return res.status(404).json({ error: "Prompt not found" });
+    }
+
+    // ✅ Check if user already rated
+    const existingRating = prompt.ratings.find(
+      (r) => r.user.toString() === userId
+    );
+
+    if (existingRating) {
+      existingRating.value = value; // update rating
+    } else {
+      prompt.ratings.push({ user: userId, value });
+    }
+
+    // ✅ Recalculate average
+    const total = prompt.ratings.reduce((sum, r) => sum + r.value, 0);
+    prompt.averageRating = total / prompt.ratings.length;
+
+    await pack.save();
+
+    res.json({
+      success: true,
+      message: "Prompt rated successfully",
+      averageRating: prompt.averageRating,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Server error", details: err.message });
   }
 };

@@ -66,7 +66,7 @@ import AdminPermission from "./admin/components/settings/AdminPermission";
 import MannualPrompt from "./admin/components/cms/overviewTab/MannualPrompt";
 import EditFunnel from "./admin/components/cms/funnelTab/EditFunnel";
 import ManuallFunnel from "./admin/components/cms/overviewTab/ManuallFunnel";
-
+import Feedback from "./admin/pages/feedback/feedback";
 function App() {
   return (
     <Router>
@@ -242,6 +242,14 @@ function App() {
               element={
                 <AdminLayout>
                   <AdminDashboard />
+                </AdminLayout>
+              }
+            />
+             <Route
+              path="/admin/reviews"
+              element={
+                <AdminLayout>
+                  <Feedback />
                 </AdminLayout>
               }
             />

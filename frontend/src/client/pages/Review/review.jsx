@@ -1,61 +1,70 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Star } from "lucide-react";
+import axiosInstance from "../../../store/axiosInstance";
+import { toast } from "react-hot-toast"; // ✅ import toast
 
 const ReviewForm = () => {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [formData, setFormData] = useState({
     review: "",
-    firstName: "",
-    lastName: "",
+    name: "",
     email: "",
   });
   const [errors, setErrors] = useState({});
 
-  // Email validation regex
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // ✅ Load user info from localStorage
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (storedUser) {
+      setFormData((prev) => ({
+        ...prev,
+        name: storedUser.name || "",
+        email: storedUser.email || "",
+      }));
+    }
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: "" }); // clear error when typing
+    setErrors({ ...errors, [e.target.name]: "" });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     let newErrors = {};
     if (rating === 0) newErrors.rating = "Please select a rating.";
     if (!formData.review.trim()) newErrors.review = "Review is required.";
-    if (!formData.firstName.trim()) newErrors.firstName = "First name is required.";
-    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required.";
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required.";
-    } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = "Enter a valid email.";
-    }
 
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      // ✅ Form is valid
-      console.log("Form submitted:", { rating, ...formData });
-      alert("Review submitted successfully!");
+      try {
+        const res = await axiosInstance.post("/reviews", {
+          rating,
+          review: formData.review,
+        });
 
-      // Reset form
-      setRating(0);
-      setFormData({
-        review: "",
-        firstName: "",
-        lastName: "",
-        email: "",
-      });
+        toast.success("✅ Review submitted successfully!"); // ✅ toast instead of alert
+        console.log("API Response:", res.data);
+
+        // Reset form
+        setRating(0);
+        setFormData((prev) => ({
+          ...prev,
+          review: "",
+        }));
+      } catch (err) {
+        console.error("Error submitting review:", err.response?.data || err.message);
+        toast.error("❌ Failed to submit review. Please try again."); // ✅ toast instead of alert
+      }
     }
   };
 
   return (
     <div className="flex justify-center items-center">
       <div className="text-white p-8 rounded-lg shadow-lg w-full">
-        {/* Title */}
         <h2 className="text-6xl font-bold mb-2">Leave a Review</h2>
         <p className="text-gray-400 mb-6 text-lg">
           How would you rate your experience with Anieuro?
@@ -78,7 +87,9 @@ const ReviewForm = () => {
               />
             ))}
           </div>
-          {errors.rating && <p className="text-red-400 text-sm mb-4">{errors.rating}</p>}
+          {errors.rating && (
+            <p className="text-red-400 text-sm mb-4">{errors.rating}</p>
+          )}
 
           {/* Review Textarea */}
           <textarea
@@ -89,47 +100,34 @@ const ReviewForm = () => {
             className="w-full bg-gray-800 border border-gray-700 rounded-md p-3 mb-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
             rows={7}
           />
-          {errors.review && <p className="text-red-400 text-sm mb-4">{errors.review}</p>}
+          {errors.review && (
+            <p className="text-red-400 text-sm mb-4">{errors.review}</p>
+          )}
 
-          {/* First Name */}
+          {/* Name (from localStorage, uneditable) */}
           <input
             type="text"
-            name="firstName"
-            value={formData.firstName}
-            onChange={handleChange}
-            placeholder="Enter your first name"
-            className="w-full bg-gray-800 border border-gray-700 rounded-md p-3 mb-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
+            name="name"
+            value={formData.name}
+            disabled
+            className="w-full bg-gray-700 border border-gray-600 rounded-md p-3 mb-2 text-gray-400 cursor-not-allowed"
           />
-          {errors.firstName && <p className="text-red-400 text-sm mb-4">{errors.firstName}</p>}
 
-          {/* Last Name */}
-          <input
-            type="text"
-            name="lastName"
-            value={formData.lastName}
-            onChange={handleChange}
-            placeholder="Enter your last name"
-            className="w-full bg-gray-800 border border-gray-700 rounded-md p-3 mb-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
-          />
-          {errors.lastName && <p className="text-red-400 text-sm mb-4">{errors.lastName}</p>}
-
-          {/* Email */}
+          {/* Email (from localStorage, uneditable) */}
           <input
             type="email"
             name="email"
             value={formData.email}
-            onChange={handleChange}
-            placeholder="Enter your Email"
-            className="w-full bg-gray-800 border border-gray-700 rounded-md p-3 mb-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
+            disabled
+            className="w-full bg-gray-700 border border-gray-600 rounded-md p-3 mb-2 text-gray-400 cursor-not-allowed"
           />
-          {errors.email && <p className="text-red-400 text-sm mb-4">{errors.email}</p>}
 
           {/* Buttons */}
           <div className="flex flex-row items-center justify-end gap-5 mt-6">
             <button
               type="button"
               onClick={() => {
-                setFormData({ review: "", firstName: "", lastName: "", email: "" });
+                setFormData((prev) => ({ ...prev, review: "" }));
                 setRating(0);
                 setErrors({});
               }}

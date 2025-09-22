@@ -10,7 +10,8 @@ import {
   deleteEmailInSequence,
   getGroupedEmailsByTier,
   trackEmailOpen,
-  trackEmailClick
+  trackEmailClick,
+  rateEmail
 } from '../controller/emailSequenceController.js';
 import upload from '../middleware/multer.js';
 import { authUser } from "../middleware/userTracker.js";
@@ -549,5 +550,78 @@ router.put("/:sequenceId/emails/:emailId", authUser, editEmailInSequence);
  */
 router.delete("/:sequenceId/emails/:emailId", authUser, deleteEmailInSequence);
 
+
+/**
+ * @swagger
+ * /api/email-sequences/{sequenceId}/{emailId}/rate:
+ *   post:
+ *     summary: Rate an email inside a sequence
+ *     description: Allows an authenticated user to rate a specific email (1–5 stars). If the user has already rated, their rating will be updated.
+ *     tags:
+ *       tags: [Rating Email, prompt and Funnel]
+ *     security:
+ *       - bearerAuth: []   # <-- JWT token required
+ *     parameters:
+ *       - in: path
+ *         name: sequenceId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the email sequence
+ *       - in: path
+ *         name: emailId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the email to rate
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - value
+ *             properties:
+ *               value:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 5
+ *                 example: 4
+ *     responses:
+ *       200:
+ *         description: Rating saved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Rating saved successfully"
+ *                 ratings:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       user:
+ *                         type: string
+ *                         example: "64f8a7d4a3b2c4e1a8f7d9a1"
+ *                       value:
+ *                         type: integer
+ *                         example: 5
+ *       400:
+ *         description: Invalid rating value
+ *       401:
+ *         description: Unauthorized (no token provided)
+ *       404:
+ *         description: Sequence or email not found
+ *       500:
+ *         description: Server error
+ */
+router.post("/:sequenceId/:emailId/rate", authUser, rateEmail);
 
 export default router;

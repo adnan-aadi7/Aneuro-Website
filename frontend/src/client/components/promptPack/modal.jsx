@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Star } from "lucide-react";
-import axiosInstance from "../../store/axiosInstance";
 import { toast } from "react-hot-toast";
+import axiosInstance from "../../../store/axiosInstance";
 
-const Popup = ({ isOpen, onClose, sequenceId, emailId }) => {
+const Popup = ({ isOpen, onClose, packId, promptId }) => {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -19,7 +19,7 @@ const Popup = ({ isOpen, onClose, sequenceId, emailId }) => {
     try {
       setLoading(true);
       await axiosInstance.post(
-        `/email-sequences/${sequenceId}/${emailId}/rate`,
+        `/prompt-packs/${packId}/prompts/${promptId}/rate`,
         { rating }
       );
 

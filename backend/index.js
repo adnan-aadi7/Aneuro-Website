@@ -25,7 +25,7 @@ import userAnalyticsRoutes from './routes/userAnalyticsRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import newsletterRoutes from './routes/newsletterRoutes.js';
 import redirectlinkRoutes from './routes/redirectlink.js'
-
+import reviewRoutes from './routes/reviewRoutes.js'
 const app = express();
 const port = 4000;
 
@@ -81,6 +81,7 @@ const startServer = async () => {
     app.use("/api/notifications", notificationRoutes);
     app.use("/api/newsletter", newsletterRoutes);
     app.use("/api/redirectlink", redirectlinkRoutes);
+    app.use("/api/reviews", reviewRoutes);
 
     app.listen(port, () => {
       console.log(`✅ Server running at http://localhost:${port}`);

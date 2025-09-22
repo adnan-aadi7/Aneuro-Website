@@ -15,6 +15,7 @@ export function authUser(req, res, next) {
     // Attach user info to request
     req.user = {
       id: decoded.id || decoded._id || null,
+      name: decoded.name || decoded.username || "",  
       email: decoded.email || null,
     };
 

@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import axiosInstance from "../../../../store/axiosInstance";
 import Popup from "../../popup";
-export default function ManualEmailCard({ emailId, title, preview, body }) {
+
+export default function ManualEmailCard({ sequenceId, emailId, title, preview, body }) {
   const [expanded, setExpanded] = useState(false);
-  const [showPopup, setShowPopup] = useState(false); // state for popup
+  const [showPopup, setShowPopup] = useState(false);
 
   const handleViewFull = async () => {
     try {
       if (!expanded) {
-        // count click only when expanding (not collapsing)
+        // ✅ track unique click
         await axiosInstance.post(`/email-sequences/${emailId}/click`);
       }
       setExpanded(!expanded);
@@ -18,9 +19,7 @@ export default function ManualEmailCard({ emailId, title, preview, body }) {
   };
 
   const renderBody = () => {
-    // normalize body into a single string
     const content = Array.isArray(body) ? body.join("\n\n") : body;
-
     return (
       <p
         className={`leading-6 text-[#B0B0B0] whitespace-pre-wrap transition-all duration-300 ${
@@ -42,36 +41,34 @@ export default function ManualEmailCard({ emailId, title, preview, body }) {
               🔐
             </span>
           </h3>
-        {/*  {preview ? (
-            <p className="text-[#12DCF0] text-sm">{preview}</p>
-          ) : null} */}
         </div>
         <button
           onClick={handleViewFull}
-          className="border border-[#12DCF080] text-[#B0B0B0] px-4 py-2 z-10 cursor-pointer text-xs font-medium transition-colors hover:bg-[#292933]"
-        >
+          className="border border-[#12DCF080] text-[#B0B0B0] px-4 py-2 z-10 cursor-pointer text-xs font-medium transition-colors hover:bg-[#292933]">
           {expanded ? "Hide Email" : "View Full Email"}
         </button>
       </div>
 
       <div className="bg-transparent rounded-lg p-4 text-sm space-y-4">
         {renderBody()}
-       {/* <div className="text-sm text-[#B0B0B0]">
-          <p>Best regards,</p>
-          <p>The Aneuro Team</p>
-        </div> */}
       </div>
+
+      {/* Rate button */}
       <div className="flex items-end justify-end">
-      <button
-        onClick={() => setShowPopup(true)}
-        className="text-cyan-400 underline text-sm font-semibold hover:text-cyan-300 cursor-pointer"
-      >
-        Rate This Tool
-      </button>
+        <button
+          onClick={() => setShowPopup(true)}
+          className="text-cyan-400 underline text-sm font-semibold hover:text-cyan-300 cursor-pointer">
+          Rate This Tool
+        </button>
       </div>
-       <Popup isOpen={showPopup} onClose={() => setShowPopup(false)}>
-        <Popup />
-      </Popup>
+
+      {/* Popup */}
+      <Popup
+        isOpen={showPopup}
+        onClose={() => setShowPopup(false)}
+        sequenceId={sequenceId}  // ✅ ensure props passed
+        emailId={emailId}        // ✅ ensure props passed
+      />
     </div>
   );
 }

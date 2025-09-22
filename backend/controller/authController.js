@@ -60,17 +60,22 @@ export async function Login(reqBody) {
       throw new Error("Invalid email or password");
     }
 
-    // Correct field from schema
-if (user.accountStatus === "suspended") {
-  throw new Error("Your account is suspended. Please contact support.");
-}
-
+    // ✅ Handle suspended accounts
+    if (user.accountStatus === "suspended") {
+      throw new Error("Your account is suspended. Please contact support.");
+    }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) throw new Error("Invalid email or password");
 
+    // ✅ Include name in token
     const token = jwt.sign(
-      { id: user._id, email: user.email, userType: user.userType },
+      {
+        id: user._id,
+        name: user.name,   // added
+        email: user.email,
+        userType: user.userType,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -79,9 +84,10 @@ if (user.accountStatus === "suspended") {
 
     await User.updateOne({ _id: user._id }, { lastLogin: new Date() });
 
+    // Quiz progress check
     const quizSession = await QuizSession.findOne({ user_id: user._id }).lean();
-
     let quizProgress = { completionPercentage: 0, isCompleted: false };
+
     if (quizSession) {
       const answeredCount = quizSession.answers.length;
       quizProgress = {
@@ -106,6 +112,7 @@ if (user.accountStatus === "suspended") {
     throw new Error(error.message || "Login failed");
   }
 }
+
 
 
 
