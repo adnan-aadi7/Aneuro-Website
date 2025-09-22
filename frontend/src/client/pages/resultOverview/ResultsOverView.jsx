@@ -26,7 +26,7 @@ export default function ResultsOverView() {
     dateTo: "",
   });
 
-  const user = useMemo(getUserInfo, []); // contains id, role, userType
+  const user = useMemo(getUserInfo, []); 
 
 useEffect(() => {
   const fetchData = async () => {
@@ -42,18 +42,19 @@ useEffect(() => {
     try {
       let res;
       const params = {
-        userId: user.id,       // logged-in user ID
-        userType: user.userType, // pass userType
-      };
+    userId: user.id,          
+    userType: user.userType,  
+  };
 
-      if (user.userType === "admin") {
-        res = await axios.get("/quiz/user/subscribers-quizzes", { params });
-      } else if (user.userType === "user") {
-        if (typeof filters.isCompleted === "boolean") {
-          params.is_completed = filters.isCompleted;
-        }
-        params.user_id = user.id;
-        res = await axios.get("/quiz/sessions", { params });
+  if (typeof filters.isCompleted === "boolean") {
+    params.is_completed = filters.isCompleted;
+  }
+
+  if (user.userType === "admin") {
+    res = await axios.get("/quiz/user/subscribers-quizzes", { params });
+  } else if (user.userType === "user") {
+    params.user_id = user.id;
+    res = await axios.get("/quiz/sessions", { params });
       } else {
         setError("Invalid user type.");
         setRows([]);

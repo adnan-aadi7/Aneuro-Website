@@ -360,7 +360,7 @@ export const getAudienceQuizReport = async (req, res) => {
     });
 
     // Ensure all 5 brain types exist
-    const allBrainTypes = ["Architect", "Reflector", "Catalyst", "Synthesizer", "Challenger"];
+    const allBrainTypes = ["Architect", "Reflector", "Catalyst", "Synthesizer"];
     allBrainTypes.forEach((type) => {
       if (!brainTypeScores[type]) {
         brainTypeScores[type] = 0;
@@ -381,14 +381,25 @@ export const getAudienceQuizReport = async (req, res) => {
       });
     }
 
-    const sessionsWithData = sessions.map((session) => {
-      const sessionObj = session.toObject();
-      sessionObj.questions_completed = session.answers?.length || 0;
-      sessionObj.reminders = reminders.filter(
-        (r) => r.quizSessionId.toString() === session._id.toString()
-      );
-      return sessionObj;
-    });
+   const sessionsWithData = sessions.map((session) => {
+  const sessionObj = session.toObject();
+  sessionObj.questions_completed = session.answers?.length || 0;
+
+  // ✅ submittedAt = createdAt of the last answer (if any)
+  if (session.answers?.length > 0) {
+    const lastAnswer = session.answers[session.answers.length - 1];
+    sessionObj.submittedAt = lastAnswer.createdAt;
+  } else {
+    sessionObj.submittedAt = null;
+  }
+
+  sessionObj.reminders = reminders.filter(
+    (r) => r.quizSessionId.toString() === session._id.toString()
+  );
+
+  return sessionObj;
+});
+
 
     return res.status(200).json({
       success: true,
@@ -705,18 +716,28 @@ export const getSubscribersWithQuizData = async (req, res) => {
 
     const userIds = users.map((u) => u._id);
 
+    // 🔹 Build base quiz query
     const quizQuery = { user_id: { $in: userIds }, is_subscriber_quiz: true };
-    if (is_completed !== undefined) quizQuery.is_completed = is_completed === "true";
+
+    // 🔹 Handle is_completed filter properly
+    if (typeof is_completed !== "undefined") {
+      if (is_completed === "true") {
+        quizQuery.is_completed = true;
+      } else {
+        // Match quizzes explicitly incomplete OR without is_completed field
+        quizQuery.$or = [{ is_completed: false }, { is_completed: { $exists: false } }];
+      }
+    }
 
     const quizzes = await QuizSession.find(quizQuery);
 
-    // Map each quiz into the "flat" user quiz structure
+    // 🔹 Map each quiz into the "flat" user quiz structure
     const data = quizzes
       .map((q) => {
         const user = users.find((u) => u._id.toString() === q.user_id.toString());
         if (!user) return null;
 
-        // Only include quizzes after subscription start date
+        // Only include quizzes created after subscription start date
         if (user.subscription?.startDate && new Date(q.createdAt) < new Date(user.subscription.startDate)) {
           return null;
         }
@@ -735,7 +756,12 @@ export const getSubscribersWithQuizData = async (req, res) => {
           is_subscriber_quiz: q.is_subscriber_quiz || false,
           brain_type: q.brain_type || null,
           reminders: q.reminders || [],
-          score_breakdown: q.score_breakdown || { Architect: 0, Reflector: 0, Catalyst: 0, Synthesizer: 0 },
+          score_breakdown: q.score_breakdown || {
+            Architect: 0,
+            Reflector: 0,
+            Catalyst: 0,
+            Synthesizer: 0,
+          },
         };
       })
       .filter(Boolean);
@@ -753,6 +779,7 @@ export const getSubscribersWithQuizData = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 
 

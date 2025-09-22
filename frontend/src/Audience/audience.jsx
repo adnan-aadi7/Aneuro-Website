@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import api from "../store/axiosInstance";
 import { toastError } from "../toast";
+import { jwtDecode } from "jwt-decode";
 
 const questions = [
   {
@@ -116,6 +117,7 @@ const Audience = () => {
   const [finished, setFinished] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "" });
   const [submitting, setSubmitting] = useState(false);
+  const [redirectUrl, setRedirectUrl] = useState("");
 
   // Theme from /api/customization/:userId
   const [theme, setTheme] = useState({
@@ -127,10 +129,34 @@ const Audience = () => {
     loading: true,
   });
 
-  const { userId } = useParams(); // route: /Audience-quiz/:userId
+  const { userId, token } = useParams(); 
+  console.log(token, 'token');
   const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/^http:\/\//, "https://");
 
   const optionLetter = (i) => String.fromCharCode(65 + i);
+
+  // ✅ Decode redirectLink from token
+  useEffect(() => {
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        console.log("Decoded token:", decoded);
+        if (decoded.redirectLink) {
+          setRedirectUrl(decoded.redirectLink);
+        }
+      } catch (err) {
+        console.error("Invalid token:", err);
+      }
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (finished && redirectUrl) {
+      setTimeout(() => {
+        window.location.href = redirectUrl;
+      }, 2000); // wait 2s before redirect
+    }
+  }, [finished, redirectUrl]);
 
   // Fetch customization on mount/param change
   useEffect(() => {
@@ -219,7 +245,15 @@ const Audience = () => {
     }
   };
 
-  const handleFinish = () => setFinished(true);
+const handleFinish = () => {
+  setFinished(true);
+
+  if (redirectUrl) {
+    setTimeout(() => {
+      window.location.href = redirectUrl;
+    }, 2000); // redirect after 2s
+  }
+};
   const handleInputChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleFormSubmit = (e) => {
@@ -305,19 +339,21 @@ const Audience = () => {
       ) : finished ? (
         // 🎉 Finish Screen
         <div
-          className="relative text-center bg-black p-8 z-10 h-[400px] w-[98%] md:w-[45%] flex flex-col items-center justify-center rounded-xl border"
-          style={cardBorderStyle}
-        >
-          {/* <div className="absolute top-8 right-8 cursor-pointer">
-            <X />
-          </div> */}
-          <img src="/Frame 1000004776.png" alt="img" className="w-32 h-32" />
-          <h1 className="text-[20px] md:text-[32px] font-bold mb-4">
-            That’s a wrap! thanks for <br />
-            sharing your mind with us
-          </h1>
-          <p className="font-medium opacity-80">You are good to go</p>
-        </div>
+    className="relative text-center bg-black p-8 z-10 h-[400px] w-[98%] md:w-[45%] flex flex-col items-center justify-center rounded-xl border"
+    style={cardBorderStyle}
+  >
+    <img src="/Frame 1000004776.png" alt="img" className="w-32 h-32" />
+    <h1 className="text-[20px] md:text-[32px] font-bold mb-4">
+      That’s a wrap! thanks for <br />
+      sharing your mind with us
+    </h1>
+    <p className="font-medium opacity-80">
+      You are good to go <br />
+      <span className="text-sm opacity-70">
+        Redirecting you in 2 seconds...
+      </span>
+    </p>
+  </div>
       ) : (
         // 📋 MCQ Questions
         <div

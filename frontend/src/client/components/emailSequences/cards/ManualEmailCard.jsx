@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import axiosInstance from "../../../../store/axiosInstance";
-
+import Popup from "../../popup";
 export default function ManualEmailCard({ emailId, title, preview, body }) {
   const [expanded, setExpanded] = useState(false);
+  const [showPopup, setShowPopup] = useState(false); // state for popup
 
   const handleViewFull = async () => {
     try {
@@ -60,6 +61,17 @@ export default function ManualEmailCard({ emailId, title, preview, body }) {
           <p>The Aneuro Team</p>
         </div> */}
       </div>
+      <div className="flex items-end justify-end">
+      <button
+        onClick={() => setShowPopup(true)}
+        className="text-cyan-400 underline text-sm font-semibold hover:text-cyan-300 cursor-pointer"
+      >
+        Rate This Tool
+      </button>
+      </div>
+       <Popup isOpen={showPopup} onClose={() => setShowPopup(false)}>
+        <Popup />
+      </Popup>
     </div>
   );
 }

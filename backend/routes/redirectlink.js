@@ -9,7 +9,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "super-secret-key";
  * @swagger
  * tags:
  *   name: Redirect Link
- *   description: Manage client redirect URLs for audience quizzes
+ *   description: Manage client redirect URLs for audience quizzes (tokens are generated dynamically, not saved in DB)
  */
 
 /**
@@ -67,18 +67,20 @@ router.post("/set", async (req, res) => {
       return res.status(400).json({ error: "User ID and redirect link are required" });
     }
 
-    const token = jwt.sign({ redirectLink, userId }, JWT_SECRET, { expiresIn: "7d" });
-
+    // Save only redirect_link
     let session = await QuizSession.findOneAndUpdate(
       { user_id: userId },
-      { redirect_link: redirectLink, redirect_token: token },
+      { redirect_link: redirectLink },
       { new: true, upsert: true }
     );
+
+    // Generate token dynamically
+    const token = jwt.sign({ redirectLink, userId }, JWT_SECRET, { expiresIn: "30d" });
 
     res.status(200).json({
       message: "✅ Redirect link saved",
       redirectLink: session.redirect_link,
-      redirectToken: session.redirect_token,
+      redirectToken: token,
       tokenizedUrl: `${process.env.FRONTEND_URL || "http://localhost:5173"}/Audience-quiz/${userId}/${token}`,
     });
   } catch (err) {
@@ -87,13 +89,12 @@ router.post("/set", async (req, res) => {
   }
 });
 
-
-
 /**
  * @swagger
  * /api/redirectlink/{userId}:
  *   get:
- *     summary: Get the saved redirect link and tokenized URL for a user
+ *     summary: Get the saved redirect link and generate a new tokenized URL
+ *     description: The token is generated fresh each time and is not stored in DB.
  *     tags: [Redirect Link]
  *     parameters:
  *       - in: path
@@ -104,7 +105,7 @@ router.post("/set", async (req, res) => {
  *         description: The ID of the user
  *     responses:
  *       200:
- *         description: Successfully retrieved redirect link and token
+ *         description: Successfully retrieved redirect link and tokenized URL
  *         content:
  *           application/json:
  *             schema:
@@ -121,6 +122,8 @@ router.post("/set", async (req, res) => {
  *                   example: http://localhost:5173/Audience-quiz/650c1f2ab6c0c3f4e81a1234/eyJhbGciOiJIUzI1...
  *       404:
  *         description: No redirect link found for this user
+ *       500:
+ *         description: Server error
  */
 router.get("/:userId", async (req, res) => {
   try {
@@ -128,20 +131,22 @@ router.get("/:userId", async (req, res) => {
 
     const session = await QuizSession.findOne({ user_id: userId });
 
-    if (!session || !session.redirect_link || !session.redirect_token) {
+    if (!session || !session.redirect_link) {
       return res.status(404).json({ error: "No redirect link found for this user" });
     }
 
+    // Generate token dynamically
+    const token = jwt.sign({ redirectLink: session.redirect_link, userId }, JWT_SECRET, { expiresIn: "30d" });
+
     res.status(200).json({
       redirectLink: session.redirect_link,
-      redirectToken: session.redirect_token,
-      tokenizedUrl: `${process.env.FRONTEND_URL || "http://localhost:5173"}/Audience-quiz/${userId}/${session.redirect_token}`,
+      redirectToken: token,
+      tokenizedUrl: `${process.env.FRONTEND_URL || "http://localhost:5173"}/Audience-quiz/${userId}/${token}`,
     });
   } catch (err) {
     console.error("Error fetching redirect link:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
-
 
 export default router;

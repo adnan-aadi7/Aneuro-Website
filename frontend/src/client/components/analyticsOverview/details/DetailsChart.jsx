@@ -14,12 +14,11 @@ const COLOR_MAP = {
   Catalyst: "#22D3EE",
   Reflector: "#2DE1C2",
   Synthesizer: "#F59E42",
-  Challenger: "#F43F5E",
 };
 
 const DetailsChart = ({ chartData }) => {
   const data = useMemo(() => {
-    const types = ["Architect", "Catalyst", "Reflector", "Synthesizer", "Challenger"];
+    const types = ["Architect", "Catalyst", "Reflector", "Synthesizer"];
     return types.map((t) => ({ name: t, value: chartData?.[t] ?? 0, color: COLOR_MAP[t] }));
   }, [chartData]);
 
@@ -29,7 +28,6 @@ const DetailsChart = ({ chartData }) => {
       { type: "Synthesizer", percent: chartData?.Synthesizer ?? 0 },
       { type: "Reflector", percent: chartData?.Reflector ?? 0 },
       { type: "Architect", percent: chartData?.Architect ?? 0 },
-      { type: "Challenger", percent: chartData?.Challenger ?? 0 },
     ];
   }, [chartData]);
 
@@ -39,12 +37,11 @@ const DetailsChart = ({ chartData }) => {
       { label: "Catalyst", color: COLOR_MAP.Catalyst },
       { label: "Reflector", color: COLOR_MAP.Reflector },
       { label: "Synthesizer", color: COLOR_MAP.Synthesizer },
-      { label: "Challenger", color: COLOR_MAP.Challenger },
     ];
   }, []);
 
   return (
-  <div className="flex flex-col md:flex-row gap-8 w-full mt-15 bg-[#2A2A39] lg:p-8 p-2">
+  <div className="flex flex-col md:flex-row gap-8 lg:gap-20 w-full mt-15 bg-[#2A2A39] lg:p-8 p-2">
     {/* Left: Legend and Table */}
     <div className="flex-1 min-w-[0] md:min-w-[320px] md:max-w-lg w-full">
       {/* Legend */}

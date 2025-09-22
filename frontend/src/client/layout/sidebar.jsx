@@ -25,6 +25,9 @@ const Sidebar = ({ sidebarOpen, onSidebarClose, onLogout }) => {
     setOn(saved === "1");
   }, []);
 
+const userData = JSON.parse(localStorage.getItem("user")) || {};
+const isAdmin = userData.userType === "admin";
+
   const menuItems = [
     { icon: MdOutlineDashboard, label: "Dashboard", to: "/client/dashboard" },
     { icon: TbFileSearch, label: "Results Overview", to: "/results-overview" },
@@ -37,7 +40,9 @@ const Sidebar = ({ sidebarOpen, onSidebarClose, onLogout }) => {
       to: "/client/manage-subscription/subscriptions",
     },
     { icon: TbHeadset, label: "Support Center", to: "/support-center" },
-    { icon: TbMessage2, label: "Leave Feedback", to: "/leave-feedback" },
+    { icon: TbMessage2, label: "Help & Support", to: "/leave-feedback" },
+        { icon: TbMessage2, label: "Leave Feedback", to: "/client/feedback" },
+
   ];
 
   const bottomItems = [
@@ -130,34 +135,38 @@ const Sidebar = ({ sidebarOpen, onSidebarClose, onLogout }) => {
             })}
 
             {/* Client View Toggle */}
-            <button
-              type="button"
-              className="flex items-center gap-3 px-6 py-3 font-medium text-[17px] text-gray-400 focus:outline-none cursor-pointer"
-              onClick={() => {
-                const next = !on;
-                setOn(next);
-                localStorage.setItem("actAsClient", next ? "1" : "0");
-                if (next) {
-                  navigate("/client/dashboard");
-                } else {
-                  navigate("/admin/dashboard");
-                }
-              }}
-              aria-pressed={on}
-            >
-              <span
-                className={`w-9 h-5 flex items-center rounded-full transition-colors duration-200 ${
-                  on ? "bg-[#12DCF0]" : "bg-gray-600"
-                }`}
-              >
-                <span
-                  className={`w-4 h-4 rounded-full bg-black transition-all duration-200 ${
-                    on ? "ml-4" : "ml-1"
-                  }`}
-                />
-              </span>
-              Client View
-            </button>
+           {/* Client View Toggle (only for admins) */}
+{isAdmin && (
+  <button
+    type="button"
+    className="flex items-center gap-3 px-6 py-3 font-medium text-[17px] text-gray-400 focus:outline-none cursor-pointer"
+    onClick={() => {
+      const next = !on;
+      setOn(next);
+      localStorage.setItem("actAsClient", next ? "1" : "0");
+      if (next) {
+        navigate("/client/dashboard");
+      } else {
+        navigate("/admin/dashboard");
+      }
+    }}
+    aria-pressed={on}
+  >
+    <span
+      className={`w-9 h-5 flex items-center rounded-full transition-colors duration-200 ${
+        on ? "bg-[#12DCF0]" : "bg-gray-600"
+      }`}
+    >
+      <span
+        className={`w-4 h-4 rounded-full bg-black transition-all duration-200 ${
+          on ? "ml-4" : "ml-1"
+        }`}
+      />
+    </span>
+    Client View
+  </button>
+)}
+
           </nav>
 
           {/* Bottom Menu */}

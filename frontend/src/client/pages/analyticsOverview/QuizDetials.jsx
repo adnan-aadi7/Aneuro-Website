@@ -71,7 +71,7 @@ const QuizDetials = () => {
               name={session?.name}
               userId={session?.user_id ? `#${session.user_id}` : undefined}
               email={session?.email}
-              date={session?.updatedAt || session?.createdAt}
+              date={session?.submittedAt || session?.updatedAt} 
               brainType={session?.brain_type}
               brainPercent={brainPercent}
               avatar={avatar}

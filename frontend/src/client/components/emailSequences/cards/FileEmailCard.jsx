@@ -1,5 +1,6 @@
 import React from "react";
-
+import Popup from "../../popup";
+import { useState } from "react";
 function getFileMeta(url = "") {
   try {
     const u = new URL(url);
@@ -19,6 +20,7 @@ const DOWNLOADABLE = new Set(["txt", "doc", "docx"]);
 export default function FileEmailCard({ title, preview, fileUrl }) {
   const { name, ext } = getFileMeta(fileUrl);
   const canDownload = DOWNLOADABLE.has(ext);
+  const [showPopup, setShowPopup] = useState(false); // state for popup
 
   return (
     <div className="bg-[#23232A] p-6 mb-6">
@@ -66,7 +68,19 @@ export default function FileEmailCard({ title, preview, fileUrl }) {
             </a>
           )}
         </div>
+        
       </div>
+       <div className="flex items-end justify-end mt-4">
+      <button
+        onClick={() => setShowPopup(true)}
+        className="text-cyan-400 underline text-sm font-semibold hover:text-cyan-300 cursor-pointer"
+      >
+        Rate This Tool
+      </button>
+      </div>
+       <Popup isOpen={showPopup} onClose={() => setShowPopup(false)}>
+        <Popup />
+      </Popup>
     </div>
   );
 }

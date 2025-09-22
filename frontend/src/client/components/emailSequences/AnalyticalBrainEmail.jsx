@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import ManualEmailCard from "./cards/ManualEmailCard";
 import FileEmailCard from "./cards/FileEmailCard";
 import CategoryFilter from "./CategoryFilter";
-
+import Popup from "../popup";
 /** Renders a list of sequences plus the Category dropdown inside */
 export default function AnalyticalBrainEmail({
   sequences,
@@ -131,7 +131,10 @@ export default function AnalyticalBrainEmail({
           >
             {showAll ? `View Less (${renderedItems.length})` : `View All Emails (${renderedItems.length})`}
           </button>
+          
         </div>
+
+        
       </div>
     </div>
   );

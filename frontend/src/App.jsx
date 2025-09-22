@@ -53,7 +53,7 @@ import Analytics from "./admin/pages/analyticsOverview/Analytics";
 import EmailStatsDetails from "./admin/pages/analyticsOverview/EmailStatsDetails";
 import PromptStatsDetails from "./admin/pages/analyticsOverview/PromptStatsDetails";
 import FunnelStatsDetails from "./admin/pages/analyticsOverview/FunnelStatsDetails";
-
+import ReviewForm from './client/pages/Review/review'
 // landing pages
 import Home from "./landingpage/pages/home";
 import AboutUs from "./landingpage/pages/AboutUs";
@@ -90,6 +90,14 @@ function App() {
         {/* ---------- Protected (any logged-in user) ---------- */}
         <Route element={<RequireAuth />}>
           {/* Client area */}
+           <Route
+            path="/client/feedback"
+            element={
+              <ClientLayout>
+                <ReviewForm />
+              </ClientLayout>
+            }
+          />
           <Route
             path="/client/dashboard"
             element={

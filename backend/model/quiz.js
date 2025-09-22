@@ -9,7 +9,8 @@ const answerSchema = new mongoose.Schema({
     enum: ['Architect', 'Reflector', 'Catalyst', 'Synthesizer'], 
     required: true 
   }
-});
+}, { timestamps: true }); 
+
 
 const quizSessionSchema = new mongoose.Schema({
   user_id: {
@@ -35,7 +36,7 @@ const quizSessionSchema = new mongoose.Schema({
   challenger_detected: { type: Boolean, default: false },
 
   redirect_link: { type: String, default: null },
-  redirect_token: { type: String, default: null },
+  //redirect_token: { type: String, default: null, unique: false, sparse: true },
 
   timestamp: { type: Date, default: Date.now }
 }, { timestamps: true });
