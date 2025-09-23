@@ -160,16 +160,22 @@ const EmailStatsCards = ({ sequenceId }) => {
         </div>
       </div>
       {/* Usage */}
-      <div className="bg-[#2A2A39] border border-[#3A3A4A] rounded p-6 min-w-[180px] flex-1">
-        <div className="flex items-center gap-2 text-white text-sm mb-2">
-          <Users className="w-5 h-5 text-white" />
-          {isCategoryView ? 'Total Usage' : 'Usage'}
-        </div>
-        <div className="text-white text-2xl font-bold mb-1">{usageCount.toLocaleString()}</div>
-        <div className="text-xs text-cyan-400 font-medium">
-          Downloads: {downloadsCount.toLocaleString()}
-        </div>
-      </div>
+      {/* Usage */}
+<div className="bg-[#2A2A39] border border-[#3A3A4A] rounded p-6 min-w-[180px] flex-1">
+  <div className="flex items-center gap-2 text-white text-sm mb-2">
+    <Users className="w-5 h-5 text-white" />
+    {isCategoryView ? 'Total Usage' : 'Usage'}
+  </div>
+
+  <div className="text-white text-2xl font-bold mb-1">
+    {currentSequence.usageStats.totalUsageBasedOnClicks}
+  </div>
+
+ 
+
+  
+</div>
+
     {/* Tier */}
 <div className="bg-[#2A2A39] border border-[#3A3A4A] rounded p-6 min-w-[180px] flex-1">
   <div className="flex items-center gap-2 text-white text-sm mb-2">

@@ -241,12 +241,15 @@ const EmailSequences = () => {
                         {safeRender(sequence.status)}
                       </span>
                     </td>
-                    <td className="py-4 px-4 text-gray-300 text-sm">
-                      <div className="flex items-center">
-                        <Users className="w-4 h-4 mr-1 text-blue-400" />
-                        {safeRender(sequence.usage, 0)}
-                      </div>
-                    </td>
+                   <td className="py-4 px-4 text-gray-300 text-sm">
+  <div className="flex items-center gap-2">
+    <Users className="w-4 h-4 text-blue-400" />
+    <span className="font-medium">
+      {safeRender(sequence.usageStats?.totalUsageBasedOnClicks, "0.00")}
+    </span>
+  </div>
+</td>
+
                     <td className="py-4 px-4 text-gray-300 text-sm">
                       {formatDate(sequence.createdAt)}
                     </td>

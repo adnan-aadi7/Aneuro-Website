@@ -232,8 +232,6 @@ export const getGroupedEmailsByTier = async (req, res) => {
 };
 
 
-
-// GET ALL
 export async function getAll(req, res) {
   try {
     const {
@@ -243,7 +241,7 @@ export async function getAll(req, res) {
       status,
       sortBy = 'createdAt',
       sortOrder = 'desc',
-      search
+      search,
     } = req.query;
 
     const filter = {};
@@ -261,31 +259,63 @@ export async function getAll(req, res) {
       .limit(parseInt(limit))
       .skip(skip);
 
+    // ✅ Add usage stats (average opens, clicks, usage per user + total usage score)
+    const enrichedSequences = sequences.map((seq) => {
+      const totalUsers = seq.usage?.users?.length || 0;
+      const totalEmails = seq.emails.length || 1;
+
+      // Aggregate all email metrics
+      const totalOpens = seq.emails.reduce((sum, email) => sum + (email.totalOpens || 0), 0);
+      const totalClicks = seq.emails.reduce((sum, email) => sum + (email.uniqueClicks || 0), 0);
+
+      // Average clicks per email
+      const avgClicksPerEmail = totalEmails > 0 ? totalClicks / totalEmails : 0;
+
+      return {
+        ...seq.toObject(),
+        usageStats: {
+          totalUsage: seq.usage?.count || 0,
+          totalUsers,
+          totalEmails,
+          totalOpens,
+          totalClicks,
+          avgUsagePerUser: totalUsers > 0 ? (seq.usage.count / totalUsers).toFixed(2) : 0,
+          avgOpensPerUser: totalUsers > 0 ? (totalOpens / totalUsers).toFixed(2) : 0,
+          avgClicksPerUser: totalUsers > 0 ? (totalClicks / totalUsers).toFixed(2) : 0,
+          avgOpensPercent: seq.usage.count > 0 ? ((totalOpens / seq.usage.count) * 100).toFixed(2) + "%" : "0%",
+          avgClicksPercent: seq.usage.count > 0 ? ((totalClicks / seq.usage.count) * 100).toFixed(2) + "%" : "0%",
+          // ✅ New: Usage score based on avg clicks per email
+          totalUsageBasedOnClicks: avgClicksPerEmail.toFixed(2),
+        },
+      };
+    });
+
     const total = await EmailSequence.countDocuments(filter);
     const totalPages = Math.ceil(total / parseInt(limit));
 
     res.status(200).json({
       success: true,
-      data: sequences,
+      data: enrichedSequences,
       pagination: {
         currentPage: parseInt(page),
         totalPages,
         totalItems: total,
         itemsPerPage: parseInt(limit),
         hasNextPage: parseInt(page) < totalPages,
-        hasPrevPage: parseInt(page) > 1
+        hasPrevPage: parseInt(page) > 1,
       },
       filters: { tier, status, search },
-      sorting: { sortBy, sortOrder }
+      sorting: { sortBy, sortOrder },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error fetching email sequences',
-      error: error.message
+      error: error.message,
     });
   }
 }
+
 
 // GET BY ID
 export async function getById(req, res) {
@@ -302,7 +332,46 @@ export async function getById(req, res) {
       return res.status(404).json({ success: false, message: 'Email sequence not found' });
     }
 
-    res.status(200).json({ success: true, data: sequence });
+    // --- Calculate usage stats ---
+    const usageStats = {
+      totalUsage: sequence.usage?.count || 0,
+      totalUsers: sequence.usage?.users?.length || 0,
+      totalEmails: Array.isArray(sequence.emails) ? sequence.emails.length : 0,
+      totalOpens: sequence.emails?.reduce((sum, e) => sum + (e.totalOpens || 0), 0) || 0,
+      totalClicks: sequence.emails?.reduce((sum, e) => sum + (e.uniqueClicks || 0), 0) || 0,
+    };
+
+    // Percentages & averages
+    usageStats.avgUsagePerUser = usageStats.totalUsers > 0 
+      ? (usageStats.totalUsage / usageStats.totalUsers).toFixed(2) 
+      : 0;
+
+    usageStats.avgOpensPerUser = usageStats.totalUsers > 0 
+      ? (usageStats.totalOpens / usageStats.totalUsers).toFixed(2) 
+      : 0;
+
+    usageStats.avgClicksPerUser = usageStats.totalUsers > 0 
+      ? (usageStats.totalClicks / usageStats.totalUsers).toFixed(2) 
+      : 0;
+
+    usageStats.avgOpensPercent = usageStats.totalEmails > 0
+      ? ((usageStats.totalOpens / usageStats.totalEmails) * 100).toFixed(2) + "%"
+      : "0%";
+
+    usageStats.avgClicksPercent = usageStats.totalEmails > 0
+      ? ((usageStats.totalClicks / usageStats.totalEmails) * 100).toFixed(2) + "%"
+      : "0%";
+
+    usageStats.totalUsageBasedOnClicks = usageStats.totalEmails > 0
+      ? (usageStats.totalClicks / usageStats.totalEmails).toFixed(2)
+      : "0.00";
+
+    // Attach stats
+    const responseData = sequence.toObject();
+    responseData.usageStats = usageStats;
+
+    res.status(200).json({ success: true, data: responseData });
+
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -311,6 +380,7 @@ export async function getById(req, res) {
     });
   }
 }
+
 
 export async function update(req, res) {
   try {
