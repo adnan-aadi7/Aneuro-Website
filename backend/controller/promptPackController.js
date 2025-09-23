@@ -561,20 +561,41 @@ export async function incrementUsage(req, res) {
   }
 }
 
-// GET STATISTICS - Get usage statistics
 export async function getStatistics(req, res) {
   try {
-    // Overall statistics
+    // Overall statistics (usage + ratings)
     const stats = await PromptPack.aggregate([
+      { $unwind: { path: "$prompts", preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: "$prompts.ratings", preserveNullAndEmptyArrays: true } },
       {
         $group: {
           _id: null,
-          totalPacks: { $sum: 1 },
+          totalPacks: { $addToSet: "$_id" },
           totalUsage: { $sum: "$usageCount" },
+
+          // usage stats
           avgUsage: { $avg: "$usageCount" },
           maxUsage: { $max: "$usageCount" },
           minUsage: { $min: "$usageCount" },
-          avgRating: { $avg: "$rating" } // overall avg rating
+
+          // collect ratings
+          allRatings: { $push: "$prompts.ratings.value" }
+        }
+      },
+      {
+        $project: {
+          totalPacks: { $size: "$totalPacks" },
+          totalUsage: 1,
+          avgUsage: 1,
+          maxUsage: 1,
+          minUsage: 1,
+          avgRating: {
+            $cond: [
+              { $gt: [{ $size: "$allRatings" }, 0] },
+              { $avg: "$allRatings" },
+              0
+            ]
+          }
         }
       }
     ]);
@@ -601,14 +622,13 @@ export async function getStatistics(req, res) {
       }
     ]);
 
-    // Status statistics (Active / Scheduled) + prompts count + avg rating
+    // Status statistics (active vs scheduled)
     const statusStats = await PromptPack.aggregate([
       {
         $group: {
           _id: "$status",
           totalPromptPacks: { $sum: 1 },
-          totalPrompts: { $sum: { $size: "$prompts" } }, // counts prompts array length
-          avgRating: { $avg: "$rating" },
+          totalPrompts: { $sum: { $size: "$prompts" } },
           totalUsage: { $sum: "$usageCount" }
         }
       }
@@ -617,13 +637,13 @@ export async function getStatistics(req, res) {
     const activeStats = statusStats.find(s => s._id === "active") || {
       totalPromptPacks: 0,
       totalPrompts: 0,
-      avgRating: 0
+      totalUsage: 0
     };
 
     const scheduledStats = statusStats.find(s => s._id === "scheduled") || {
       totalPromptPacks: 0,
       totalPrompts: 0,
-      avgRating: 0
+      totalUsage: 0
     };
 
     res.status(200).json({
@@ -636,12 +656,12 @@ export async function getStatistics(req, res) {
           active: {
             totalPacks: activeStats.totalPromptPacks,
             totalPrompts: activeStats.totalPrompts,
-            avgRating: activeStats.avgRating
+            totalUsage: activeStats.totalUsage
           },
           scheduled: {
             totalPacks: scheduledStats.totalPromptPacks,
             totalPrompts: scheduledStats.totalPrompts,
-            avgRating: scheduledStats.avgRating
+            totalUsage: scheduledStats.totalUsage
           }
         }
       }
@@ -649,11 +669,12 @@ export async function getStatistics(req, res) {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error fetching statistics',
+      message: "Error fetching statistics",
       error: error.message
     });
   }
 }
+
 
 
 export const editPromptInPromptPack = async (req, res) => {

@@ -296,19 +296,32 @@ export const deleteFunnelTemplate = async (req, res) => {
 export const getFunnelTemplateStats = async (req, res) => {
   try {
     const mainStats = await FunnelTemplate.aggregate([
-      { $group: {
+      {
+        $group: {
           _id: null,
           totalTemplates: { $sum: 1 },
           totalUsage: { $sum: "$usage" },
+          avgUsage: { $avg: "$usage" },
           totalConversions: { $sum: "$conversions" },
-          averageUserRating: { $avg: "$userRating" }
-      }}
+          avgConversionRate: {
+            $avg: {
+              $cond: [
+                { $gt: ["$usage", 0] }, // avoid division by zero
+                { $divide: ["$conversions", "$usage"] },
+                0
+              ]
+            }
+          },
+          avgRating: { $avg: "$averageRating" }
+        }
+      }
     ]);
 
     const totalActive = await FunnelTemplate.countDocuments({ status: "active" });
     const totalScheduled = await FunnelTemplate.countDocuments({ status: "scheduled" });
 
     const tierStats = await FunnelTemplate.aggregate([
+      { $unwind: "$tier" }, // flatten array values
       { $group: { _id: "$tier", count: { $sum: 1 } } }
     ]);
 
@@ -317,8 +330,10 @@ export const getFunnelTemplateStats = async (req, res) => {
       data: {
         totalTemplates: mainStats[0]?.totalTemplates || 0,
         totalUsage: mainStats[0]?.totalUsage || 0,
+        avgUsage: mainStats[0]?.avgUsage || 0,
         totalConversions: mainStats[0]?.totalConversions || 0,
-        averageUserRating: mainStats[0]?.averageUserRating || 0,
+        avgConversionRate: mainStats[0]?.avgConversionRate || 0, // this is in ratio (0–1), multiply by 100 in frontend if needed
+        avgRating: mainStats[0]?.avgRating || 0,
         totalActive,
         totalScheduled,
         tierCounts: tierStats.reduce((acc, item) => {
@@ -328,9 +343,14 @@ export const getFunnelTemplateStats = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching funnel template statistics", error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching funnel template statistics",
+      error: error.message
+    });
   }
 };
+
 
 
 export const rateFunnel = async (req, res) => {

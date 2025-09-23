@@ -2,7 +2,11 @@ import React, { useEffect } from "react";
 import { Filter, Users, BarChart, Calendar, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchFunnelTemplateStats, selectFunnelTemplateStats, selectFunnelTemplateLoading } from "../../../../store/Slice/FunnelSequenceSlice";
+import {
+  fetchFunnelTemplateStats,
+  selectFunnelTemplateStats,
+  selectFunnelTemplateLoading,
+} from "../../../../store/Slice/FunnelSequenceSlice";
 
 const FunnelStats = () => {
   const navigate = useNavigate();
@@ -10,18 +14,15 @@ const FunnelStats = () => {
   const stats = useSelector(selectFunnelTemplateStats);
   const loading = useSelector(selectFunnelTemplateLoading);
 
-  // Fetch stats on component mount
   useEffect(() => {
     dispatch(fetchFunnelTemplateStats());
   }, [dispatch]);
 
   console.log("funnel stats", stats);
 
-  // Loading state
   if (loading) {
     return (
       <div className="lg:p-6 p-2">
-        {/* Header Row */}
         <div className="flex flex-row items-center justify-between mb-6 flex-wrap gap-2">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <Filter className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
@@ -36,10 +37,12 @@ const FunnelStats = () => {
             View Details
           </button>
         </div>
-        {/* Skeleton Loading */}
         <div className="flex flex-wrap gap-6">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="bg-[#2A2A39] border border-[#3A3A4A] rounded p-6 min-w-[200px] flex-1">
+            <div
+              key={i}
+              className="bg-[#2A2A39] border border-[#3A3A4A] rounded p-6 min-w-[200px] flex-1"
+            >
               <div className="h-4 bg-gray-600 rounded w-24 mb-2 animate-pulse"></div>
               <div className="h-8 bg-gray-600 rounded w-16 mb-1 animate-pulse"></div>
               <div className="h-3 bg-gray-600 rounded w-20 animate-pulse"></div>
@@ -49,9 +52,10 @@ const FunnelStats = () => {
       </div>
     );
   }
+
   return (
     <div className="lg:p-6 p-2">
-      {/* Header Row */}
+      {/* Header */}
       <div className="flex flex-row items-center justify-between mb-6 flex-wrap gap-2">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <Filter className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
@@ -61,11 +65,14 @@ const FunnelStats = () => {
         </div>
         <button
           className="cursor-pointer bg-cyan-400 text-black font-medium px-3 sm:px-6 py-2 rounded hover:bg-cyan-300 transition-all text-sm whitespace-nowrap"
-          onClick={() => navigate(`/admin/CMS?tab=${encodeURIComponent('Funnel Templates')}`)}
+          onClick={() =>
+            navigate(`/admin/CMS?tab=${encodeURIComponent("Funnel Templates")}`)
+          }
         >
           View Details
         </button>
       </div>
+
       {/* Stat Cards */}
       <div className="flex flex-wrap gap-6">
         {/* Total Templates */}
@@ -74,7 +81,9 @@ const FunnelStats = () => {
             <Filter className="w-5 h-5 text-white" />
             Total Templates
           </div>
-          <div className="text-white text-3xl font-bold mb-1">{stats?.totalTemplates || 0}</div>
+          <div className="text-white text-3xl font-bold mb-1">
+            {stats?.totalTemplates || 0}
+          </div>
           <div className="text-xs text-green-400 font-medium flex items-center gap-1">
             <svg
               width="16"
@@ -89,17 +98,22 @@ const FunnelStats = () => {
             {stats?.totalTemplates || 0} total templates
           </div>
         </div>
-        {/* Total Usage */}
+
+        {/* Usage + Conversions */}
         <div className="bg-[#2A2A39] border border-[#3A3A4A] rounded p-6 min-w-[200px] flex-1">
           <div className="flex items-center gap-2 text-white text-sm mb-2">
             <Users className="w-5 h-5 text-white" />
-            Total Usage
+            Usage 
           </div>
-          <div className="text-white text-3xl font-bold mb-1">{stats?.totalUsage || 0}</div>
+          <div className="text-white text-3xl font-bold mb-1">
+            {stats?.totalUsage || 0}
+          </div>
+         
           <div className="text-xs text-cyan-400 font-medium">
-            {stats?.totalConversions > 0 ? `Conversions: ${stats.totalConversions}` : 'No conversions yet'}
+            Avg Usage: {stats?.avgUsage || 0}
           </div>
         </div>
+
         {/* Avg Conversion */}
         <div className="bg-[#2A2A39] border border-[#3A3A4A] rounded p-6 min-w-[200px] flex-1">
           <div className="flex items-center gap-2 text-white text-sm mb-2">
@@ -107,15 +121,13 @@ const FunnelStats = () => {
             Avg Conversion
           </div>
           <div className="text-white text-3xl font-bold mb-1">
-            {stats?.totalUsage > 0 && stats?.totalConversions > 0 
-              ? `${((stats.totalConversions / stats.totalUsage) * 100).toFixed(1)}%`
-              : '0%'
-            }
+            {stats?.avgConversionRate
+              ? `${(stats.avgConversionRate * 100).toFixed(1)}%`
+              : "0%"}
           </div>
-          <div className="text-xs text-cyan-400 font-medium">
-            Conversion rate
-          </div>
+          <div className="text-xs text-cyan-400 font-medium">Conversion rate</div>
         </div>
+
         {/* Active/Scheduled */}
         <div className="bg-[#2A2A39] border border-[#3A3A4A] rounded p-6 min-w-[200px] flex-1">
           <div className="flex items-center gap-2 text-white text-sm mb-2">
@@ -131,18 +143,19 @@ const FunnelStats = () => {
             </span>
           </div>
         </div>
-        {/* User Rating */}
+
+        {/* Avg Rating */}
         <div className="bg-[#2A2A39] border border-[#3A3A4A] rounded p-6 min-w-[200px] flex-1">
           <div className="flex items-center gap-2 text-white text-sm mb-2">
             <Star className="w-5 h-5 text-white" />
             User Rating
           </div>
           <div className="text-white text-3xl font-bold mb-1">
-            {stats?.averageUserRating ? `${stats.averageUserRating.toFixed(1)}/5.0` : '0.0/5.0'}
+            {stats?.avgRating ? `${stats.avgRating.toFixed(1)}/5.0` : "0.0/5.0"}
           </div>
           <div className="text-xs text-cyan-400 font-medium flex items-center gap-1">
-            <Star className="w-4 h-4 text-cyan-400" /> 
-            {stats?.averageUserRating ? 'Average rating' : 'No ratings yet'}
+            <Star className="w-4 h-4 text-cyan-400" />
+            {stats?.avgRating ? "Average rating" : "No ratings yet"}
           </div>
         </div>
       </div>

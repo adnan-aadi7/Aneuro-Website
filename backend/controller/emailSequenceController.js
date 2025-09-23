@@ -457,10 +457,15 @@ export async function getStats(req, res) {
           totalSequences: { $addToSet: "$_id" },
           totalEmails: { $sum: 1 },
           totalOpens: { $sum: "$emails.totalOpens" },
-          totalClicks: { $sum: "$emails.uniqueClicks" }, // ✅ use uniqueClicks instead of totalClicks
-          // OR if you want total (including duplicates):
-          // totalClicks: { $sum: { $size: "$emails.clickedUsers" } },
-          totalUsage: { $sum: "$usage.count" },
+
+          // ✅ Sum all clicks across all emails
+          totalClicks: { $sum: "$emails.uniqueClicks" },
+
+          // ✅ Treat clicks as usage
+          totalUsage: { $sum: "$emails.uniqueClicks" },
+
+          // ✅ Collect ratings for avg calculation
+          allRatings: { $push: "$emails.ratings" }
         }
       },
       {
@@ -469,7 +474,51 @@ export async function getStats(req, res) {
           totalEmails: 1,
           totalOpens: 1,
           totalClicks: 1,
-          totalUsage: 1
+          totalUsage: 1,
+          allRatings: {
+            $reduce: {
+              input: "$allRatings",
+              initialValue: [],
+              in: { $concatArrays: ["$$value", "$$this"] }
+            }
+          },
+
+          // ✅ Calculate averages
+         avgClicks: {
+  $cond: [
+    { $gt: ["$totalEmails", 0] },
+    { $multiply: [{ $divide: ["$totalClicks", "$totalEmails"] }, 100] },
+    0
+  ]
+},
+avgOpens: {
+  $cond: [
+    { $gt: ["$totalEmails", 0] },
+    { $multiply: [{ $divide: ["$totalOpens", "$totalEmails"] }, 100] },
+    0
+  ]
+}
+
+        }
+      },
+      {
+        $project: {
+          totalSequences: 1,
+          totalEmails: 1,
+          totalOpens: 1,
+          totalClicks: 1,
+          totalUsage: 1,
+          avgClicks: 1,
+          avgOpens: 1,
+
+          // ✅ Average rating across all ratings
+          avgRating: {
+            $cond: [
+              { $gt: [{ $size: "$allRatings" }, 0] },
+              { $avg: "$allRatings.value" },
+              0
+            ]
+          }
         }
       }
     ]);
@@ -492,8 +541,11 @@ export async function getStats(req, res) {
         totalSequences: mainStats[0]?.totalSequences || 0,
         totalEmails: mainStats[0]?.totalEmails || 0,
         totalOpens: mainStats[0]?.totalOpens || 0,
-        totalClicks: mainStats[0]?.totalClicks || 0, // ✅ now reflects real clicks
-        totalUsage: mainStats[0]?.totalUsage || 0,
+        totalClicks: mainStats[0]?.totalClicks || 0,
+        totalUsage: mainStats[0]?.totalUsage || 0, // ✅ usage = clicks
+        avgClicks: mainStats[0]?.avgClicks || 0,
+        avgOpens: mainStats[0]?.avgOpens || 0,
+        avgRating: mainStats[0]?.avgRating || 0,
         totalActive,
         totalScheduled,
         categoryCounts: categoryStats.reduce((acc, item) => {
@@ -510,7 +562,6 @@ export async function getStats(req, res) {
     });
   }
 }
-
 
 
 export const trackEmailOpen = async (req, res) => {
