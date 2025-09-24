@@ -170,11 +170,11 @@ export async function getAll(req, res) {
       category,
       tier,
       status,
-      sortBy = 'createdDate',
-      sortOrder = 'desc',
+      sortBy = "createdDate",
+      sortOrder = "desc",
       search,
       minUsage,
-      maxUsage
+      maxUsage,
     } = req.query;
 
     // Build filter object
@@ -184,18 +184,11 @@ export async function getAll(req, res) {
     if (status) filter.status = status;
     if (search) filter.name = { $regex: search, $options: "i" };
 
-    // Usage filtering (if you keep raw count on the document)
-    if (minUsage || maxUsage) {
-      filter["usageStats.totalUsage"] = {};
-      if (minUsage) filter["usageStats.totalUsage"].$gte = parseInt(minUsage);
-      if (maxUsage) filter["usageStats.totalUsage"].$lte = parseInt(maxUsage);
-    }
-
     // Build sort object
     const sortObj = {};
     sortObj[sortBy] = sortOrder === "asc" ? 1 : -1;
 
-    // Calculate pagination
+    // Pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     // Fetch packs
@@ -203,22 +196,33 @@ export async function getAll(req, res) {
       .sort(sortObj)
       .limit(parseInt(limit))
       .skip(skip)
-      .lean(); // plain JS objects so we can add computed fields
+      .lean();
 
-    // Attach usage info per pack
-    const packsWithUsage = promptPacks.map(pack => {
+    // Attach usage info per pack (calculated from clicks inside prompts)
+    const packsWithUsage = promptPacks.map((pack) => {
+      let totalClicks = 0;
+      let uniqueUsers = new Set();
+
+      if (Array.isArray(pack.prompts)) {
+        pack.prompts.forEach((prompt) => {
+          totalClicks += prompt.clicks?.total || 0;
+
+          if (Array.isArray(prompt.clicks?.users)) {
+            prompt.clicks.users.forEach((userId) => uniqueUsers.add(userId.toString()));
+          }
+        });
+      }
+
       return {
         ...pack,
-        usageStats: pack.usageStats || {
-          totalUsage: pack.usage?.count ?? 0,
-          totalUsers: pack.usage?.users?.length ?? 0,
-          totalEmails: Array.isArray(pack.emails) ? pack.emails.length : 0,
-          totalOpens: pack.emails?.reduce((sum, e) => sum + (e.totalOpens || 0), 0) ?? 0,
-          totalClicks: pack.emails?.reduce((sum, e) => sum + (e.uniqueClicks || 0), 0) ?? 0,
-        }
+        usageStats: {
+          totalClicks,
+          totalUsers: uniqueUsers.size, // unique users across all prompts in the pack
+        },
       };
     });
 
+    // Count total packs for pagination
     const total = await PromptPack.countDocuments(filter);
     const totalPages = Math.ceil(total / parseInt(limit));
 
@@ -231,10 +235,10 @@ export async function getAll(req, res) {
         totalItems: total,
         itemsPerPage: parseInt(limit),
         hasNextPage: parseInt(page) < totalPages,
-        hasPrevPage: parseInt(page) > 1
+        hasPrevPage: parseInt(page) > 1,
       },
       filters: { category, tier, status, search, minUsage, maxUsage },
-      sorting: { sortBy, sortOrder }
+      sorting: { sortBy, sortOrder },
     });
   } catch (error) {
     res.status(500).json({
@@ -244,7 +248,6 @@ export async function getAll(req, res) {
     });
   }
 }
-
 
 // GET BY ID - Get single prompt pack
 export async function getById(req, res) {
@@ -577,7 +580,7 @@ export async function incrementUsage(req, res) {
 
 export async function getStatistics(req, res) {
   try {
-    // Overall statistics (usage + ratings)
+    // Overall statistics (ratings + clicks)
     const stats = await PromptPack.aggregate([
       { $unwind: { path: "$prompts", preserveNullAndEmptyArrays: true } },
       { $unwind: { path: "$prompts.ratings", preserveNullAndEmptyArrays: true } },
@@ -585,30 +588,37 @@ export async function getStatistics(req, res) {
         $group: {
           _id: null,
           totalPacks: { $addToSet: "$_id" },
-          totalUsage: { $sum: "$usageCount" },
 
-          // usage stats
-          avgUsage: { $avg: "$usageCount" },
-          maxUsage: { $max: "$usageCount" },
-          minUsage: { $min: "$usageCount" },
+          // ratings
+          allRatings: { $push: "$prompts.ratings.value" },
 
-          // collect ratings
-          allRatings: { $push: "$prompts.ratings.value" }
+          // clicks
+          totalClicks: { $sum: "$prompts.clicks.total" },
+          uniqueUsers: { $addToSet: "$prompts.clicks.users" }
         }
       },
       {
         $project: {
           totalPacks: { $size: "$totalPacks" },
-          totalUsage: 1,
-          avgUsage: 1,
-          maxUsage: 1,
-          minUsage: 1,
           avgRating: {
             $cond: [
               { $gt: [{ $size: "$allRatings" }, 0] },
               { $avg: "$allRatings" },
               0
             ]
+          },
+          totalClicks: 1,
+          totalUsers: {
+            // flatten nested arrays of users
+            $size: {
+              $setUnion: {
+                $reduce: {
+                  input: "$uniqueUsers",
+                  initialValue: [],
+                  in: { $concatArrays: ["$$value", "$$this"] }
+                }
+              }
+            }
           }
         }
       }
@@ -616,34 +626,96 @@ export async function getStatistics(req, res) {
 
     // Category statistics
     const categoryStats = await PromptPack.aggregate([
+      { $unwind: { path: "$prompts", preserveNullAndEmptyArrays: true } },
       {
         $group: {
           _id: "$category",
-          count: { $sum: 1 },
-          totalUsage: { $sum: "$usageCount" }
+          totalPacks: { $addToSet: "$_id" },
+          totalClicks: { $sum: "$prompts.clicks.total" },
+          uniqueUsers: { $addToSet: "$prompts.clicks.users" }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          totalPacks: { $size: "$totalPacks" },
+          totalClicks: 1,
+          totalUsers: {
+            $size: {
+              $setUnion: {
+                $reduce: {
+                  input: "$uniqueUsers",
+                  initialValue: [],
+                  in: { $concatArrays: ["$$value", "$$this"] }
+                }
+              }
+            }
+          }
         }
       }
     ]);
 
     // Tier statistics
     const tierStats = await PromptPack.aggregate([
+      { $unwind: { path: "$prompts", preserveNullAndEmptyArrays: true } },
+      { $unwind: "$tier" },
       {
         $group: {
           _id: "$tier",
-          count: { $sum: 1 },
-          totalUsage: { $sum: "$usageCount" }
+          totalPacks: { $addToSet: "$_id" },
+          totalClicks: { $sum: "$prompts.clicks.total" },
+          uniqueUsers: { $addToSet: "$prompts.clicks.users" }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          totalPacks: { $size: "$totalPacks" },
+          totalClicks: 1,
+          totalUsers: {
+            $size: {
+              $setUnion: {
+                $reduce: {
+                  input: "$uniqueUsers",
+                  initialValue: [],
+                  in: { $concatArrays: ["$$value", "$$this"] }
+                }
+              }
+            }
+          }
         }
       }
     ]);
 
-    // Status statistics (active vs scheduled)
+    // Status statistics
     const statusStats = await PromptPack.aggregate([
+      { $unwind: { path: "$prompts", preserveNullAndEmptyArrays: true } },
       {
         $group: {
           _id: "$status",
-          totalPromptPacks: { $sum: 1 },
-          totalPrompts: { $sum: { $size: "$prompts" } },
-          totalUsage: { $sum: "$usageCount" }
+          totalPromptPacks: { $addToSet: "$_id" },
+          totalPrompts: { $sum: 1 },
+          totalClicks: { $sum: "$prompts.clicks.total" },
+          uniqueUsers: { $addToSet: "$prompts.clicks.users" }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          totalPromptPacks: { $size: "$totalPromptPacks" },
+          totalPrompts: 1,
+          totalClicks: 1,
+          totalUsers: {
+            $size: {
+              $setUnion: {
+                $reduce: {
+                  input: "$uniqueUsers",
+                  initialValue: [],
+                  in: { $concatArrays: ["$$value", "$$this"] }
+                }
+              }
+            }
+          }
         }
       }
     ]);
@@ -651,13 +723,15 @@ export async function getStatistics(req, res) {
     const activeStats = statusStats.find(s => s._id === "active") || {
       totalPromptPacks: 0,
       totalPrompts: 0,
-      totalUsage: 0
+      totalClicks: 0,
+      totalUsers: 0
     };
 
     const scheduledStats = statusStats.find(s => s._id === "scheduled") || {
       totalPromptPacks: 0,
       totalPrompts: 0,
-      totalUsage: 0
+      totalClicks: 0,
+      totalUsers: 0
     };
 
     res.status(200).json({
@@ -667,16 +741,8 @@ export async function getStatistics(req, res) {
         byCategory: categoryStats,
         byTier: tierStats,
         status: {
-          active: {
-            totalPacks: activeStats.totalPromptPacks,
-            totalPrompts: activeStats.totalPrompts,
-            totalUsage: activeStats.totalUsage
-          },
-          scheduled: {
-            totalPacks: scheduledStats.totalPromptPacks,
-            totalPrompts: scheduledStats.totalPrompts,
-            totalUsage: scheduledStats.totalUsage
-          }
+          active: activeStats,
+          scheduled: scheduledStats
         }
       }
     });
@@ -688,6 +754,7 @@ export async function getStatistics(req, res) {
     });
   }
 }
+
 
 
 

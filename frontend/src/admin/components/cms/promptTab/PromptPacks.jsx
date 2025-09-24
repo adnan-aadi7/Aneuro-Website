@@ -225,12 +225,16 @@ const PromptPacks = () => {
                         {safeRender(pack.status)}
                       </span>
                     </td>
-                    <td className="py-4 px-4 text-gray-300 text-sm">
-                      <div className="flex items-center">
-                        <Users className="w-4 h-4 mr-1 text-blue-400" />
-                        {safeRender(pack.usageCount || pack.usage, 0)}
-                      </div>
-                    </td>
+                  <td className="py-4 px-4 text-gray-300 text-sm">
+  <div className="flex flex-col space-y-1">
+    <div className="flex items-center">
+      <Users className="w-4 h-4 mr-1 text-blue-400" />
+      <span>{pack.usageStats?.totalUsers ?? 0} </span>
+    </div>
+    
+  </div>
+</td>
+
                     <td className="py-4 px-4 text-gray-300 text-sm">
                       {formatDate(pack.createdDate)}
                     </td>

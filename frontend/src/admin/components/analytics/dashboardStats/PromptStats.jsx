@@ -110,11 +110,11 @@ const PromptStats = () => {
             Total Usage
           </div>
           <div className="text-white text-3xl font-bold mb-1">
-            {overall.totalUsage || 0}
+            {overall.totalUsers || 0}
           </div>
-          <div className="text-xs text-cyan-400 font-medium">
+          {/*<div className="text-xs text-cyan-400 font-medium">
             Avg usage: {overall.avgUsage || 0} 
-          </div>
+          </div>*/}
         </div>
 
         {/* Avg Rating */}
@@ -140,7 +140,7 @@ const PromptStats = () => {
             Max Usage
           </div>
           <div className="text-white text-3xl font-bold mb-1">
-            {overall.maxUsage || 0}
+            {overall.totalUsers || 0}
           </div>
           <div className="text-xs text-cyan-400 font-medium">Highest usage</div>
         </div>
