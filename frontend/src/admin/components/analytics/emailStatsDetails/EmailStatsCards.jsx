@@ -168,8 +168,9 @@ const EmailStatsCards = ({ sequenceId }) => {
   </div>
 
   <div className="text-white text-2xl font-bold mb-1">
-    {currentSequence.usageStats.totalUsageBasedOnClicks}
-  </div>
+  {currentSequence?.usageStats?.totalUsageBasedOnClicks ?? 0}
+</div>
+
 
  
 

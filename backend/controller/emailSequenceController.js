@@ -883,3 +883,5 @@ export const rateEmail = async (req, res) => {
     res.status(500).json({ error: "Server error", details: err.message });
   }
 };
+
+

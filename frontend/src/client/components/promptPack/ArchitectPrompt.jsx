@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { ChevronDown, Copy } from "lucide-react";
 import Popup from "./modal";
-
+import axiosInstance from "../../../store/axiosInstance";
 export default function ArchitectPrompt({ groupedPrompts = {}, categories = [] }) {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [copiedPrompt, setCopiedPrompt] = useState(0);
@@ -9,12 +9,23 @@ export default function ArchitectPrompt({ groupedPrompts = {}, categories = [] }
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPrompt, setSelectedPrompt] = useState(null);
 
+  // 🔹 API helper to record clicks
+  const recordPromptClick = async (packId, promptId) => {
+    try {
+      await axiosInstance.post(`/prompt-packs/${packId}/prompts/${promptId}/click`);
+    } catch (error) {
+      console.error("Failed to record prompt click:", error);
+    }
+  };
+
   const isFileContent = (s) =>
     typeof s === "string" &&
     (/^https?:\/\//i.test(s) || /\.(pdf|docx?|txt)$/i.test(s));
 
   const openInNewTab = (url) => {
-    try { window.open(url, "_blank", "noopener,noreferrer"); } catch {}
+    try {
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch {}
   };
 
   const promptsForArchitect = useMemo(() => {
@@ -31,17 +42,21 @@ export default function ArchitectPrompt({ groupedPrompts = {}, categories = [] }
     return Array.from(set);
   }, [categories, groupedPrompts.Architect]);
 
-  const handleCopy = (text, id) => {
+  // 🔹 Copy with API call
+  const handleCopy = (text, id, packId) => {
     if (!text) return;
     navigator.clipboard.writeText(text);
     setCopiedPrompt(id);
+    recordPromptClick(packId, id); // 👈 API call
     setTimeout(() => setCopiedPrompt(0), 1200);
   };
 
-  const toggleExpand = (id) => {
+  // 🔹 Toggle expand with API call
+  const toggleExpand = (id, packId) => {
     setExpandedPromptIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
+    recordPromptClick(packId, id); // 👈 API call
   };
 
   const renderDropdown = () => (
@@ -69,7 +84,10 @@ export default function ArchitectPrompt({ groupedPrompts = {}, categories = [] }
       return (
         <button
           className="border border-[#12DCF080] text-[#12DCF0] bg-transparent px-3 py-1 rounded text-sm font-medium transition-colors hover:bg-[#23232F]"
-          onClick={() => openInNewTab(payload)}
+          onClick={() => {
+            openInNewTab(payload);
+            recordPromptClick(prompt.packId, prompt.promptId); // 👈 API call
+          }}
         >
           View File
         </button>
@@ -78,7 +96,7 @@ export default function ArchitectPrompt({ groupedPrompts = {}, categories = [] }
     return (
       <button
         className="flex flex-row gap-1 cursor-pointer items-center border border-[#12DCF080] text-[#12DCF0] bg-transparent px-3 py-1 rounded text-sm font-medium transition-colors hover:bg-[#23232F]"
-        onClick={() => handleCopy(payload, prompt.promptId)}
+        onClick={() => handleCopy(payload, prompt.promptId, prompt.packId)} // 👈 API call
       >
         <Copy className="w-4 h-4" /> {copiedPrompt === prompt.promptId ? "Copied!" : "Copy"}
       </button>
@@ -132,7 +150,7 @@ export default function ArchitectPrompt({ groupedPrompts = {}, categories = [] }
                     href={prompt.content}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-gray-400  break-words"
+                    className="text-gray-400 break-words"
                   >
                     {prompt.content}
                   </a>
@@ -151,7 +169,7 @@ export default function ArchitectPrompt({ groupedPrompts = {}, categories = [] }
 
               {!isFile && prompt.content && (
                 <button
-                  onClick={() => toggleExpand(prompt.promptId)}
+                  onClick={() => toggleExpand(prompt.promptId, prompt.packId)} // 👈 API call
                   className="flex items-center gap-2 mt-4 text-sm text-gray-400 hover:text-gray-300"
                 >
                   <ChevronDown

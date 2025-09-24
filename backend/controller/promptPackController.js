@@ -162,8 +162,6 @@ export async function create(req, res) {
 
 
 
-
-// GET ALL - Get all prompt packs with filtering, sorting, and pagination
 export async function getAll(req, res) {
   try {
     const {
@@ -184,34 +182,49 @@ export async function getAll(req, res) {
     if (category) filter.category = category;
     if (tier) filter.tier = tier;
     if (status) filter.status = status;
-    if (search) filter.name = { $regex: search, $options: 'i' };
-    
-    // Usage count filtering
+    if (search) filter.name = { $regex: search, $options: "i" };
+
+    // Usage filtering (if you keep raw count on the document)
     if (minUsage || maxUsage) {
-      filter.usageCount = {};
-      if (minUsage) filter.usageCount.$gte = parseInt(minUsage);
-      if (maxUsage) filter.usageCount.$lte = parseInt(maxUsage);
+      filter["usageStats.totalUsage"] = {};
+      if (minUsage) filter["usageStats.totalUsage"].$gte = parseInt(minUsage);
+      if (maxUsage) filter["usageStats.totalUsage"].$lte = parseInt(maxUsage);
     }
 
     // Build sort object
     const sortObj = {};
-    sortObj[sortBy] = sortOrder === 'asc' ? 1 : -1;
+    sortObj[sortBy] = sortOrder === "asc" ? 1 : -1;
 
     // Calculate pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
-    
-    // Execute query
+
+    // Fetch packs
     const promptPacks = await PromptPack.find(filter)
       .sort(sortObj)
       .limit(parseInt(limit))
-      .skip(skip);
+      .skip(skip)
+      .lean(); // plain JS objects so we can add computed fields
+
+    // Attach usage info per pack
+    const packsWithUsage = promptPacks.map(pack => {
+      return {
+        ...pack,
+        usageStats: pack.usageStats || {
+          totalUsage: pack.usage?.count ?? 0,
+          totalUsers: pack.usage?.users?.length ?? 0,
+          totalEmails: Array.isArray(pack.emails) ? pack.emails.length : 0,
+          totalOpens: pack.emails?.reduce((sum, e) => sum + (e.totalOpens || 0), 0) ?? 0,
+          totalClicks: pack.emails?.reduce((sum, e) => sum + (e.uniqueClicks || 0), 0) ?? 0,
+        }
+      };
+    });
 
     const total = await PromptPack.countDocuments(filter);
     const totalPages = Math.ceil(total / parseInt(limit));
 
     res.status(200).json({
       success: true,
-      data: promptPacks,
+      data: packsWithUsage,
       pagination: {
         currentPage: parseInt(page),
         totalPages,
@@ -226,11 +239,12 @@ export async function getAll(req, res) {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error fetching prompt packs',
-      error: error.message
+      message: "Error fetching prompt packs",
+      error: error.message,
     });
   }
 }
+
 
 // GET BY ID - Get single prompt pack
 export async function getById(req, res) {
@@ -780,5 +794,49 @@ export const ratePrompt = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: "Server error", details: err.message });
+  }
+};
+
+
+export const incrementPromptClick = async (req, res) => {
+  try {
+    const { packId, promptId } = req.params;
+    const userId = req.user?.id; // assuming JWT middleware attaches user
+
+    const pack = await PromptPack.findById(packId);
+    if (!pack) {
+      return res.status(404).json({ success: false, message: "Prompt pack not found" });
+    }
+
+    const prompt = pack.prompts.id(promptId);
+    if (!prompt) {
+      return res.status(404).json({ success: false, message: "Prompt not found" });
+    }
+
+    // Always increment total clicks
+    prompt.clicks.total += 1;
+
+    // Count unique user clicks
+    if (userId && !prompt.clicks.users.includes(userId)) {
+      prompt.clicks.users.push(userId);
+    }
+
+    await pack.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Prompt click recorded",
+      data: {
+        promptId,
+        totalClicks: prompt.clicks.total,
+        uniqueUsers: prompt.clicks.users.length,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error incrementing prompt click",
+      error: error.message,
+    });
   }
 };

@@ -12,10 +12,15 @@ const PromptSchema = new mongoose.Schema({
     enum: ["Architect", "Challenger", "Synthesizer", "Reflector", "Catalyst"],
   },
 
-  // ⭐ Individual ratings for each prompt
   ratings: [PromptRatingSchema],
   averageRating: { type: Number, default: 0 },
+
+  clicks: {
+    total: { type: Number, default: 0 },   
+    users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], 
+  },
 });
+
 
 const PromptPackSchema = new mongoose.Schema({
   name: {

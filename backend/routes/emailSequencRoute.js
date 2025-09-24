@@ -624,4 +624,5 @@ router.delete("/:sequenceId/emails/:emailId", authUser, deleteEmailInSequence);
  */
 router.post("/:sequenceId/:emailId/rate", authUser, rateEmail);
 
+
 export default router;

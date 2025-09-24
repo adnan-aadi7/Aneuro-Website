@@ -1,16 +1,32 @@
 import React, { useState, useMemo } from "react";
 import { ChevronDown, Copy } from "lucide-react";
 import Popup from "./modal";
-
+import axiosInstance from "../../../store/axiosInstance";
 export default function CatalystPrompt({ groupedPrompts = {}, categories = [] }) {
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [showFirstPrompt, setShowFirstPrompt] = useState(true);
+  const [showFirstPrompt, setShowFirstPrompt] = useState(false);
   const [showFullPrompt, setShowFullPrompt] = useState(false);
   const [copiedPrompt, setCopiedPrompt] = useState(0);
-  const [showEmailTooltip, setShowEmailTooltip] = useState(false);
-  const [emailTooltipPos, setEmailTooltipPos] = useState({ x: 0, y: 0 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPrompt, setSelectedPrompt] = useState(null);
+
+  // ✅ Safe API runner
+  const runCare = async (fn) => {
+    try {
+      return await fn();
+    } catch (err) {
+      console.error("API Error:", err);
+      return null;
+    }
+  };
+
+  // ✅ Record click
+  const recordPromptClick = async (packId, promptId) => {
+    if (!packId || !promptId) return;
+    await runCare(() =>
+      axiosInstance.post(`/api/prompt-packs/${packId}/prompts/${promptId}/click`)
+    );
+  };
 
   const isFileContent = (s) =>
     typeof s === "string" &&
@@ -45,11 +61,21 @@ export default function CatalystPrompt({ groupedPrompts = {}, categories = [] })
   const prompt1 = promptsForCatalyst[0] || null;
   const prompt2 = promptsForCatalyst[1] || null;
 
-  const handleCopy = (text, which) => {
+  // ✅ Copy handler
+  const handleCopy = (text, which, promptObj) => {
     if (!text) return;
     navigator.clipboard.writeText(text);
     setCopiedPrompt(which);
     setTimeout(() => setCopiedPrompt(0), 1500);
+    recordPromptClick(promptObj?.packId, promptObj?.promptId);
+  };
+
+  // ✅ Truncate helper
+  const truncateText = (text, wordLimit = 40) => {
+    if (!text) return "";
+    const words = text.split(" ");
+    if (words.length <= wordLimit) return text;
+    return words.slice(0, wordLimit).join(" ") + "...";
   };
 
   const renderDropdown = () => (
@@ -70,15 +96,18 @@ export default function CatalystPrompt({ groupedPrompts = {}, categories = [] })
     </div>
   );
 
-  const renderBody = (text) => {
+  // ✅ Body renderer with truncation
+  const renderBody = (text, expanded) => {
     if (!text || isFileContent(text)) return null;
+    const displayText = expanded ? text : truncateText(text, 40);
     return (
       <div className="text-sm text-gray-300 space-y-3">
-        <pre className="whitespace-pre-wrap font-sans">{text}</pre>
+        <pre className="whitespace-pre-wrap font-sans">{displayText}</pre>
       </div>
     );
   };
 
+  // ✅ Copy / View button
   const renderButton = (promptObj, which) => {
     const payload = promptObj?.content || promptObj?.fileUrl;
     if (!payload) return null;
@@ -87,7 +116,10 @@ export default function CatalystPrompt({ groupedPrompts = {}, categories = [] })
       return (
         <button
           className="border border-[#12DCF080] text-[#12DCF0] bg-transparent px-3 py-1 rounded text-sm font-medium transition-colors flex items-center gap-2 hover:bg-[#23232F]"
-          onClick={() => openInNewTab(payload)}
+          onClick={() => {
+            openInNewTab(payload);
+            recordPromptClick(promptObj?.packId, promptObj?.promptId);
+          }}
         >
           View
         </button>
@@ -96,7 +128,7 @@ export default function CatalystPrompt({ groupedPrompts = {}, categories = [] })
     return (
       <button
         className="border border-[#12DCF080] text-[#12DCF0] bg-transparent px-3 py-1 rounded text-sm font-medium transition-colors flex items-center gap-2 hover:bg-[#23232F] disabled:opacity-50 disabled:cursor-not-allowed"
-        onClick={() => handleCopy(payload, which)}
+        onClick={() => handleCopy(payload, which, promptObj)}
         disabled={!payload}
       >
         <Copy className="w-4 h-4" />
@@ -105,6 +137,7 @@ export default function CatalystPrompt({ groupedPrompts = {}, categories = [] })
     );
   };
 
+  // ✅ Prompt block
   const renderPromptBlock = (prompt, which, showState, setShowState) => {
     if (!prompt) return null;
     const isFile = isFileContent(prompt?.content);
@@ -121,7 +154,6 @@ export default function CatalystPrompt({ groupedPrompts = {}, categories = [] })
                 Subject: {prompt.subject}
               </p>
             )}
-            {/* ✅ If file, show raw URL */}
             {isFile && (
               <p className="text-xs text-gray-400 break-all">{prompt.content}</p>
             )}
@@ -129,12 +161,14 @@ export default function CatalystPrompt({ groupedPrompts = {}, categories = [] })
           {renderButton(prompt, which)}
         </div>
 
-        {/* ✅ Show content + toggle only if NOT file */}
         {!isFile && (
           <>
-            {showState && renderBody(prompt?.content)}
+            {renderBody(prompt?.content, showState)}
             <button
-              onClick={() => setShowState(!showState)}
+              onClick={() => {
+                setShowState(!showState);
+                recordPromptClick(prompt?.packId, prompt?.promptId);
+              }}
               className="flex items-center gap-2 mt-4 text-sm text-gray-400 hover:text-gray-300"
             >
               <ChevronDown
@@ -147,7 +181,6 @@ export default function CatalystPrompt({ groupedPrompts = {}, categories = [] })
           </>
         )}
 
-        {/* ✅ Always show Rate this tool */}
         <div className="mt-6 text-right">
           <button
             onClick={() => {

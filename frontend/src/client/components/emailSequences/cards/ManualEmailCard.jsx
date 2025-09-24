@@ -8,13 +8,17 @@ export default function ManualEmailCard({ sequenceId, emailId, title, preview, b
 
   const handleViewFull = async () => {
     try {
+      // ✅ Always track an open
+      await axiosInstance.get(`/email-sequences/${emailId}/open`);
+
+      // ✅ Track a unique click only first time when expanding
       if (!expanded) {
-        // ✅ track unique click
         await axiosInstance.post(`/email-sequences/${emailId}/click`);
       }
+
       setExpanded(!expanded);
     } catch (error) {
-      console.error("Error tracking email click:", error);
+      console.error("Error tracking email open/click:", error);
     }
   };
 
@@ -66,8 +70,8 @@ export default function ManualEmailCard({ sequenceId, emailId, title, preview, b
       <Popup
         isOpen={showPopup}
         onClose={() => setShowPopup(false)}
-        sequenceId={sequenceId}  // ✅ ensure props passed
-        emailId={emailId}        // ✅ ensure props passed
+        sequenceId={sequenceId}
+        emailId={emailId}
       />
     </div>
   );

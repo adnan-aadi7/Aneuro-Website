@@ -1,13 +1,23 @@
 import React, { useState, useMemo } from "react";
 import { ChevronDown, Copy } from "lucide-react";
 import Popup from "./modal";
-
+import axiosInstance from "../../../store/axiosInstance";
 export default function ReflectorPrompt({ groupedPrompts = {}, categories = [] }) {
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [copiedPrompt, setCopiedPrompt] = useState(null); // track which prompt was copied
+  const [copiedPrompt, setCopiedPrompt] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPrompt, setSelectedPrompt] = useState(null);
-  const [expanded, setExpanded] = useState({}); // track expanded prompts
+  const [expanded, setExpanded] = useState({});
+
+  // ✅ Safe runner for API calls
+  const runCare = async (fn) => {
+    try {
+      return await fn();
+    } catch (err) {
+      console.error("API Error:", err);
+      return null;
+    }
+  };
 
   const isFileContent = (s) =>
     typeof s === "string" &&
@@ -21,6 +31,15 @@ export default function ReflectorPrompt({ groupedPrompts = {}, categories = [] }
     }
   };
 
+  // ✅ API call to record click
+  const recordPromptClick = async (packId, promptId) => {
+    if (!packId || !promptId) return;
+    await runCare(() =>
+      axiosInstance.post(`/api/prompt-packs/${packId}/prompts/${promptId}/click`)
+    );
+  };
+
+  // Filter prompts by category
   const promptsForReflector = useMemo(() => {
     const reflectorPrompts = groupedPrompts.Reflector || [];
     return selectedCategory
@@ -28,6 +47,7 @@ export default function ReflectorPrompt({ groupedPrompts = {}, categories = [] }
       : reflectorPrompts;
   }, [groupedPrompts.Reflector, selectedCategory]);
 
+  // Compute categories
   const availableCategories = useMemo(() => {
     if (Array.isArray(categories) && categories.length > 0) {
       return categories;
@@ -39,13 +59,23 @@ export default function ReflectorPrompt({ groupedPrompts = {}, categories = [] }
     return Array.from(set);
   }, [categories, groupedPrompts.Reflector]);
 
+  // ✅ Copy button handler
   const handleCopy = (text, index) => {
     if (!text) return;
     navigator.clipboard.writeText(text);
-    setCopiedPrompt(index); // mark this prompt as copied
-    setTimeout(() => setCopiedPrompt(null), 1500); // reset after 1.5s
+    setCopiedPrompt(index);
+    setTimeout(() => setCopiedPrompt(null), 1500);
   };
 
+  // ✅ Truncate helper
+  const truncateText = (text, wordLimit = 40) => {
+    if (!text) return "";
+    const words = text.split(" ");
+    if (words.length <= wordLimit) return text;
+    return words.slice(0, wordLimit).join(" ") + "...";
+  };
+
+  // Render dropdown filter
   const renderDropdown = () => (
     <div className="relative mb-8">
       <select
@@ -64,15 +94,18 @@ export default function ReflectorPrompt({ groupedPrompts = {}, categories = [] }
     </div>
   );
 
-  const renderBody = (text) => {
+  // ✅ Body with expand/collapse
+  const renderBody = (text, expanded) => {
     if (!text || isFileContent(text)) return null;
+    const displayText = expanded ? text : truncateText(text, 40);
     return (
       <div className="text-sm text-gray-300 space-y-3">
-        <pre className="whitespace-pre-wrap font-sans">{text}</pre>
+        <pre className="whitespace-pre-wrap font-sans">{displayText}</pre>
       </div>
     );
   };
 
+  // ✅ Copy / View button
   const renderButton = (promptObj, index) => {
     const payload = promptObj?.content || promptObj?.fileUrl;
     if (!payload) return null;
@@ -82,7 +115,10 @@ export default function ReflectorPrompt({ groupedPrompts = {}, categories = [] }
       return (
         <button
           className="border border-[#12DCF080] text-[#12DCF0] bg-transparent px-3 py-1 rounded text-sm font-medium transition-colors flex items-center gap-2 hover:bg-[#23232F]"
-          onClick={() => openInNewTab(payload)}
+          onClick={() => {
+            openInNewTab(payload);
+            recordPromptClick(promptObj?.packId, promptObj?.promptId);
+          }}
         >
           View
         </button>
@@ -92,7 +128,10 @@ export default function ReflectorPrompt({ groupedPrompts = {}, categories = [] }
     return (
       <button
         className="border border-[#12DCF080] text-[#12DCF0] bg-transparent px-3 py-1 rounded text-sm font-medium transition-colors flex items-center gap-2 hover:bg-[#23232F]"
-        onClick={() => handleCopy(payload, index)}
+        onClick={() => {
+          handleCopy(payload, index);
+          recordPromptClick(promptObj?.packId, promptObj?.promptId);
+        }}
         disabled={!payload}
       >
         <Copy className="w-4 h-4" />
@@ -101,6 +140,7 @@ export default function ReflectorPrompt({ groupedPrompts = {}, categories = [] }
     );
   };
 
+  // ✅ Full Prompt block
   const renderPromptBlock = (prompt, index) => {
     if (!prompt || (!prompt.content && !prompt.fileUrl)) return null;
     const isFile = isFileContent(prompt?.content);
@@ -126,7 +166,7 @@ export default function ReflectorPrompt({ groupedPrompts = {}, categories = [] }
 
         {!isFile && (
           <>
-            {expanded[index] && renderBody(prompt?.content)}
+            {renderBody(prompt?.content, expanded[index])}
             <button
               onClick={() =>
                 setExpanded((prev) => ({ ...prev, [index]: !prev[index] }))
@@ -161,6 +201,7 @@ export default function ReflectorPrompt({ groupedPrompts = {}, categories = [] }
     );
   };
 
+  // ✅ Empty state
   if (!promptsForReflector.length) {
     return (
       <div className="bg-[#303041] text-white mt-10">
@@ -179,6 +220,7 @@ export default function ReflectorPrompt({ groupedPrompts = {}, categories = [] }
     );
   }
 
+  // ✅ Final UI
   return (
     <div className="bg-[#303041] text-white mt-10">
       <div className="p-2 lg:p-8">

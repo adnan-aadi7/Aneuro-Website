@@ -12,7 +12,8 @@ import {
   uploadPromptPack,
   editPromptInPromptPack,
   getGroupedPromptsByTier,
-  ratePrompt
+  ratePrompt,
+  incrementPromptClick
 } from '../controller/promptPackController.js';
 import upload from '../middleware/multer.js';
 import { authUser } from "../middleware/userTracker.js";
@@ -562,5 +563,66 @@ router.put("/:packId/prompts/:promptId", authUser, editPromptInPromptPack);
  */
 router.post("/:packId/prompts/:promptId/rate", authUser, ratePrompt);
 
+/**
+ * @swagger
+ * /api/prompt-packs/{packId}/prompts/{promptId}/click:
+ *   post:
+ *     summary: Record a prompt click
+ *     description: >
+ *       Increments the total clicks for a specific prompt inside a prompt pack.  
+ *       - Every request increases **total clicks**.  
+ *       - If the user is authenticated, it also counts as a **unique click** per user.
+ *     tags: [PromptPacks]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: packId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the prompt pack
+ *       - in: path
+ *         name: promptId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the prompt
+ *     responses:
+ *       200:
+ *         description: Prompt click recorded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Prompt click recorded
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     promptId:
+ *                       type: string
+ *                       example: 650abc123ef4567890abcd12
+ *                     totalClicks:
+ *                       type: integer
+ *                       example: 12
+ *                     uniqueUsers:
+ *                       type: integer
+ *                       example: 5
+ *       404:
+ *         description: Prompt or pack not found
+ *       500:
+ *         description: Server error
+ */
+router.post(
+  "/:packId/prompts/:promptId/click",
+  authUser,
+  incrementPromptClick
+);
 
 export default router;
