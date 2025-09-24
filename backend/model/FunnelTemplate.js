@@ -40,6 +40,12 @@ const FunnelTemplateSchema = new mongoose.Schema({
   // ⭐ Computed average rating
   averageRating: { type: Number, min: 0, max: 5, default: 0 },
 
+  // ⭐ Track clicks
+  clicks: {
+    total: { type: Number, default: 0 },
+    users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
+  },
+
   createdAt: { type: Date, default: Date.now },
   releaseDateTime: { type: Date },
 });

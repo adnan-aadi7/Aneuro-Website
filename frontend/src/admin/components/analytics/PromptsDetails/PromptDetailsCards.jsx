@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Mail, Users, Calendar } from "lucide-react";
+import { Mail, Users, Calendar, MousePointerClick } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPromptPackById } from "../../../../store/Slice/PromptPacksSlice";
 
@@ -15,14 +15,16 @@ const PromptDetailsCards = ({ packId }) => {
 
   if (!packId) {
     return (
-      <div className="text-gray-400 text-center py-6">No prompt pack selected. Please select a pack to view details.</div>
+      <div className="text-gray-400 text-center py-6">
+        No prompt pack selected. Please select a pack to view details.
+      </div>
     );
   }
 
   if (loading) {
     return (
       <div className="flex flex-wrap gap-6  max-w-4xl">
-        {[1,2,3].map((i) => (
+        {[1, 2, 3].map((i) => (
           <div key={i} className="bg-[#323242] border border-[#45455a]  p-6 min-w-[220px] flex-1">
             <div className="animate-pulse">
               <div className="h-5 bg-gray-700 rounded w-20 mb-2"></div>
@@ -40,7 +42,8 @@ const PromptDetailsCards = ({ packId }) => {
   }
 
   const promptsCount = currentPack?.prompts ? currentPack.prompts.length : 0;
-  const usageCount = currentPack?.usageCount || 0;
+  const totalUsers = currentPack?.usageStats?.totalUsers || 0;
+  const totalClicks = currentPack?.usageStats?.totalClicks || 0;
   const downloadsCount = currentPack?.downloads || currentPack?.downloadsCount || 0;
   const status = currentPack?.status || "-";
 
@@ -67,17 +70,23 @@ const PromptDetailsCards = ({ packId }) => {
           +12% this month
         </div>
       </div>
+
       {/* Usage */}
       <div className="bg-[#323242] border border-[#45455a]  p-6 min-w-[220px] flex-1">
         <div className="flex items-center gap-2 text-white text-sm mb-2">
           <Users className="w-5 h-5 text-white" />
           Usage
         </div>
-        <div className="text-white text-2xl font-bold mb-1">{usageCount.toLocaleString()}</div>
-        <div className="text-xs text-cyan-400 font-medium">
-          Downloads: {downloadsCount.toLocaleString()}
+        <div className="text-white text-2xl font-bold mb-1">
+          {totalUsers.toLocaleString()} 
         </div>
+        <div className="text-xs text-cyan-400 font-medium flex items-center gap-1">
+          <MousePointerClick className="w-4 h-4 text-cyan-400" />
+          {totalClicks.toLocaleString()} clicks
+        </div>
+       
       </div>
+
       {/* Status */}
       <div className="bg-[#323242] border border-[#45455a]  p-6 min-w-[220px] flex-1">
         <div className="flex items-center gap-2 text-white text-sm mb-2">

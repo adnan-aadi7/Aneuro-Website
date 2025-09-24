@@ -7,7 +7,8 @@ import {
   updateFunnelTemplate,
   deleteFunnelTemplate,
   getFunnelTemplateStats,
-  rateFunnel
+  rateFunnel,
+  trackClick
 } from '../controller/funnelTemplateController.js';
 import upload from '../middleware/multer.js';
 import { authUser } from '../middleware/userTracker.js';
@@ -342,5 +343,55 @@ router.delete('/:id', authUser, deleteFunnelTemplate);
 // ✅ Add authMiddleware before rateFunnel
 router.post("/:funnelId/rate", authUser, rateFunnel);
 
-
+/**
+ * @swagger
+ * /api/funnel-templates/{id}/click:
+ *   post:
+ *     summary: Track a unique click on a Funnel Template
+ *     description: Records a click from the authenticated user. Each user is counted only once per funnel.
+ *     tags: [FunnelTemplates]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: Funnel Template ID (MongoDB ObjectId)
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Click recorded successfully or already counted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Click recorded successfully"
+ *                 clicks:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       example: 5
+ *                     users:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                         example: 60f7f8f9a9d8b2b2c8d12345
+ *       400:
+ *         description: Invalid ID format
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
+ *       404:
+ *         description: Funnel Template not found
+ *       500:
+ *         description: Error tracking click
+ */
+router.post("/:id/click", authUser, trackClick);
 export default router;

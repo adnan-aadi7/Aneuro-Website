@@ -225,12 +225,28 @@ export const createFunnelTemplate = async (req, res) => {
 // ✅ Get all Funnel Templates
 export const getAllFunnelTemplates = async (req, res) => {
   try {
-    const templates = await FunnelTemplate.find().sort({ createdAt: -1 });
-    res.status(200).json({ success: true, data: templates });
+    const templates = await FunnelTemplate.find()
+      .sort({ createdAt: -1 })
+      .lean(); // plain objects so we can safely add computed fields
+
+    const enrichedTemplates = templates.map((tpl) => ({
+      ...tpl,
+      usage: tpl.clicks?.total || 0,           // ⭐ usage from clicks
+      uniqueUsers: tpl.clicks?.users?.length || 0 // ⭐ unique users count
+    }));
+
+    res.status(200).json({ 
+      success: true, 
+      data: enrichedTemplates 
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
   }
 };
+
 
 // ✅ Get Funnel Template by ID
 export const getFunnelTemplateById = async (req, res) => {
@@ -300,29 +316,34 @@ export const getFunnelTemplateStats = async (req, res) => {
         $group: {
           _id: null,
           totalTemplates: { $sum: 1 },
-          totalUsage: { $sum: "$usage" },
-          avgUsage: { $avg: "$usage" },
+
+          // ⭐ use clicks.total instead of usage
+          totalUsage: { $sum: "$clicks.total" },
+          avgUsage: { $avg: "$clicks.total" },
+
           totalConversions: { $sum: "$conversions" },
+
           avgConversionRate: {
             $avg: {
               $cond: [
-                { $gt: ["$usage", 0] }, // avoid division by zero
-                { $divide: ["$conversions", "$usage"] },
-                0
-              ]
-            }
+                { $gt: ["$clicks.total", 0] }, // avoid divide by zero
+                { $divide: ["$conversions", "$clicks.total"] },
+                0,
+              ],
+            },
           },
-          avgRating: { $avg: "$averageRating" }
-        }
-      }
+
+          avgRating: { $avg: "$averageRating" },
+        },
+      },
     ]);
 
     const totalActive = await FunnelTemplate.countDocuments({ status: "active" });
     const totalScheduled = await FunnelTemplate.countDocuments({ status: "scheduled" });
 
     const tierStats = await FunnelTemplate.aggregate([
-      { $unwind: "$tier" }, // flatten array values
-      { $group: { _id: "$tier", count: { $sum: 1 } } }
+      { $unwind: "$tier" },
+      { $group: { _id: "$tier", count: { $sum: 1 } } },
     ]);
 
     res.status(200).json({
@@ -332,21 +353,24 @@ export const getFunnelTemplateStats = async (req, res) => {
         totalUsage: mainStats[0]?.totalUsage || 0,
         avgUsage: mainStats[0]?.avgUsage || 0,
         totalConversions: mainStats[0]?.totalConversions || 0,
-        avgConversionRate: mainStats[0]?.avgConversionRate || 0, // this is in ratio (0–1), multiply by 100 in frontend if needed
+
+        // frontend multiply by 100 if you want percentage
+        avgConversionRate: mainStats[0]?.avgConversionRate || 0,
+
         avgRating: mainStats[0]?.avgRating || 0,
         totalActive,
         totalScheduled,
         tierCounts: tierStats.reduce((acc, item) => {
           acc[item._id] = item.count;
           return acc;
-        }, {})
-      }
+        }, {}),
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: "Error fetching funnel template statistics",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -390,3 +414,44 @@ export const rateFunnel = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export async function trackClick(req, res) {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id; // ⬅️ Assuming user is from auth middleware
+
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ success: false, message: "Invalid ID format" });
+    }
+
+    const funnel = await FunnelTemplate.findById(id);
+    if (!funnel) {
+      return res.status(404).json({ success: false, message: "Funnel template not found" });
+    }
+
+    // Check if user already clicked
+    const alreadyClicked = funnel.clicks.users.some(
+      (u) => u.toString() === userId.toString()
+    );
+
+    if (!alreadyClicked) {
+      funnel.clicks.users.push(userId);
+      funnel.clicks.total += 1;
+      await funnel.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: alreadyClicked
+        ? "User already counted for this template"
+        : "Click recorded successfully",
+      clicks: funnel.clicks
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error tracking click",
+      error: error.message
+    });
+  }
+}

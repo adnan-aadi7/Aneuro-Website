@@ -261,7 +261,7 @@ export async function getById(req, res) {
       });
     }
 
-    const promptPack = await PromptPack.findById(id);
+    const promptPack = await PromptPack.findById(id).lean();
 
     if (!promptPack) {
       return res.status(404).json({ 
@@ -270,9 +270,30 @@ export async function getById(req, res) {
       });
     }
 
+    // --- Calculate usage stats from clicks ---
+    let totalClicks = 0;
+    const userSet = new Set();
+
+    if (Array.isArray(promptPack.prompts)) {
+      promptPack.prompts.forEach(prompt => {
+        totalClicks += prompt?.clicks?.total || 0;
+        if (Array.isArray(prompt?.clicks?.users)) {
+          prompt.clicks.users.forEach(u => userSet.add(String(u)));
+        }
+      });
+    }
+
+    const usageStats = {
+      totalClicks,
+      totalUsers: userSet.size
+    };
+
     res.status(200).json({ 
       success: true, 
-      data: promptPack 
+      data: {
+        ...promptPack,
+        usageStats
+      }
     });
   } catch (error) {
     res.status(500).json({
@@ -282,6 +303,7 @@ export async function getById(req, res) {
     });
   }
 }
+
 
 export const getGroupedPromptsByTier = async (req, res) => {
   try {

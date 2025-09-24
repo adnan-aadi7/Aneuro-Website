@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import FunnelCategoryFilter from "./FunnelCategoryFilter";
-import Popup from "./modal"; // ⭐ Import your rating modal
-
+import Popup from "./modal";
+import axiosInstance from "../../../store/axiosInstance";
 function getFileMeta(url = "") {
   try {
     const u = new URL(url);
@@ -25,6 +25,16 @@ export default function FunnelStructure({
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedFunnelId, setSelectedFunnelId] = useState(null);
+
+  // ⭐ Track click API
+  const trackClick = async (funnelId) => {
+    try {
+      await axiosInstance.post(`/funnel-templates/${funnelId}/click`);
+      console.log("Click tracked:", funnelId);
+    } catch (err) {
+      console.error("Failed to track click:", err);
+    }
+  };
 
   const openRatingModal = (funnelId) => {
     setSelectedFunnelId(funnelId);
@@ -82,23 +92,30 @@ export default function FunnelStructure({
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
+                      {/* ⭐ View button with click tracking */}
                       <a
                         href={tpl.fileUrl}
                         target="_blank"
                         rel="noreferrer"
+                        onClick={() => trackClick(tpl._id)}
                         className="border border-[#12DCF080] text-[#B0B0B0] px-3 py-2 text-xs font-medium hover:bg-[#292933]"
                       >
                         View
                       </a>
+
                       {canDownload && (
                         <a
                           href={tpl.fileUrl}
                           download={file.name}
+                          onClick={() => trackClick(tpl._id)}
                           className="border border-[#12DCF080] text-[#B0B0B0] px-3 py-2 text-xs font-medium hover:bg-[#292933]"
                         >
                           Download
                         </a>
                       )}
+
+                      {/* ⭐ Example extra button that also tracks clicks */}
+                     
                     </div>
                   </div>
                 )}
@@ -107,7 +124,7 @@ export default function FunnelStructure({
                 <div className="text-right">
                   <button
                     onClick={() => openRatingModal(tpl._id)}
-                    className="text-cyan-500 underline  font-medium cursor-pointer  text-sm"
+                    className="text-cyan-500 underline font-medium cursor-pointer text-sm"
                   >
                     Rate this Tool
                   </button>
@@ -117,7 +134,10 @@ export default function FunnelStructure({
           })}
 
         <div className="text-center mt-8">
-          <button className="bg-[#23232A] border border-[#12DCF080] text-[#B0B0B0] px-6 py-3 text-xs font-medium transition-colors hover:bg-[#292933]">
+          <button
+            className="bg-[#23232A] border border-[#12DCF080] text-[#B0B0B0] px-6 py-3 text-xs font-medium transition-colors hover:bg-[#292933]"
+            onClick={() => console.log("TODO: Load all templates")}
+          >
             View All Templates
           </button>
         </div>
