@@ -71,15 +71,15 @@ const Navbar = () => {
           ))}
           <a
             href="/signup"
-            className="w-full text-white font-bold text-[16px] px-5 py-3 rounded-full bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3]"
+            className="w-[200px] items-center justify-center flex text-white font-bold text-[16px] px-5 py-3 rounded-full bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3]"
           >
             GET STARTED
           </a>
            <a
-            href="/signup"
-            className="w-full text-white font-bold text-[16px] px-5 py-3 rounded-full bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3]"
+            href="/login"
+            className="w-[200px] items-center justify-center flex text-white font-bold text-[16px] px-5 py-3 rounded-full bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3]"
           >
-            GET STARTED
+            Login
           </a>
         </div>
       )}
