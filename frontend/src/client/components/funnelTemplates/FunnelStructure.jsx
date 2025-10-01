@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import FunnelCategoryFilter from "./FunnelCategoryFilter";
 import Popup from "./modal";
 import axiosInstance from "../../../store/axiosInstance";
+
 function getFileMeta(url = "") {
   try {
     const u = new URL(url);
@@ -14,7 +15,6 @@ function getFileMeta(url = "") {
     return { name, ext };
   }
 }
-const DOWNLOADABLE = new Set(["txt", "doc", "docx"]);
 
 export default function FunnelStructure({
   templates,
@@ -26,11 +26,10 @@ export default function FunnelStructure({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedFunnelId, setSelectedFunnelId] = useState(null);
 
-  // ⭐ Track click API
+  // Track clicks
   const trackClick = async (funnelId) => {
     try {
       await axiosInstance.post(`/funnel-templates/${funnelId}/click`);
-      console.log("Click tracked:", funnelId);
     } catch (err) {
       console.error("Failed to track click:", err);
     }
@@ -63,7 +62,7 @@ export default function FunnelStructure({
           templates?.map((tpl) => {
             const hasFile = !!tpl.fileUrl;
             const file = hasFile ? getFileMeta(tpl.fileUrl) : null;
-            const canDownload = hasFile && DOWNLOADABLE.has(file.ext);
+            const isPdf = file?.ext === "pdf";
 
             return (
               <div key={tpl._id} className="bg-[#23232A] p-6 mb-6 rounded-lg">
@@ -92,30 +91,28 @@ export default function FunnelStructure({
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      {/* ⭐ View button with click tracking */}
-                      <a
-                        href={tpl.fileUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={() => trackClick(tpl._id)}
-                        className="border border-[#12DCF080] text-[#B0B0B0] px-3 py-2 text-xs font-medium hover:bg-[#292933]"
-                      >
-                        View
-                      </a>
-
-                      {canDownload && (
+                      {/* If PDF → open in new tab without toolbar */}
+                      {isPdf ? (
                         <a
-                          href={tpl.fileUrl}
-                          download={file.name}
+                          href={`${tpl.fileUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+                          target="_blank"
+                          rel="noreferrer"
                           onClick={() => trackClick(tpl._id)}
                           className="border border-[#12DCF080] text-[#B0B0B0] px-3 py-2 text-xs font-medium hover:bg-[#292933]"
                         >
-                          Download
+                          View
+                        </a>
+                      ) : (
+                        <a
+                          href={tpl.fileUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={() => trackClick(tpl._id)}
+                          className="border border-[#12DCF080] text-[#B0B0B0] px-3 py-2 text-xs font-medium hover:bg-[#292933]"
+                        >
+                          View
                         </a>
                       )}
-
-                      {/* ⭐ Example extra button that also tracks clicks */}
-                     
                     </div>
                   </div>
                 )}
