@@ -30,9 +30,7 @@ const Dashboard = () => {
         <BrainTypesAnalysis />
         <QuizPerformance />
       </div>
-
-      {/* ✅ Show QuestionnaireLinks only if NOT admin */}
-      {userType !== "admin" && <QuestionnaireLinks />}
+<QuestionnaireLinks />
 
       <SuggestTools />
     </>

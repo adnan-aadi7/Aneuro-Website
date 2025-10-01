@@ -226,10 +226,10 @@ const backendTiers = selectedTiers.map(t => tierMap[t]);
           <Mail className="w-6 h-6" style={{ color: "#12DCF0" }} />
         </div>
         <div>
-          <h2 className="text-white font-medium text-base">Email Sequences</h2>
+          <h2 className="text-white font-medium text-base">Nurture</h2>
           <p className="text-gray-400 text-sm mt-1">
-            Upload email marketing sequences
-            <br />& templates
+            Guide leads with customizable sequences that speak to each brain type, building trust and momentum toward conversion.
+
           </p>
         </div>
       </div>

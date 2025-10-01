@@ -120,7 +120,7 @@ const PromptPacks = () => {
       <Toaster position="top-right" />
       
       {/* Header */}
-      <h1 className="text-3xl font-medium mb-6">All Prompt Packs</h1>
+      <h1 className="text-3xl font-medium mb-6">All Behavioral Ad Kits</h1>
 
       {/* Table */}
       <div className="overflow-x-auto">

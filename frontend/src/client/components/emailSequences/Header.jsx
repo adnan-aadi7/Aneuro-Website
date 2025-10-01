@@ -6,9 +6,9 @@ export default function Header({ activeTab, setActiveTab }) {
   return (
     <div className="text-white w-full">
       <div className="py-4 px-2">
-        <h1 className="text-white text-4xl font-semibold mb-1">Email Sequences</h1>
+        <h1 className="text-white text-4xl font-semibold mb-1">Personalized Email Sequences</h1>
         <p className="text-slate-400 text-base mt-3">
-          Brain types with access to their email scripts.
+          Guide leads with customizable sequences, that speak to each brain type, to build trust and momentum toward conversion.
         </p>
       </div>
 

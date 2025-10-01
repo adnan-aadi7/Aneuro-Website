@@ -140,7 +140,7 @@ const FunnelTemplates = () => {
     <div className="bg-[#16161C] text_white  w-full mt-3 border border-slate-800 p-5">
       <Toaster position="top-right" />
       {/* Header */}
-      <h1 className="text-3xl font-medium mb-6">All Funnel Templates</h1>
+      <h1 className="text-3xl font-medium mb-6">All Cognitive Wireframes</h1>
 
       {/* Table */}
       <div className="overflow-x-auto">

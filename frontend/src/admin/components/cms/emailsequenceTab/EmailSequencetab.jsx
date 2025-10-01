@@ -138,11 +138,12 @@ const EmailSequences = () => {
   const safeSequences = Array.isArray(sequences) ? sequences : [];
 
   return (
-    <div className="bg-[#16161C] text-white w-full mt-4 border border-slate-800 p-5">
+    <div className="bg-[#16161C] text-white w-full  border border-slate-800 p-5">
       <Toaster position="top-right" />
       
       {/* Header */}
-      <h1 className="text-3xl font-medium mb-6">All Email Sequences</h1>
+      <h1 className="text-3xl font-medium mb-6">All Personalized Email Sequences</h1>
+
 
       {/* Table */}
       <div className="overflow-x-auto">

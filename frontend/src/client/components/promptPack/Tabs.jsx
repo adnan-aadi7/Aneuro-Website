@@ -69,9 +69,9 @@ export default function Tabs() {
     <div className="text-white w-full ">
       {/* Header */}
       <div className=" px-2 pt-4 pb-2">
-        <h1 className="text-2xl sm:text-4xl font-bold mb-2 sm:mb-4">Prompt Packs</h1>
+        <h1 className="text-2xl sm:text-4xl font-bold mb-2 sm:mb-4">Behavioral Ad Kits</h1>
         <p className="text-gray-400 text-base sm:text-lg">
-          Select a brain type to view ready-to-use content prompts.
+          Capture attention with prebuilt headlines, hooks, and CTAs tailored to each cognitive profiles.
         </p>
       </div>
 

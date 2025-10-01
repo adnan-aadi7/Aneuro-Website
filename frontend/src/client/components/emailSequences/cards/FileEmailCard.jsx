@@ -16,11 +16,24 @@ function getFileMeta(url = "") {
   }
 }
 
-const DOWNLOADABLE = new Set(["txt", "doc", "docx"]);
+// ✅ Viewer URL to block downloads (PDF → Google Docs viewer, others → same URL)
+const getViewerUrl = (url, ext) => {
+  if (ext === "pdf") {
+    return `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
+      url
+    )}`;
+  }
+  return url;
+};
 
-export default function FileEmailCard({ sequenceId, emailId, title, preview, fileUrl }) {
+export default function FileEmailCard({
+  sequenceId,
+  emailId,
+  title,
+  preview,
+  fileUrl,
+}) {
   const { name, ext } = getFileMeta(fileUrl);
-  const canDownload = DOWNLOADABLE.has(ext);
   const [showPopup, setShowPopup] = useState(false);
   const [viewed, setViewed] = useState(false); // track if already clicked
 
@@ -58,15 +71,18 @@ export default function FileEmailCard({ sequenceId, emailId, title, preview, fil
           <span className="mr-2 inline-block px-2 py-0.5 rounded bg-[#2b2b35] text-xs uppercase tracking-wide">
             {ext || "file"}
           </span>
-          <span title={name} className="align-middle truncate max-w-[55vw] inline-block">
+          <span
+            title={name}
+            className="align-middle truncate max-w-[55vw] inline-block"
+          >
             {name}
           </span>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* View (always available, with tracking) */}
+          {/* View only – no downloads */}
           <a
-            href={fileUrl}
+            href={getViewerUrl(fileUrl, ext)}
             target="_blank"
             rel="noreferrer"
             onClick={handleViewClick}
@@ -74,17 +90,6 @@ export default function FileEmailCard({ sequenceId, emailId, title, preview, fil
           >
             View
           </a>
-
-          {/* Download only for txt/word */}
-          {canDownload && (
-            <a
-              href={fileUrl}
-              download={name}
-              className="border border-[#12DCF080] text-[#B0B0B0] px-3 py-2 text-xs font-medium hover:bg-[#292933]"
-            >
-              Download
-            </a>
-          )}
         </div>
       </div>
 

@@ -227,10 +227,9 @@ useEffect(() => {
           <span className="text-[#22C55E] text-xl">🔗</span>
         </div>
         <div>
-          <h2 className="text-white font-medium text-base">Funnel Templates</h2>
+          <h2 className="text-white font-medium text-base">Cognitive Wireframes</h2>
           <p className="text-gray-400 text-xs mt-1">
-            Marketing funnel templates &<br />
-            workflows
+          Turn clicks into purchases with science-backed frameworks that structure ad-driven landing pages using cognitive motivators.
           </p>
         </div>
       </div>
@@ -458,7 +457,7 @@ useEffect(() => {
         disabled={loading}
         aria-busy={loading && submittingAction === 'active'}
       >
-        {loading && submittingAction === 'active' ? 'Uploading...' : 'Upload Funnel Templates'}
+        {loading && submittingAction === 'active' ? 'Uploading...' : 'Upload Cognitive Wireframes'}
       </button>
 
       <button

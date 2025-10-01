@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { ChevronDown, Copy } from "lucide-react";
 import Popup from "./modal";
 import axiosInstance from "../../../store/axiosInstance";
+
 export default function ReflectorPrompt({ groupedPrompts = {}, categories = [] }) {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [copiedPrompt, setCopiedPrompt] = useState(null);
@@ -25,7 +26,11 @@ export default function ReflectorPrompt({ groupedPrompts = {}, categories = [] }
 
   const openInNewTab = (url) => {
     try {
-      window.open(url, "_blank", "noopener,noreferrer");
+      // ✅ Open via Google Docs Viewer to restrict direct download
+      const viewerUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
+        url
+      )}`;
+      window.open(viewerUrl, "_blank", "noopener,noreferrer");
     } catch {
       /* noop */
     }
@@ -114,7 +119,7 @@ export default function ReflectorPrompt({ groupedPrompts = {}, categories = [] }
     if (isFile) {
       return (
         <button
-          className="border border-[#12DCF080] text-[#12DCF0] bg-transparent px-3 py-1 rounded text-sm font-medium transition-colors flex items-center gap-2 hover:bg-[#23232F]"
+          className="border cursor-pointer border-[#12DCF080] text-[#12DCF0] bg-transparent px-3 py-1 rounded text-sm font-medium transition-colors flex items-center gap-2 hover:bg-[#23232F]"
           onClick={() => {
             openInNewTab(payload);
             recordPromptClick(promptObj?.packId, promptObj?.promptId);
@@ -157,9 +162,18 @@ export default function ReflectorPrompt({ groupedPrompts = {}, categories = [] }
                 Subject: {prompt.subject}
               </p>
             )}
-            {isFile && (
-              <p className="text-xs text-gray-400 break-all">{prompt.content}</p>
-            )}
+           {isFile && (
+  <p
+    onClick={() => {
+      openInNewTab(prompt.content); // ✅ Opens file in a new tab
+      recordPromptClick(promptObj?.packId, promptObj?.promptId); // ✅ Track click
+    }}
+    className="text-xs text-gray-400 break-all underline cursor-pointer "
+  >
+    {prompt.content}
+  </p>
+)}
+
           </div>
           {renderButton(prompt, index)}
         </div>

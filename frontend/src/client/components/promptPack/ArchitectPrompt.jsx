@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { ChevronDown, Copy } from "lucide-react";
 import Popup from "./modal";
 import axiosInstance from "../../../store/axiosInstance";
+
 export default function ArchitectPrompt({ groupedPrompts = {}, categories = [] }) {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [copiedPrompt, setCopiedPrompt] = useState(0);
@@ -22,12 +23,6 @@ export default function ArchitectPrompt({ groupedPrompts = {}, categories = [] }
     typeof s === "string" &&
     (/^https?:\/\//i.test(s) || /\.(pdf|docx?|txt)$/i.test(s));
 
-  const openInNewTab = (url) => {
-    try {
-      window.open(url, "_blank", "noopener,noreferrer");
-    } catch {}
-  };
-
   const promptsForArchitect = useMemo(() => {
     const architectPrompts = groupedPrompts.Architect || [];
     return selectedCategory
@@ -47,7 +42,7 @@ export default function ArchitectPrompt({ groupedPrompts = {}, categories = [] }
     if (!text) return;
     navigator.clipboard.writeText(text);
     setCopiedPrompt(id);
-    recordPromptClick(packId, id); // 👈 API call
+    recordPromptClick(packId, id);
     setTimeout(() => setCopiedPrompt(0), 1200);
   };
 
@@ -56,7 +51,7 @@ export default function ArchitectPrompt({ groupedPrompts = {}, categories = [] }
     setExpandedPromptIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
-    recordPromptClick(packId, id); // 👈 API call
+    recordPromptClick(packId, id);
   };
 
   const renderDropdown = () => (
@@ -85,8 +80,11 @@ export default function ArchitectPrompt({ groupedPrompts = {}, categories = [] }
         <button
           className="border border-[#12DCF080] text-[#12DCF0] bg-transparent px-3 py-1 rounded text-sm font-medium transition-colors hover:bg-[#23232F]"
           onClick={() => {
-            openInNewTab(payload);
-            recordPromptClick(prompt.packId, prompt.promptId); // 👈 API call
+            const viewerUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
+              payload
+            )}`;
+            window.open(viewerUrl, "_blank", "noopener,noreferrer");
+            recordPromptClick(prompt.packId, prompt.promptId);
           }}
         >
           View File
@@ -96,9 +94,10 @@ export default function ArchitectPrompt({ groupedPrompts = {}, categories = [] }
     return (
       <button
         className="flex flex-row gap-1 cursor-pointer items-center border border-[#12DCF080] text-[#12DCF0] bg-transparent px-3 py-1 rounded text-sm font-medium transition-colors hover:bg-[#23232F]"
-        onClick={() => handleCopy(payload, prompt.promptId, prompt.packId)} // 👈 API call
+        onClick={() => handleCopy(payload, prompt.promptId, prompt.packId)}
       >
-        <Copy className="w-4 h-4" /> {copiedPrompt === prompt.promptId ? "Copied!" : "Copy"}
+        <Copy className="w-4 h-4" />{" "}
+        {copiedPrompt === prompt.promptId ? "Copied!" : "Copy"}
       </button>
     );
   };
@@ -146,11 +145,15 @@ export default function ArchitectPrompt({ groupedPrompts = {}, categories = [] }
 
               {isFile ? (
                 <div className="mb-4 text-sm">
+                  {/* File link itself, opens viewer in new tab */}
                   <a
-                    href={prompt.content}
+                    href={`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
+                      prompt.content
+                    )}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-gray-400 break-words"
+                    className="text-gray-400 underline break-words "
+                    onClick={() => recordPromptClick(prompt.packId, prompt.promptId)}
                   >
                     {prompt.content}
                   </a>
@@ -169,7 +172,7 @@ export default function ArchitectPrompt({ groupedPrompts = {}, categories = [] }
 
               {!isFile && prompt.content && (
                 <button
-                  onClick={() => toggleExpand(prompt.promptId, prompt.packId)} // 👈 API call
+                  onClick={() => toggleExpand(prompt.promptId, prompt.packId)}
                   className="flex items-center gap-2 mt-4 text-sm text-gray-400 hover:text-gray-300"
                 >
                   <ChevronDown

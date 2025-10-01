@@ -849,7 +849,7 @@ const resetLocalLoading = (status) => {
       {/* Prompt Tabs Section */}
       <div className="ml-6 mr-6 mt-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-white text-lg font-semibold">Prompt Pack</h3>
+          <h3 className="text-white text-lg font-semibold">Behavioral Ad Kits</h3>
           <button
             type="button"
             onClick={addNewPrompt}

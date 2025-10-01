@@ -17,9 +17,9 @@ const AdminControlCenter = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const tabs = useMemo(() => [
     { name: "Overview" },
-    { name: "Email Sequences" },
-    { name: "Prompt Packs" },
-    { name: "Funnel Templates" },
+    { name: "Nurture" },
+    { name: "Attention" },
+    { name: "Conversion" },
     { name: "Scheduled Releases" },
   ], []);
 
@@ -35,19 +35,20 @@ const AdminControlCenter = () => {
   }, [searchParams, tabs]);
 
   const Title = {
-    Overview: "Admin Control Center",
-    "Email Sequences": "Email Sequences",
-    "Prompt Packs": "Prompt Packs",
-    "Funnel Templates": "Funnel Templates",
-    "Scheduled Releases": "Scheduled Releases",
-  };
-  const tabDescriptions = {
-    Overview: "Manage all content drops and user access",
-    "Email Sequences": "Create and manage automated email sequences",
-    "Prompt Packs": "Organize and publish AI prompt packs",
-    "Funnel Templates": "Configure and customize funnel templates",
-    "Scheduled Releases": "Set up and control scheduled content releases",
-  };
+  Overview: "Admin Control Center",
+  Attention: "Behavioral Ad Kits",
+  Nurture: "Personalized Email Sequences",
+  Conversion: "Cognitive Wireframes",
+  "Scheduled Releases": "Scheduled Releases",
+};
+
+const tabDescriptions = {
+  Overview: "Manage all content drops and user access",
+  Attention: "Capture attention with prebuilt headlines, hooks, and CTAs tailored to each cognitive profile.",
+  Nurture: "Guide leads with customizable sequences that speak to each brain type, building trust and momentum toward conversion.",
+  Conversion: "Turn clicks into purchases with science-backed frameworks that structure ad-driven landing pages using cognitive motivators.",
+  "Scheduled Releases": "Set up and control scheduled content releases",
+};
 
   const handleScheduleSuccess = (message) => {
     toast.success(message);
@@ -194,9 +195,10 @@ const AdminControlCenter = () => {
         </div>
         {activeTab === "Overview" && <RecentActivity />}
 
-        {activeTab === "Email Sequences" && <EmailSequencesTab />}
-        {activeTab === "Prompt Packs" && <PromptPacks />}
-        {activeTab === "Funnel Templates" && <FunnelTemplates />}
+       {activeTab === "Nurture" && <EmailSequencesTab />}
+{activeTab === "Attention" && <PromptPacks />}
+{activeTab === "Conversion" && <FunnelTemplates />}
+
         {activeTab === "Scheduled Releases" && (
           <>
             <Cards />

@@ -31,9 +31,9 @@ const isAdmin = userData.userType === "admin";
   const menuItems = [
     { icon: MdOutlineDashboard, label: "Dashboard", to: "/client/dashboard" },
     { icon: TbFileSearch, label: "Results Overview", to: "/results-overview" },
-    { icon: TbMail, label: "Email Sequences", to: "/email-sequences" },
-    { icon: TbStars, label: "Prompt Packs", to: "/prompt-packs" },
-    { icon: TbClock, label: "Funnel Templates", to: "/funnel-templates" },
+    { icon: TbMail, label: "Nurture", to: "/email-sequences" },
+    { icon: TbStars, label: "Attention", to: "/prompt-packs" },
+    { icon: TbClock, label: "Conversion", to: "/funnel-templates" },
     {
       icon: TbCurrencyDollar,
       label: "Manage Subscription",

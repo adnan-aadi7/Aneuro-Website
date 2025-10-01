@@ -6,9 +6,9 @@ export default function Header({ activeTab, setActiveTab }) {
   return (
     <div className="text-white w-full ">
       <div className="py-4 px-2">
-        <h1 className="text-white text-4xl font-semibold mb-1">Funnel Templates</h1>
+        <h1 className="text-white text-4xl font-semibold mb-1">Cognitive Wireframes</h1>
         <p className="text-slate-400 text-base mt-3">
-          Launch high-converting funnels built to match how each brain type engages.
+         Turn clicks into purchases with science backed frameworks that explain how to structure ad driven landing pages using cognitive motivators.
         </p>
       </div>
 

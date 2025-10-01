@@ -222,11 +222,9 @@ export default function PromptPacksCard() {
           <span className="text- text-xl">💡</span>
         </div>
         <div>
-          <h2 className="text-white  font-medium text-base">Prompt Packs</h2>
+          <h2 className="text-white  font-medium text-base">Behavioral Ad Kits</h2>
           <p className="text-gray-400 text-xs mt-1">
-            AI prompts and template
-            <br />
-            collections
+            Capture attention with prebuilt headlines, hooks, and CTAs tailored to each cognitive profile.
           </p>
         </div>
       </div>
@@ -449,7 +447,7 @@ export default function PromptPacksCard() {
         disabled={loading}
         aria-busy={loading && submittingAction === 'active'}
       >
-        {loading && submittingAction === 'active' ? 'Uploading...' : 'Upload Prompt Packs'}
+        {loading && submittingAction === 'active' ? 'Uploading...' : 'Upload Behavioral Ad Kits'}
       </button>
       <button
         onClick={() => handleUploadClick('scheduled')}

@@ -79,11 +79,10 @@ const LevelIntelligence = () => {
               />
             </div>
             <h3 className="text-white text-lg md:text-xl font-semibold mb-2">
-              Get in Touch with Our AI Experts
+              Get in Touch 
             </h3>
             <p className="text-white text-sm md:text-base mb-4 md:mb-6">
-              Whether you're looking to build a custom neural network, explore
-              deep learning.
+             From building tailored solutions to exploring innovative ideas, we’ll support your journey.
             </p>
             <button className="cursor-pointer bg-gradient-to-r from-[#12DCF0] to-[#1DE6FB] text-white font-semibold px-6 md:px-8 py-2 md:py-3 rounded-full shadow-lg mt-2 w-auto text-xs md:text-base"
             onClick={scrollFooterAboutUs}
