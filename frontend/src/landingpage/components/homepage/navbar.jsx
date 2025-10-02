@@ -46,7 +46,7 @@ const Navbar = () => {
           href="/login"
           className="hidden lg:block text-white font-bold text-[16px] px-5 py-3 rounded-full bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3]"
         >
-          Sign In
+          LOGIN
         </a>
         </div>
 

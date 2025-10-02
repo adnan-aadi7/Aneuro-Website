@@ -25,12 +25,12 @@ const Compete =()=>{
 
              <div className="flex justify-center gap-4 flex-wrap mt-12">
            <Link to="/signup">
-  <button className="cursor-pointer px-6 py-3 bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] rounded-full font-semibold">
+  <button className="text-[14px] cursor-pointer px-6 py-3 border border-white/20 bg-gradient-to-r from-[#12DCF0] via-[#0A95A3] to-[#0A95A3] rounded-full font-semibold">
     Get Started
   </button>
 </Link>
 <Link to="/">
-  <button className="cursor-pointer px-6 py-3 border border-white/60 rounded-full font-semibold hover:bg-white hover:text-black transition" 
+  <button className="text-[14px] cursor-pointer px-6 py-3 border border-white/60 rounded-full font-semibold hover:bg-white hover:text-black " 
   onClick={scrollToPricing}
   >
     View Pricing
